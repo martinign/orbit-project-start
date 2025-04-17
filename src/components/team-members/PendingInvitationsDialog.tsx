@@ -20,7 +20,7 @@ interface Invitation {
   projects: {
     project_number: string;
     Sponsor: string;
-  };
+  } | null;
 }
 
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
@@ -153,7 +153,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
                   <div className="font-medium">
-                    {invitation.projects.project_number} - {invitation.projects.Sponsor}
+                    {invitation.projects ? 
+                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` : 
+                      "Unknown Project"}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Permission Level: {invitation.permission_level}
