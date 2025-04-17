@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Building, MapPin, UserCog } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,128 +24,74 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import TeamMemberForm from "./TeamMemberForm";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/toggle-group";
 
 interface TeamMembersListProps {
-  projectId: string;
+  projectId: string | null;
+  searchQuery: string;
+  viewMode: "table" | "card";
 }
 
-const TeamMembersList: React.FC<TeamMembersListProps> = ({ projectId }) => {
+const TeamMembersList: React.FC<TeamMembersListProps> = ({ 
+  projectId, 
+  searchQuery, 
+  viewMode 
+}) => {
   const { toast } = useToast();
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    full_name: '',
-    role: '',
-    location: '',
-  });
 
   const { data: teamMembers, isLoading, refetch } = useQuery({
-    queryKey: ["team_members", projectId],
+    queryKey: ["team_members", projectId, searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("project_team_members")
-        .select("*")
-        .eq("project_id", projectId)
+        .select(`
+          *,
+          projects:project_id(
+            id,
+            project_number,
+            Sponsor
+          )
+        `)
         .order("created_at", { ascending: false });
 
+      if (projectId) {
+        query = query.eq("project_id", projectId);
+      }
+
+      if (searchQuery) {
+        query = query.ilike("full_name", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query;
+      
       if (error) throw error;
+      
       return data || [];
     },
-    enabled: !!projectId,
   });
 
   const handleEdit = (member: any) => {
     setSelectedMember(member);
-    setFormData({
-      full_name: member.full_name,
-      role: member.role || '',
-      location: member.location || '',
-    });
     setIsEditDialogOpen(true);
   };
 
   const handleDelete = (member: any) => {
     setSelectedMember(member);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleAddNew = () => {
-    setSelectedMember(null);
-    setFormData({
-      full_name: '',
-      role: '',
-      location: '',
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = async () => {
-    try {
-      if (!formData.full_name.trim()) {
-        toast({
-          title: "Error",
-          description: "Team member name is required.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (selectedMember) {
-        // Update existing team member
-        const { error } = await supabase
-          .from("project_team_members")
-          .update({
-            full_name: formData.full_name,
-            role: formData.role || null,
-            location: formData.location || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", selectedMember.id);
-
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Team member updated successfully.",
-        });
-      } else {
-        // Add new team member
-        const { error } = await supabase
-          .from("project_team_members")
-          .insert({
-            project_id: projectId,
-            full_name: formData.full_name,
-            role: formData.role || null,
-            location: formData.location || null,
-            user_id: (await supabase.auth.getUser()).data.user?.id,
-          });
-
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Team member added successfully.",
-        });
-      }
-      
-      setIsEditDialogOpen(false);
-      refetch();
-    } catch (error) {
-      console.error("Error saving team member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save team member. Please try again.",
-        variant: "destructive",
-      });
-    }
   };
 
   const confirmDelete = async () => {
@@ -158,25 +104,21 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ projectId }) => {
         .eq("id", selectedMember.id);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to delete the team member. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        throw error;
       }
 
       toast({
         title: "Success",
-        description: "Team member deleted successfully.",
+        description: "Team member deleted successfully",
       });
+      
       refetch();
       setIsDeleteDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting team member:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "Failed to delete team member",
         variant: "destructive",
       });
     }
@@ -186,34 +128,44 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ projectId }) => {
     return <div className="text-center py-6">Loading team members...</div>;
   }
 
+  if (!teamMembers || teamMembers.length === 0) {
+    return (
+      <div className="text-center p-8 text-muted-foreground bg-gray-50 rounded-md">
+        <UserCog className="mx-auto h-12 w-12 opacity-20 mb-2" />
+        <h3 className="text-lg font-medium">No team members found</h3>
+        <p className="mb-4">
+          {projectId 
+            ? "This project doesn't have any team members yet." 
+            : "No team members added to any projects yet."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium">Project Team Members</h2>
-        <Button
-          onClick={handleAddNew}
-          className="bg-blue-500 hover:bg-blue-600"
-        >
-          Add Team Member
-        </Button>
-      </div>
-
-      {teamMembers && teamMembers.length > 0 ? (
+      {viewMode === "table" ? (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Location</TableHead>
+              {!projectId && <TableHead>Project</TableHead>}
               <TableHead className="w-[100px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {teamMembers.map((member) => (
               <TableRow key={member.id}>
-                <TableCell>{member.full_name}</TableCell>
+                <TableCell className="font-medium">{member.full_name}</TableCell>
                 <TableCell>{member.role || '-'}</TableCell>
                 <TableCell>{member.location || '-'}</TableCell>
+                {!projectId && (
+                  <TableCell>
+                    {member.projects?.project_number} - {member.projects?.Sponsor}
+                  </TableCell>
+                )}
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
@@ -238,68 +190,75 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ projectId }) => {
           </TableBody>
         </Table>
       ) : (
-        <div className="text-center py-6 bg-gray-50 rounded-md">
-          No team members found for this project. Click "Add Team Member" to add your first team member.
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {teamMembers.map((member) => (
+            <Card key={member.id} className="overflow-hidden">
+              <CardHeader className="pb-2 bg-purple-50">
+                <CardTitle className="text-lg">{member.full_name}</CardTitle>
+                {member.role && (
+                  <CardDescription className="flex items-center gap-1">
+                    <UserCog className="h-3.5 w-3.5" />
+                    {member.role}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-2">
+                  {member.location && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <MapPin className="h-4 w-4" />
+                      <span>{member.location}</span>
+                    </div>
+                  )}
+                  {!projectId && member.projects && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Building className="h-4 w-4" />
+                      <span>{member.projects.project_number} - {member.projects.Sponsor}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEdit(member)}
+                    className="text-purple-500 hover:text-purple-700 hover:bg-purple-50"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDelete(member)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Edit/Add Dialog */}
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {selectedMember ? "Edit Team Member" : "Add Team Member"}
-            </DialogTitle>
+            <DialogTitle>Edit Team Member</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div>
-              <Label htmlFor="full_name">Name *</Label>
-              <Input
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleInputChange}
-                placeholder="Enter team member's name"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="role">Role</Label>
-              <Input
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                placeholder="Enter role (e.g. Project Manager)"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="Enter location"
-                className="mt-1"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleSave}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                {selectedMember ? "Update" : "Add"}
-              </Button>
-            </div>
-          </div>
+          {selectedMember && (
+            <TeamMemberForm
+              projectId={selectedMember.project_id}
+              teamMember={selectedMember}
+              onSuccess={() => {
+                setIsEditDialogOpen(false);
+                refetch();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
       
@@ -309,7 +268,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({ projectId }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the team member "{selectedMember?.full_name}".
+              This action cannot be undone. This will permanently delete the team member 
+              "{selectedMember?.full_name}" from the project.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
