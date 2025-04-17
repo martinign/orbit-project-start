@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Combobox } from "@/components/ui/combobox";
-import { useTeamMemberRoles } from "@/hooks/useTeamMemberRoles";
 import {
   Select,
   SelectContent,
@@ -33,9 +31,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
     role: teamMember?.role || "",
     location: teamMember?.location || "",
   });
-  
-  // Fetch all unique roles from the database
-  const { data: roleOptions = [], isLoading: isLoadingRoles } = useTeamMemberRoles();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -70,10 +65,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
 
   const handleProjectChange = (value: string) => {
     setFormData(prev => ({ ...prev, project_id: value }));
-  };
-
-  const handleRoleChange = (value: string) => {
-    setFormData(prev => ({ ...prev, role: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,20 +205,17 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
       
       <div>
         <Label htmlFor="role">Role</Label>
-        <div className="mt-1">
-          <Combobox
-            options={roleOptions || []}
-            value={formData.role}
-            onChange={handleRoleChange}
-            placeholder="Select or enter a role"
-            emptyMessage="No roles found"
-            allowCustomValue={true}
-            isLoading={isLoadingRoles}
-          />
-        </div>
+        <Input
+          id="role"
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          placeholder="E.g., Project Manager, Developer"
+          className="mt-1"
+        />
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <UserCog className="h-3 w-3" />
-          Select from existing roles or type to add a custom role
+          Enter the team member's role in the project
         </p>
       </div>
       
