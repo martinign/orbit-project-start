@@ -14,6 +14,9 @@ interface FormFieldProps {
   required?: boolean;
   hint?: string;
   icon?: LucideIcon;
+  type?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
 const FormField = ({
@@ -26,9 +29,12 @@ const FormField = ({
   required = false,
   hint,
   icon: Icon,
+  type = "text",
+  className,
+  disabled = false,
 }: FormFieldProps) => {
   return (
-    <div>
+    <div className={className}>
       <Label htmlFor={id}>
         {label}
         {required && " *"}
@@ -41,10 +47,12 @@ const FormField = ({
         placeholder={placeholder}
         className="mt-1"
         required={required}
+        type={type}
+        disabled={disabled}
       />
-      {hint && Icon && (
+      {hint && (
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-          <Icon className="h-3 w-3" />
+          {Icon && <Icon className="h-3 w-3" />}
           {hint}
         </p>
       )}

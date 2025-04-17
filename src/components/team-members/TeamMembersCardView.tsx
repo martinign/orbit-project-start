@@ -9,12 +9,13 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import { TeamMember } from "@/hooks/useTeamMembers";
 
 interface TeamMembersCardViewProps {
-  teamMembers: any[];
+  teamMembers: TeamMember[];
   projectId: string | null;
-  onEdit: (member: any) => void;
-  onDelete: (member: any) => void;
+  onEdit: (member: TeamMember) => void;
+  onDelete: (member: TeamMember) => void;
 }
 
 const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
@@ -23,20 +24,38 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const handleEdit = (e: React.MouseEvent, member: any) => {
+  const handleEdit = (e: React.MouseEvent, member: TeamMember) => {
     e.stopPropagation();
     onEdit(member);
   };
 
-  const handleDelete = (e: React.MouseEvent, member: any) => {
+  const handleDelete = (e: React.MouseEvent, member: TeamMember) => {
     e.stopPropagation();
     onDelete(member);
+  };
+
+  const renderMemberDetail = (
+    icon: React.ReactNode,
+    content: string | undefined,
+    className?: string
+  ) => {
+    if (!content) return null;
+    
+    return (
+      <p className={`flex items-center gap-2 ${className || ''}`}>
+        {icon}
+        <span className="truncate">{content}</span>
+      </p>
+    );
   };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {teamMembers.map((member) => (
-        <Card key={member.id} className="overflow-hidden h-[280px] flex flex-col">
+        <Card 
+          key={member.id} 
+          className="overflow-hidden h-[280px] flex flex-col hover:shadow-md transition-shadow"
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-lg truncate">{member.full_name}</CardTitle>
             {member.role && (
@@ -48,32 +67,24 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
           </CardHeader>
           <CardContent className="pb-2 flex-grow">
             <div className="space-y-2 text-sm">
-              {member.email && (
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="truncate">{member.email}</span>
-                </p>
+              {renderMemberDetail(
+                <Mail className="h-4 w-4 text-muted-foreground" />,
+                member.email
               )}
               
-              {member.phone && (
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  {member.phone}
-                </p>
+              {renderMemberDetail(
+                <Phone className="h-4 w-4 text-muted-foreground" />,
+                member.phone
               )}
               
-              {member.organization && (
-                <p className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  {member.organization}
-                </p>
+              {renderMemberDetail(
+                <Building className="h-4 w-4 text-muted-foreground" />,
+                member.organization
               )}
               
-              {member.location && (
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  {member.location}
-                </p>
+              {renderMemberDetail(
+                <MapPin className="h-4 w-4 text-muted-foreground" />,
+                member.location
               )}
               
               {/* Only show project badge if not filtered by project */}
