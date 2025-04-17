@@ -29,12 +29,17 @@ interface Invitation {
   status: string;
   created_at: string;
   profiles?: InvitationProfile | null;
+  projects?: {
+    project_number?: string;
+    Sponsor?: string;
+  } | null;
 }
 
 const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch invitations with profile information
   const { data: invitations, isLoading } = useQuery({
     queryKey: ["project_invitations", projectId],
     queryFn: async () => {
@@ -51,6 +56,10 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
           profiles:invitee_id (
             full_name,
             email
+          ),
+          projects:project_id (
+            project_number,
+            Sponsor
           )
         `)
         .eq("project_id", projectId)
@@ -168,4 +177,3 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
 };
 
 export default ProjectInvitationsList;
-
