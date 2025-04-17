@@ -100,11 +100,16 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
 
     try {
       if (isEditing && project) {
-        // Update existing project
+        // Update existing project - Fix: ensure we have all required fields
         const { error } = await supabase
           .from("projects")
           .update({
-            ...values,
+            project_number: values.project_number,
+            protocol_number: values.protocol_number,
+            protocol_title: values.protocol_title,
+            Sponsor: values.Sponsor,
+            description: values.description,
+            status: values.status,
             updated_at: new Date().toISOString()
           })
           .eq("id", project.id);
