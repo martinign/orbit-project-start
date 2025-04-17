@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +26,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 import TaskDialog from './TaskDialog';
 
 interface Task {
@@ -223,63 +229,68 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                     {getTasksForColumn(column.status).map((task, index) => (
                       <Draggable key={task.id} draggableId={task.id} index={index}>
                         {(provided) => (
-                          <Card
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="mb-2 shadow-sm"
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-grow">
-                                  <h4 className="font-medium line-clamp-2">{task.title}</h4>
-                                  
-                                  {task.description && (
-                                    <p className="text-sm text-gray-500 line-clamp-2 mt-1">
-                                      {task.description}
-                                    </p>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <Card
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="mb-2 shadow-sm cursor-pointer"
+                              >
+                                <CardContent className="p-3 flex justify-between items-start">
+                                  <h4 className="font-medium truncate">{task.title}</h4>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-[160px]">
+                                      <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem 
+                                        onClick={() => handleDeleteConfirm(task)}
+                                        className="text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </CardContent>
+                              </Card>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-80">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold">{task.title}</h4>
+                                
+                                {task.description && (
+                                  <div>
+                                    <h5 className="text-xs font-medium text-gray-500">Description</h5>
+                                    <p className="text-sm">{task.description}</p>
+                                  </div>
+                                )}
+                                
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {task.priority && (
+                                    <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
+                                      {task.priority}
+                                    </span>
                                   )}
                                   
-                                  <div className="flex gap-2 mt-3">
-                                    {task.priority && (
-                                      <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-                                        {task.priority}
-                                      </span>
-                                    )}
-                                    
-                                    {task.due_date && formatDate(task.due_date) && (
-                                      <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-                                        <Calendar className="h-3 w-3 mr-1" />
-                                        {formatDate(task.due_date)}
-                                      </span>
-                                    )}
-                                  </div>
+                                  {task.due_date && formatDate(task.due_date) && (
+                                    <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      {formatDate(task.due_date)}
+                                    </span>
+                                  )}
                                 </div>
-                                
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-[160px]">
-                                    <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                                      <Edit className="h-4 w-4 mr-2" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDeleteConfirm(task)}
-                                      className="text-red-600"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
-                            </CardContent>
-                          </Card>
+                            </HoverCardContent>
+                          </HoverCard>
                         )}
                       </Draggable>
                     ))}
