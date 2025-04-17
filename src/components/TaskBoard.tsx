@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,21 +43,14 @@ interface TaskBoardProps {
   onRefetch: () => void;
 }
 
-// Define column configuration
+// Define column configuration with new order
 const columnsConfig = [
   {
-    id: 'completed',
-    title: 'Completed',
-    status: 'completed',
-    color: 'bg-green-100 border-green-300',
-    badgeColor: 'bg-green-500',
-  },
-  {
-    id: 'in-progress',
-    title: 'In Progress',
-    status: 'in progress',
-    color: 'bg-blue-100 border-blue-300',
-    badgeColor: 'bg-blue-500',
+    id: 'not-started',
+    title: 'Not Started',
+    status: 'not started',
+    color: 'bg-gray-100 border-gray-300',
+    badgeColor: 'bg-gray-500',
   },
   {
     id: 'pending',
@@ -68,11 +60,18 @@ const columnsConfig = [
     badgeColor: 'bg-yellow-500',
   },
   {
-    id: 'not-started',
-    title: 'Not Started',
-    status: 'not started',
-    color: 'bg-gray-100 border-gray-300',
-    badgeColor: 'bg-gray-500',
+    id: 'in-progress',
+    title: 'In Progress',
+    status: 'in progress',
+    color: 'bg-blue-100 border-blue-300',
+    badgeColor: 'bg-blue-500',
+  },
+  {
+    id: 'completed',
+    title: 'Completed',
+    status: 'completed',
+    color: 'bg-green-100 border-green-300',
+    badgeColor: 'bg-green-500',
   },
 ];
 
