@@ -18,19 +18,30 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
-const TasksList: React.FC = () => {
+interface TasksListProps {
+  projectId?: string;
+}
+
+const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { data: templates, isLoading, refetch } = useQuery({
-    queryKey: ["task_templates"],
+    queryKey: ["task_templates", projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("task_templates")
         .select("*")
         .order("created_at", { ascending: false });
+        
+      // If projectId is provided, filter by project
+      if (projectId) {
+        query = query.eq("project_id", projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data || [];
@@ -105,6 +116,7 @@ const TasksList: React.FC = () => {
           setIsEditDialogOpen(false);
         }}
         template={selectedTemplate}
+        projectId={projectId}
       />
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
