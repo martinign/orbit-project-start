@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,12 +116,15 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
-  const handleEditContact = (contact: Contact) => {
+  // Improved handler functions with cleaner state management
+  const handleEditContact = (e: React.MouseEvent, contact: Contact) => {
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedContact(contact);
     setIsEditContactOpen(true);
   };
 
-  const handleDeleteContact = (contact: Contact) => {
+  const handleDeleteContact = (e: React.MouseEvent, contact: Contact) => {
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedContact(contact);
     setIsDeleteDialogOpen(true);
   };
@@ -158,6 +162,18 @@ const ContactsList: React.FC<ContactsListProps> = ({
         variant: "destructive",
       });
     }
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditContactOpen(false);
+    // Small delay to ensure state is updated correctly
+    setTimeout(() => setSelectedContact(null), 100);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    // Small delay to ensure state is updated correctly
+    setTimeout(() => setSelectedContact(null), 100);
   };
 
   if (isLoading) {
@@ -209,11 +225,12 @@ const ContactsList: React.FC<ContactsListProps> = ({
                   <TableCell>{contact.location || "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {/* Using aria-label for better accessibility */}
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => handleEditContact(contact)}
-                        title="Edit contact"
+                        onClick={(e) => handleEditContact(e, contact)}
+                        aria-label="Edit contact"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -221,8 +238,8 @@ const ContactsList: React.FC<ContactsListProps> = ({
                         variant="ghost" 
                         size="icon" 
                         className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteContact(contact)}
-                        title="Delete contact"
+                        onClick={(e) => handleDeleteContact(e, contact)}
+                        aria-label="Delete contact"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -274,6 +291,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
                     </p>
                   )}
                   
+                  {/* Only show project badge when not filtered by project */}
                   {!projectId && contact.projects && (
                     <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block mt-1">
                       {contact.projects.project_number} - {contact.projects.Sponsor}
@@ -283,11 +301,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
               </CardContent>
               <CardFooter className="border-t p-2 mt-auto">
                 <div className="flex gap-1 ml-auto">
+                  {/* Improved button implementation */}
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => handleEditContact(contact)}
+                    onClick={(e) => handleEditContact(e, contact)}
+                    aria-label="Edit contact"
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
@@ -295,7 +315,8 @@ const ContactsList: React.FC<ContactsListProps> = ({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDeleteContact(contact)}
+                    onClick={(e) => handleDeleteContact(e, contact)}
+                    aria-label="Delete contact"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -306,7 +327,11 @@ const ContactsList: React.FC<ContactsListProps> = ({
         </div>
       )}
 
-      <Dialog open={isEditContactOpen} onOpenChange={setIsEditContactOpen}>
+      {/* Improved dialog implementation */}
+      <Dialog 
+        open={isEditContactOpen} 
+        onOpenChange={handleCloseEditDialog}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Contact</DialogTitle>
@@ -314,21 +339,27 @@ const ContactsList: React.FC<ContactsListProps> = ({
               Update contact information
             </DialogDescription>
           </DialogHeader>
-          <ContactForm 
-            contact={selectedContact}
-            onSuccess={() => {
-              setIsEditContactOpen(false);
-              queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
-              toast({
-                title: "Success",
-                description: "Contact updated successfully.",
-              });
-            }}
-          />
+          {selectedContact && (
+            <ContactForm 
+              contact={selectedContact}
+              onSuccess={() => {
+                handleCloseEditDialog();
+                queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
+                toast({
+                  title: "Success",
+                  description: "Contact updated successfully.",
+                });
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Improved alert dialog implementation */}
+      <AlertDialog 
+        open={isDeleteDialogOpen} 
+        onOpenChange={handleCloseDeleteDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>

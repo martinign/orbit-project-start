@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Edit, Trash2, Building, MapPin, UserCog, Mail, Phone, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -100,12 +101,15 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     },
   });
 
-  const handleEdit = (member: TeamMember) => {
+  // Improved handler functions with proper event handling
+  const handleEdit = (e: React.MouseEvent, member: TeamMember) => {
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedMember(member);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (member: TeamMember) => {
+  const handleDelete = (e: React.MouseEvent, member: TeamMember) => {
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedMember(member);
     setIsDeleteDialogOpen(true);
   };
@@ -139,6 +143,18 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         variant: "destructive",
       });
     }
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    // Small delay to ensure state is updated correctly
+    setTimeout(() => setSelectedMember(null), 100);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    // Small delay to ensure state is updated correctly
+    setTimeout(() => setSelectedMember(null), 100);
   };
 
   if (isLoading) {
@@ -188,7 +204,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleEdit(member)}
+                      onClick={(e) => handleEdit(e, member)}
+                      aria-label="Edit team member"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -196,7 +213,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                       variant="ghost"
                       size="icon"
                       className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleDelete(member)}
+                      onClick={(e) => handleDelete(e, member)}
+                      aria-label="Delete team member"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -249,6 +267,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
+                  {/* Only show project badge if not filtered by project */}
                   {!projectId && member.projects && (
                     <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
                       {member.projects.project_number} - {member.projects.Sponsor}
@@ -262,7 +281,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => handleEdit(member)}
+                    onClick={(e) => handleEdit(e, member)}
+                    aria-label="Edit team member"
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
@@ -270,7 +290,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDelete(member)}
+                    onClick={(e) => handleDelete(e, member)}
+                    aria-label="Delete team member"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -281,7 +302,11 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         </div>
       )}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Improved dialog implementation */}
+      <Dialog 
+        open={isEditDialogOpen} 
+        onOpenChange={handleCloseEditDialog}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Team Member</DialogTitle>
@@ -291,7 +316,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
               projectId={selectedMember.project_id}
               teamMember={selectedMember}
               onSuccess={() => {
-                setIsEditDialogOpen(false);
+                handleCloseEditDialog();
                 queryClient.invalidateQueries({ queryKey: ["team_members"] });
               }}
             />
@@ -299,7 +324,11 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         </DialogContent>
       </Dialog>
       
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      {/* Improved alert dialog implementation */}
+      <AlertDialog 
+        open={isDeleteDialogOpen} 
+        onOpenChange={handleCloseDeleteDialog}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
