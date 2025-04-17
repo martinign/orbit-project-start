@@ -58,6 +58,21 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
   const [selectedNote, setSelectedNote] = useState<ProjectNote | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch user ID on component mount
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUserId(user?.id || null);
+      } catch (error) {
+        console.error('Error fetching user ID:', error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
 
   // Fetch project notes
   const fetchNotes = async () => {
@@ -145,7 +160,14 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
 
   // Save a new note
   const saveNewNote = async () => {
-    if (!projectId) return;
+    if (!projectId || !userId) {
+      toast({
+        title: 'Error',
+        description: 'User ID or Project ID not available',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     try {
       const { error } = await supabase
@@ -154,7 +176,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
           project_id: projectId,
           title,
           content,
-          user_id: supabase.auth.getUser().then(res => res.data.user?.id) || '',
+          user_id: userId,
         });
         
       if (error) throw error;
@@ -344,7 +366,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
             </Button>
             <Button 
               onClick={saveNewNote} 
-              disabled={!title.trim()} 
+              disabled={!title.trim() || !userId} 
               className="bg-blue-500 hover:bg-blue-600"
             >
               Create Note
