@@ -1,9 +1,12 @@
 
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +18,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
 } from "@/components/ui/sidebar";
 import {
   Dialog,
@@ -24,13 +28,109 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import TaskDialog from "@/components/TaskDialog";
 import TasksList from "@/components/TasksList";
+import ProjectDialog from "@/components/ProjectDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  // Fetch recent projects
+  const { data: recentProjects } = useQuery({
+    queryKey: ["recent_projects"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, project_number, Sponsor, status")
+        .order("updated_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const handleEditProject = (project: any) => {
+    setSelectedProject(project);
+    setIsProjectDialogOpen(true);
+  };
+
+  const handleDeleteProject = (project: any) => {
+    setSelectedProject(project);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!selectedProject) return;
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", selectedProject.id);
+
+      if (error) {
+        throw error;
+      }
+
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+
+      toast({
+        title: "Success",
+        description: "Project deleted successfully",
+      });
+      
+      setIsDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete project",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get status color based on project status
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return "text-green-500";
+      case 'pending':
+        return "text-yellow-500";
+      case 'completed':
+        return "text-blue-500";
+      case 'cancelled':
+        return "text-gray-500";
+      default:
+        return "text-gray-400";
+    }
+  };
 
   return (
     <Sidebar>
@@ -118,6 +218,58 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Recent Projects Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>RECENT PROJECTS</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {recentProjects && recentProjects.length > 0 ? (
+                recentProjects.map((project) => (
+                  <SidebarMenuItem key={project.id}>
+                    <Link to={`/projects`}>
+                      <SidebarMenuButton
+                        tooltip={`${project.project_number} - ${project.Sponsor}`}
+                        className="hover:bg-blue-500/10 transition-colors duration-200"
+                      >
+                        <Circle className={`h-3 w-3 ${getStatusColor(project.status)}`} />
+                        <span className="truncate max-w-[150px]">
+                          {project.project_number} - {project.Sponsor}
+                        </span>
+                      </SidebarMenuButton>
+                    </Link>
+                    <SidebarMenuAction showOnHover>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                            <MoreHorizontal className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDeleteProject(project)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </SidebarMenuAction>
+                  </SidebarMenuItem>
+                ))
+              ) : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton className="text-gray-400 cursor-default">
+                    <span>No recent projects</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <Button 
@@ -153,6 +305,40 @@ export function AppSidebar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Project Dialog */}
+      <ProjectDialog 
+        open={isProjectDialogOpen} 
+        onClose={() => setIsProjectDialogOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+          queryClient.invalidateQueries({ queryKey: ["projects"] });
+          setIsProjectDialogOpen(false);
+        }}
+        project={selectedProject}
+      />
+
+      {/* Delete Project Confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the project
+              "{selectedProject?.project_number} - {selectedProject?.Sponsor}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteProject}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }
