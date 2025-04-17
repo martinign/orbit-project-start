@@ -6,7 +6,8 @@ import ProjectSelector from "@/components/team-members/ProjectSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserRound } from "lucide-react";
+import { UserRound, Mail, Clock } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface InviteMembersDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface Profile {
   id: string;
   full_name: string | null;
   created_at: string;
+  avatar_url?: string | null;
 }
 
 const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
@@ -35,10 +37,10 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const fetchProfiles = async () => {
     setIsLoading(true);
     try {
+      // Remove the order by to ensure we get all profiles
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, created_at")
-        .order("full_name");
+        .select("*");
       
       if (error) throw error;
       
@@ -93,6 +95,17 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
     onClose();
   };
 
+  // Generate initials from full name or a default value
+  const getInitials = (name: string | null): string => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -126,17 +139,28 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                     />
                     <label 
                       htmlFor={`profile-${profile.id}`} 
-                      className="flex items-center cursor-pointer flex-1"
+                      className="flex items-center cursor-pointer flex-1 gap-2"
                     >
-                      <UserRound className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="text-sm">{profile.full_name || 'Unnamed User'}</span>
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-purple-100 text-purple-600">
+                          {getInitials(profile.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {profile.full_name || 'Unnamed User'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          User ID: {profile.id.substring(0, 8)}...
+                        </span>
+                      </div>
                     </label>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="py-4 text-center text-sm text-gray-500">
-                No users found.
+                No users found in the profiles table.
               </div>
             )}
           </div>
