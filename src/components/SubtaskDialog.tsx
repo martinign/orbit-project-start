@@ -31,7 +31,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Combobox } from "@/components/ui/combobox";
 import { useQuery } from "@tanstack/react-query";
 
 interface Task {
@@ -53,6 +52,11 @@ interface Subtask {
   parent_task_id: string;
   notes?: string;
   assigned_to?: string;
+}
+
+interface TeamMember {
+  id: string;
+  full_name: string;
 }
 
 interface SubtaskDialogProps {
@@ -84,7 +88,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch team members to use as options for assignedTo field
-  const { data: teamMembers } = useQuery({
+  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
     queryKey: ['team_members'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -96,12 +100,6 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
       return data || [];
     },
   });
-
-  // Format team members for combobox
-  const teamMemberOptions = teamMembers ? teamMembers.map(member => ({
-    value: member.full_name,
-    label: member.full_name
-  })) : [];
 
   useEffect(() => {
     if (open) {
@@ -263,15 +261,20 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assignedTo">Assigned To</Label>
-            <Combobox
-              options={teamMemberOptions}
-              value={assignedTo}
-              onChange={setAssignedTo}
-              placeholder="Select or enter a name"
-              emptyMessage="No team members found"
-              allowCustomValue={true}
-            />
+            <Label htmlFor="assignedTo">Assigned To (Optional)</Label>
+            <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <SelectTrigger id="assignedTo">
+                <SelectValue placeholder="Select team member" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Not assigned</SelectItem>
+                {teamMembers?.map((member) => (
+                  <SelectItem key={member.id} value={member.full_name}>
+                    {member.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
