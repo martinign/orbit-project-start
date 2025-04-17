@@ -292,43 +292,45 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                         
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button 
-                                              variant="ghost" 
-                                              size="icon" 
-                                              className="h-8 w-8 -mr-2"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleTaskUpdates(task);
-                                              }}
-                                            >
-                                              <FilePen className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Updates</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                        
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button 
-                                              variant="ghost" 
-                                              size="icon" 
-                                              className="h-8 w-8 -mr-2"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleAddSubtask(task);
-                                              }}
-                                            >
-                                              <FilePlus className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Add Subtask</p>
-                                          </TooltipContent>
-                                        </Tooltip>
+                                        <div className="flex items-center gap-1">
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 -mr-2"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleTaskUpdates(task);
+                                                }}
+                                              >
+                                                <FilePen className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Updates</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                          
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 -mr-2"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleAddSubtask(task);
+                                                }}
+                                              >
+                                                <FilePlus className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Add Subtask</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </div>
                                       </div>
                                     </div>
                                   </CardContent>
@@ -411,3 +413,4 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
 };
 
 export default TaskBoard;
+
