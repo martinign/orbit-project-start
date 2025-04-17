@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useTeamMemberName } from '@/hooks/useTeamMembers';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface TaskUpdate {
   id: string;
@@ -120,7 +120,7 @@ interface UpdateItemProps {
 }
 
 const UpdateItem: React.FC<UpdateItemProps> = ({ update }) => {
-  const { memberName } = useTeamMemberName(update.user_id);
+  const { data: userProfile, isLoading } = useUserProfile(update.user_id);
   
   const formatDate = (dateString: string) => {
     try {
@@ -135,7 +135,7 @@ const UpdateItem: React.FC<UpdateItemProps> = ({ update }) => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="font-normal">
-            {memberName || 'Unknown User'}
+            {isLoading ? 'Loading...' : (userProfile?.full_name || 'Unknown User')}
           </Badge>
           <span className="text-xs text-muted-foreground">
             {formatDate(update.created_at)}
