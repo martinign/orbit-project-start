@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ interface ProjectDetails {
   project_number?: string | null;
   Sponsor?: string | null;
   protocol_number?: string | null;
-  protocol_title?: string | null;
 }
 
 interface Invitation {
@@ -50,14 +48,13 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           project_id,
           created_at,
           inviter_id,
-          profiles:profiles!inviter_id(
+          profiles!project_invitations_inviter_id_fkey(
             full_name
           ),
           projects(
             project_number,
             Sponsor,
-            protocol_number,
-            protocol_title
+            protocol_number
           )
         `)
         .eq("invitee_id", user.user.id)
