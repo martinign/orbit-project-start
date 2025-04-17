@@ -1,42 +1,14 @@
+
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus, Plus } from 'lucide-react';
-import { format } from 'date-fns';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
+
+import TaskColumn from './TaskColumn';
 import TaskDialog from './TaskDialog';
+import DeleteTaskDialog from './DeleteTaskDialog';
 
 interface Task {
   id: string;
@@ -100,15 +72,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     return tasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
     );
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return null;
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch {
-      return null;
-    }
   };
 
   const handleEditTask = (task: Task) => {
@@ -213,170 +176,22 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch(priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-200 text-red-800';
-      case 'medium':
-        return 'bg-orange-200 text-orange-800';
-      case 'low':
-        return 'bg-green-200 text-green-800';
-      default:
-        return 'bg-gray-200 text-gray-800';
-    }
-  };
-
   return (
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {columnsConfig.map((column) => (
-              <div key={column.id} className="flex flex-col h-full group">
-                <div className={`p-3 rounded-t-md ${column.color} border-b-2 relative`}>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">{column.title}</h3>
-                      <Badge className={column.badgeColor}>
-                        {getTasksForColumn(column.status).length}
-                      </Badge>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2 top-2"
-                      onClick={() => handleCreateTask(column.status)}
-                      title={`Add task to ${column.title}`}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-                
-                <Droppable droppableId={column.id}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="bg-gray-50 rounded-b-md p-2 flex-grow min-h-[200px]"
-                    >
-                      {getTasksForColumn(column.status).map((task, index) => (
-                        <Draggable key={task.id} draggableId={task.id} index={index}>
-                          {(provided) => (
-                            <HoverCard>
-                              <HoverCardTrigger asChild>
-                                <Card
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="mb-2 shadow-sm cursor-pointer"
-                                >
-                                  <CardContent className="p-3">
-                                    <div className="flex justify-between items-start">
-                                      <h4 className="font-medium truncate">{task.title}</h4>
-                                      <div className="flex flex-col gap-1">
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-[160px]">
-                                            <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                                              <Edit className="h-4 w-4 mr-2" />
-                                              Edit
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem 
-                                              onClick={() => handleDeleteConfirm(task)}
-                                              className="text-red-600"
-                                            >
-                                              <Trash2 className="h-4 w-4 mr-2" />
-                                              Delete
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                        
-                                        <div className="flex items-center gap-1">
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 -mr-2"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleTaskUpdates(task);
-                                                }}
-                                              >
-                                                <FilePen className="h-4 w-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Updates</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                          
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                className="h-8 w-8 -mr-2"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleAddSubtask(task);
-                                                }}
-                                              >
-                                                <FilePlus className="h-4 w-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Add Subtask</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              </HoverCardTrigger>
-                              <HoverCardContent className="w-80">
-                                <div className="space-y-2">
-                                  <h4 className="font-semibold">{task.title}</h4>
-                                  
-                                  {task.description && (
-                                    <div>
-                                      <h5 className="text-xs font-medium text-gray-500">Description</h5>
-                                      <p className="text-sm">{task.description}</p>
-                                    </div>
-                                  )}
-                                  
-                                  <div className="flex flex-wrap gap-2 pt-1">
-                                    {task.priority && (
-                                      <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-                                        {task.priority}
-                                      </span>
-                                    )}
-                                    
-                                    {task.due_date && formatDate(task.due_date) && (
-                                      <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-                                        <Calendar className="h-3 w-3 mr-1" />
-                                        {formatDate(task.due_date)}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </HoverCardContent>
-                            </HoverCard>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </div>
+              <TaskColumn
+                key={column.id}
+                column={column}
+                tasks={getTasksForColumn(column.status)}
+                handleEditTask={handleEditTask}
+                handleDeleteConfirm={handleDeleteConfirm}
+                handleTaskUpdates={handleTaskUpdates}
+                handleAddSubtask={handleAddSubtask}
+                handleCreateTask={handleCreateTask}
+              />
             ))}
           </div>
         </DragDropContext>
@@ -406,23 +221,14 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         }}
       />
 
-      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the task
-              "{selectedTask?.title}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteTask} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {selectedTask && (
+        <DeleteTaskDialog
+          open={isDeleteConfirmOpen}
+          onOpenChange={setIsDeleteConfirmOpen}
+          taskTitle={selectedTask.title}
+          onDelete={deleteTask}
+        />
+      )}
     </div>
   );
 };
