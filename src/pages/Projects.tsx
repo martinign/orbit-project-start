@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { PlusCircle, LayoutGrid, LayoutList, Edit, Trash2, Search } from "lucide-react";
@@ -48,11 +47,6 @@ const Projects = () => {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
-
-  // If we have an ID in the URL, show the project details view
-  if (id) {
-    return <ProjectDetailsView />;
-  }
 
   // Fetch projects from Supabase
   const { data: projects, isLoading, refetch } = useQuery({
@@ -141,6 +135,11 @@ const Projects = () => {
   const handleProjectClick = (project: any) => {
     navigate(`/projects/${project.id}`);
   };
+
+  // If we have an ID in the URL, show the project details view
+  if (id) {
+    return <ProjectDetailsView />;
+  }
 
   return (
     <div className="w-full">
