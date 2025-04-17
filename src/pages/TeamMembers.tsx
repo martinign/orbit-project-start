@@ -53,7 +53,7 @@ const TeamMembers = () => {
             </Button>
           </div>
 
-          <Button onClick={() => setIsCreateTeamMemberOpen(true)} className="flex items-center gap-2 text-white bg-blue-600 hover:bg-blue-500">
+          <Button onClick={() => setIsCreateTeamMemberOpen(true)} className="flex items-center gap-2 text-white bg-blue-500 hover:bg-blue-400">
             <Plus className="h-4 w-4" />
             Add Team Member
           </Button>
