@@ -40,6 +40,27 @@ interface TeamMembersListProps {
   viewMode: "table" | "card";
 }
 
+// Define a proper type for team members from Supabase
+interface TeamMember {
+  id: string;
+  full_name: string;
+  role: string | null;
+  location: string | null;
+  project_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  // Optional fields that might not exist in the database yet
+  email?: string | null;
+  phone?: string | null;
+  organization?: string | null;
+  projects?: {
+    id: string;
+    project_number: string;
+    Sponsor: string;
+  } | null;
+}
+
 const TeamMembersList: React.FC<TeamMembersListProps> = ({ 
   projectId, 
   searchQuery, 
@@ -47,7 +68,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -78,16 +99,16 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       
       if (error) throw error;
       
-      return data || [];
+      return data as TeamMember[];
     },
   });
 
-  const handleEdit = (member: any) => {
+  const handleEdit = (member: TeamMember) => {
     setSelectedMember(member);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (member: any) => {
+  const handleDelete = (member: TeamMember) => {
     setSelectedMember(member);
     setIsDeleteDialogOpen(true);
   };
@@ -204,6 +225,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
               </CardHeader>
               <CardContent className="pb-2">
                 <div className="space-y-2 text-sm">
+                  {/* Only render email if it exists */}
                   {member.email && (
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
@@ -211,6 +233,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
+                  {/* Only render phone if it exists */}
                   {member.phone && (
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground" />
@@ -218,6 +241,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
+                  {/* Only render organization if it exists */}
                   {member.organization && (
                     <p className="flex items-center gap-2">
                       <Building className="h-4 w-4 text-muted-foreground" />
