@@ -1,3 +1,4 @@
+
 import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -99,12 +100,16 @@ export function AppSidebar() {
     };
   }, [queryClient, refetchRecentProjects]);
 
-  const handleEditProject = (project: any) => {
+  const handleEditProject = (e: React.MouseEvent, project: any) => {
+    e.preventDefault();
+    e.stopPropagation();
     setSelectedProject(project);
     setIsProjectDialogOpen(true);
   };
 
-  const handleDeleteProject = (project: any) => {
+  const handleDeleteProject = (e: React.MouseEvent, project: any) => {
+    e.preventDefault();
+    e.stopPropagation();
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
   };
@@ -257,7 +262,16 @@ export function AppSidebar() {
               {recentProjects && recentProjects.length > 0 ? (
                 recentProjects.map((project) => (
                   <SidebarMenuItem key={project.id}>
-                    <Link to={`/projects/${project.id}`}>
+                    <Link 
+                      to={`/projects/${project.id}`}
+                      onClick={(e) => {
+                        // Only navigate if not clicking on dropdown or actions
+                        if ((e.target as HTMLElement).closest('[data-dropdown]') || 
+                            (e.target as HTMLElement).closest('[data-action]')) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
                       <SidebarMenuButton
                         tooltip={`${project.project_number} - ${project.Sponsor}`}
                         className="hover:bg-blue-500/10 transition-colors duration-200"
@@ -270,18 +284,35 @@ export function AppSidebar() {
                     </Link>
                     <SidebarMenuAction showOnHover>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-5 w-5 p-0">
+                        <DropdownMenuTrigger 
+                          asChild 
+                          data-dropdown="true"
+                        >
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-5 w-5 p-0"
+                            data-action="true"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal className="h-3 w-3" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={() => handleEditProject(project)}>
+                        <DropdownMenuContent 
+                          align="end" 
+                          className="w-40"
+                          data-dropdown="true"
+                        >
+                          <DropdownMenuItem 
+                            onClick={(e) => handleEditProject(e, project)}
+                            data-action="true"
+                          >
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-red-600"
-                            onClick={() => handleDeleteProject(project)}
+                            onClick={(e) => handleDeleteProject(e, project)}
+                            data-action="true"
                           >
                             Delete
                           </DropdownMenuItem>

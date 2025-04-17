@@ -39,6 +39,7 @@ export const useTeamMembers = () => {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
   });
 };
 

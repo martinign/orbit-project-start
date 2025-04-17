@@ -25,11 +25,13 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
   onDelete,
 }) => {
   const handleEdit = (e: React.MouseEvent, member: TeamMember) => {
+    e.preventDefault();
     e.stopPropagation();
     onEdit(member);
   };
 
   const handleDelete = (e: React.MouseEvent, member: TeamMember) => {
+    e.preventDefault();
     e.stopPropagation();
     onDelete(member);
   };

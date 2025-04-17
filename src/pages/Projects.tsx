@@ -48,7 +48,6 @@ const Projects = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
 
-  // Fetch projects from Supabase
   const { data: projects, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
@@ -62,7 +61,6 @@ const Projects = () => {
     },
   });
 
-  // Filter projects based on search query
   useEffect(() => {
     if (projects && projects.length > 0) {
       if (!searchQuery.trim()) {
@@ -117,12 +115,14 @@ const Projects = () => {
     }
   };
   
-  const openEditDialog = (project: any) => {
+  const openEditDialog = (project: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsProjectDialogOpen(true);
   };
   
-  const openDeleteDialog = (project: any) => {
+  const openDeleteDialog = (project: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
   };
@@ -136,7 +136,6 @@ const Projects = () => {
     navigate(`/projects/${project.id}`);
   };
 
-  // If we have an ID in the URL, show the project details view
   if (id) {
     return <ProjectDetailsView />;
   }
@@ -229,12 +228,12 @@ const Projects = () => {
                           {project.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end gap-2">
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            onClick={() => openEditDialog(project)}
+                            onClick={(e) => openEditDialog(project, e)}
                             title="Edit project"
                           >
                             <Edit className="h-4 w-4" />
@@ -243,7 +242,7 @@ const Projects = () => {
                             variant="ghost" 
                             size="icon" 
                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => openDeleteDialog(project)}
+                            onClick={(e) => openDeleteDialog(project, e)}
                             title="Delete project"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -257,7 +256,11 @@ const Projects = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                 {filteredProjects.map((project) => (
-                  <div key={project.id} onClick={() => handleProjectClick(project)} className="cursor-pointer">
+                  <div 
+                    key={project.id} 
+                    onClick={() => handleProjectClick(project)} 
+                    className="cursor-pointer"
+                  >
                     <ProjectCard 
                       project={project} 
                       onDelete={(id) => {

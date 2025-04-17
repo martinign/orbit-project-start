@@ -37,8 +37,14 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event from propagating up
     setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event from propagating up
+    onDelete(project.id);
   };
 
   const handleEditSuccess = () => {
@@ -49,25 +55,47 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
     onUpdate();
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // If the click is from the dropdown or its contents, don't do anything
+    if ((e.target as HTMLElement).closest('[data-dropdown-trigger]') || 
+        (e.target as HTMLElement).closest('[data-dropdown-content]')) {
+      return;
+    }
+  };
+
   return (
     <div className="relative">
       <HoverCard>
         <HoverCardTrigger asChild>
-          <Card className="h-[180px] w-full cursor-pointer hover:border-blue-300 transition-all duration-200">
+          <Card 
+            className="h-[180px] w-full cursor-pointer hover:border-blue-300 transition-all duration-200"
+            onClick={handleCardClick}
+          >
             <CardContent className="p-6 flex flex-col h-full justify-between">
               <div className="absolute top-3 right-3">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                  <DropdownMenuTrigger 
+                    className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                    data-dropdown-trigger="true"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <MoreHorizontal className="h-5 w-5 text-gray-500" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="cursor-pointer" onClick={handleEdit}>
+                  <DropdownMenuContent 
+                    align="end"
+                    data-dropdown-content="true"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <DropdownMenuItem 
+                      className="cursor-pointer" 
+                      onClick={handleEdit}
+                    >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="cursor-pointer text-red-600 focus:text-red-600" 
-                      onClick={() => onDelete(project.id)}
+                      onClick={handleDelete}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
