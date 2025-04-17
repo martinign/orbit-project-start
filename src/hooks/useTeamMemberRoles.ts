@@ -2,6 +2,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface RoleOption {
+  value: string;
+  label: string;
+}
+
 export const useTeamMemberRoles = () => {
   return useQuery({
     queryKey: ["team_member_roles"],

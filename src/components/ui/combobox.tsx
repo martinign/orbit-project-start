@@ -29,6 +29,7 @@ interface ComboboxProps {
   emptyMessage?: string
   className?: string
   allowCustomValue?: boolean
+  isLoading?: boolean
 }
 
 export function Combobox({
@@ -39,6 +40,7 @@ export function Combobox({
   emptyMessage = "No options found.",
   className,
   allowCustomValue = false,
+  isLoading = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || "")
@@ -88,8 +90,13 @@ export function Combobox({
           role="combobox"
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
+          disabled={isLoading}
         >
-          <span className="truncate">{inputValue || placeholder}</span>
+          {isLoading ? (
+            <span className="text-muted-foreground">Loading options...</span>
+          ) : (
+            <span className="truncate">{inputValue || placeholder}</span>
+          )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -103,26 +110,34 @@ export function Combobox({
             className="h-9"
           />
           <CommandEmpty>
-            {allowCustomValue 
-              ? "No matching option. Press enter to use this value." 
-              : emptyMessage}
+            {isLoading 
+              ? "Loading options..."
+              : allowCustomValue 
+                ? "No matching option. Press enter to use this value." 
+                : emptyMessage}
           </CommandEmpty>
           <CommandGroup>
-            {safeOptions.map((option) => (
-              <CommandItem
-                key={option.value}
-                value={option.value}
-                onSelect={handleSelect}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === option.value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {option.label}
+            {isLoading ? (
+              <CommandItem disabled value="loading">
+                Loading options...
               </CommandItem>
-            ))}
+            ) : (
+              safeOptions.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.value}
+                  onSelect={handleSelect}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === option.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option.label}
+                </CommandItem>
+              ))
+            )}
           </CommandGroup>
         </Command>
       </PopoverContent>

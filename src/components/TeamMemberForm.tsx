@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserCog } from "lucide-react";
 
 interface TeamMemberFormProps {
   projectId?: string;
@@ -221,8 +222,13 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
             placeholder="Select or enter a role"
             emptyMessage="No roles found"
             allowCustomValue={true}
+            isLoading={isLoadingRoles}
           />
         </div>
+        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+          <UserCog className="h-3 w-3" />
+          Select from existing roles or type to add a custom role
+        </p>
       </div>
       
       <div>
