@@ -77,6 +77,7 @@ const Contacts = () => {
               size="icon"
               onClick={() => setViewMode("table")}
               title="Table view"
+              className={viewMode === "table" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
             >
               <LayoutList className="h-4 w-4" />
             </Button>
@@ -85,6 +86,7 @@ const Contacts = () => {
               size="icon"
               onClick={() => setViewMode("card")}
               title="Card view"
+              className={viewMode === "card" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
@@ -92,7 +94,7 @@ const Contacts = () => {
 
           <Button 
             onClick={() => setIsCreateContactOpen(true)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
           >
             <Plus className="h-4 w-4" />
             Create Contact
@@ -140,6 +142,7 @@ const Contacts = () => {
                 variant="outline" 
                 size="sm"
                 onClick={() => setSelectedProjectId(null)}
+                className="border-blue-500 text-blue-500 hover:bg-blue-50"
               >
                 Clear Filter
               </Button>
@@ -179,3 +182,4 @@ const Contacts = () => {
 };
 
 export default Contacts;
+
