@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -66,13 +66,14 @@ const ContactsList: React.FC<ContactsListProps> = ({
   viewMode = "table" 
 }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [isEditContactOpen, setIsEditContactOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   // Fetch contacts from Supabase
-  const { data: contacts, isLoading, refetch } = useQuery({
+  const { data: contacts, isLoading } = useQuery({
     queryKey: ["project_contacts", projectId],
     queryFn: async () => {
       let query = supabase
@@ -146,11 +147,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
         return;
       }
 
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
+
       toast({
         title: "Success",
         description: "Contact deleted successfully.",
       });
-      refetch();
       setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting contact:", error);
@@ -319,7 +322,8 @@ const ContactsList: React.FC<ContactsListProps> = ({
             contact={selectedContact}
             onSuccess={() => {
               setIsEditContactOpen(false);
-              refetch();
+              // Invalidate the query to refresh the data
+              queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
               toast({
                 title: "Success",
                 description: "Contact updated successfully.",
@@ -349,7 +353,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </Dialog>
     </div>
   );
 };

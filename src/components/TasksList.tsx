@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import TaskTemplateList from './TaskTemplateList';
@@ -31,11 +32,12 @@ interface TasksListProps {
 
 const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: templates, isLoading, refetch } = useQuery({
+  const { data: templates, isLoading } = useQuery({
     queryKey: ["task_templates", projectId],
     queryFn: async () => {
       let query = supabase
@@ -82,11 +84,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
         return;
       }
 
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["task_templates"] });
+
       toast({
         title: "Success",
         description: "Template deleted successfully.",
       });
-      refetch();
       setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting template:", error);
@@ -118,7 +122,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
         open={isEditDialogOpen} 
         onClose={() => setIsEditDialogOpen(false)}
         onSuccess={() => {
-          refetch();
+          queryClient.invalidateQueries({ queryKey: ["task_templates"] });
           setIsEditDialogOpen(false);
         }}
         template={selectedTemplate}

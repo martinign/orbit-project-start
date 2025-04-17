@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   LayoutGrid, 
@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const TeamMembers = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -172,6 +173,8 @@ const TeamMembers = () => {
               projectId={selectedProjectId || undefined}
               onSuccess={() => {
                 setIsCreateTeamMemberOpen(false);
+                // Invalidate the query to refresh the data
+                queryClient.invalidateQueries({ queryKey: ["team_members"] });
                 toast({
                   title: "Team Member Added",
                   description: "The team member has been successfully added to the project.",

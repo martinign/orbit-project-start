@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Edit, Trash2, Building, MapPin, UserCog } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -45,11 +45,12 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   viewMode 
 }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: teamMembers, isLoading, refetch } = useQuery({
+  const { data: teamMembers, isLoading } = useQuery({
     queryKey: ["team_members", projectId, searchQuery],
     queryFn: async () => {
       let query = supabase
@@ -103,12 +104,14 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         throw error;
       }
 
+      // Invalidate the query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["team_members"] });
+
       toast({
         title: "Success",
         description: "Team member deleted successfully",
       });
       
-      refetch();
       setIsDeleteDialogOpen(false);
     } catch (error: any) {
       console.error("Error deleting team member:", error);
@@ -251,7 +254,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
               teamMember={selectedMember}
               onSuccess={() => {
                 setIsEditDialogOpen(false);
-                refetch();
+                // Invalidate the query to refresh the data
+                queryClient.invalidateQueries({ queryKey: ["team_members"] });
               }}
             />
           )}
