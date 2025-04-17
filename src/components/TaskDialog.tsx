@@ -76,6 +76,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [selectedProject, setSelectedProject] = useState<string | undefined>(projectId);
   const [projects, setProjects] = useState<any[]>([]);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [didInitialFormSet, setDidInitialFormSet] = useState(false);
 
   // Fetch team members for assignedTo field
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
@@ -92,57 +93,68 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   });
 
   useEffect(() => {
-    // Fetch projects for the dropdown if no projectId is provided
-    if (!projectId) {
-      const fetchProjects = async () => {
-        const { data } = await supabase
-          .from('projects')
-          .select('id, project_number, Sponsor')
-          .order('project_number', { ascending: true });
+    // Only reset form when dialog opens
+    if (open && !didInitialFormSet) {
+      // Fetch projects for the dropdown if no projectId is provided
+      if (!projectId) {
+        const fetchProjects = async () => {
+          const { data } = await supabase
+            .from('projects')
+            .select('id, project_number, Sponsor')
+            .order('project_number', { ascending: true });
+          
+          if (data) setProjects(data);
+        };
         
-        if (data) setProjects(data);
-      };
-      
-      fetchProjects();
+        fetchProjects();
+      }
+
+      // Set initial form values
+      if (mode === 'edit' && task) {
+        setTitle(task.title || '');
+        setDescription(task.description || '');
+        setStatus(task.status || 'not started');
+        setPriority(task.priority || 'medium');
+        setNotes(task.notes || '');
+        
+        // Handle the assignedTo field correctly when editing
+        if (task.assigned_to) {
+          setAssignedTo(task.assigned_to);
+        } else {
+          setAssignedTo('none');
+        }
+        
+        setSelectedProject(task.project_id || projectId);
+        
+        if (task.due_date) {
+          setDueDate(new Date(task.due_date));
+        }
+      } else {
+        // For new task creation, initialize default values
+        setTitle('');
+        setDescription('');
+        // Only set status if provided in task prop, otherwise use default
+        setStatus(task?.status || 'not started');
+        setPriority('medium');
+        setNotes('');
+        setAssignedTo('none');
+        setDueDate(undefined);
+        setSelectedProject(projectId);
+      }
+
+      setDidInitialFormSet(true);
     }
 
-    // Set form values when editing a task
-    if (mode === 'edit' && task) {
-      setTitle(task.title || '');
-      setDescription(task.description || '');
-      setStatus(task.status || 'not started');
-      setPriority(task.priority || 'medium');
-      setNotes(task.notes || '');
-      
-      // Handle the assignedTo field correctly when editing
-      if (task.assigned_to) {
-        setAssignedTo(task.assigned_to);
-      } else {
-        setAssignedTo('none');
-      }
-      
-      setSelectedProject(task.project_id || projectId);
-      
-      if (task.due_date) {
-        setDueDate(new Date(task.due_date));
-      }
-    } else {
-      // Reset form for new task creation
-      setTitle('');
-      setDescription('');
-      setStatus('not started');
-      setPriority('medium');
-      setNotes('');
-      setAssignedTo('none');
-      setDueDate(undefined);
-      setSelectedProject(projectId);
+    // Reset this flag when dialog closes
+    if (!open) {
+      setDidInitialFormSet(false);
     }
-  }, [mode, task, projectId, open]);
+  }, [mode, task, projectId, open, didInitialFormSet]);
 
   const handleTemplateSelect = (template: TaskTemplate) => {
     console.log("Applying template to form:", template);
     
-    // Apply template values to form
+    // Apply template values to form - preserve task status if it was set
     setTitle(template.title || '');
     if (template.description) {
       setDescription(template.description);
