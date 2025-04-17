@@ -1,7 +1,5 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,13 +16,23 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 
+interface TaskTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+  user_id: string;
+  project_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface TasksListProps {
   projectId?: string;
 }
 
 const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
   const { toast } = useToast();
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -44,16 +52,16 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as TaskTemplate[];
     },
   });
 
-  const handleEdit = (template: any) => {
+  const handleEdit = (template: TaskTemplate) => {
     setSelectedTemplate(template);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (template: any) => {
+  const handleDelete = (template: TaskTemplate) => {
     setSelectedTemplate(template);
     setIsDeleteDialogOpen(true);
   };

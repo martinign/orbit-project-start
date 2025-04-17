@@ -4,10 +4,20 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+interface TaskTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+  user_id: string;
+  project_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface TaskTemplateListProps {
-  templates: any[];
-  onEdit: (template: any) => void;
-  onDelete: (template: any) => void;
+  templates: TaskTemplate[];
+  onEdit: (template: TaskTemplate) => void;
+  onDelete: (template: TaskTemplate) => void;
 }
 
 const TaskTemplateList: React.FC<TaskTemplateListProps> = ({ 

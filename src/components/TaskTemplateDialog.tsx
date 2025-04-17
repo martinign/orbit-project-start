@@ -24,13 +24,15 @@ interface TaskTemplateDialogProps {
   onClose: () => void;
   onSuccess: () => void;
   template?: any;
+  projectId?: string; // Add the projectId prop
 }
 
 const TaskTemplateDialog: React.FC<TaskTemplateDialogProps> = ({ 
   open, 
   onClose, 
   onSuccess, 
-  template 
+  template,
+  projectId 
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -68,7 +70,8 @@ const TaskTemplateDialog: React.FC<TaskTemplateDialogProps> = ({
           .insert({
             title: data.title,
             description: data.description,
-            user_id: user?.id
+            user_id: user?.id,
+            project_id: projectId // Use the projectId if provided
           });
 
         if (error) throw error;
