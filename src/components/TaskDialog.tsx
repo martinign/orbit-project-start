@@ -33,6 +33,11 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 
+interface TeamMember {
+  id: string;
+  full_name: string;
+}
+
 interface TaskDialogProps {
   open: boolean;
   onClose: () => void;
@@ -59,7 +64,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [assignedTo, setAssignedTo] = useState('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | undefined>(projectId);
   const [projects, setProjects] = useState<any[]>([]);
@@ -100,7 +105,14 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setStatus(task.status || 'not started');
       setPriority(task.priority || 'medium');
       setNotes(task.notes || '');
-      setAssignedTo(task.assigned_to || '');
+      
+      // Handle the assignedTo field correctly when editing
+      if (task.assigned_to) {
+        setAssignedTo(task.assigned_to);
+      } else {
+        setAssignedTo('none');
+      }
+      
       setSelectedProject(task.project_id || projectId);
       
       if (task.due_date) {
@@ -113,7 +125,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setStatus('not started');
       setPriority('medium');
       setNotes('');
-      setAssignedTo('');
+      setAssignedTo('none');
       setDueDate(undefined);
       setSelectedProject(projectId);
     }
@@ -151,9 +163,11 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         project_id: selectedProject,
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
-        assigned_to: assignedTo || null,
+        assigned_to: assignedTo === 'none' ? null : assignedTo,
         user_id: user.id,
       };
+      
+      console.log("Saving task with data:", taskData);
       
       if (mode === 'edit' && task) {
         // Update existing task
@@ -302,7 +316,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
               <SelectContent>
                 <SelectItem value="none">Not assigned</SelectItem>
                 {teamMembers?.map((member) => (
-                  <SelectItem key={member.id} value={member.full_name}>
+                  <SelectItem key={member.id} value={member.id}>
                     {member.full_name}
                   </SelectItem>
                 ))}

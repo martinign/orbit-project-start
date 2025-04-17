@@ -84,7 +84,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   const [status, setStatus] = useState('not started');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [assignedTo, setAssignedTo] = useState('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch team members to use as options for assignedTo field
@@ -109,7 +109,13 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         setDescription(subtask.description || '');
         setStatus(subtask.status || 'not started');
         setNotes(subtask.notes || '');
-        setAssignedTo(subtask.assigned_to || '');
+        
+        // Handle the assignedTo field correctly when editing
+        if (subtask.assigned_to) {
+          setAssignedTo(subtask.assigned_to);
+        } else {
+          setAssignedTo('none');
+        }
         
         if (subtask.due_date) {
           setDueDate(new Date(subtask.due_date));
@@ -123,7 +129,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         setStatus('not started');
         setDueDate(undefined);
         setNotes('');
-        setAssignedTo('');
+        setAssignedTo('none');
       }
     }
   }, [open, mode, subtask, parentTask]);
@@ -160,8 +166,10 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
         user_id: user.id,
-        assigned_to: assignedTo || null
+        assigned_to: assignedTo === 'none' ? null : assignedTo
       };
+      
+      console.log("Saving subtask with data:", subtaskData);
       
       if (mode === 'edit' && subtask?.id) {
         // Update existing subtask
@@ -269,7 +277,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
               <SelectContent>
                 <SelectItem value="none">Not assigned</SelectItem>
                 {teamMembers?.map((member) => (
-                  <SelectItem key={member.id} value={member.full_name}>
+                  <SelectItem key={member.id} value={member.id}>
                     {member.full_name}
                   </SelectItem>
                 ))}
