@@ -1,7 +1,9 @@
 
-import { Folder, LogOut } from "lucide-react";
+import { Folder, LogOut, List, Plus, BookTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -14,9 +16,21 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import TaskDialog from "@/components/TaskDialog";
+import TasksList from "@/components/TasksList";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
 
   return (
     <Sidebar>
@@ -41,6 +55,45 @@ export function AppSidebar() {
                   <span>All Projects</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link to="/task-templates">
+                  <SidebarMenuButton
+                    tooltip="Task Templates"
+                    className="hover:bg-blue-500/10 transition-colors duration-200"
+                  >
+                    <BookTemplate className="text-blue-500" />
+                    <span>Task Templates</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>TASK MANAGEMENT</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Create Task"
+                  className="hover:bg-green-500/10 transition-colors duration-200"
+                  onClick={() => setIsCreateTaskOpen(true)}
+                >
+                  <Plus className="text-green-500" />
+                  <span>Create Task</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="View Tasks"
+                  className="hover:bg-blue-500/10 transition-colors duration-200"
+                  onClick={() => setIsViewTasksOpen(true)}
+                >
+                  <List className="text-blue-500" />
+                  <span>View Tasks</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -55,6 +108,30 @@ export function AppSidebar() {
           Sign Out
         </Button>
       </SidebarFooter>
+
+      {/* Create Task Dialog */}
+      <TaskDialog 
+        open={isCreateTaskOpen} 
+        onClose={() => setIsCreateTaskOpen(false)} 
+      />
+
+      {/* View Tasks Dialog */}
+      <Dialog open={isViewTasksOpen} onOpenChange={setIsViewTasksOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tasks</DialogTitle>
+            <DialogDescription>
+              View and manage your tasks
+            </DialogDescription>
+          </DialogHeader>
+          <TasksList />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewTasksOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }
