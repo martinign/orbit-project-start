@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import ProjectSelector from "@/components/team-members/ProjectSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserRound, Mail, Clock } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface InviteMembersDialogProps {
@@ -37,7 +36,6 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const fetchProfiles = async () => {
     setIsLoading(true);
     try {
-      // Remove the order by to ensure we get all profiles
       const { data, error } = await supabase
         .from("profiles")
         .select("*");
@@ -86,7 +84,6 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       return;
     }
 
-    // For demonstration purposes - in a real app, you'd implement the actual invitation logic
     toast({
         title: "Success",
         description: `Invitation sent to ${selectedProfileIds.length} users for project`,
@@ -95,7 +92,6 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
     onClose();
   };
 
-  // Generate initials from full name or a default value
   const getInitials = (name: string | null): string => {
     if (!name) return "?";
     return name
@@ -149,9 +145,6 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">
                           {profile.full_name || 'Unnamed User'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          User ID: {profile.id.substring(0, 8)}...
                         </span>
                       </div>
                     </label>
