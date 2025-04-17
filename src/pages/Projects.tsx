@@ -28,13 +28,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import ProjectDialog from "@/components/ProjectDialog";
 
 const Projects = () => {
   const { user } = useAuth();
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
 
   // Fetch projects from Supabase
-  const { data: projects, isLoading } = useQuery({
+  const { data: projects, isLoading, refetch } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -71,7 +73,10 @@ const Projects = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+          <Button 
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            onClick={() => setIsProjectDialogOpen(true)}
+          >
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Project
           </Button>
@@ -110,6 +115,10 @@ const Projects = () => {
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         project.status === 'active' 
                           ? 'bg-green-100 text-green-800' 
+                          : project.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : project.status === 'completed'
+                          ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
                         {project.status}
@@ -126,6 +135,12 @@ const Projects = () => {
           )}
         </CardContent>
       </Card>
+
+      <ProjectDialog 
+        open={isProjectDialogOpen} 
+        onClose={() => setIsProjectDialogOpen(false)}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };
