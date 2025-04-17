@@ -29,13 +29,20 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, BookTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import TaskTemplatesListDialog from './TaskTemplatesListDialog';
 
 interface TeamMember {
   id: string;
   full_name: string;
+}
+
+interface TaskTemplate {
+  id: string;
+  title: string;
+  description: string | null;
 }
 
 interface TaskDialogProps {
@@ -68,6 +75,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | undefined>(projectId);
   const [projects, setProjects] = useState<any[]>([]);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
   // Fetch team members for assignedTo field
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
@@ -130,6 +138,18 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setSelectedProject(projectId);
     }
   }, [mode, task, projectId]);
+
+  const handleTemplateSelect = (template: TaskTemplate) => {
+    setTitle(template.title);
+    if (template.description) {
+      setDescription(template.description);
+    }
+    
+    toast({
+      title: "Template Applied",
+      description: `Applied template: ${template.title}`,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,7 +252,21 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <div className="flex justify-between items-center">
+              <Label htmlFor="title">Title</Label>
+              {mode === 'create' && (
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsTemplateDialogOpen(true)}
+                  className="flex items-center gap-1"
+                >
+                  <BookTemplate className="h-4 w-4" />
+                  Use Template
+                </Button>
+              )}
+            </div>
             <Input
               id="title"
               placeholder="Task title"
@@ -371,6 +405,14 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Template Selection Dialog */}
+      <TaskTemplatesListDialog
+        open={isTemplateDialogOpen}
+        onClose={() => setIsTemplateDialogOpen(false)}
+        selectionMode={true}
+        onTemplateSelect={handleTemplateSelect}
+      />
     </Dialog>
   );
 };

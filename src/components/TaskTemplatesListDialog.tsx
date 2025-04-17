@@ -28,14 +28,24 @@ import {
 import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 import TaskTemplateList from "@/components/TaskTemplateList";
 
+interface TaskTemplate {
+  id: string;
+  title: string;
+  description: string | null;
+}
+
 interface TaskTemplatesListDialogProps {
   open: boolean;
   onClose: () => void;
+  selectionMode?: boolean;
+  onTemplateSelect?: (template: TaskTemplate) => void;
 }
 
 const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({ 
   open, 
-  onClose 
+  onClose,
+  selectionMode = false,
+  onTemplateSelect
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -90,6 +100,13 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
     }
   };
 
+  const handleTemplateSelection = (template: TaskTemplate) => {
+    if (selectionMode && onTemplateSelect) {
+      onTemplateSelect(template);
+      onClose();
+    }
+  };
+
   const filteredTemplates = templates?.filter(template => 
     template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (template.description || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -99,9 +116,13 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Task Templates</DialogTitle>
+          <DialogTitle>
+            {selectionMode ? "Select Task Template" : "Task Templates"}
+          </DialogTitle>
           <DialogDescription>
-            View and manage your task templates
+            {selectionMode 
+              ? "Choose a template to use for your task" 
+              : "View and manage your task templates"}
           </DialogDescription>
         </DialogHeader>
         
@@ -118,31 +139,50 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
               <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
             </div>
             
-            <Button 
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={() => {
-                setSelectedTemplate(null);
-                setIsEditDialogOpen(true);
-              }}
-            >
-              Create Template
-            </Button>
+            {!selectionMode && (
+              <Button 
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  setIsEditDialogOpen(true);
+                }}
+              >
+                Create Template
+              </Button>
+            )}
           </div>
           
           {isLoading ? (
             <div className="flex justify-center p-4">Loading templates...</div>
           ) : filteredTemplates && filteredTemplates.length > 0 ? (
-            <TaskTemplateList 
-              templates={filteredTemplates}
-              onEdit={(template) => {
-                setSelectedTemplate(template);
-                setIsEditDialogOpen(true);
-              }}
-              onDelete={(template) => {
-                setSelectedTemplate(template);
-                setIsDeleteDialogOpen(true);
-              }}
-            />
+            selectionMode ? (
+              <div className="space-y-4">
+                {filteredTemplates.map((template) => (
+                  <div 
+                    key={template.id}
+                    className="border p-4 rounded-md hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleTemplateSelection(template)}
+                  >
+                    <h3 className="font-medium">{template.title}</h3>
+                    {template.description && (
+                      <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <TaskTemplateList 
+                templates={filteredTemplates}
+                onEdit={(template) => {
+                  setSelectedTemplate(template);
+                  setIsEditDialogOpen(true);
+                }}
+                onDelete={(template) => {
+                  setSelectedTemplate(template);
+                  setIsDeleteDialogOpen(true);
+                }}
+              />
+            )
           ) : (
             <div className="text-center p-4">
               <p className="text-muted-foreground">
@@ -154,25 +194,27 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Close
+            {selectionMode ? "Cancel" : "Close"}
           </Button>
         </DialogFooter>
       </DialogContent>
       
       {/* Edit Template Dialog */}
-      <TaskTemplateDialog 
-        open={isEditDialogOpen} 
-        onClose={() => {
-          setIsEditDialogOpen(false);
-          setSelectedTemplate(null);
-        }}
-        onSuccess={() => {
-          refetch();
-          setIsEditDialogOpen(false);
-          setSelectedTemplate(null);
-        }}
-        template={selectedTemplate}
-      />
+      {!selectionMode && (
+        <TaskTemplateDialog 
+          open={isEditDialogOpen} 
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setSelectedTemplate(null);
+          }}
+          onSuccess={() => {
+            refetch();
+            setIsEditDialogOpen(false);
+            setSelectedTemplate(null);
+          }}
+          template={selectedTemplate}
+        />
+      )}
       
       {/* Delete Template Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
