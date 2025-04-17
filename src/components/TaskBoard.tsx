@@ -9,6 +9,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import TaskColumn from './TaskColumn';
 import TaskDialog from './TaskDialog';
 import DeleteTaskDialog from './DeleteTaskDialog';
+import SubtaskDialog from './SubtaskDialog';
 
 interface Task {
   id: string;
@@ -96,10 +97,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   const handleAddSubtask = (task: Task) => {
     setSelectedTask(task);
     setIsSubtaskDialogOpen(true);
-    toast({
-      title: "Add Subtask Feature",
-      description: "Subtask functionality will be implemented soon.",
-    });
   };
 
   const handleCreateTask = (status: string) => {
@@ -111,6 +108,15 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     if (!selectedTask) return;
 
     try {
+      // First, delete all subtasks associated with this task
+      const { error: subtasksError } = await supabase
+        .from('project_subtasks')
+        .delete()
+        .eq('parent_task_id', selectedTask.id);
+
+      if (subtasksError) throw subtasksError;
+
+      // Then delete the task itself
       const { error } = await supabase
         .from('project_tasks')
         .delete()
@@ -121,7 +127,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: 'Task Deleted',
-        description: 'The task has been successfully deleted.',
+        description: 'The task and its subtasks have been successfully deleted.',
       });
       onRefetch();
     } catch (error) {
@@ -222,12 +228,24 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
       />
 
       {selectedTask && (
-        <DeleteTaskDialog
-          open={isDeleteConfirmOpen}
-          onOpenChange={setIsDeleteConfirmOpen}
-          taskTitle={selectedTask.title}
-          onDelete={deleteTask}
-        />
+        <>
+          <DeleteTaskDialog
+            open={isDeleteConfirmOpen}
+            onOpenChange={setIsDeleteConfirmOpen}
+            taskTitle={selectedTask.title}
+            onDelete={deleteTask}
+          />
+
+          <SubtaskDialog
+            open={isSubtaskDialogOpen}
+            onClose={() => setIsSubtaskDialogOpen(false)}
+            parentTask={selectedTask}
+            onSuccess={() => {
+              onRefetch();
+              setIsSubtaskDialogOpen(false);
+            }}
+          />
+        </>
       )}
     </div>
   );
