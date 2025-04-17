@@ -116,11 +116,16 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           description: "Project updated successfully",
         });
       } else {
-        // Create new project
+        // Create new project - Fix: Ensure all required fields are explicitly included
         const { error } = await supabase
           .from("projects")
           .insert({
-            ...values,
+            project_number: values.project_number,
+            protocol_number: values.protocol_number,
+            protocol_title: values.protocol_title,
+            Sponsor: values.Sponsor,
+            description: values.description,
+            status: values.status,
             user_id: user.id
           });
           
