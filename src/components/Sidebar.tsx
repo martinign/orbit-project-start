@@ -225,7 +225,7 @@ export function AppSidebar() {
               {recentProjects && recentProjects.length > 0 ? (
                 recentProjects.map((project) => (
                   <SidebarMenuItem key={project.id}>
-                    <Link to={`/projects`}>
+                    <Link to={`/projects/${project.id}`}>
                       <SidebarMenuButton
                         tooltip={`${project.project_number} - ${project.Sponsor}`}
                         className="hover:bg-blue-500/10 transition-colors duration-200"

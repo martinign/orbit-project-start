@@ -2,18 +2,24 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/Sidebar";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import Projects from "./Projects";
 import Contacts from "./Contacts";
 import TeamMembers from "./TeamMembers";
+import ProjectDetailsView from "@/components/ProjectDetailsView";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const { id } = useParams<{ id: string }>();
 
   // Determine which component to render based on the current path
   const renderContent = () => {
     const path = location.pathname;
+    
+    if (path.startsWith("/projects/") && id) {
+      return <ProjectDetailsView />;
+    }
     
     if (path === "/contacts") {
       return <Contacts />;
