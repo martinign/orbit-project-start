@@ -31,6 +31,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
+import { useQuery } from "@tanstack/react-query";
 
 interface TaskDialogProps {
   open: boolean;
@@ -58,9 +60,30 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | undefined>(projectId);
   const [projects, setProjects] = useState<any[]>([]);
+
+  // Fetch team members for assignedTo field
+  const { data: teamMembers } = useQuery({
+    queryKey: ['team_members'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_team_members')
+        .select('id, full_name')
+        .order('full_name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Format team members for combobox
+  const teamMemberOptions = teamMembers ? teamMembers.map(member => ({
+    value: member.full_name,
+    label: member.full_name
+  })) : [];
 
   useEffect(() => {
     // Fetch projects for the dropdown if no projectId is provided
@@ -84,6 +107,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setStatus(task.status || 'not started');
       setPriority(task.priority || 'medium');
       setNotes(task.notes || '');
+      setAssignedTo(task.assigned_to || '');
       setSelectedProject(task.project_id || projectId);
       
       if (task.due_date) {
@@ -96,6 +120,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setStatus('not started');
       setPriority('medium');
       setNotes('');
+      setAssignedTo('');
       setDueDate(undefined);
       setSelectedProject(projectId);
     }
@@ -133,6 +158,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         project_id: selectedProject,
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
+        assigned_to: assignedTo || null,
         user_id: user.id,
       };
       
@@ -272,6 +298,18 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assignedTo">Assigned To</Label>
+            <Combobox
+              options={teamMemberOptions}
+              value={assignedTo}
+              onChange={setAssignedTo}
+              placeholder="Select or enter a name"
+              emptyMessage="No team members found"
+              allowCustomValue={true}
+            />
           </div>
 
           <div className="space-y-2">

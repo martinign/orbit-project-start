@@ -31,6 +31,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
+import { useQuery } from "@tanstack/react-query";
 
 interface Task {
   id: string;
@@ -42,10 +44,23 @@ interface Task {
   project_id: string;
 }
 
+interface Subtask {
+  id?: string;
+  title: string;
+  description?: string;
+  status: string;
+  due_date?: string;
+  parent_task_id: string;
+  notes?: string;
+  assigned_to?: string;
+}
+
 interface SubtaskDialogProps {
   open: boolean;
   onClose: () => void;
   parentTask: Task | null;
+  subtask?: Subtask;
+  mode?: 'create' | 'edit';
   onSuccess?: () => void;
 }
 
@@ -53,6 +68,8 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   open, 
   onClose, 
   parentTask, 
+  subtask,
+  mode = 'create',
   onSuccess 
 }) => {
   const { toast } = useToast();
@@ -63,18 +80,55 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   const [status, setStatus] = useState('not started');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch team members to use as options for assignedTo field
+  const { data: teamMembers } = useQuery({
+    queryKey: ['team_members'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_team_members')
+        .select('id, full_name')
+        .order('full_name');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Format team members for combobox
+  const teamMemberOptions = teamMembers ? teamMembers.map(member => ({
+    value: member.full_name,
+    label: member.full_name
+  })) : [];
+
   useEffect(() => {
-    if (open && parentTask) {
-      // Reset form for new subtask creation
-      setTitle('');
-      setDescription('');
-      setStatus('not started');
-      setDueDate(undefined);
-      setNotes('');
+    if (open) {
+      if (mode === 'edit' && subtask) {
+        // Populate form with subtask data for editing
+        setTitle(subtask.title || '');
+        setDescription(subtask.description || '');
+        setStatus(subtask.status || 'not started');
+        setNotes(subtask.notes || '');
+        setAssignedTo(subtask.assigned_to || '');
+        
+        if (subtask.due_date) {
+          setDueDate(new Date(subtask.due_date));
+        } else {
+          setDueDate(undefined);
+        }
+      } else {
+        // Reset form for new subtask creation
+        setTitle('');
+        setDescription('');
+        setStatus('not started');
+        setDueDate(undefined);
+        setNotes('');
+        setAssignedTo('');
+      }
     }
-  }, [open, parentTask]);
+  }, [open, mode, subtask, parentTask]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,19 +162,35 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
         user_id: user.id,
+        assigned_to: assignedTo || null
       };
       
-      // Create new subtask
-      const { error } = await supabase
-        .from('project_subtasks')
-        .insert(subtaskData);
-          
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Subtask created successfully",
-      });
+      if (mode === 'edit' && subtask?.id) {
+        // Update existing subtask
+        const { error } = await supabase
+          .from('project_subtasks')
+          .update(subtaskData)
+          .eq('id', subtask.id);
+            
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Subtask updated successfully",
+        });
+      } else {
+        // Create new subtask
+        const { error } = await supabase
+          .from('project_subtasks')
+          .insert(subtaskData);
+            
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Subtask created successfully",
+        });
+      }
       
       // Reset form and close dialog
       onClose();
@@ -145,9 +215,11 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Subtask</DialogTitle>
+          <DialogTitle>{mode === 'edit' ? 'Edit Subtask' : 'Create Subtask'}</DialogTitle>
           <DialogDescription>
-            Create a subtask for: {parentTask?.title}
+            {mode === 'edit' 
+              ? `Edit subtask for: ${parentTask?.title}`
+              : `Create a subtask for: ${parentTask?.title}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,6 +260,18 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assignedTo">Assigned To</Label>
+            <Combobox
+              options={teamMemberOptions}
+              value={assignedTo}
+              onChange={setAssignedTo}
+              placeholder="Select or enter a name"
+              emptyMessage="No team members found"
+              allowCustomValue={true}
+            />
           </div>
 
           <div className="space-y-2">
@@ -232,7 +316,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Create subtask'}
+              {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Update subtask' : 'Create subtask'}
             </Button>
           </DialogFooter>
         </form>
