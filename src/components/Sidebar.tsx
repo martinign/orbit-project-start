@@ -52,6 +52,7 @@ import ProjectDialog from "@/components/ProjectDialog";
 import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 import TaskTemplatesListDialog from "@/components/TaskTemplatesListDialog";
 import InviteMembersDialog from "@/components/team-members/InviteMembersDialog";
+import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
@@ -62,6 +63,7 @@ export function AppSidebar() {
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
+  const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const pendingInvitationsCount = useInvitationsCount();
 
@@ -238,7 +240,11 @@ export function AppSidebar() {
                   {pendingInvitationsCount > 0 && (
                     <Badge 
                       variant="secondary" 
-                      className="absolute right-2 bg-purple-100 text-purple-600 hover:bg-purple-100"
+                      className="absolute right-2 bg-purple-100 text-purple-600 hover:bg-purple-100 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPendingInvitationsOpen(true);
+                      }}
                     >
                       {pendingInvitationsCount}
                     </Badge>
@@ -409,6 +415,11 @@ export function AppSidebar() {
       <InviteMembersDialog
         open={isInviteMembersDialogOpen}
         onClose={() => setIsInviteMembersDialogOpen(false)}
+      />
+
+      <PendingInvitationsDialog
+        open={isPendingInvitationsOpen}
+        onClose={() => setIsPendingInvitationsOpen(false)}
       />
     </Sidebar>
   );
