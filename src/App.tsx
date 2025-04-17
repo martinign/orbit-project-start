@@ -31,6 +31,7 @@ const App = () => (
               <Route path="/task-templates" element={<TaskTemplates />} />
               <Route path="/projects" element={<Dashboard />} />
               <Route path="/contacts" element={<Dashboard />} />
+              <Route path="/team-members" element={<Dashboard />} />
               {/* Add more protected routes here as needed */}
             </Route>
             

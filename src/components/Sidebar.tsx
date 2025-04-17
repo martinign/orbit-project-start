@@ -1,5 +1,5 @@
 
-import { Folder, LogOut, List, Plus, FileText, Users } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -73,6 +73,17 @@ export function AppSidebar() {
                   >
                     <Users className="text-purple-500" />
                     <span>Contacts</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link to="/team-members">
+                  <SidebarMenuButton
+                    tooltip="Team Members"
+                    className="hover:bg-purple-500/10 transition-colors duration-200"
+                  >
+                    <UserRound className="text-purple-500" />
+                    <span>Team Members</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>

@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/Sidebar";
 import { useLocation } from "react-router-dom";
 import Projects from "./Projects";
 import Contacts from "./Contacts";
+import TeamMembers from "./TeamMembers";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,6 +17,10 @@ const Dashboard = () => {
     
     if (path === "/contacts") {
       return <Contacts />;
+    }
+    
+    if (path === "/team-members") {
+      return <TeamMembers />;
     }
     
     // Default to Projects for /projects and /dashboard routes
