@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -61,14 +60,14 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
           permission_level,
           status,
           created_at,
-          profiles:invitee_id(
+          profiles:profiles!invitee_id(
             full_name,
             email
           ),
-          inviter:inviter_id(
+          inviter:profiles!inviter_id(
             full_name
           ),
-          projects:project_id(
+          projects(
             project_number,
             Sponsor
           )
@@ -115,11 +114,11 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "secondary";  // Use "secondary" for pending
+        return "secondary";
       case "accepted":
-        return "default";    // Use "default" for accepted
+        return "default";
       case "rejected":
-        return "destructive"; // Use "destructive" for rejected
+        return "destructive";
       default:
         return "secondary";
     }
