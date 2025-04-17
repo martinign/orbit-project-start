@@ -112,14 +112,14 @@ const Contacts = () => {
         <CardContent>
           <div className="flex justify-between items-center mb-4">
             <Select 
-              value={selectedProjectId || ""} 
-              onValueChange={(value) => setSelectedProjectId(value || null)}
+              value={selectedProjectId || "all"} 
+              onValueChange={(value) => setSelectedProjectId(value === "all" ? null : value)}
             >
               <SelectTrigger className="w-[250px]">
                 <SelectValue placeholder="Filter by project" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Projects</SelectItem>
+                <SelectItem value="all">All Projects</SelectItem>
                 {isLoadingProjects ? (
                   <SelectItem value="loading" disabled>
                     Loading projects...
