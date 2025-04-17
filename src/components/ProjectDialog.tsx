@@ -1,9 +1,5 @@
 
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,6 +15,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProjectDialogProps {
@@ -100,7 +99,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
 
     try {
       if (isEditing && project) {
-        // Update existing project - Fix: ensure we have all required fields
         const { error } = await supabase
           .from("projects")
           .update({
@@ -121,7 +119,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           description: "Project updated successfully",
         });
       } else {
-        // Create new project - Fix: Ensure all required fields are explicitly included
         const { error } = await supabase
           .from("projects")
           .insert({
@@ -162,15 +159,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            <span>{isEditing ? 'Edit Project' : 'Create New Project'}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose} 
-              className="h-6 w-6 rounded-full absolute right-4 top-4"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            {isEditing ? 'Edit Project' : 'Create New Project'}
           </DialogTitle>
         </DialogHeader>
         
