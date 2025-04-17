@@ -37,6 +37,8 @@ export const useTeamMembers = () => {
       return (data || []) as TeamMember[];
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 };
 

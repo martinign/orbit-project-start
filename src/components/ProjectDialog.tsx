@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProjectDialogProps {
   open: boolean;
@@ -47,6 +48,7 @@ const formSchema = z.object({
 const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!project;
 
@@ -114,6 +116,11 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           
         if (error) throw error;
         
+        // Invalidate related queries to trigger refetching
+        queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+        queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+        
         toast({
           title: "Success",
           description: "Project updated successfully",
@@ -132,6 +139,10 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           });
           
         if (error) throw error;
+        
+        // Invalidate related queries to trigger refetching
+        queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
         
         toast({
           title: "Success",

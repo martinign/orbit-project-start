@@ -60,19 +60,44 @@ export function AppSidebar() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  const { data: recentProjects } = useQuery({
+  const { data: recentProjects, refetch: refetchRecentProjects } = useQuery({
     queryKey: ["recent_projects"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, project_number, protocol_number, protocol_title, Sponsor, description, status")
+        .select("id, project_number, protocol_number, protocol_title, Sponsor, description, status, updated_at")
         .order("updated_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
       return data || [];
     },
+    staleTime: 1 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        () => {
+          refetchRecentProjects();
+          queryClient.invalidateQueries({ queryKey: ["projects"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, refetchRecentProjects]);
 
   const handleEditProject = (project: any) => {
     setSelectedProject(project);
@@ -99,6 +124,7 @@ export function AppSidebar() {
 
       queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["project", selectedProject.id] });
 
       toast({
         title: "Success",
@@ -114,6 +140,12 @@ export function AppSidebar() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleProjectSuccess = () => {
+    refetchRecentProjects();
+    queryClient.invalidateQueries({ queryKey: ["projects"] });
+    setIsProjectDialogOpen(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -297,11 +329,7 @@ export function AppSidebar() {
       <ProjectDialog 
         open={isProjectDialogOpen} 
         onClose={() => setIsProjectDialogOpen(false)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
-          queryClient.invalidateQueries({ queryKey: ["projects"] });
-          setIsProjectDialogOpen(false);
-        }}
+        onSuccess={handleProjectSuccess}
         project={selectedProject}
       />
 

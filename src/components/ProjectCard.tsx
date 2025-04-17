@@ -17,6 +17,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import ProjectDialog from "@/components/ProjectDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProjectCardProps {
   project: {
@@ -34,9 +35,18 @@ interface ProjectCardProps {
 
 const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleEdit = () => {
     setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    // Invalidate all relevant queries when a project is updated
+    queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+    queryClient.invalidateQueries({ queryKey: ["projects"] });
+    queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+    onUpdate();
   };
 
   return (
@@ -103,7 +113,7 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
       <ProjectDialog 
         open={isEditDialogOpen} 
         onClose={() => setIsEditDialogOpen(false)}
-        onSuccess={onUpdate}
+        onSuccess={handleEditSuccess}
         project={project}
       />
     </div>
