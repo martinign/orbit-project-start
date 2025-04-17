@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +26,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import SubtaskDialog from './SubtaskDialog';
+import { useTeamMemberName } from '@/hooks/useTeamMembers';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,6 +85,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [deleteSubtask, setDeleteSubtask] = useState<Subtask | null>(null);
   const [isDeleteSubtaskDialogOpen, setIsDeleteSubtaskDialogOpen] = useState(false);
+  const { memberName: assignedToName, isLoading: isLoadingMember } = useTeamMemberName(task.assigned_to);
 
   useEffect(() => {
     if (task.id) {
@@ -176,7 +177,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         description: "Subtask deleted successfully",
       });
       
-      // Refresh the subtasks list
       fetchSubtasks();
     } catch (error) {
       console.error('Error deleting subtask:', error);
@@ -194,6 +194,85 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleAddNewSubtask = () => {
     setEditSubtask(null);
     handleAddSubtask(task);
+  };
+
+  const SubtaskItem = ({ subtask }: { subtask: Subtask }) => {
+    const { memberName: subtaskAssignedToName } = useTeamMemberName(subtask.assigned_to);
+    
+    return (
+      <div key={subtask.id} className="mb-2 last:mb-0">
+        <Card className="shadow-sm">
+          <CardContent className="p-2">
+            <div className="flex justify-between items-start">
+              <div className="flex-grow">
+                <div className="flex justify-between items-start">
+                  <h5 className="text-sm font-medium">{subtask.title}</h5>
+                  <Badge className={getStatusColor(subtask.status)}>
+                    {subtask.status}
+                  </Badge>
+                </div>
+                {subtask.description && (
+                  <p className="text-xs text-gray-600 mt-1">{subtask.description}</p>
+                )}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {subtask.due_date && formatDate(subtask.due_date) && (
+                    <div className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1 text-gray-500" />
+                      <span className="text-xs text-gray-600">{formatDate(subtask.due_date)}</span>
+                    </div>
+                  )}
+                  {subtaskAssignedToName && (
+                    <div className="flex items-center">
+                      <User className="h-3 w-3 mr-1 text-gray-500" />
+                      <span className="text-xs text-gray-600">{subtaskAssignedToName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-start gap-1 ml-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditSubtask(subtask);
+                      }}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit Subtask</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSubtask(subtask);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Delete Subtask</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
 
   return (
@@ -292,10 +371,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {task.assigned_to && (
+                    {assignedToName && (
                       <div className="flex items-center text-xs text-gray-600">
                         <User className="h-3 w-3 mr-1" />
-                        <span>{task.assigned_to}</span>
+                        <span>{assignedToName}</span>
                       </div>
                     )}
                     
@@ -335,12 +414,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   )}
                 </div>
                 
-                {task.assigned_to && (
+                {assignedToName && (
                   <div>
                     <h5 className="text-xs font-medium text-gray-500">Assigned To</h5>
                     <p className="text-sm flex items-center">
                       <User className="h-3 w-3 mr-1" />
-                      {task.assigned_to}
+                      {assignedToName}
                     </p>
                   </div>
                 )}
@@ -351,78 +430,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           {isExpanded && subtasks.length > 0 && (
             <div className="ml-6 pl-2 border-l-2 border-gray-300 mt-1">
               {subtasks.map((subtask) => (
-                <div key={subtask.id} className="mb-2 last:mb-0">
-                  <Card className="shadow-sm">
-                    <CardContent className="p-2">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-grow">
-                          <div className="flex justify-between items-start">
-                            <h5 className="text-sm font-medium">{subtask.title}</h5>
-                            <Badge className={getStatusColor(subtask.status)}>
-                              {subtask.status}
-                            </Badge>
-                          </div>
-                          {subtask.description && (
-                            <p className="text-xs text-gray-600 mt-1">{subtask.description}</p>
-                          )}
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {subtask.due_date && formatDate(subtask.due_date) && (
-                              <div className="flex items-center">
-                                <Calendar className="h-3 w-3 mr-1 text-gray-500" />
-                                <span className="text-xs text-gray-600">{formatDate(subtask.due_date)}</span>
-                              </div>
-                            )}
-                            {subtask.assigned_to && (
-                              <div className="flex items-center">
-                                <User className="h-3 w-3 mr-1 text-gray-500" />
-                                <span className="text-xs text-gray-600">{subtask.assigned_to}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-1 ml-2">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-6 w-6"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditSubtask(subtask);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Edit Subtask</p>
-                            </TooltipContent>
-                          </Tooltip>
-                          
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-6 w-6 text-red-500"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteSubtask(subtask);
-                                }}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Delete Subtask</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <SubtaskItem key={subtask.id} subtask={subtask} />
               ))}
             </div>
           )}
