@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,15 +23,20 @@ import {
   ListTodo,
   Users,
   UserRound,
+  Plus,
 } from 'lucide-react';
-import TasksList from './TasksList';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import TasksList from './TasksList';
+import TaskBoard from './TaskBoard';
+import TaskDialog from './TaskDialog';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tasks');
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
 
   // Fetch project details
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -92,27 +97,65 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  // Fetch tasks statistics
-  const { data: tasksStats } = useQuery({
-    queryKey: ['project_tasks_stats', id],
+  // Fetch project tasks
+  const { 
+    data: tasks, 
+    isLoading: tasksLoading, 
+    refetch: refetchTasks 
+  } = useQuery({
+    queryKey: ['tasks', id],
     queryFn: async () => {
-      if (!id) return { total: 0, completed: 0, inProgress: 0 };
+      if (!id) return [];
       
-      const { data: tasks, error } = await supabase
+      const { data, error } = await supabase
         .from('project_tasks')
-        .select('status')
-        .eq('project_id', id);
+        .select('*')
+        .eq('project_id', id)
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
-      
-      const total = tasks.length;
-      const completed = tasks.filter(t => t.status.toLowerCase() === 'completed').length;
-      const inProgress = tasks.filter(t => t.status.toLowerCase() === 'in progress').length;
-      
-      return { total, completed, inProgress };
+      return data;
     },
     enabled: !!id,
   });
+
+  // Set up real-time subscription for tasks updates
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel('project_tasks_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_tasks',
+          filter: `project_id=eq.${id}`
+        },
+        () => {
+          refetchTasks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, refetchTasks]);
+
+  // Calculate task statistics
+  const tasksStats = React.useMemo(() => {
+    if (!tasks) return { total: 0, completed: 0, inProgress: 0, notStarted: 0, pending: 0 };
+    
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'completed').length;
+    const inProgress = tasks.filter(t => t.status === 'in progress').length;
+    const notStarted = tasks.filter(t => t.status === 'not started').length;
+    const pending = tasks.filter(t => t.status === 'pending').length;
+    
+    return { total, completed, inProgress, notStarted, pending };
+  }, [tasks]);
 
   if (projectLoading) {
     return <div className="flex justify-center items-center h-64">Loading project details...</div>;
@@ -203,13 +246,13 @@ const ProjectDetailsView = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Tasks</p>
-                <p className="text-2xl font-bold">{tasksStats?.total || 0}</p>
+                <p className="text-2xl font-bold">{tasksStats.total}</p>
                 <div className="flex gap-2 mt-1 text-xs">
                   <span className="text-green-600">
-                    {tasksStats?.completed || 0} Completed
+                    {tasksStats.completed} Completed
                   </span>
                   <span className="text-blue-600">
-                    {tasksStats?.inProgress || 0} In Progress
+                    {tasksStats.inProgress} In Progress
                   </span>
                 </div>
               </div>
@@ -234,14 +277,76 @@ const ProjectDetailsView = () => {
         </TabsList>
         <TabsContent value="tasks" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Project Tasks</CardTitle>
-              <CardDescription>Manage tasks for this project</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Project Tasks</CardTitle>
+                <CardDescription>Manage tasks for this project</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === 'board' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('board')}
+                  >
+                    Board
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setViewMode('list')}
+                  >
+                    List
+                  </Button>
+                </div>
+                <Button 
+                  onClick={() => setIsTaskDialogOpen(true)} 
+                  className="bg-blue-500 hover:bg-blue-600"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Task
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <TasksList projectId={id} />
+              {tasksLoading ? (
+                <div className="text-center py-6">Loading tasks...</div>
+              ) : tasks && tasks.length > 0 ? (
+                viewMode === 'board' ? (
+                  <TaskBoard 
+                    tasks={tasks} 
+                    projectId={id || ''} 
+                    onRefetch={refetchTasks} 
+                  />
+                ) : (
+                  <TasksList projectId={id} />
+                )
+              ) : (
+                <div className="text-center p-8 border rounded-lg">
+                  <p className="text-muted-foreground mb-4">No tasks found for this project</p>
+                  <Button 
+                    onClick={() => setIsTaskDialogOpen(true)} 
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Plus className="mr-2 h-4 w-4" /> Create Task
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
+          
+          {/* Task Creation Dialog */}
+          <TaskDialog
+            open={isTaskDialogOpen}
+            onClose={() => setIsTaskDialogOpen(false)}
+            mode="create"
+            projectId={id}
+            onSuccess={() => {
+              refetchTasks();
+              setIsTaskDialogOpen(false);
+            }}
+          />
         </TabsContent>
         <TabsContent value="contacts" className="mt-6">
           <Card>
