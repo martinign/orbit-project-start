@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Building, MapPin, UserCog } from 'lucide-react';
+import { Edit, Trash2, Building, MapPin, UserCog, Mail, Phone, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +30,8 @@ import {
   CardContent, 
   CardDescription, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardFooter 
 } from "@/components/ui/card";
 
 interface TeamMembersListProps {
@@ -189,54 +190,75 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
           </TableBody>
         </Table>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {teamMembers.map((member) => (
             <Card key={member.id} className="overflow-hidden">
-              <CardHeader className="pb-2 bg-purple-50">
-                <CardTitle className="text-lg">{member.full_name}</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg truncate">{member.full_name}</CardTitle>
                 {member.role && (
-                  <CardDescription className="flex items-center gap-1">
-                    <UserCog className="h-3.5 w-3.5" />
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <User className="h-3 w-3" />
                     {member.role}
-                  </CardDescription>
+                  </p>
                 )}
               </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-2">
+              <CardContent className="pb-2">
+                <div className="space-y-2 text-sm">
+                  {member.email && (
+                    <p className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="truncate">{member.email}</span>
+                    </p>
+                  )}
+                  
+                  {member.phone && (
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {member.phone}
+                    </p>
+                  )}
+                  
+                  {member.organization && (
+                    <p className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      {member.organization}
+                    </p>
+                  )}
+                  
                   {member.location && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>{member.location}</span>
-                    </div>
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {member.location}
+                    </p>
                   )}
+                  
                   {!projectId && member.projects && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Building className="h-4 w-4" />
-                      <span>{member.projects.project_number} - {member.projects.Sponsor}</span>
-                    </div>
+                    <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
+                      {member.projects.project_number} - {member.projects.Sponsor}
+                    </p>
                   )}
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleEdit(member)}
-                    className="text-purple-500 hover:text-purple-700 hover:bg-purple-50"
-                  >
-                    <Edit className="h-3.5 w-3.5 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => handleDelete(member)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Delete
-                  </Button>
                 </div>
               </CardContent>
+              <CardFooter className="pt-0 flex justify-end border-t p-2">
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleEdit(member)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDelete(member)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
           ))}
         </div>
