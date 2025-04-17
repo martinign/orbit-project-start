@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { PlusCircle, Filter, LayoutGrid, LayoutList } from "lucide-react";
+import { PlusCircle, Filter, LayoutGrid, LayoutList, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,6 +31,16 @@ import {
 import ProjectDialog from "@/components/ProjectDialog";
 import ProjectCard from "@/components/ProjectCard";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Projects = () => {
   const { user } = useAuth();
@@ -38,6 +48,8 @@ const Projects = () => {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Fetch projects from Supabase
   const { data: projects, isLoading, refetch } = useQuery({
@@ -74,6 +86,7 @@ const Projects = () => {
         description: "Project deleted successfully.",
       });
       refetch();
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting project:", error);
       toast({
@@ -82,6 +95,21 @@ const Projects = () => {
         variant: "destructive",
       });
     }
+  };
+  
+  const openEditDialog = (project: any) => {
+    setSelectedProject(project);
+    setIsProjectDialogOpen(true);
+  };
+  
+  const openDeleteDialog = (project: any) => {
+    setSelectedProject(project);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const closeProjectDialog = () => {
+    setSelectedProject(null);
+    setIsProjectDialogOpen(false);
   };
 
   return (
@@ -157,6 +185,7 @@ const Projects = () => {
                     <TableHead>Title</TableHead>
                     <TableHead>Sponsor</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="w-[120px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -178,6 +207,27 @@ const Projects = () => {
                         }`}>
                           {project.status}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => openEditDialog(project)}
+                            title="Edit project"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => openDeleteDialog(project)}
+                            title="Delete project"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -205,9 +255,34 @@ const Projects = () => {
 
       <ProjectDialog 
         open={isProjectDialogOpen} 
-        onClose={() => setIsProjectDialogOpen(false)}
-        onSuccess={() => refetch()}
+        onClose={closeProjectDialog}
+        onSuccess={() => {
+          refetch();
+          closeProjectDialog();
+        }}
+        project={selectedProject}
       />
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the project 
+              "{selectedProject?.project_number} - {selectedProject?.protocol_title}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => selectedProject && handleDeleteProject(selectedProject.id)}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
