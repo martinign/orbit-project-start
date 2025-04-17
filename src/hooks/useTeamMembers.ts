@@ -1,7 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Contact } from "@/types/contact";
 
 export interface TeamMember {
   id: string;
@@ -9,9 +8,6 @@ export interface TeamMember {
   role?: string;
   location?: string;
   project_id: string;
-  email?: string;
-  phone?: string;
-  organization?: string;
   projects?: {
     project_number: string;
     Sponsor: string;
@@ -29,9 +25,6 @@ export const useTeamMembers = () => {
           full_name, 
           role, 
           location,
-          email,
-          phone,
-          organization,
           project_id,
           projects:project_id(
             project_number,
