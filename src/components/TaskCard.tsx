@@ -3,7 +3,7 @@ import { Draggable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus, ChevronDown, ChevronRight, List, User } from 'lucide-react';
+import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus, ChevronDown, ChevronRight, List, User, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import SubtaskDialog from './SubtaskDialog';
+import TaskUpdateDialog from './TaskUpdateDialog';
+import TaskUpdatesDisplay from './TaskUpdatesDisplay';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
 import {
   AlertDialog,
@@ -79,10 +81,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const { toast } = useToast();
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [updateCount, setUpdateCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [editSubtask, setEditSubtask] = useState<Subtask | null>(null);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
   const [deleteSubtask, setDeleteSubtask] = useState<Subtask | null>(null);
   const [isDeleteSubtaskDialogOpen, setIsDeleteSubtaskDialogOpen] = useState(false);
   const { memberName: assignedToName, isLoading: isLoadingMember } = useTeamMemberName(task.assigned_to);
@@ -90,6 +95,27 @@ const TaskCard: React.FC<TaskCardProps> = ({
   useEffect(() => {
     if (task.id) {
       fetchSubtasks();
+      fetchUpdateCount();
+      
+      const channel = supabase
+        .channel('updates-count-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'project_task_updates',
+            filter: `task_id=eq.${task.id}`
+          },
+          () => {
+            fetchUpdateCount();
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [task.id]);
 
@@ -108,6 +134,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
       console.error('Error fetching subtasks:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchUpdateCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('project_task_updates')
+        .select('*', { count: 'exact', head: true })
+        .eq('task_id', task.id);
+
+      if (error) throw error;
+      setUpdateCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching update count:', error);
     }
   };
 
@@ -194,6 +234,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const handleAddNewSubtask = () => {
     setEditSubtask(null);
     handleAddSubtask(task);
+  };
+
+  const handleOpenUpdateDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsUpdateDialogOpen(true);
+  };
+
+  const handleShowUpdates = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsUpdatesDisplayOpen(true);
   };
 
   const SubtaskItem = ({ subtask }: { subtask: Subtask }) => {
@@ -329,43 +379,69 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       </DropdownMenu>
                       
                       <div className="flex items-center gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 -mr-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleTaskUpdates(task);
-                              }}
-                            >
-                              <FilePen className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Updates</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 -mr-2 relative"
+                                onClick={handleOpenUpdateDialog}
+                              >
+                                <FilePen className="h-4 w-4" />
+                                {updateCount > 0 && (
+                                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {updateCount > 99 ? '99+' : updateCount}
+                                  </span>
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Add Update</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 -mr-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddNewSubtask();
-                              }}
-                            >
-                              <FilePlus className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Add Subtask</p>
-                          </TooltipContent>
-                        </Tooltip>
+                        {updateCount > 0 && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 -mr-2"
+                                  onClick={handleShowUpdates}
+                                >
+                                  <MessageCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>View Updates</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 -mr-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddNewSubtask();
+                                }}
+                              >
+                                <FilePlus className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Add Subtask</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   </div>
@@ -382,6 +458,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       <div className="flex gap-1 items-center">
                         <List className="h-3 w-3 text-gray-500" />
                         <span className="text-xs text-gray-500">{subtasks.length} subtask{subtasks.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                    
+                    {updateCount > 0 && (
+                      <div className="flex gap-1 items-center">
+                        <MessageCircle className="h-3 w-3 text-gray-500" />
+                        <span className="text-xs text-gray-500">{updateCount} update{updateCount !== 1 ? 's' : ''}</span>
                       </div>
                     )}
                   </div>
@@ -435,7 +518,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           )}
 
-          {/* Subtask Dialog for Editing */}
           {isSubtaskDialogOpen && (
             <SubtaskDialog
               open={isSubtaskDialogOpen}
@@ -449,8 +531,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
               onSuccess={fetchSubtasks}
             />
           )}
+          
+          {isUpdateDialogOpen && (
+            <TaskUpdateDialog
+              open={isUpdateDialogOpen}
+              onClose={() => setIsUpdateDialogOpen(false)}
+              taskId={task.id}
+              onSuccess={() => fetchUpdateCount()}
+            />
+          )}
+          
+          {isUpdatesDisplayOpen && (
+            <TaskUpdatesDisplay
+              open={isUpdatesDisplayOpen}
+              onClose={() => setIsUpdatesDisplayOpen(false)}
+              taskId={task.id}
+              taskTitle={task.title}
+            />
+          )}
 
-          {/* Delete Subtask Confirmation Dialog */}
           <AlertDialog open={isDeleteSubtaskDialogOpen} onOpenChange={setIsDeleteSubtaskDialogOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>

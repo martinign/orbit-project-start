@@ -14,6 +14,7 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  assigned_to?: string;
 }
 
 interface ColumnConfig {
