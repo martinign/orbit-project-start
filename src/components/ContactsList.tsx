@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +71,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
-  // Fetch contacts from Supabase
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["project_contacts", projectId],
     queryFn: async () => {
@@ -81,7 +79,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
         .select("*, projects(project_number, Sponsor)")
         .order("created_at", { ascending: false });
       
-      // If projectId is provided, filter by project
       if (projectId) {
         query = query.eq("project_id", projectId);
       }
@@ -93,7 +90,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
     },
   });
 
-  // Filter contacts based on search query
   useEffect(() => {
     if (contacts && contacts.length > 0) {
       if (!searchQuery.trim()) {
@@ -147,7 +143,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
         return;
       }
 
-      // Invalidate the query to refresh the data
       queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
 
       toast({
@@ -279,7 +274,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
                     </p>
                   )}
                   
-                  {contact.projects && (
+                  {!projectId && contact.projects && (
                     <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block mt-1">
                       {contact.projects.project_number} - {contact.projects.Sponsor}
                     </p>
@@ -311,7 +306,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
         </div>
       )}
 
-      {/* Edit Contact Dialog */}
       <Dialog open={isEditContactOpen} onOpenChange={setIsEditContactOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -324,7 +318,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
             contact={selectedContact}
             onSuccess={() => {
               setIsEditContactOpen(false);
-              // Invalidate the query to refresh the data
               queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
               toast({
                 title: "Success",
@@ -335,7 +328,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

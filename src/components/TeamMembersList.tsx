@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Edit, Trash2, Building, MapPin, UserCog, Mail, Phone, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -40,7 +39,6 @@ interface TeamMembersListProps {
   viewMode: "table" | "card";
 }
 
-// Define a proper type for team members from Supabase
 interface TeamMember {
   id: string;
   full_name: string;
@@ -50,7 +48,6 @@ interface TeamMember {
   user_id: string;
   created_at: string;
   updated_at: string;
-  // Optional fields that might not exist in the database yet
   email?: string | null;
   phone?: string | null;
   organization?: string | null;
@@ -126,7 +123,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         throw error;
       }
 
-      // Invalidate the query to refresh the data
       queryClient.invalidateQueries({ queryKey: ["team_members"] });
 
       toast({
@@ -225,7 +221,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
               </CardHeader>
               <CardContent className="pb-2 flex-grow">
                 <div className="space-y-2 text-sm">
-                  {/* Only render email if it exists */}
                   {member.email && (
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-muted-foreground" />
@@ -233,7 +228,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
-                  {/* Only render phone if it exists */}
                   {member.phone && (
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground" />
@@ -241,7 +235,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
-                  {/* Only render organization if it exists */}
                   {member.organization && (
                     <p className="flex items-center gap-2">
                       <Building className="h-4 w-4 text-muted-foreground" />
@@ -256,7 +249,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
-                  {member.projects && (
+                  {!projectId && member.projects && (
                     <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
                       {member.projects.project_number} - {member.projects.Sponsor}
                     </p>
@@ -288,7 +281,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         </div>
       )}
 
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -300,7 +292,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
               teamMember={selectedMember}
               onSuccess={() => {
                 setIsEditDialogOpen(false);
-                // Invalidate the query to refresh the data
                 queryClient.invalidateQueries({ queryKey: ["team_members"] });
               }}
             />
@@ -308,7 +299,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
