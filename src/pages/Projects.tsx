@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import ProjectDialog from "@/components/ProjectDialog";
 import ProjectCard from "@/components/ProjectCard";
+import ProjectDetailsView from "@/components/ProjectDetailsView";
 import { useToast } from "@/hooks/use-toast";
 import { 
   AlertDialog,
@@ -34,16 +35,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useParams, useNavigate } from "react-router-dom";
 
 const Projects = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+
+  // If we have an ID in the URL, show the project details view
+  if (id) {
+    return <ProjectDetailsView />;
+  }
 
   // Fetch projects from Supabase
   const { data: projects, isLoading, refetch } = useQuery({
@@ -129,6 +138,10 @@ const Projects = () => {
     setIsProjectDialogOpen(false);
   };
 
+  const handleProjectClick = (project: any) => {
+    navigate(`/projects/${project.id}`);
+  };
+
   return (
     <div className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -199,7 +212,7 @@ const Projects = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredProjects.map((project) => (
-                    <TableRow key={project.id}>
+                    <TableRow key={project.id} className="cursor-pointer" onClick={() => handleProjectClick(project)}>
                       <TableCell>{project.project_number}</TableCell>
                       <TableCell>{project.protocol_number}</TableCell>
                       <TableCell className="max-w-xs truncate">{project.protocol_title}</TableCell>
@@ -217,7 +230,7 @@ const Projects = () => {
                           {project.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-end gap-2">
                           <Button 
                             variant="ghost" 
@@ -245,12 +258,16 @@ const Projects = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                 {filteredProjects.map((project) => (
-                  <ProjectCard 
-                    key={project.id} 
-                    project={project} 
-                    onDelete={handleDeleteProject}
-                    onUpdate={() => refetch()}
-                  />
+                  <div key={project.id} onClick={() => handleProjectClick(project)} className="cursor-pointer">
+                    <ProjectCard 
+                      project={project} 
+                      onDelete={(id) => {
+                        openDeleteDialog(project);
+                        return false;
+                      }}
+                      onUpdate={() => refetch()}
+                    />
+                  </div>
                 ))}
               </div>
             )

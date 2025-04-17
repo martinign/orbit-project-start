@@ -30,6 +30,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import TaskDialog from './TaskDialog';
@@ -72,8 +82,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     queryFn: async () => {
       let query = supabase
         .from('project_tasks')
-        .select('*, projects:project_id(id, project_number, Sponsor)')
-        .order('created_at', { ascending: false });
+        .select('*, projects:project_id(id, project_number, Sponsor)');
 
       if (projectId) {
         query = query.eq('project_id', projectId);
@@ -83,7 +92,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
         query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return data as Task[];
     },
@@ -324,7 +333,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
       {/* Task Dialog */}
       <TaskDialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
         mode={dialogMode}
         task={selectedTask}
         projectId={projectId}
