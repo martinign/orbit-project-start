@@ -1,5 +1,5 @@
 
-import { Folder, LogOut, List, Plus, FileText } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -26,11 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import TaskDialog from "@/components/TaskDialog";
 import TasksList from "@/components/TasksList";
+import ContactForm from "@/components/ContactForm";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
+  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
 
   return (
     <Sidebar>
@@ -53,6 +55,35 @@ export function AppSidebar() {
                 >
                   <Folder className="text-blue-500" />
                   <span>All Projects</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>CONTACTS</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link to="/contacts">
+                  <SidebarMenuButton
+                    tooltip="Contacts"
+                    className="hover:bg-purple-500/10 transition-colors duration-200"
+                  >
+                    <Users className="text-purple-500" />
+                    <span>Contact Table</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Add Contact"
+                  className="hover:bg-green-500/10 transition-colors duration-200"
+                  onClick={() => setIsCreateContactOpen(true)}
+                >
+                  <Plus className="text-green-500" />
+                  <span>Create Contact</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -119,6 +150,19 @@ export function AppSidebar() {
               Close
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Contact Dialog */}
+      <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Contact</DialogTitle>
+            <DialogDescription>
+              Add a new contact to the system
+            </DialogDescription>
+          </DialogHeader>
+          <ContactForm onSuccess={() => setIsCreateContactOpen(false)} />
         </DialogContent>
       </Dialog>
     </Sidebar>

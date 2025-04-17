@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import TaskTemplates from "./pages/TaskTemplates";
 import Projects from "./pages/Projects";
+import Contacts from "./pages/Contacts";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/task-templates" element={<TaskTemplates />} />
               <Route path="/projects" element={<Projects />} />
+              <Route path="/contacts" element={<Contacts />} />
               {/* Add more protected routes here as needed */}
             </Route>
             

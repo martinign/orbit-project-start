@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Fixed the query to properly type the response and handle the project filtering
   const { data: templates, isLoading, refetch } = useQuery({
     queryKey: ["task_templates", projectId],
     queryFn: async () => {
@@ -45,7 +43,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
         .select("*")
         .order("created_at", { ascending: false });
         
-      // If projectId is provided, filter by project
       if (projectId) {
         query = query.eq("project_id", projectId);
       }
