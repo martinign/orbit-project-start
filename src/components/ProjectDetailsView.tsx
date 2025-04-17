@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import TasksList from './TasksList';
 import TaskBoard from './TaskBoard';
 import TaskDialog from './TaskDialog';
 
@@ -36,7 +35,6 @@ const ProjectDetailsView = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tasks');
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'board' | 'list'>('board');
 
   // Fetch project details
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -282,23 +280,7 @@ const ProjectDetailsView = () => {
                 <CardTitle>Project Tasks</CardTitle>
                 <CardDescription>Manage tasks for this project</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-2">
-                  <Button
-                    variant={viewMode === 'board' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('board')}
-                  >
-                    Board
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                  >
-                    List
-                  </Button>
-                </div>
+              <div>
                 <Button 
                   onClick={() => setIsTaskDialogOpen(true)} 
                   className="bg-blue-500 hover:bg-blue-600"
@@ -313,15 +295,11 @@ const ProjectDetailsView = () => {
               {tasksLoading ? (
                 <div className="text-center py-6">Loading tasks...</div>
               ) : tasks && tasks.length > 0 ? (
-                viewMode === 'board' ? (
-                  <TaskBoard 
-                    tasks={tasks} 
-                    projectId={id || ''} 
-                    onRefetch={refetchTasks} 
-                  />
-                ) : (
-                  <TasksList projectId={id} />
-                )
+                <TaskBoard 
+                  tasks={tasks} 
+                  projectId={id || ''} 
+                  onRefetch={refetchTasks} 
+                />
               ) : (
                 <div className="text-center p-8 border rounded-lg">
                   <p className="text-muted-foreground mb-4">No tasks found for this project</p>
