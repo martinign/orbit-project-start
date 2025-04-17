@@ -1,4 +1,3 @@
-
 import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,13 +57,13 @@ export function AppSidebar() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  // Fetch recent projects
+  // Fetch recent projects with all necessary fields
   const { data: recentProjects } = useQuery({
     queryKey: ["recent_projects"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, project_number, Sponsor, status")
+        .select("id, project_number, protocol_number, protocol_title, Sponsor, description, status")
         .order("updated_at", { ascending: false })
         .limit(5);
 
