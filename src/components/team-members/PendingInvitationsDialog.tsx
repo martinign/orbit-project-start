@@ -115,6 +115,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
+      // If no more pending invitations, close the dialog
+      if ((invitations?.length || 0) <= 1) {
+        onClose();
+      }
+
     } catch (error: any) {
       console.error("Error handling invitation:", error);
       toast({

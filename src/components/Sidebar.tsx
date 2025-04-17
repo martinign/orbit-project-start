@@ -1,4 +1,4 @@
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -251,6 +251,24 @@ export function AppSidebar() {
                   )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {pendingInvitationsCount > 0 && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Pending Invitations"
+                    className="hover:bg-purple-500/10 transition-colors duration-200"
+                    onClick={() => setIsPendingInvitationsOpen(true)}
+                  >
+                    <Bell className="text-purple-500" />
+                    <span>Invitations</span>
+                    <Badge 
+                      variant="secondary" 
+                      className="ml-auto bg-purple-100 text-purple-600 hover:bg-purple-100"
+                    >
+                      {pendingInvitationsCount}
+                    </Badge>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
