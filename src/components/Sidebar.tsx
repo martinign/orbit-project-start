@@ -1,5 +1,5 @@
 
-import { Folder, LogOut, List, Plus, BookTemplate } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -55,17 +55,6 @@ export function AppSidebar() {
                   <span>All Projects</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link to="/task-templates">
-                  <SidebarMenuButton
-                    tooltip="Task Templates"
-                    className="hover:bg-blue-500/10 transition-colors duration-200"
-                  >
-                    <BookTemplate className="text-blue-500" />
-                    <span>Task Templates</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -76,22 +65,22 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="Create Task"
+                  tooltip="Task Template"
                   className="hover:bg-green-500/10 transition-colors duration-200"
                   onClick={() => setIsCreateTaskOpen(true)}
                 >
                   <Plus className="text-green-500" />
-                  <span>Create Task</span>
+                  <span>Task Template</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="View Tasks"
+                  tooltip="View Templates"
                   className="hover:bg-blue-500/10 transition-colors duration-200"
                   onClick={() => setIsViewTasksOpen(true)}
                 >
                   <List className="text-blue-500" />
-                  <span>View Tasks</span>
+                  <span>View Templates</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -109,19 +98,19 @@ export function AppSidebar() {
         </Button>
       </SidebarFooter>
 
-      {/* Create Task Dialog */}
+      {/* Create Task Template Dialog */}
       <TaskDialog 
         open={isCreateTaskOpen} 
         onClose={() => setIsCreateTaskOpen(false)} 
       />
 
-      {/* View Tasks Dialog */}
+      {/* View Templates Dialog */}
       <Dialog open={isViewTasksOpen} onOpenChange={setIsViewTasksOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Tasks</DialogTitle>
+            <DialogTitle>Task Templates</DialogTitle>
             <DialogDescription>
-              View and manage your tasks
+              View and manage your task templates
             </DialogDescription>
           </DialogHeader>
           <TasksList />
