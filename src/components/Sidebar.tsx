@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { useInvitationsCount } from "@/hooks/useInvitationsCount";
 import {
   Sidebar,
   SidebarContent,
@@ -61,6 +63,7 @@ export function AppSidebar() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const pendingInvitationsCount = useInvitationsCount();
 
   const { data: recentProjects, refetch: refetchRecentProjects } = useQuery({
     queryKey: ["recent_projects"],
@@ -227,11 +230,19 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Invite Members"
-                  className="hover:bg-purple-500/10 transition-colors duration-200"
+                  className="hover:bg-purple-500/10 transition-colors duration-200 relative"
                   onClick={() => setIsInviteMembersDialogOpen(true)}
                 >
                   <UserPlus className="text-purple-500" />
                   <span>Invite Members</span>
+                  {pendingInvitationsCount > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="absolute right-2 bg-purple-100 text-purple-600 hover:bg-purple-100"
+                    >
+                      {pendingInvitationsCount}
+                    </Badge>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
