@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus } from 'lucide-react';
+import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -55,7 +54,6 @@ interface TaskBoardProps {
   onRefetch: () => void;
 }
 
-// Define column configuration with new order
 const columnsConfig = [
   {
     id: 'not-started',
@@ -95,15 +93,15 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
 
-  // Filter tasks into columns based on status
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
     );
   };
 
-  // Format date for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
     try {
@@ -113,19 +111,16 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     }
   };
 
-  // Handle task editing
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
 
-  // Handle task deletion confirmation
   const handleDeleteConfirm = (task: Task) => {
     setSelectedTask(task);
     setIsDeleteConfirmOpen(true);
   };
 
-  // Handle task updates
   const handleTaskUpdates = (task: Task) => {
     setSelectedTask(task);
     setIsUpdateDialogOpen(true);
@@ -135,7 +130,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     });
   };
 
-  // Handle adding subtask
   const handleAddSubtask = (task: Task) => {
     setSelectedTask(task);
     setIsSubtaskDialogOpen(true);
@@ -145,7 +139,11 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     });
   };
 
-  // Delete task
+  const handleCreateTask = (status: string) => {
+    setSelectedStatus(status);
+    setIsCreateTaskDialogOpen(true);
+  };
+
   const deleteTask = async () => {
     if (!selectedTask) return;
 
@@ -157,7 +155,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
 
       if (error) throw error;
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: 'Task Deleted',
@@ -176,18 +173,15 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     }
   };
 
-  // Handle drag end - update task status in database
   const handleDragEnd = async (result: any) => {
     const { destination, source, draggableId } = result;
 
-    // No destination or dropped in the same place
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
       return;
     }
 
-    // Get new status based on destination column
     const newStatus = columnsConfig.find(
       col => col.id === destination.droppableId
     )?.status;
@@ -195,7 +189,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     if (!newStatus) return;
 
     try {
-      // Update the task's status in the database
       const { error } = await supabase
         .from('project_tasks')
         .update({ status: newStatus })
@@ -208,7 +201,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         description: `Task moved to ${columnsConfig.find(col => col.id === destination.droppableId)?.title}`,
       });
       
-      // No need to manually refetch as we enabled real-time updates
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
     } catch (error) {
       console.error('Error updating task status:', error);
       toast({
@@ -216,11 +209,10 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         description: 'Failed to update task status.',
         variant: 'destructive',
       });
-      onRefetch(); // Fallback to refetch if real-time fails
+      onRefetch();
     }
   };
 
-  // Get priority color
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
       case 'high':
@@ -240,12 +232,25 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {columnsConfig.map((column) => (
-              <div key={column.id} className="flex flex-col h-full">
-                <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
-                  <h3 className="font-medium">{column.title}</h3>
-                  <Badge className={column.badgeColor}>
-                    {getTasksForColumn(column.status).length}
-                  </Badge>
+              <div key={column.id} className="flex flex-col h-full group">
+                <div className={`p-3 rounded-t-md ${column.color} border-b-2 relative`}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium">{column.title}</h3>
+                      <Badge className={column.badgeColor}>
+                        {getTasksForColumn(column.status).length}
+                      </Badge>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2 top-2"
+                      onClick={() => handleCreateTask(column.status)}
+                      title={`Add task to ${column.title}`}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 
                 <Droppable droppableId={column.id}>
@@ -377,7 +382,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         </DragDropContext>
       </TooltipProvider>
 
-      {/* Task Dialog for editing */}
       <TaskDialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
@@ -390,7 +394,18 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
+      <TaskDialog
+        open={isCreateTaskDialogOpen}
+        onClose={() => setIsCreateTaskDialogOpen(false)}
+        mode="create"
+        projectId={projectId}
+        task={{ status: selectedStatus }}
+        onSuccess={() => {
+          onRefetch();
+          setIsCreateTaskDialogOpen(false);
+        }}
+      />
+
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -413,4 +428,3 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
 };
 
 export default TaskBoard;
-
