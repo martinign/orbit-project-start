@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,85 +100,8 @@ const Contacts = () => {
           </Button>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>All Contacts</CardTitle>
-          <CardDescription>
-            Manage your contacts and network connections
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center mb-4">
-            <Select 
-              value={selectedProjectId || ""} 
-              onValueChange={setSelectedProjectId}
-            >
-              <SelectTrigger className="w-[250px]">
-                <SelectValue placeholder="Filter by project" />
-              </SelectTrigger>
-              <SelectContent>
-                {isLoadingProjects ? (
-                  <SelectItem value="loading" disabled>
-                    Loading projects...
-                  </SelectItem>
-                ) : projects && projects.length > 0 ? (
-                  projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.project_number} - {project.Sponsor}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="none" disabled>
-                    No projects found
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            
-            {selectedProjectId && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setSelectedProjectId(null)}
-                className="border-blue-500 text-blue-500 hover:bg-blue-50"
-              >
-                Clear Filter
-              </Button>
-            )}
-          </div>
-
-          <ContactsList 
-            projectId={selectedProjectId} 
-            searchQuery={searchQuery} 
-            viewMode={viewMode} 
-          />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create Contact</DialogTitle>
-            <DialogDescription>
-              Add a new contact to your network
-            </DialogDescription>
-          </DialogHeader>
-          <ContactForm 
-            projectId={selectedProjectId}
-            onSuccess={() => {
-              setIsCreateContactOpen(false);
-              toast({
-                title: "Contact Created",
-                description: "Your contact has been successfully added.",
-              });
-            }} 
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
 
 export default Contacts;
-
