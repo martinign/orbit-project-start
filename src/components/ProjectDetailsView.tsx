@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -39,6 +38,7 @@ import TeamMembersList from './TeamMembersList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import ContactForm from './ContactForm';
 import ProjectNotes from './ProjectNotes';
+import ProjectInvitationsList from './ProjectInvitationsList';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +48,6 @@ const ProjectDetailsView = () => {
   const [contactSearchQuery, setContactSearchQuery] = useState('');
   const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
 
-  // Fetch project details
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
     queryFn: async () => {
@@ -73,7 +72,6 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  // Fetch project contacts count
   const { data: contactsCount, refetch: refetchContacts } = useQuery({
     queryKey: ['project_contacts_count', id],
     queryFn: async () => {
@@ -90,7 +88,6 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  // Fetch project team members count
   const { data: teamMembersCount } = useQuery({
     queryKey: ['project_team_members_count', id],
     queryFn: async () => {
@@ -107,12 +104,7 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  // Fetch project tasks
-  const { 
-    data: tasks, 
-    isLoading: tasksLoading, 
-    refetch: refetchTasks 
-  } = useQuery({
+  const { data: tasks, isLoading: tasksLoading, refetch: refetchTasks } = useQuery({
     queryKey: ['tasks', id],
     queryFn: async () => {
       if (!id) return [];
@@ -129,7 +121,6 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  // Set up real-time subscription for tasks updates
   useEffect(() => {
     if (!id) return;
 
@@ -154,7 +145,6 @@ const ProjectDetailsView = () => {
     };
   }, [id, refetchTasks]);
 
-  // Calculate task statistics
   const tasksStats = React.useMemo(() => {
     if (!tasks) return { total: 0, completed: 0, inProgress: 0, notStarted: 0, pending: 0 };
     
@@ -285,6 +275,7 @@ const ProjectDetailsView = () => {
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="team">Team Members</TabsTrigger>
+          <TabsTrigger value="invites">Invited Members</TabsTrigger>
         </TabsList>
         <TabsContent value="tasks" className="mt-6">
           <Card>
@@ -447,6 +438,17 @@ const ProjectDetailsView = () => {
                 searchQuery="" 
                 viewMode="table" 
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="invites" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Invitations</CardTitle>
+              <CardDescription>View and manage project invitations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectInvitationsList projectId={id} />
             </CardContent>
           </Card>
         </TabsContent>
