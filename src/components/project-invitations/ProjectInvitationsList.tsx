@@ -17,22 +17,30 @@ interface ProjectInvitationsListProps {
   projectId: string | null;
 }
 
-interface InvitationProfile {
+interface InviteeProfile {
   full_name?: string | null;
   email?: string | null;
+}
+
+interface InviterProfile {
+  full_name?: string | null;
+}
+
+interface ProjectDetails {
+  project_number?: string | null;
+  Sponsor?: string | null;
 }
 
 interface Invitation {
   id: string;
   invitee_id: string;
+  inviter_id: string;
   permission_level: "read_only" | "edit";
   status: string;
   created_at: string;
-  profiles?: InvitationProfile | null;
-  projects?: {
-    project_number?: string;
-    Sponsor?: string;
-  } | null;
+  profiles?: InviteeProfile | null;
+  inviter?: InviterProfile | null;
+  projects?: ProjectDetails | null;
 }
 
 const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
@@ -53,14 +61,14 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
           permission_level,
           status,
           created_at,
-          profiles:invitee_id (
+          profiles:invitee_id(
             full_name,
             email
           ),
-          inviter:inviter_id (
+          inviter:inviter_id(
             full_name
           ),
-          projects:project_id (
+          projects:project_id(
             project_number,
             Sponsor
           )
@@ -69,7 +77,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Invitation[];
     },
     enabled: !!projectId,
   });

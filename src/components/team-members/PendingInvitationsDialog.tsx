@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,23 @@ interface PendingInvitationsDialogProps {
   onClose: () => void;
 }
 
+interface InviterProfile {
+  full_name?: string | null;
+}
+
+interface ProjectDetails {
+  project_number?: string | null;
+  Sponsor?: string | null;
+}
+
 interface Invitation {
   id: string;
   project_id: string;
   permission_level: string;
   created_at: string;
   inviter_id: string;
-  profiles: {
-    full_name: string;
-  } | null;
-  projects: {
-    project_number: string;
-    Sponsor: string;
-  } | null;
+  profiles?: InviterProfile | null;
+  projects?: ProjectDetails | null;
 }
 
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
@@ -58,7 +63,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Invitation[];
     },
     enabled: open,
   });
