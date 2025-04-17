@@ -353,7 +353,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </Dialog>
+      </AlertDialog>
     </div>
   );
 };
