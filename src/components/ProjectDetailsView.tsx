@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -26,6 +27,7 @@ import {
   Plus,
   Search,
   X,
+  FileText,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +38,7 @@ import ContactsList from './ContactsList';
 import TeamMembersList from './TeamMembersList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import ContactForm from './ContactForm';
+import ProjectNotes from './ProjectNotes';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -279,6 +282,7 @@ const ProjectDetailsView = () => {
       <Tabs defaultValue="tasks" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="team">Team Members</TabsTrigger>
         </TabsList>
@@ -334,6 +338,19 @@ const ProjectDetailsView = () => {
             }}
           />
         </TabsContent>
+
+        <TabsContent value="notes" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Notes</CardTitle>
+              <CardDescription>View and manage project notes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectNotes projectId={id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="contacts" className="mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
