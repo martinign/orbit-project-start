@@ -12,4 +12,6 @@ export interface Contact {
     project_number: string;
     Sponsor: string;
   };
+  phone?: string;
+  organization?: string;
 }

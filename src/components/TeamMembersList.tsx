@@ -1,62 +1,18 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Building, MapPin, UserCog, Mail, Phone, User } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import TeamMemberForm from "./TeamMemberForm";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle,
-  CardFooter 
-} from "@/components/ui/card";
+import TeamMembersTable from './team-members/TeamMembersTable';
+import TeamMembersCardView from './team-members/TeamMembersCardView';
+import EditTeamMemberDialog from './team-members/EditTeamMemberDialog';
+import DeleteTeamMemberDialog from './team-members/DeleteTeamMemberDialog';
+import TeamMembersEmptyState from './team-members/TeamMembersEmptyState';
 
 interface TeamMembersListProps {
   projectId: string | null;
   searchQuery: string;
   viewMode: "table" | "card";
-}
-
-interface TeamMember {
-  id: string;
-  full_name: string;
-  role: string | null;
-  location: string | null;
-  project_id: string;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  email?: string | null;
-  phone?: string | null;
-  organization?: string | null;
-  projects?: {
-    id: string;
-    project_number: string;
-    Sponsor: string;
-  } | null;
 }
 
 const TeamMembersList: React.FC<TeamMembersListProps> = ({ 
@@ -66,7 +22,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -97,19 +53,16 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       
       if (error) throw error;
       
-      return data as TeamMember[];
+      return data;
     },
   });
 
-  // Improved handler functions with proper event handling
-  const handleEdit = (e: React.MouseEvent, member: TeamMember) => {
-    e.stopPropagation(); // Prevent event bubbling
+  const handleEdit = (member: any) => {
     setSelectedMember(member);
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (e: React.MouseEvent, member: TeamMember) => {
-    e.stopPropagation(); // Prevent event bubbling
+  const handleDelete = (member: any) => {
     setSelectedMember(member);
     setIsDeleteDialogOpen(true);
   };
@@ -162,192 +115,44 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   }
 
   if (!teamMembers || teamMembers.length === 0) {
-    return (
-      <div className="text-center p-8 text-muted-foreground bg-gray-50 rounded-md">
-        <UserCog className="mx-auto h-12 w-12 opacity-20 mb-2" />
-        <h3 className="text-lg font-medium">No team members found</h3>
-        <p className="mb-4">
-          {projectId 
-            ? "This project doesn't have any team members yet." 
-            : "No team members added to any projects yet."}
-        </p>
-      </div>
-    );
+    return <TeamMembersEmptyState projectId={projectId} />;
   }
 
   return (
     <div>
       {viewMode === "table" ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Location</TableHead>
-              {!projectId && <TableHead>Project</TableHead>}
-              <TableHead className="w-[100px] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {teamMembers.map((member) => (
-              <TableRow key={member.id}>
-                <TableCell className="font-medium">{member.full_name}</TableCell>
-                <TableCell>{member.role || '-'}</TableCell>
-                <TableCell>{member.location || '-'}</TableCell>
-                {!projectId && (
-                  <TableCell>
-                    {member.projects?.project_number} - {member.projects?.Sponsor}
-                  </TableCell>
-                )}
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleEdit(e, member)}
-                      aria-label="Edit team member"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={(e) => handleDelete(e, member)}
-                      aria-label="Delete team member"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <TeamMembersTable 
+          teamMembers={teamMembers} 
+          projectId={projectId}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {teamMembers.map((member) => (
-            <Card key={member.id} className="overflow-hidden h-[280px] flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg truncate">{member.full_name}</CardTitle>
-                {member.role && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {member.role}
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent className="pb-2 flex-grow">
-                <div className="space-y-2 text-sm">
-                  {member.email && (
-                    <p className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="truncate">{member.email}</span>
-                    </p>
-                  )}
-                  
-                  {member.phone && (
-                    <p className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {member.phone}
-                    </p>
-                  )}
-                  
-                  {member.organization && (
-                    <p className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      {member.organization}
-                    </p>
-                  )}
-                  
-                  {member.location && (
-                    <p className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      {member.location}
-                    </p>
-                  )}
-                  
-                  {/* Only show project badge if not filtered by project */}
-                  {!projectId && member.projects && (
-                    <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
-                      {member.projects.project_number} - {member.projects.Sponsor}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="border-t p-2 mt-auto">
-                <div className="flex gap-1 ml-auto">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => handleEdit(e, member)}
-                    aria-label="Edit team member"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={(e) => handleDelete(e, member)}
-                    aria-label="Delete team member"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <TeamMembersCardView 
+          teamMembers={teamMembers} 
+          projectId={projectId}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       )}
 
-      {/* Improved dialog implementation */}
-      <Dialog 
-        open={isEditDialogOpen} 
-        onOpenChange={handleCloseEditDialog}
-      >
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Team Member</DialogTitle>
-          </DialogHeader>
-          {selectedMember && (
-            <TeamMemberForm
-              projectId={selectedMember.project_id}
-              teamMember={selectedMember}
-              onSuccess={() => {
-                handleCloseEditDialog();
-                queryClient.invalidateQueries({ queryKey: ["team_members"] });
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Dialog components */}
+      <EditTeamMemberDialog 
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseEditDialog}
+        teamMember={selectedMember}
+        onSuccess={() => {
+          handleCloseEditDialog();
+          queryClient.invalidateQueries({ queryKey: ["team_members"] });
+        }}
+      />
       
-      {/* Improved alert dialog implementation */}
-      <AlertDialog 
-        open={isDeleteDialogOpen} 
-        onOpenChange={handleCloseDeleteDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the team member 
-              "{selectedMember?.full_name}" from the project.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteTeamMemberDialog 
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        teamMember={selectedMember}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
