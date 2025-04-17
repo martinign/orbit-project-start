@@ -32,10 +32,6 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group";
 
 interface TeamMembersListProps {
   projectId: string | null;

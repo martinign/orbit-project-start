@@ -1,29 +1,69 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TeamMemberFormProps {
-  projectId: string;
+  projectId?: string;
   teamMember?: any;
   onSuccess: () => void;
 }
 
-const TeamMemberForm = ({ projectId, teamMember, onSuccess }: TeamMemberFormProps) => {
+const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: TeamMemberFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [formData, setFormData] = useState({
+    project_id: teamMember?.project_id || initialProjectId || "",
     full_name: teamMember?.full_name || "",
     role: teamMember?.role || "",
     location: teamMember?.location || "",
   });
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setIsLoadingProjects(true);
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("id, project_number, Sponsor")
+          .order("project_number", { ascending: true });
+        
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error: any) {
+        console.error("Error fetching projects:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load projects",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, [toast]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProjectChange = (value: string) => {
+    setFormData(prev => ({ ...prev, project_id: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +77,17 @@ const TeamMemberForm = ({ projectId, teamMember, onSuccess }: TeamMemberFormProp
           description: "Name is required",
           variant: "destructive",
         });
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!formData.project_id) {
+        toast({
+          title: "Error",
+          description: "Project selection is required",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
         return;
       }
 
@@ -48,11 +99,12 @@ const TeamMemberForm = ({ projectId, teamMember, onSuccess }: TeamMemberFormProp
           description: "You must be logged in to add team members",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
       const userData = {
-        project_id: projectId,
+        project_id: formData.project_id,
         full_name: formData.full_name,
         role: formData.role || null,
         location: formData.location || null,
@@ -64,6 +116,7 @@ const TeamMemberForm = ({ projectId, teamMember, onSuccess }: TeamMemberFormProp
         const { error } = await supabase
           .from("project_team_members")
           .update({
+            project_id: formData.project_id,
             full_name: formData.full_name,
             role: formData.role || null,
             location: formData.location || null,
@@ -106,6 +159,36 @@ const TeamMemberForm = ({ projectId, teamMember, onSuccess }: TeamMemberFormProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="project_id">Project *</Label>
+        <Select
+          value={formData.project_id}
+          onValueChange={handleProjectChange}
+          disabled={isLoadingProjects || isSubmitting || (!!initialProjectId && !teamMember)}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Select a project" />
+          </SelectTrigger>
+          <SelectContent>
+            {isLoadingProjects ? (
+              <SelectItem value="loading" disabled>
+                Loading projects...
+              </SelectItem>
+            ) : projects.length > 0 ? (
+              projects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.project_number} - {project.Sponsor}
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="none" disabled>
+                No projects found
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+      
       <div>
         <Label htmlFor="full_name">Full Name *</Label>
         <Input

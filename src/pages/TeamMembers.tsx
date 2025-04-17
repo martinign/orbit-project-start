@@ -33,6 +33,7 @@ import {
   DialogDescription 
 } from "@/components/ui/dialog";
 import TeamMembersList from "@/components/TeamMembersList";
+import TeamMemberForm from "@/components/TeamMemberForm";
 import { useToast } from "@/hooks/use-toast";
 
 const TeamMembers = () => {
@@ -167,23 +168,16 @@ const TeamMembers = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-4">
-            {selectedProjectId ? (
-              <TeamMemberForm 
-                projectId={selectedProjectId}
-                onSuccess={() => {
-                  setIsCreateTeamMemberOpen(false);
-                  toast({
-                    title: "Team Member Added",
-                    description: "The team member has been successfully added to the project.",
-                  });
-                }} 
-              />
-            ) : (
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded-md text-amber-800">
-                <p className="font-medium mb-2">Please select a project first</p>
-                <p>To add a team member, first select a project from the dropdown menu.</p>
-              </div>
-            )}
+            <TeamMemberForm 
+              projectId={selectedProjectId || undefined}
+              onSuccess={() => {
+                setIsCreateTeamMemberOpen(false);
+                toast({
+                  title: "Team Member Added",
+                  description: "The team member has been successfully added to the project.",
+                });
+              }} 
+            />
           </div>
         </DialogContent>
       </Dialog>
