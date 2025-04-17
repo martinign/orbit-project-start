@@ -6,7 +6,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Calendar, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -31,6 +31,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import TaskDialog from './TaskDialog';
 
 interface Task {
@@ -87,6 +93,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
 
   // Filter tasks into columns based on status
   const getTasksForColumn = (status: string) => {
@@ -115,6 +123,26 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   const handleDeleteConfirm = (task: Task) => {
     setSelectedTask(task);
     setIsDeleteConfirmOpen(true);
+  };
+
+  // Handle task updates
+  const handleTaskUpdates = (task: Task) => {
+    setSelectedTask(task);
+    setIsUpdateDialogOpen(true);
+    toast({
+      title: "Updates Feature",
+      description: "Updates functionality will be implemented soon.",
+    });
+  };
+
+  // Handle adding subtask
+  const handleAddSubtask = (task: Task) => {
+    setSelectedTask(task);
+    setIsSubtaskDialogOpen(true);
+    toast({
+      title: "Add Subtask Feature",
+      description: "Subtask functionality will be implemented soon.",
+    });
   };
 
   // Delete task
@@ -208,100 +236,144 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
 
   return (
     <div className="h-full">
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {columnsConfig.map((column) => (
-            <div key={column.id} className="flex flex-col h-full">
-              <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
-                <h3 className="font-medium">{column.title}</h3>
-                <Badge className={column.badgeColor}>
-                  {getTasksForColumn(column.status).length}
-                </Badge>
-              </div>
-              
-              <Droppable droppableId={column.id}>
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="bg-gray-50 rounded-b-md p-2 flex-grow min-h-[200px]"
-                  >
-                    {getTasksForColumn(column.status).map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided) => (
-                          <HoverCard>
-                            <HoverCardTrigger asChild>
-                              <Card
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="mb-2 shadow-sm cursor-pointer"
-                              >
-                                <CardContent className="p-3 flex justify-between items-start">
-                                  <h4 className="font-medium truncate">{task.title}</h4>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[160px]">
-                                      <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem 
-                                        onClick={() => handleDeleteConfirm(task)}
-                                        className="text-red-600"
-                                      >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </CardContent>
-                              </Card>
-                            </HoverCardTrigger>
-                            <HoverCardContent className="w-80">
-                              <div className="space-y-2">
-                                <h4 className="font-semibold">{task.title}</h4>
-                                
-                                {task.description && (
-                                  <div>
-                                    <h5 className="text-xs font-medium text-gray-500">Description</h5>
-                                    <p className="text-sm">{task.description}</p>
-                                  </div>
-                                )}
-                                
-                                <div className="flex flex-wrap gap-2 pt-1">
-                                  {task.priority && (
-                                    <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-                                      {task.priority}
-                                    </span>
+      <TooltipProvider>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {columnsConfig.map((column) => (
+              <div key={column.id} className="flex flex-col h-full">
+                <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
+                  <h3 className="font-medium">{column.title}</h3>
+                  <Badge className={column.badgeColor}>
+                    {getTasksForColumn(column.status).length}
+                  </Badge>
+                </div>
+                
+                <Droppable droppableId={column.id}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="bg-gray-50 rounded-b-md p-2 flex-grow min-h-[200px]"
+                    >
+                      {getTasksForColumn(column.status).map((task, index) => (
+                        <Draggable key={task.id} draggableId={task.id} index={index}>
+                          {(provided) => (
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Card
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="mb-2 shadow-sm cursor-pointer"
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="flex justify-between items-start">
+                                      <h4 className="font-medium truncate">{task.title}</h4>
+                                      <div className="flex flex-col gap-1">
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-[160px]">
+                                            <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                              <Edit className="h-4 w-4 mr-2" />
+                                              Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem 
+                                              onClick={() => handleDeleteConfirm(task)}
+                                              className="text-red-600"
+                                            >
+                                              <Trash2 className="h-4 w-4 mr-2" />
+                                              Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                        
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon" 
+                                              className="h-8 w-8 -mr-2"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleTaskUpdates(task);
+                                              }}
+                                            >
+                                              <FilePen className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Updates</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                        
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon" 
+                                              className="h-8 w-8 -mr-2"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAddSubtask(task);
+                                              }}
+                                            >
+                                              <FilePlus className="h-4 w-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Add Subtask</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-80">
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold">{task.title}</h4>
+                                  
+                                  {task.description && (
+                                    <div>
+                                      <h5 className="text-xs font-medium text-gray-500">Description</h5>
+                                      <p className="text-sm">{task.description}</p>
+                                    </div>
                                   )}
                                   
-                                  {task.due_date && formatDate(task.due_date) && (
-                                    <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-                                      <Calendar className="h-3 w-3 mr-1" />
-                                      {formatDate(task.due_date)}
-                                    </span>
-                                  )}
+                                  <div className="flex flex-wrap gap-2 pt-1">
+                                    {task.priority && (
+                                      <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
+                                        {task.priority}
+                                      </span>
+                                    )}
+                                    
+                                    {task.due_date && formatDate(task.due_date) && (
+                                      <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
+                                        <Calendar className="h-3 w-3 mr-1" />
+                                        {formatDate(task.due_date)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            </HoverCardContent>
-                          </HoverCard>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          ))}
-        </div>
-      </DragDropContext>
+                              </HoverCardContent>
+                            </HoverCard>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            ))}
+          </div>
+        </DragDropContext>
+      </TooltipProvider>
 
       {/* Task Dialog for editing */}
       <TaskDialog
