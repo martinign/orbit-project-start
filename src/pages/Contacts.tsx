@@ -1,34 +1,39 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle, LayoutGrid, LayoutList, Search } from "lucide-react";
+import { 
+  LayoutGrid, 
+  LayoutList, 
+  Plus, 
+  Search 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import ContactsList from "@/components/ContactsList";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
 } from "@/components/ui/dialog";
 import ContactForm from "@/components/ContactForm";
-
-interface Project {
-  id: string;
-  project_number: string;
-  Sponsor: string;
-}
+import { useToast } from "@/hooks/use-toast";
 
 const Contacts = () => {
   const { toast } = useToast();
@@ -46,31 +51,27 @@ const Contacts = () => {
         .order("project_number", { ascending: true });
       
       if (error) throw error;
-      return data as Project[];
+      return data || [];
     },
   });
 
-  const handleClearFilter = () => {
-    setSelectedProjectId(null);
-  };
-
   return (
     <div className="w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold">Contacts</h1>
-        <div className="flex flex-wrap gap-3">
-          <div className="relative w-64">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-foreground">Contacts</h1>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              type="text"
+              type="search"
               placeholder="Search contacts..."
+              className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
             />
-            <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant={viewMode === "table" ? "default" : "outline"}
               size="icon"
@@ -88,12 +89,12 @@ const Contacts = () => {
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-          
+
           <Button 
-            className="bg-blue-500 hover:bg-blue-600 text-white"
             onClick={() => setIsCreateContactOpen(true)}
+            className="flex items-center gap-2"
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Create Contact
           </Button>
         </div>
@@ -107,46 +108,54 @@ const Contacts = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div className="w-full sm:w-auto">
-              <Select value={selectedProjectId || ""} onValueChange={setSelectedProjectId}>
-                <SelectTrigger className="w-full sm:w-[250px]">
-                  <SelectValue placeholder="Filter by project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingProjects ? (
-                    <SelectItem value="loading" disabled>Loading projects...</SelectItem>
-                  ) : projects && projects.length > 0 ? (
-                    projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.project_number} - {project.Sponsor}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>No projects found</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex justify-between items-center mb-4">
+            <Select 
+              value={selectedProjectId || ""} 
+              onValueChange={setSelectedProjectId}
+            >
+              <SelectTrigger className="w-[250px]">
+                <SelectValue placeholder="Filter by project" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingProjects ? (
+                  <SelectItem value="loading" disabled>
+                    Loading projects...
+                  </SelectItem>
+                ) : projects && projects.length > 0 ? (
+                  projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.project_number} - {project.Sponsor}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="none" disabled>
+                    No projects found
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            
             {selectedProjectId && (
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={handleClearFilter}
-                className="w-full sm:w-auto"
+                onClick={() => setSelectedProjectId(null)}
               >
                 Clear Filter
               </Button>
             )}
           </div>
-          
-          <ContactsList projectId={selectedProjectId} searchQuery={searchQuery} viewMode={viewMode} />
+
+          <ContactsList 
+            projectId={selectedProjectId} 
+            searchQuery={searchQuery} 
+            viewMode={viewMode} 
+          />
         </CardContent>
       </Card>
 
-      {/* Create Contact Dialog */}
       <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create Contact</DialogTitle>
             <DialogDescription>
@@ -154,14 +163,14 @@ const Contacts = () => {
             </DialogDescription>
           </DialogHeader>
           <ContactForm 
-            projectId={selectedProjectId} 
+            projectId={selectedProjectId}
             onSuccess={() => {
               setIsCreateContactOpen(false);
               toast({
-                title: "Success",
-                description: "Contact created successfully",
+                title: "Contact Created",
+                description: "Your contact has been successfully added.",
               });
-            }}
+            }} 
           />
         </DialogContent>
       </Dialog>

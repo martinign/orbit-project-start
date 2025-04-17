@@ -26,13 +26,11 @@ import {
 } from "@/components/ui/dialog";
 import TaskDialog from "@/components/TaskDialog";
 import TasksList from "@/components/TasksList";
-import ContactForm from "@/components/ContactForm";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
-  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
 
   return (
     <Sidebar>
@@ -49,13 +47,15 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Projects"
-                  className="hover:bg-blue-500/10 transition-colors duration-200"
-                >
-                  <Folder className="text-blue-500" />
-                  <span>All Projects</span>
-                </SidebarMenuButton>
+                <Link to="/projects">
+                  <SidebarMenuButton
+                    tooltip="Projects"
+                    className="hover:bg-blue-500/10 transition-colors duration-200"
+                  >
+                    <Folder className="text-blue-500" />
+                    <span>Projects</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -140,19 +140,6 @@ export function AppSidebar() {
               Close
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Contact Dialog */}
-      <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Contact</DialogTitle>
-            <DialogDescription>
-              Add a new contact to the system
-            </DialogDescription>
-          </DialogHeader>
-          <ContactForm onSuccess={() => setIsCreateContactOpen(false)} />
         </DialogContent>
       </Dialog>
     </Sidebar>
