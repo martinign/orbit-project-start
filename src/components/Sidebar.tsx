@@ -1,5 +1,4 @@
-
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -50,6 +49,7 @@ import {
 import ProjectDialog from "@/components/ProjectDialog";
 import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 import TaskTemplatesListDialog from "@/components/TaskTemplatesListDialog";
+import InviteMembersDialog from "@/components/team-members/InviteMembersDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
@@ -59,6 +59,7 @@ export function AppSidebar() {
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const { data: recentProjects, refetch: refetchRecentProjects } = useQuery({
@@ -223,6 +224,16 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Invite Members"
+                  className="hover:bg-purple-500/10 transition-colors duration-200"
+                  onClick={() => setIsInviteMembersDialogOpen(true)}
+                >
+                  <UserPlus className="text-purple-500" />
+                  <span>Invite Members</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -265,7 +276,6 @@ export function AppSidebar() {
                     <Link 
                       to={`/projects/${project.id}`}
                       onClick={(e) => {
-                        // Only navigate if not clicking on dropdown or actions
                         if ((e.target as HTMLElement).closest('[data-dropdown]') || 
                             (e.target as HTMLElement).closest('[data-action]')) {
                           e.preventDefault();
@@ -384,6 +394,11 @@ export function AppSidebar() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InviteMembersDialog
+        open={isInviteMembersDialogOpen}
+        onClose={() => setIsInviteMembersDialogOpen(false)}
+      />
     </Sidebar>
   );
 }
