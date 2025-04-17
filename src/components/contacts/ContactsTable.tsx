@@ -1,32 +1,21 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types/contact";
-
 interface ContactsTableProps {
   contacts: Contact[];
   projectId?: string | null;
   onEdit: (e: React.MouseEvent, contact: Contact) => void;
   onDelete: (e: React.MouseEvent, contact: Contact) => void;
 }
-
 const ContactsTable: React.FC<ContactsTableProps> = ({
   contacts,
   projectId,
   onEdit,
   onDelete
 }) => {
-  return (
-    <div className="rounded-md border">
+  return <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -41,48 +30,29 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {contacts.map((contact) => (
-            <TableRow key={contact.id}>
+          {contacts.map(contact => <TableRow key={contact.id}>
               <TableCell className="font-medium">{contact.full_name}</TableCell>
               <TableCell>{contact.email}</TableCell>
               <TableCell>{contact.telephone || "-"}</TableCell>
               <TableCell>{contact.company || "-"}</TableCell>
               <TableCell>{contact.role || "-"}</TableCell>
-              {!projectId && (
-                <TableCell>
-                  {contact.projects ? 
-                    `${contact.projects.project_number} - ${contact.projects.Sponsor}` : 
-                    "-"}
-                </TableCell>
-              )}
+              {!projectId && <TableCell>
+                  {contact.projects ? `${contact.projects.project_number} - ${contact.projects.Sponsor}` : "-"}
+                </TableCell>}
               <TableCell>{contact.location || "-"}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={(e) => onEdit(e, contact)}
-                    aria-label="Edit contact"
-                  >
+                  <Button variant="ghost" size="icon" onClick={e => onEdit(e, contact)} aria-label="Edit contact">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={(e) => onDelete(e, contact)}
-                    aria-label="Delete contact"
-                  >
+                  <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={e => onDelete(e, contact)} aria-label="Delete contact">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
-          ))}
+            </TableRow>)}
         </TableBody>
       </Table>
-    </div>
-  );
+    </div>;
 };
-
 export default ContactsTable;
