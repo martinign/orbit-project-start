@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UserRound } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface InviteMembersDialogProps {
   open: boolean;
@@ -20,10 +22,15 @@ interface Profile {
   avatar_url?: string | null;
 }
 
+interface SelectedProfile {
+  id: string;
+  permission: "read_only" | "edit";
+}
+
 const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const [projectId, setProjectId] = useState("");
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [selectedProfiles, setSelectedProfiles] = useState<Record<string, boolean>>({});
+  const [selectedProfiles, setSelectedProfiles] = useState<Record<string, SelectedProfile>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -57,9 +64,22 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   };
 
   const handleProfileToggle = (profileId: string) => {
+    setSelectedProfiles(prev => {
+      if (prev[profileId]) {
+        const { [profileId]: removed, ...rest } = prev;
+        return rest;
+      }
+      return {
+        ...prev,
+        [profileId]: { id: profileId, permission: "read_only" }
+      };
+    });
+  };
+
+  const handlePermissionChange = (profileId: string, permission: "read_only" | "edit") => {
     setSelectedProfiles(prev => ({
       ...prev,
-      [profileId]: !prev[profileId]
+      [profileId]: { ...prev[profileId], permission }
     }));
   };
 
@@ -73,7 +93,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       return;
     }
 
-    const selectedProfileIds = Object.keys(selectedProfiles).filter(id => selectedProfiles[id]);
+    const selectedProfileIds = Object.values(selectedProfiles);
     
     if (selectedProfileIds.length === 0) {
       toast({
@@ -84,12 +104,38 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       return;
     }
 
-    toast({
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("User not authenticated");
+
+      const invitations = selectedProfileIds.map(profile => ({
+        project_id: projectId,
+        inviter_id: user.user.id,
+        invitee_id: profile.id,
+        permission_level: profile.permission,
+        status: 'pending'
+      }));
+
+      const { error } = await supabase
+        .from('project_invitations')
+        .insert(invitations);
+
+      if (error) throw error;
+
+      toast({
         title: "Success",
-        description: `Invitation sent to ${selectedProfileIds.length} users for project`,
-    });
-    
-    onClose();
+        description: `Invitations sent to ${selectedProfileIds.length} users`,
+      });
+      
+      onClose();
+    } catch (error: any) {
+      console.error('Error sending invitations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send invitations. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getInitials = (name: string | null): string => {
@@ -148,6 +194,22 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                         </span>
                       </div>
                     </label>
+                    {selectedProfiles[profile.id] && (
+                      <Select
+                        value={selectedProfiles[profile.id].permission}
+                        onValueChange={(value: "read_only" | "edit") => 
+                          handlePermissionChange(profile.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="read_only">Read Only</SelectItem>
+                          <SelectItem value="edit">Can Edit</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 ))}
               </div>

@@ -131,6 +131,47 @@ export type Database = {
           },
         ]
       }
+      project_invitations: {
+        Row: {
+          created_at: string | null
+          id: string
+          invitee_id: string
+          inviter_id: string
+          permission_level: Database["public"]["Enums"]["project_member_permission"]
+          project_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          permission_level?: Database["public"]["Enums"]["project_member_permission"]
+          project_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          permission_level?: Database["public"]["Enums"]["project_member_permission"]
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_notes: {
         Row: {
           content: string | null
@@ -313,6 +354,7 @@ export type Database = {
           full_name: string
           id: string
           location: string | null
+          permission_level: Database["public"]["Enums"]["project_member_permission"]
           project_id: string
           role: string | null
           updated_at: string
@@ -323,6 +365,7 @@ export type Database = {
           full_name: string
           id?: string
           location?: string | null
+          permission_level?: Database["public"]["Enums"]["project_member_permission"]
           project_id: string
           role?: string | null
           updated_at?: string
@@ -333,6 +376,7 @@ export type Database = {
           full_name?: string
           id?: string
           location?: string | null
+          permission_level?: Database["public"]["Enums"]["project_member_permission"]
           project_id?: string
           role?: string | null
           updated_at?: string
@@ -422,7 +466,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      project_member_permission: "read_only" | "edit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -537,6 +581,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_member_permission: ["read_only", "edit"],
+    },
   },
 } as const
