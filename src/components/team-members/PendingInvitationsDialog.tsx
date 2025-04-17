@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { LoaderIcon, Shield, User } from "lucide-react";
+import { LoaderIcon } from "lucide-react";
 
 interface PendingInvitationsDialogProps {
   open: boolean;
@@ -19,12 +19,13 @@ interface InviterProfile {
 interface ProjectDetails {
   project_number?: string | null;
   Sponsor?: string | null;
+  protocol_number?: string | null;
+  protocol_title?: string | null;
 }
 
 interface Invitation {
   id: string;
   project_id: string;
-  permission_level: string;
   created_at: string;
   inviter_id: string;
   profiles?: InviterProfile | null;
@@ -47,7 +48,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         .select(`
           id,
           project_id,
-          permission_level,
           created_at,
           inviter_id,
           profiles:profiles!inviter_id(
@@ -55,7 +55,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           ),
           projects(
             project_number,
-            Sponsor
+            Sponsor,
+            protocol_number,
+            protocol_title
           )
         `)
         .eq("invitee_id", user.user.id)
@@ -148,7 +150,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         </DialogHeader>
         <div className="space-y-4 py-4">
           {isLoading ? (
-            <div className="text-center py-4">Loading invitations...</div>
+            <div className="flex justify-center py-4">
+              <LoaderIcon className="h-6 w-6 animate-spin" />
+            </div>
           ) : !invitations || invitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No pending invitations
@@ -158,37 +162,40 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex flex-col space-y-2 p-4 border rounded-lg"
+                  className="flex flex-col space-y-3 p-4 border rounded-lg"
                 >
-                  <div className="font-medium">
-                    {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
+                  <div>
+                    <div className="font-medium">
+                      Project: {invitation.projects?.project_number}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Sponsor: {invitation.projects?.Sponsor}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Protocol: {invitation.projects?.protocol_number}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Invited by: {invitation.profiles?.full_name || 'Unknown'}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    Invited by: {invitation.profiles?.full_name || 'Unknown'}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Shield className="h-4 w-4" />
-                    Permission Level: {invitation.permission_level}
-                  </div>
-                  <div className="flex justify-end space-x-2 mt-2">
+                  <div className="flex justify-end space-x-2">
                     <Button
                       variant="outline"
                       onClick={() => handleInvitation(invitation.id, false)}
                       disabled={!!loading}
                     >
-                      {loading === invitation.id ? (
+                      {loading === invitation.id && (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
+                      )}
                       Reject
                     </Button>
                     <Button
                       onClick={() => handleInvitation(invitation.id, true)}
                       disabled={!!loading}
                     >
-                      {loading === invitation.id ? (
+                      {loading === invitation.id && (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
+                      )}
                       Accept
                     </Button>
                   </div>
