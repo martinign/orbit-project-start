@@ -3,56 +3,12 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Mail, Phone, Building, MapPin, User, Plus } from "lucide-react";
-import ContactForm from "./ContactForm";
-
-interface Contact {
-  id: string;
-  full_name: string;
-  email: string;
-  telephone?: string;
-  company?: string;
-  role?: string;
-  location?: string;
-  project_id: string;
-  projects?: {
-    project_number: string;
-    Sponsor: string;
-  };
-}
+import { Contact } from "@/types/contact";
+import ContactsTable from "./contacts/ContactsTable";
+import ContactsCardView from "./contacts/ContactsCardView";
+import ContactsEmptyState from "./contacts/ContactsEmptyState";
+import DeleteContactDialog from "./contacts/DeleteContactDialog";
+import EditContactDialog from "./contacts/EditContactDialog";
 
 interface ContactsListProps {
   projectId?: string | null;
@@ -116,7 +72,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
-  // Improved handler functions with cleaner state management
   const handleEditContact = (e: React.MouseEvent, contact: Contact) => {
     e.stopPropagation(); // Prevent event bubbling
     setSelectedContact(contact);
@@ -181,204 +136,47 @@ const ContactsList: React.FC<ContactsListProps> = ({
   }
 
   if (!filteredContacts || filteredContacts.length === 0) {
-    return (
-      <div className="text-center p-8 border rounded-lg">
-        <p className="text-muted-foreground">
-          {searchQuery ? "No contacts match your search criteria" : "No contacts found"}
-        </p>
-      </div>
-    );
+    return <ContactsEmptyState searchQuery={searchQuery} />;
   }
 
   return (
     <div className="space-y-4">
       {viewMode === "table" ? (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Role</TableHead>
-                {!projectId && <TableHead>Project</TableHead>}
-                <TableHead>Location</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredContacts.map((contact) => (
-                <TableRow key={contact.id}>
-                  <TableCell className="font-medium">{contact.full_name}</TableCell>
-                  <TableCell>{contact.email}</TableCell>
-                  <TableCell>{contact.telephone || "-"}</TableCell>
-                  <TableCell>{contact.company || "-"}</TableCell>
-                  <TableCell>{contact.role || "-"}</TableCell>
-                  {!projectId && (
-                    <TableCell>
-                      {contact.projects ? 
-                        `${contact.projects.project_number} - ${contact.projects.Sponsor}` : 
-                        "-"}
-                    </TableCell>
-                  )}
-                  <TableCell>{contact.location || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {/* Using aria-label for better accessibility */}
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={(e) => handleEditContact(e, contact)}
-                        aria-label="Edit contact"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={(e) => handleDeleteContact(e, contact)}
-                        aria-label="Delete contact"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <ContactsTable 
+          contacts={filteredContacts}
+          projectId={projectId}
+          onEdit={handleEditContact}
+          onDelete={handleDeleteContact}
+        />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredContacts.map((contact) => (
-            <Card key={contact.id} className="overflow-hidden h-[320px] flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg truncate">{contact.full_name}</CardTitle>
-                {contact.role && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    {contact.role}
-                  </p>
-                )}
-              </CardHeader>
-              <CardContent className="pb-2 flex-grow">
-                <div className="space-y-2 text-sm">
-                  <p className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{contact.email}</span>
-                  </p>
-                  
-                  {contact.telephone && (
-                    <p className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      {contact.telephone}
-                    </p>
-                  )}
-                  
-                  {contact.company && (
-                    <p className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-muted-foreground" />
-                      {contact.company}
-                    </p>
-                  )}
-                  
-                  {contact.location && (
-                    <p className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      {contact.location}
-                    </p>
-                  )}
-                  
-                  {/* Only show project badge when not filtered by project */}
-                  {!projectId && contact.projects && (
-                    <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block mt-1">
-                      {contact.projects.project_number} - {contact.projects.Sponsor}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="border-t p-2 mt-auto">
-                <div className="flex gap-1 ml-auto">
-                  {/* Improved button implementation */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => handleEditContact(e, contact)}
-                    aria-label="Edit contact"
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={(e) => handleDeleteContact(e, contact)}
-                    aria-label="Delete contact"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <ContactsCardView 
+          contacts={filteredContacts}
+          projectId={projectId}
+          onEdit={handleEditContact}
+          onDelete={handleDeleteContact}
+        />
       )}
 
-      {/* Improved dialog implementation */}
-      <Dialog 
-        open={isEditContactOpen} 
-        onOpenChange={handleCloseEditDialog}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Contact</DialogTitle>
-            <DialogDescription>
-              Update contact information
-            </DialogDescription>
-          </DialogHeader>
-          {selectedContact && (
-            <ContactForm 
-              contact={selectedContact}
-              onSuccess={() => {
-                handleCloseEditDialog();
-                queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
-                toast({
-                  title: "Success",
-                  description: "Contact updated successfully.",
-                });
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <EditContactDialog 
+        isOpen={isEditContactOpen}
+        onClose={handleCloseEditDialog}
+        contact={selectedContact}
+        onSuccess={() => {
+          handleCloseEditDialog();
+          queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
+          toast({
+            title: "Success",
+            description: "Contact updated successfully.",
+          });
+        }}
+      />
 
-      {/* Improved alert dialog implementation */}
-      <AlertDialog 
-        open={isDeleteDialogOpen} 
-        onOpenChange={handleCloseDeleteDialog}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the contact
-              "{selectedContact?.full_name}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteContactDialog 
+        isOpen={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        contact={selectedContact}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
