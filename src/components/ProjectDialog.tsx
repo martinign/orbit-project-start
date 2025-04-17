@@ -167,7 +167,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
               variant="ghost" 
               size="icon" 
               onClick={onClose} 
-              className="h-6 w-6 rounded-full"
+              className="h-6 w-6 rounded-full absolute right-4 top-4"
             >
               <X className="h-4 w-4" />
             </Button>
