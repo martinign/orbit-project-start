@@ -13,55 +13,53 @@ interface InviteMembersDialogProps {
   onClose: () => void;
 }
 
-interface User {
+interface Profile {
   id: string;
-  email: string;
+  full_name: string | null;
   created_at: string;
 }
 
 const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const [projectId, setProjectId] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<Record<string, boolean>>({});
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [selectedProfiles, setSelectedProfiles] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (open) {
-      fetchUsers();
+      fetchProfiles();
     }
   }, [open]);
 
-  const fetchUsers = async () => {
+  const fetchProfiles = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.admin.listUsers();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, created_at")
+        .order("full_name");
+      
       if (error) throw error;
       
-      if (data) {
-        setUsers(data.users.map(user => ({
-          id: user.id,
-          email: user.email || 'No email',
-          created_at: user.created_at
-        })));
-      }
+      setProfiles(data || []);
     } catch (error: any) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching profiles:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch users. You might not have admin rights.",
+        description: "Failed to fetch user profiles.",
         variant: "destructive",
       });
-      setUsers([]);
+      setProfiles([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleUserToggle = (userId: string) => {
-    setSelectedUsers(prev => ({
+  const handleProfileToggle = (profileId: string) => {
+    setSelectedProfiles(prev => ({
       ...prev,
-      [userId]: !prev[userId]
+      [profileId]: !prev[profileId]
     }));
   };
 
@@ -75,9 +73,9 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       return;
     }
 
-    const selectedUserIds = Object.keys(selectedUsers).filter(id => selectedUsers[id]);
+    const selectedProfileIds = Object.keys(selectedProfiles).filter(id => selectedProfiles[id]);
     
-    if (selectedUserIds.length === 0) {
+    if (selectedProfileIds.length === 0) {
       toast({
         title: "Error",
         description: "Please select at least one user",
@@ -89,7 +87,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
     // For demonstration purposes - in a real app, you'd implement the actual invitation logic
     toast({
         title: "Success",
-        description: `Invitation sent to ${selectedUserIds.length} users for project`,
+        description: `Invitation sent to ${selectedProfileIds.length} users for project`,
     });
     
     onClose();
@@ -114,31 +112,31 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
             <label className="text-sm font-medium">Select Users</label>
             {isLoading ? (
               <div className="py-4 text-center text-sm text-gray-500">Loading users...</div>
-            ) : users.length > 0 ? (
+            ) : profiles.length > 0 ? (
               <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
-                {users.map((user) => (
+                {profiles.map((profile) => (
                   <div 
-                    key={user.id} 
+                    key={profile.id} 
                     className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md"
                   >
                     <Checkbox 
-                      id={`user-${user.id}`} 
-                      checked={!!selectedUsers[user.id]}
-                      onCheckedChange={() => handleUserToggle(user.id)}
+                      id={`profile-${profile.id}`} 
+                      checked={!!selectedProfiles[profile.id]}
+                      onCheckedChange={() => handleProfileToggle(profile.id)}
                     />
                     <label 
-                      htmlFor={`user-${user.id}`} 
+                      htmlFor={`profile-${profile.id}`} 
                       className="flex items-center cursor-pointer flex-1"
                     >
                       <UserRound className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="text-sm">{user.email}</span>
+                      <span className="text-sm">{profile.full_name || 'Unnamed User'}</span>
                     </label>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="py-4 text-center text-sm text-gray-500">
-                No users found or you don't have admin rights.
+                No users found.
               </div>
             )}
           </div>
