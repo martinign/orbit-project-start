@@ -137,10 +137,13 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setDueDate(undefined);
       setSelectedProject(projectId);
     }
-  }, [mode, task, projectId]);
+  }, [mode, task, projectId, open]);
 
   const handleTemplateSelect = (template: TaskTemplate) => {
-    setTitle(template.title);
+    console.log("Applying template to form:", template);
+    
+    // Apply template values to form
+    setTitle(template.title || '');
     if (template.description) {
       setDescription(template.description);
     }

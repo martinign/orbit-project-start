@@ -102,6 +102,7 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
 
   const handleTemplateSelection = (template: TaskTemplate) => {
     if (selectionMode && onTemplateSelect) {
+      console.log("Template selected:", template);
       onTemplateSelect(template);
       onClose();
     }
