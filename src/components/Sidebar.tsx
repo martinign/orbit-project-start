@@ -1,5 +1,4 @@
-
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -19,6 +18,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuAction,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import {
   Dialog,
@@ -46,17 +48,18 @@ import {
 } from "@/components/ui/alert-dialog";
 import ProjectDialog from "@/components/ProjectDialog";
 import TaskTemplateDialog from "@/components/TaskTemplateDialog";
+import TaskTemplatesListDialog from "@/components/TaskTemplatesListDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
+  const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  // Fetch recent projects with all necessary fields
   const { data: recentProjects } = useQuery({
     queryKey: ["recent_projects"],
     queryFn: async () => {
@@ -94,7 +97,6 @@ export function AppSidebar() {
         throw error;
       }
 
-      // Invalidate the query to refresh the data
       queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
 
@@ -114,7 +116,6 @@ export function AppSidebar() {
     }
   };
 
-  // Get status color based on project status
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -203,11 +204,20 @@ export function AppSidebar() {
                   <span>Task Templates</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="View Templates"
+                  className="hover:bg-green-500/10 transition-colors duration-200"
+                  onClick={() => setIsViewTemplatesDialogOpen(true)}
+                >
+                  <Eye className="text-green-500" />
+                  <span>View Templates</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Recent Projects Section */}
         <SidebarGroup>
           <SidebarGroupLabel>RECENT PROJECTS</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -270,7 +280,6 @@ export function AppSidebar() {
         </Button>
       </SidebarFooter>
 
-      {/* Task Template Dialog */}
       <TaskTemplateDialog 
         open={isTaskTemplateDialogOpen} 
         onClose={() => setIsTaskTemplateDialogOpen(false)}
@@ -280,7 +289,11 @@ export function AppSidebar() {
         }}
       />
 
-      {/* Edit Project Dialog */}
+      <TaskTemplatesListDialog
+        open={isViewTemplatesDialogOpen}
+        onClose={() => setIsViewTemplatesDialogOpen(false)}
+      />
+
       <ProjectDialog 
         open={isProjectDialogOpen} 
         onClose={() => setIsProjectDialogOpen(false)}
@@ -292,7 +305,6 @@ export function AppSidebar() {
         project={selectedProject}
       />
 
-      {/* Delete Project Confirmation */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
