@@ -43,8 +43,11 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || "")
 
+  // Ensure options is always an array, even if it's undefined
+  const safeOptions = options || []
+
   // Find the option that matches the current value
-  const selectedOption = options.find(option => option.value === value)
+  const selectedOption = safeOptions.find(option => option.value === value)
 
   // Update the input value when the value prop changes
   React.useEffect(() => {
@@ -65,7 +68,7 @@ export function Combobox({
   }
 
   const handleSelect = (currentValue: string) => {
-    const option = options.find(option => option.value === currentValue)
+    const option = safeOptions.find(option => option.value === currentValue)
     
     if (option) {
       onChange(currentValue)
@@ -105,7 +108,7 @@ export function Combobox({
               : emptyMessage}
           </CommandEmpty>
           <CommandGroup>
-            {options.map((option) => (
+            {safeOptions.map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}

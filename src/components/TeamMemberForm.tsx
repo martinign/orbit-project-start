@@ -215,7 +215,7 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
         <Label htmlFor="role">Role</Label>
         <div className="mt-1">
           <Combobox
-            options={roleOptions}
+            options={roleOptions || []}
             value={formData.role}
             onChange={handleRoleChange}
             placeholder="Select or enter a role"
