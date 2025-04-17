@@ -2,37 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { Edit, Trash2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
+// Import the smaller component files
+import NotesList from './project-notes/NotesList';
+import NoteItem from './project-notes/NoteItem';
+import CreateNoteDialog from './project-notes/CreateNoteDialog';
+import EditNoteDialog from './project-notes/EditNoteDialog';
+import DeleteNoteDialog from './project-notes/DeleteNoteDialog';
+import NotesEmptyState from './project-notes/NotesEmptyState';
 
 type ProjectNote = {
   id: string;
@@ -127,15 +106,6 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
       supabase.removeChannel(channel);
     };
   }, [projectId]);
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy • h:mm a');
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   // Handle opening the create note dialog
   const handleCreateNote = () => {
@@ -270,181 +240,45 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
       {isLoading ? (
         <div className="flex justify-center py-10">Loading notes...</div>
       ) : notes.length > 0 ? (
-        <div className="grid gap-6">
-          {notes.map((note) => (
-            <Card key={note.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{note.title}</CardTitle>
-                    <CardDescription>
-                      {formatDate(note.created_at)}
-                      {note.created_at !== note.updated_at && 
-                        ` • Updated ${formatDate(note.updated_at)}`}
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEditNote(note)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleDeleteConfirmation(note)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none">
-                  {note.content ? (
-                    <div className="whitespace-pre-wrap">{note.content}</div>
-                  ) : (
-                    <p className="text-muted-foreground italic">No content</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <NotesList 
+          notes={notes} 
+          onEditNote={handleEditNote} 
+          onDeleteConfirmation={handleDeleteConfirmation} 
+        />
       ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-10">
-            <p className="text-muted-foreground mb-4">No notes found for this project</p>
-            <Button onClick={handleCreateNote} className="bg-blue-500 hover:bg-blue-600">
-              <Plus className="mr-2 h-4 w-4" />
-              Create First Note
-            </Button>
-          </CardContent>
-        </Card>
+        <NotesEmptyState onCreateNote={handleCreateNote} />
       )}
 
       {/* Create Note Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Note</DialogTitle>
-            <DialogDescription>
-              Add a new note to this project
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium mb-1">
-                Title
-              </label>
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Note title"
-              />
-            </div>
-            <div>
-              <label htmlFor="content" className="block text-sm font-medium mb-1">
-                Content
-              </label>
-              <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your note here..."
-                rows={8}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={saveNewNote} 
-              disabled={!title.trim() || !userId} 
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              Create Note
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateNoteDialog 
+        open={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSave={saveNewNote}
+        title={title}
+        setTitle={setTitle}
+        content={content}
+        setContent={setContent}
+        isUserIdAvailable={!!userId}
+      />
 
       {/* Edit Note Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Note</DialogTitle>
-            <DialogDescription>
-              Update the note details
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="edit-title" className="block text-sm font-medium mb-1">
-                Title
-              </label>
-              <Input
-                id="edit-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Note title"
-              />
-            </div>
-            <div>
-              <label htmlFor="edit-content" className="block text-sm font-medium mb-1">
-                Content
-              </label>
-              <Textarea
-                id="edit-content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your note here..."
-                rows={8}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={updateNote} 
-              disabled={!title.trim()} 
-              className="bg-blue-500 hover:bg-blue-600"
-            >
-              Update Note
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditNoteDialog 
+        open={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onUpdate={updateNote}
+        title={title}
+        setTitle={setTitle}
+        content={content}
+        setContent={setContent}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the note
-              "{selectedNote?.title}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={deleteNote}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteNoteDialog 
+        open={isDeleteDialogOpen}
+        onClose={setIsDeleteDialogOpen}
+        onDelete={deleteNote}
+        selectedNote={selectedNote}
+      />
     </div>
   );
 };
