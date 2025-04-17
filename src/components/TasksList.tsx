@@ -40,13 +40,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
     queryFn: async () => {
       let query = supabase
         .from("task_templates")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
         
       if (projectId) {
         query = query.eq("project_id", projectId);
       }
 
+      query = query.order("created_at", { ascending: false });
       const { data, error } = await query;
 
       if (error) throw error;

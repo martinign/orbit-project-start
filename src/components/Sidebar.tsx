@@ -72,19 +72,9 @@ export function AppSidebar() {
                     className="hover:bg-purple-500/10 transition-colors duration-200"
                   >
                     <Users className="text-purple-500" />
-                    <span>Contact Table</span>
+                    <span>Contacts</span>
                   </SidebarMenuButton>
                 </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Add Contact"
-                  className="hover:bg-green-500/10 transition-colors duration-200"
-                  onClick={() => setIsCreateContactOpen(true)}
-                >
-                  <Plus className="text-green-500" />
-                  <span>Create Contact</span>
-                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

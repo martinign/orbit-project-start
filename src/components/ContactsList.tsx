@@ -34,7 +34,7 @@ import { Edit, Trash2, Search, Plus } from "lucide-react";
 import ContactForm from "./ContactForm";
 
 interface ContactsListProps {
-  projectId?: string;
+  projectId?: string | null;
 }
 
 const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
@@ -52,7 +52,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
     queryFn: async () => {
       let query = supabase
         .from("project_contacts")
-        .select("*")
+        .select("*, projects(project_number, Sponsor)")
         .order("created_at", { ascending: false });
       
       // If projectId is provided, filter by project
@@ -82,7 +82,9 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
         contact.telephone?.toLowerCase().includes(query) ||
         contact.company?.toLowerCase().includes(query) ||
         contact.role?.toLowerCase().includes(query) ||
-        contact.location?.toLowerCase().includes(query)
+        contact.location?.toLowerCase().includes(query) ||
+        contact.projects?.project_number?.toLowerCase().includes(query) ||
+        contact.projects?.Sponsor?.toLowerCase().includes(query)
       );
       
       setFilteredContacts(filtered);
@@ -167,6 +169,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
                 <TableHead>Phone</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Project</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -179,6 +182,11 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
                   <TableCell>{contact.telephone || "-"}</TableCell>
                   <TableCell>{contact.company || "-"}</TableCell>
                   <TableCell>{contact.role || "-"}</TableCell>
+                  <TableCell>
+                    {contact.projects ? 
+                      `${contact.projects.project_number} - ${contact.projects.Sponsor}` : 
+                      "-"}
+                  </TableCell>
                   <TableCell>{contact.location || "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

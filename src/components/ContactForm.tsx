@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,6 +17,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface Project {
+  id: string;
+  project_number: string;
+  Sponsor: string;
+}
 
 // Form validation schema
 const contactSchema = z.object({
@@ -26,7 +33,7 @@ const contactSchema = z.object({
   company: z.string().optional(),
   role: z.string().optional(),
   location: z.string().optional(),
-  project_id: z.string().optional(),
+  project_id: z.string().min(1, "Project is required"),
 });
 
 type ContactFormValues = z.infer<typeof contactSchema>;
@@ -34,13 +41,36 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 interface ContactFormProps {
   contact?: any;
   onSuccess?: () => void;
-  projectId?: string;
+  projectId?: string | null;
 }
 
 const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+
+  // Fetch projects for dropdown
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("id, project_number, Sponsor")
+          .order("project_number", { ascending: true });
+        
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   // Initialize the form with default values or existing contact data
   const form = useForm<ContactFormValues>({
@@ -66,15 +96,28 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
         },
   });
 
+  // Update form value when projectId prop changes
+  useEffect(() => {
+    if (projectId) {
+      form.setValue("project_id", projectId);
+    }
+  }, [projectId, form]);
+
   const onSubmit = async (values: ContactFormValues) => {
     if (!user) return;
     setIsSubmitting(true);
 
     try {
+      // Ensure required fields are present
       const contactData = {
-        ...values,
-        user_id: user.id,
-        project_id: values.project_id || null,
+        full_name: values.full_name,
+        email: values.email,
+        telephone: values.telephone || null,
+        company: values.company || null,
+        role: values.role || null,
+        location: values.location || null,
+        project_id: values.project_id,
+        user_id: user.id
       };
 
       // Determine if this is an update or a new contact
@@ -138,6 +181,45 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
               <FormControl>
                 <Input placeholder="john@example.com" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="project_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Project*</FormLabel>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value}
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {isLoadingProjects ? (
+                    <SelectItem value="loading" disabled>
+                      Loading projects...
+                    </SelectItem>
+                  ) : projects.length > 0 ? (
+                    projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.project_number} - {project.Sponsor}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      No projects found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
