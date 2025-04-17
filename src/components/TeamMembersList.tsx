@@ -213,7 +213,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {teamMembers.map((member) => (
-            <Card key={member.id} className="overflow-hidden">
+            <Card key={member.id} className="overflow-hidden h-[280px] flex flex-col">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg truncate">{member.full_name}</CardTitle>
                 {member.role && (
@@ -223,7 +223,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                   </p>
                 )}
               </CardHeader>
-              <CardContent className="pb-2">
+              <CardContent className="pb-2 flex-grow">
                 <div className="space-y-2 text-sm">
                   {/* Only render email if it exists */}
                   {member.email && (
@@ -256,15 +256,15 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
                     </p>
                   )}
                   
-                  {!projectId && member.projects && (
+                  {member.projects && (
                     <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
                       {member.projects.project_number} - {member.projects.Sponsor}
                     </p>
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="pt-0 flex justify-end border-t p-2">
-                <div className="flex gap-1">
+              <CardFooter className="border-t p-2 mt-auto">
+                <div className="flex gap-1 ml-auto">
                   <Button
                     variant="ghost"
                     size="icon"

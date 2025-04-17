@@ -191,7 +191,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
                 <TableHead>Phone</TableHead>
                 <TableHead>Company</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Project</TableHead>
+                {!projectId && <TableHead>Project</TableHead>}
                 <TableHead>Location</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -204,11 +204,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
                   <TableCell>{contact.telephone || "-"}</TableCell>
                   <TableCell>{contact.company || "-"}</TableCell>
                   <TableCell>{contact.role || "-"}</TableCell>
-                  <TableCell>
-                    {contact.projects ? 
-                      `${contact.projects.project_number} - ${contact.projects.Sponsor}` : 
-                      "-"}
-                  </TableCell>
+                  {!projectId && (
+                    <TableCell>
+                      {contact.projects ? 
+                        `${contact.projects.project_number} - ${contact.projects.Sponsor}` : 
+                        "-"}
+                    </TableCell>
+                  )}
                   <TableCell>{contact.location || "-"}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -239,7 +241,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredContacts.map((contact) => (
-            <Card key={contact.id} className="overflow-hidden">
+            <Card key={contact.id} className="overflow-hidden h-[320px] flex flex-col">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg truncate">{contact.full_name}</CardTitle>
                 {contact.role && (
@@ -249,7 +251,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
                   </p>
                 )}
               </CardHeader>
-              <CardContent className="pb-2">
+              <CardContent className="pb-2 flex-grow">
                 <div className="space-y-2 text-sm">
                   <p className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-muted-foreground" />
@@ -284,8 +286,8 @@ const ContactsList: React.FC<ContactsListProps> = ({
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="pt-0 flex justify-end border-t p-2">
-                <div className="flex gap-1">
+              <CardFooter className="border-t p-2 mt-auto">
+                <div className="flex gap-1 ml-auto">
                   <Button
                     variant="ghost"
                     size="icon"
