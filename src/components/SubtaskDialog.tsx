@@ -267,7 +267,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
                 <SelectValue placeholder="Select team member" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Not assigned</SelectItem>
+                <SelectItem value="none">Not assigned</SelectItem>
                 {teamMembers?.map((member) => (
                   <SelectItem key={member.id} value={member.full_name}>
                     {member.full_name}
