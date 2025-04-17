@@ -1,0 +1,113 @@
+
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import ProjectDialog from "@/components/ProjectDialog";
+
+interface ProjectCardProps {
+  project: {
+    id: string;
+    Sponsor: string;
+    project_number: string;
+    protocol_number: string;
+    protocol_title: string;
+    description: string | null;
+    status: string;
+  };
+  onDelete: (id: string) => void;
+  onUpdate: () => void;
+}
+
+const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  return (
+    <div className="relative">
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <Card className="h-[180px] w-full cursor-pointer hover:border-blue-300 transition-all duration-200">
+            <CardContent className="p-6 flex flex-col h-full justify-between">
+              <div className="absolute top-3 right-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <MoreHorizontal className="h-5 w-5 text-gray-500" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="cursor-pointer" onClick={handleEdit}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-red-600 focus:text-red-600" 
+                      onClick={() => onDelete(project.id)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold truncate">{project.Sponsor}</h3>
+                <p className="text-sm text-gray-600 truncate">Project #: {project.project_number}</p>
+                <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+              </div>
+              <div className="mt-4">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  project.status === 'active' 
+                    ? 'bg-green-100 text-green-800' 
+                    : project.status === 'pending'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : project.status === 'completed'
+                    ? 'bg-blue-100 text-blue-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {project.status}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80 p-4">
+          <div className="space-y-2">
+            <h4 className="font-semibold">Protocol Title:</h4>
+            <p className="text-sm">{project.protocol_title}</p>
+            {project.description && (
+              <>
+                <h4 className="font-semibold">Description:</h4>
+                <p className="text-sm">{project.description}</p>
+              </>
+            )}
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+
+      <ProjectDialog 
+        open={isEditDialogOpen} 
+        onClose={() => setIsEditDialogOpen(false)}
+        onSuccess={onUpdate}
+        project={project}
+      />
+    </div>
+  );
+};
+
+export default ProjectCard;

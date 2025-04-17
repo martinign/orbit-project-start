@@ -1,7 +1,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { PlusCircle, Filter } from "lucide-react";
+import { PlusCircle, Filter, LayoutGrid, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,11 +29,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import ProjectDialog from "@/components/ProjectDialog";
+import ProjectCard from "@/components/ProjectCard";
+import { useToast } from "@/hooks/use-toast";
 
 const Projects = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [filterType, setFilterType] = useState<string | null>(null);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "card">("table");
 
   // Fetch projects from Supabase
   const { data: projects, isLoading, refetch } = useQuery({
@@ -48,6 +52,37 @@ const Projects = () => {
       return data;
     },
   });
+
+  const handleDeleteProject = async (projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete the project. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Project deleted successfully.",
+      });
+      refetch();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="w-full">
@@ -73,6 +108,25 @@ const Projects = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "table" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("table")}
+              title="Table view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "card" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("card")}
+              title="Card view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <Button 
             className="bg-blue-500 hover:bg-blue-600 text-white"
             onClick={() => setIsProjectDialogOpen(true)}
@@ -94,40 +148,53 @@ const Projects = () => {
           {isLoading ? (
             <div className="flex justify-center p-4">Loading projects...</div>
           ) : projects && projects.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Project Number</TableHead>
-                  <TableHead>Protocol Number</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Sponsor</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {projects.map((project) => (
-                  <TableRow key={project.id}>
-                    <TableCell>{project.project_number}</TableCell>
-                    <TableCell>{project.protocol_number}</TableCell>
-                    <TableCell className="max-w-xs truncate">{project.protocol_title}</TableCell>
-                    <TableCell>{project.Sponsor}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        project.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : project.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : project.status === 'completed'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {project.status}
-                      </span>
-                    </TableCell>
+            viewMode === "table" ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Project Number</TableHead>
+                    <TableHead>Protocol Number</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Sponsor</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projects.map((project) => (
+                    <TableRow key={project.id}>
+                      <TableCell>{project.project_number}</TableCell>
+                      <TableCell>{project.protocol_number}</TableCell>
+                      <TableCell className="max-w-xs truncate">{project.protocol_title}</TableCell>
+                      <TableCell>{project.Sponsor}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          project.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : project.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : project.status === 'completed'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {project.status}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                {projects.map((project) => (
+                  <ProjectCard 
+                    key={project.id} 
+                    project={project} 
+                    onDelete={handleDeleteProject}
+                    onUpdate={() => refetch()}
+                  />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            )
           ) : (
             <div className="text-center p-4">
               <p className="text-muted-foreground">No projects found</p>

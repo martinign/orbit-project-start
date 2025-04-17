@@ -1,229 +1,303 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProjectDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess: () => void;
+  project?: {
+    id: string;
+    project_number: string;
+    protocol_number: string;
+    protocol_title: string;
+    Sponsor: string;
+    description?: string | null;
+    status: string;
+  };
 }
 
-const ProjectDialog = ({ open, onClose, onSuccess }: ProjectDialogProps) => {
+const formSchema = z.object({
+  project_number: z.string().min(1, "Project number is required"),
+  protocol_number: z.string().min(1, "Protocol number is required"),
+  protocol_title: z.string().min(1, "Protocol title is required"),
+  Sponsor: z.string().min(1, "Sponsor is required"),
+  description: z.string().optional(),
+  status: z.string().min(1, "Status is required")
+});
+
+const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    project_number: "",
-    protocol_number: "",
-    protocol_title: "",
-    Sponsor: "",
-    description: "",
-    status: "active",
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!project;
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      project_number: "",
+      protocol_number: "",
+      protocol_title: "",
+      Sponsor: "",
+      description: "",
+      status: "active"
+    }
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleStatusChange = (value: string) => {
-    setFormData({ ...formData, status: value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to create a project",
-        variant: "destructive",
+  // Pre-populate the form when editing
+  useEffect(() => {
+    if (project && open) {
+      form.reset({
+        project_number: project.project_number,
+        protocol_number: project.protocol_number,
+        protocol_title: project.protocol_title,
+        Sponsor: project.Sponsor,
+        description: project.description || "",
+        status: project.status
       });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.from("projects").insert({
-        ...formData,
-        user_id: user.id,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Project created successfully",
-      });
-      
-      setFormData({
+    } else if (!project && open) {
+      form.reset({
         project_number: "",
         protocol_number: "",
         protocol_title: "",
         Sponsor: "",
         description: "",
-        status: "active",
+        status: "active"
       });
+    }
+  }, [project, open, form]);
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create or update a project",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (isEditing && project) {
+        // Update existing project
+        const { error } = await supabase
+          .from("projects")
+          .update({
+            ...values,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", project.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Project updated successfully",
+        });
+      } else {
+        // Create new project
+        const { error } = await supabase
+          .from("projects")
+          .insert({
+            ...values,
+            user_id: user.id
+          });
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Project created successfully",
+        });
+      }
       
-      if (onSuccess) onSuccess();
+      onSuccess();
       onClose();
-    } catch (error: any) {
+      form.reset();
+    } catch (error) {
+      console.error("Error saving project:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create project",
-        variant: "destructive",
+        description: `Failed to ${isEditing ? "update" : "create"} project. Please try again.`,
+        variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>
-              Fill out the form below to create a new clinical trial project.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-5 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="project_number">Project Number</Label>
-                <Input
-                  id="project_number"
-                  name="project_number"
-                  value={formData.project_number}
-                  onChange={handleChange}
-                  placeholder="PX-001"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="protocol_number">Protocol Number</Label>
-                <Input
-                  id="protocol_number"
-                  name="protocol_number"
-                  value={formData.protocol_number}
-                  onChange={handleChange}
-                  placeholder="PROTO-123"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="protocol_title">Protocol Title</Label>
-              <Input
-                id="protocol_title"
-                name="protocol_title"
-                value={formData.protocol_title}
-                onChange={handleChange}
-                placeholder="Study of..."
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="Sponsor">Sponsor</Label>
-              <Input
-                id="Sponsor"
-                name="Sponsor"
-                value={formData.Sponsor}
-                onChange={handleChange}
-                placeholder="Sponsor Company"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Detailed project description..."
-                className="min-h-[100px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <ToggleGroup
-                type="single"
-                value={formData.status}
-                onValueChange={handleStatusChange}
-                className="justify-stretch w-full"
-              >
-                <ToggleGroupItem 
-                  value="active" 
-                  className="flex-1 bg-white data-[state=on]:bg-green-100 data-[state=on]:text-green-800 border border-gray-300"
-                >
-                  Active
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="pending" 
-                  className="flex-1 bg-white data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-800 border border-gray-300"
-                >
-                  Pending
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="completed" 
-                  className="flex-1 bg-white data-[state=on]:bg-blue-100 data-[state=on]:text-blue-800 border border-gray-300"
-                >
-                  Completed
-                </ToggleGroupItem>
-                <ToggleGroupItem 
-                  value="inactive" 
-                  className="flex-1 bg-white data-[state=on]:bg-gray-100 data-[state=on]:text-gray-800 border border-gray-300"
-                >
-                  Inactive
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          </div>
-
-          <DialogFooter>
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{isEditing ? 'Edit Project' : 'Create New Project'}</span>
             <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              disabled={loading}
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose} 
+              className="h-6 w-6 rounded-full"
             >
-              Cancel
+              <X className="h-4 w-4" />
             </Button>
-            <Button 
-              type="submit" 
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create Project"}
-            </Button>
-          </DialogFooter>
-        </form>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="project_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter project number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="protocol_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Protocol Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter protocol number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="Sponsor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Sponsor</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter sponsor name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="protocol_title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Protocol Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter protocol title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter project description"
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <FormControl>
+                    <ToggleGroup
+                      type="single"
+                      value={field.value}
+                      onValueChange={(value) => {
+                        if (value) field.onChange(value);
+                      }}
+                      className="justify-start w-full flex"
+                    >
+                      <ToggleGroupItem 
+                        value="active" 
+                        className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}
+                      >
+                        Active
+                      </ToggleGroupItem>
+                      <ToggleGroupItem 
+                        value="pending" 
+                        className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}
+                      >
+                        Pending
+                      </ToggleGroupItem>
+                      <ToggleGroupItem 
+                        value="completed" 
+                        className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}
+                      >
+                        Completed
+                      </ToggleGroupItem>
+                      <ToggleGroupItem 
+                        value="cancelled" 
+                        className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}
+                      >
+                        Cancelled
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : isEditing ? "Update Project" : "Create Project"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
