@@ -1,18 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { UserCog } from "lucide-react";
+import ProjectSelector from "./team-members/ProjectSelector";
+import FormField from "./team-members/FormField";
+import FormActions from "./team-members/FormActions";
 
 interface TeamMemberFormProps {
   projectId?: string;
@@ -23,40 +17,12 @@ interface TeamMemberFormProps {
 const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: TeamMemberFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [formData, setFormData] = useState({
     project_id: teamMember?.project_id || initialProjectId || "",
     full_name: teamMember?.full_name || "",
     role: teamMember?.role || "",
     location: teamMember?.location || "",
   });
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setIsLoadingProjects(true);
-      try {
-        const { data, error } = await supabase
-          .from("projects")
-          .select("id, project_number, Sponsor")
-          .order("project_number", { ascending: true });
-        
-        if (error) throw error;
-        setProjects(data || []);
-      } catch (error: any) {
-        console.error("Error fetching projects:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load projects",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingProjects(false);
-      }
-    };
-
-    fetchProjects();
-  }, [toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -162,92 +128,49 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="project_id">Project *</Label>
-        <Select
+        <ProjectSelector
           value={formData.project_id}
-          onValueChange={handleProjectChange}
-          disabled={isLoadingProjects || isSubmitting || (!!initialProjectId && !teamMember)}
-        >
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select a project" />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoadingProjects ? (
-              <SelectItem value="loading" disabled>
-                Loading projects...
-              </SelectItem>
-            ) : projects.length > 0 ? (
-              projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.project_number} - {project.Sponsor}
-                </SelectItem>
-              ))
-            ) : (
-              <SelectItem value="none" disabled>
-                No projects found
-              </SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <Label htmlFor="full_name">Full Name *</Label>
-        <Input
-          id="full_name"
-          name="full_name"
-          value={formData.full_name}
-          onChange={handleChange}
-          placeholder="Enter full name"
-          className="mt-1"
+          onChange={handleProjectChange}
+          disabled={(!!initialProjectId && !teamMember)}
           required
         />
       </div>
       
-      <div>
-        <Label htmlFor="role">Role</Label>
-        <Input
-          id="role"
-          name="role"
-          value={formData.role}
-          onChange={handleChange}
-          placeholder="E.g., Project Manager, Developer"
-          className="mt-1"
-        />
-        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-          <UserCog className="h-3 w-3" />
-          Enter the team member's role in the project
-        </p>
-      </div>
+      <FormField
+        id="full_name"
+        name="full_name"
+        label="Full Name"
+        value={formData.full_name}
+        onChange={handleChange}
+        placeholder="Enter full name"
+        required
+      />
       
-      <div>
-        <Label htmlFor="location">Location</Label>
-        <Input
-          id="location"
-          name="location"
-          value={formData.location}
-          onChange={handleChange}
-          placeholder="E.g., New York"
-          className="mt-1"
-        />
-      </div>
+      <FormField
+        id="role"
+        name="role"
+        label="Role"
+        value={formData.role}
+        onChange={handleChange}
+        placeholder="E.g., Project Manager, Developer"
+        hint="Enter the team member's role in the project"
+        icon={UserCog}
+      />
       
-      <div className="flex justify-end gap-3 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onSuccess}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-purple-500 hover:bg-purple-600"
-        >
-          {isSubmitting ? "Saving..." : teamMember ? "Update" : "Add Team Member"}
-        </Button>
-      </div>
+      <FormField
+        id="location"
+        name="location"
+        label="Location"
+        value={formData.location}
+        onChange={handleChange}
+        placeholder="E.g., New York"
+      />
+      
+      <FormActions 
+        onCancel={onSuccess}
+        isSubmitting={isSubmitting}
+        isEditMode={!!teamMember}
+      />
     </form>
   );
 };
