@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import TaskTemplates from "./pages/TaskTemplates";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -28,7 +27,6 @@ const App = () => (
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/task-templates" element={<TaskTemplates />} />
               <Route path="/projects" element={<Dashboard />} />
               <Route path="/projects/:id" element={<Dashboard />} />
               <Route path="/contacts" element={<Dashboard />} />

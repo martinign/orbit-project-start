@@ -45,12 +45,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ProjectDialog from "@/components/ProjectDialog";
+import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
@@ -193,15 +194,14 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link to="/task-templates">
-                  <SidebarMenuButton
-                    tooltip="Task Templates"
-                    className="hover:bg-green-500/10 transition-colors duration-200"
-                  >
-                    <FileText className="text-green-500" />
-                    <span>Task Templates</span>
-                  </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton
+                  tooltip="Task Templates"
+                  className="hover:bg-green-500/10 transition-colors duration-200"
+                  onClick={() => setIsTaskTemplateDialogOpen(true)}
+                >
+                  <FileText className="text-green-500" />
+                  <span>Task Templates</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -270,22 +270,15 @@ export function AppSidebar() {
         </Button>
       </SidebarFooter>
 
-      {/* View Templates Dialog */}
-      <Dialog open={isViewTasksOpen} onOpenChange={setIsViewTasksOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Task Templates</DialogTitle>
-            <DialogDescription>
-              View and manage your task templates
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewTasksOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Task Template Dialog */}
+      <TaskTemplateDialog 
+        open={isTaskTemplateDialogOpen} 
+        onClose={() => setIsTaskTemplateDialogOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["task_templates"] });
+          setIsTaskTemplateDialogOpen(false);
+        }}
+      />
 
       {/* Edit Project Dialog */}
       <ProjectDialog 
