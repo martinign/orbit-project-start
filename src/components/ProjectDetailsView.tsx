@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -9,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,17 +24,26 @@ import {
   Users,
   UserRound,
   Plus,
+  Search,
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import TaskBoard from './TaskBoard';
 import TaskDialog from './TaskDialog';
+import { Input } from '@/components/ui/input';
+import ContactsList from './ContactsList';
+import TeamMembersList from './TeamMembersList';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import ContactForm from './ContactForm';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tasks');
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [contactSearchQuery, setContactSearchQuery] = useState('');
+  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
 
   // Fetch project details
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -62,7 +71,7 @@ const ProjectDetailsView = () => {
   });
 
   // Fetch project contacts count
-  const { data: contactsCount } = useQuery({
+  const { data: contactsCount, refetch: refetchContacts } = useQuery({
     queryKey: ['project_contacts_count', id],
     queryFn: async () => {
       if (!id) return 0;
@@ -314,7 +323,6 @@ const ProjectDetailsView = () => {
             </CardContent>
           </Card>
           
-          {/* Task Creation Dialog */}
           <TaskDialog
             open={isTaskDialogOpen}
             onClose={() => setIsTaskDialogOpen(false)}
@@ -328,25 +336,100 @@ const ProjectDetailsView = () => {
         </TabsContent>
         <TabsContent value="contacts" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Project Contacts</CardTitle>
-              <CardDescription>View and manage project contacts</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Project Contacts</CardTitle>
+                <CardDescription>View and manage project contacts</CardDescription>
+              </div>
+              <div>
+                <Button 
+                  onClick={() => setIsCreateContactOpen(true)} 
+                  className="bg-blue-500 hover:bg-blue-600"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Contact
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {/* Contact list component would go here */}
-              <p className="text-muted-foreground">Project contacts will be displayed here.</p>
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search contacts..."
+                    className="pl-8"
+                    value={contactSearchQuery}
+                    onChange={(e) => setContactSearchQuery(e.target.value)}
+                  />
+                  {contactSearchQuery && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-10 w-10"
+                      onClick={() => setContactSearchQuery('')}
+                      title="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              <ContactsList 
+                projectId={id} 
+                searchQuery={contactSearchQuery} 
+                viewMode="table" 
+              />
             </CardContent>
           </Card>
+          
+          <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Create Contact</DialogTitle>
+                <DialogDescription>
+                  Add a new contact to this project
+                </DialogDescription>
+              </DialogHeader>
+              <ContactForm 
+                projectId={id}
+                onSuccess={() => {
+                  setIsCreateContactOpen(false);
+                  refetchContacts();
+                  toast({
+                    title: "Success",
+                    description: "Contact added successfully",
+                  });
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         <TabsContent value="team" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Team Members</CardTitle>
-              <CardDescription>View and manage project team members</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Team Members</CardTitle>
+                <CardDescription>View and manage project team members</CardDescription>
+              </div>
+              <div>
+                <Button 
+                  className="bg-blue-500 hover:bg-blue-600"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Team Member
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              {/* Team members list component would go here */}
-              <p className="text-muted-foreground">Project team members will be displayed here.</p>
+              <TeamMembersList 
+                projectId={id} 
+                searchQuery="" 
+                viewMode="table" 
+              />
             </CardContent>
           </Card>
         </TabsContent>
