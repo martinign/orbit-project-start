@@ -50,7 +50,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []) as TaskTemplate[];
+      return data || [];
     },
   });
 

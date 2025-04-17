@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -21,6 +20,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -30,21 +36,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Search, Plus } from "lucide-react";
+import { Edit, Trash2, Mail, Phone, Building, MapPin, User, Plus } from "lucide-react";
 import ContactForm from "./ContactForm";
+
+interface Contact {
+  id: string;
+  full_name: string;
+  email: string;
+  telephone?: string;
+  company?: string;
+  role?: string;
+  location?: string;
+  project_id: string;
+  projects?: {
+    project_number: string;
+    Sponsor: string;
+  };
+}
 
 interface ContactsListProps {
   projectId?: string | null;
+  searchQuery?: string;
+  viewMode?: "table" | "card";
 }
 
-const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
+const ContactsList: React.FC<ContactsListProps> = ({ 
+  projectId, 
+  searchQuery = "", 
+  viewMode = "table" 
+}) => {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredContacts, setFilteredContacts] = useState<any[]>([]);
-  const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
   const [isEditContactOpen, setIsEditContactOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   // Fetch contacts from Supabase
   const { data: contacts, isLoading, refetch } = useQuery({
@@ -63,7 +88,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      return data as Contact[] || [];
     },
   });
 
@@ -93,12 +118,12 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
     }
   }, [searchQuery, contacts]);
 
-  const handleEditContact = (contact: any) => {
+  const handleEditContact = (contact: Contact) => {
     setSelectedContact(contact);
     setIsEditContactOpen(true);
   };
 
-  const handleDeleteContact = (contact: any) => {
+  const handleDeleteContact = (contact: Contact) => {
     setSelectedContact(contact);
     setIsDeleteDialogOpen(true);
   };
@@ -137,29 +162,23 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
     }
   };
 
+  if (isLoading) {
+    return <div className="text-center py-6">Loading contacts...</div>;
+  }
+
+  if (!filteredContacts || filteredContacts.length === 0) {
+    return (
+      <div className="text-center p-8 border rounded-lg">
+        <p className="text-muted-foreground">
+          {searchQuery ? "No contacts match your search criteria" : "No contacts found"}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search contacts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-full sm:w-64"
-          />
-          <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-        </div>
-        
-        <Button onClick={() => setIsCreateContactOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Contact
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="text-center py-6">Loading contacts...</div>
-      ) : filteredContacts.length > 0 ? (
+      {viewMode === "table" ? (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -215,39 +234,77 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
           </Table>
         </div>
       ) : (
-        <div className="text-center p-8 border rounded-lg">
-          <p className="text-muted-foreground">
-            {searchQuery ? "No contacts match your search criteria" : "No contacts found"}
-          </p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => setIsCreateContactOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Your First Contact
-          </Button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredContacts.map((contact) => (
+            <Card key={contact.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg truncate">{contact.full_name}</CardTitle>
+                {contact.role && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {contact.role}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="space-y-2 text-sm">
+                  <p className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{contact.email}</span>
+                  </p>
+                  
+                  {contact.telephone && (
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      {contact.telephone}
+                    </p>
+                  )}
+                  
+                  {contact.company && (
+                    <p className="flex items-center gap-2">
+                      <Building className="h-4 w-4 text-muted-foreground" />
+                      {contact.company}
+                    </p>
+                  )}
+                  
+                  {contact.location && (
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      {contact.location}
+                    </p>
+                  )}
+                  
+                  {contact.projects && (
+                    <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block mt-1">
+                      {contact.projects.project_number} - {contact.projects.Sponsor}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="pt-0 flex justify-end border-t p-2">
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleEditContact(contact)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleDeleteContact(contact)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       )}
-
-      {/* Create Contact Dialog */}
-      <Dialog open={isCreateContactOpen} onOpenChange={setIsCreateContactOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Create Contact</DialogTitle>
-            <DialogDescription>
-              Add a new contact to your network
-            </DialogDescription>
-          </DialogHeader>
-          <ContactForm 
-            projectId={projectId} 
-            onSuccess={() => {
-              setIsCreateContactOpen(false);
-              refetch();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Contact Dialog */}
       <Dialog open={isEditContactOpen} onOpenChange={setIsEditContactOpen}>
@@ -263,6 +320,10 @@ const ContactsList: React.FC<ContactsListProps> = ({ projectId }) => {
             onSuccess={() => {
               setIsEditContactOpen(false);
               refetch();
+              toast({
+                title: "Success",
+                description: "Contact updated successfully.",
+              });
             }}
           />
         </DialogContent>
