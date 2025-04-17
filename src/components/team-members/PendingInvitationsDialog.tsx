@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { LoaderIcon } from "lucide-react";
+import { LoaderIcon, Shield, User } from "lucide-react";
 
 interface PendingInvitationsDialogProps {
   open: boolean;
@@ -17,6 +16,10 @@ interface Invitation {
   project_id: string;
   permission_level: string;
   created_at: string;
+  inviter_id: string;
+  profiles: {
+    full_name: string;
+  } | null;
   projects: {
     project_number: string;
     Sponsor: string;
@@ -41,6 +44,10 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           project_id,
           permission_level,
           created_at,
+          inviter_id,
+          profiles:inviter_id (
+            full_name
+          ),
           projects:project_id (
             project_number,
             Sponsor
@@ -51,7 +58,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Invitation[];
+      return data;
     },
     enabled: open,
   });
@@ -69,7 +76,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         throw new Error("Invitation not found");
       }
 
-      // Update invitation status
       const { error: updateError } = await supabase
         .from("project_invitations")
         .update({ status: accept ? "accepted" : "rejected" })
@@ -77,7 +83,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
 
       if (updateError) throw updateError;
 
-      // If accepted, add user to project team members
       if (accept) {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) throw new Error("User not found");
@@ -101,7 +106,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         if (teamMemberError) throw teamMemberError;
       }
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
       queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
       if (accept) {
@@ -115,7 +119,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
-      // If no more pending invitations, close the dialog
       if ((invitations?.length || 0) <= 1) {
         onClose();
       }
@@ -153,11 +156,14 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
                   <div className="font-medium">
-                    {invitation.projects ? 
-                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` : 
-                      "Unknown Project"}
+                    {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    Invited by: {invitation.profiles?.full_name || 'Unknown'}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Shield className="h-4 w-4" />
                     Permission Level: {invitation.permission_level}
                   </div>
                   <div className="flex justify-end space-x-2 mt-2">

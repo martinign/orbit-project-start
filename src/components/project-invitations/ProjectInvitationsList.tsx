@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LoaderIcon, Shield } from "lucide-react";
+import { LoaderIcon, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,7 +39,6 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch invitations with profile information
   const { data: invitations, isLoading } = useQuery({
     queryKey: ["project_invitations", projectId],
     queryFn: async () => {
@@ -50,12 +49,16 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         .select(`
           id,
           invitee_id,
+          inviter_id,
           permission_level,
           status,
           created_at,
           profiles:invitee_id (
             full_name,
             email
+          ),
+          inviter:inviter_id (
+            full_name
           ),
           projects:project_id (
             project_number,
@@ -66,7 +69,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Invitation[];
+      return data;
     },
     enabled: !!projectId,
   });
@@ -143,6 +146,10 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
             </div>
             <div className="text-sm text-muted-foreground">
               {invitation.profiles?.email}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              Invited by: {invitation.inviter?.full_name || 'Unknown'}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={getStatusBadgeVariant(invitation.status)}>
