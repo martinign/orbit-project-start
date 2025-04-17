@@ -1,3 +1,4 @@
+
 import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -43,15 +44,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import TaskDialog from "@/components/TaskDialog";
-import TasksList from "@/components/TasksList";
 import ProjectDialog from "@/components/ProjectDialog";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [isViewTasksOpen, setIsViewTasksOpen] = useState(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -195,24 +193,15 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Task Template"
-                  className="hover:bg-green-500/10 transition-colors duration-200"
-                  onClick={() => setIsCreateTaskOpen(true)}
-                >
-                  <Plus className="text-green-500" />
-                  <span>Task Template</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="View Templates"
-                  className="hover:bg-blue-500/10 transition-colors duration-200"
-                  onClick={() => setIsViewTasksOpen(true)}
-                >
-                  <List className="text-blue-500" />
-                  <span>View Templates</span>
-                </SidebarMenuButton>
+                <Link to="/task-templates">
+                  <SidebarMenuButton
+                    tooltip="Task Templates"
+                    className="hover:bg-green-500/10 transition-colors duration-200"
+                  >
+                    <FileText className="text-green-500" />
+                    <span>Task Templates</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -281,12 +270,6 @@ export function AppSidebar() {
         </Button>
       </SidebarFooter>
 
-      {/* Create Task Template Dialog */}
-      <TaskDialog 
-        open={isCreateTaskOpen} 
-        onClose={() => setIsCreateTaskOpen(false)} 
-      />
-
       {/* View Templates Dialog */}
       <Dialog open={isViewTasksOpen} onOpenChange={setIsViewTasksOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -296,7 +279,6 @@ export function AppSidebar() {
               View and manage your task templates
             </DialogDescription>
           </DialogHeader>
-          <TasksList />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewTasksOpen(false)}>
               Close
