@@ -12,42 +12,83 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TaskDialogProps {
   open: boolean;
   onClose: () => void;
   task?: any; // For editing existing tasks
+  onSuccess?: () => void;
 }
 
-const TaskDialog: React.FC<TaskDialogProps> = ({ open, onClose, task }) => {
+const TaskDialog: React.FC<TaskDialogProps> = ({ open, onClose, task, onSuccess }) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
-  const [priority, setPriority] = useState(task?.priority || 'medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create tasks",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Here would go the actual logic to save the task to the database
-      // For now we'll just simulate a success
+      if (task) {
+        // Update existing template
+        const { error } = await supabase
+          .from('task_templates')
+          .update({
+            title,
+            description,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', task.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Task template updated successfully",
+        });
+      } else {
+        // Create new template
+        const { error } = await supabase
+          .from('task_templates')
+          .insert({
+            title,
+            description,
+            user_id: user.id
+          });
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Task template created successfully",
+        });
+      }
       
-      toast({
-        title: "Success",
-        description: task ? "Task updated successfully" : "Task created successfully",
-      });
-      
+      // Reset form and close dialog
+      setTitle('');
+      setDescription('');
       onClose();
+      
+      // Refresh the list if onSuccess callback is provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error saving task:", error);
       toast({
@@ -64,9 +105,9 @@ const TaskDialog: React.FC<TaskDialogProps> = ({ open, onClose, task }) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{task ? 'Edit Task' : 'Create New Task'}</DialogTitle>
+          <DialogTitle>{task ? 'Edit Task Template' : 'Create New Task Template'}</DialogTitle>
           <DialogDescription>
-            {task ? 'Make changes to your task here.' : 'Fill out the form to create a new task.'}
+            {task ? 'Make changes to your task template here.' : 'Fill out the form to create a new task template.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -93,29 +134,12 @@ const TaskDialog: React.FC<TaskDialogProps> = ({ open, onClose, task }) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
-            <Select 
-              value={priority} 
-              onValueChange={setPriority}
-            >
-              <SelectTrigger id="priority">
-                <SelectValue placeholder="Select priority" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : task ? 'Save changes' : 'Create task'}
+              {isSubmitting ? 'Saving...' : task ? 'Save changes' : 'Create template'}
             </Button>
           </DialogFooter>
         </form>
