@@ -36,6 +36,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Fixed the query to properly type the response and handle the project filtering
   const { data: templates, isLoading, refetch } = useQuery({
     queryKey: ["task_templates", projectId],
     queryFn: async () => {
