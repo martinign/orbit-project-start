@@ -9,6 +9,20 @@ interface ProjectInvitationsListProps {
   projectId: string | null;
 }
 
+interface InvitationProfile {
+  full_name?: string | null;
+  email?: string | null;
+}
+
+interface Invitation {
+  id: string;
+  invitee_id: string;
+  permission_level: string;
+  status: string;
+  created_at: string;
+  profiles?: InvitationProfile | null;
+}
+
 const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const { toast } = useToast();
 
@@ -34,7 +48,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Invitation[];
     },
     enabled: !!projectId,
   });

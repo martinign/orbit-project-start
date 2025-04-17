@@ -38,7 +38,7 @@ import TeamMembersList from './TeamMembersList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import ContactForm from './ContactForm';
 import ProjectNotes from './ProjectNotes';
-import ProjectInvitationsList from './ProjectInvitationsList';
+import ProjectInvitationsList from './project-invitations/ProjectInvitationsList';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
