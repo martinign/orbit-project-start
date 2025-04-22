@@ -1,8 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +24,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ProjectDialogProps {
   open: boolean;
@@ -33,6 +39,7 @@ interface ProjectDialogProps {
     Sponsor: string;
     description?: string | null;
     status: string;
+    is_featured?: boolean; // Ensure this matches your database column name
   };
 }
 
@@ -42,7 +49,8 @@ const formSchema = z.object({
   protocol_title: z.string().min(1, "Protocol title is required"),
   Sponsor: z.string().min(1, "Sponsor is required"),
   description: z.string().optional(),
-  status: z.string().min(1, "Status is required")
+  status: z.string().min(1, "Status is required"),
+  isFeatured: z.boolean().default(false),
 });
 
 const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps) => {
@@ -60,11 +68,11 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       protocol_title: "",
       Sponsor: "",
       description: "",
-      status: "active"
-    }
+      status: "active",
+      isFeatured: false,
+    },
   });
 
-  // Pre-populate the form when editing
   useEffect(() => {
     if (project && open) {
       form.reset({
@@ -73,7 +81,8 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         protocol_title: project.protocol_title,
         Sponsor: project.Sponsor,
         description: project.description || "",
-        status: project.status
+        status: project.status,
+        isFeatured: project.is_featured || false,
       });
     } else if (!project && open) {
       form.reset({
@@ -82,7 +91,8 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         protocol_title: "",
         Sponsor: "",
         description: "",
-        status: "active"
+        status: "active",
+        isFeatured: false,
       });
     }
   }, [project, open, form]);
@@ -92,7 +102,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       toast({
         title: "Authentication Error",
         description: "You must be logged in to create or update a project",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -110,17 +120,17 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
             Sponsor: values.Sponsor,
             description: values.description,
             status: values.status,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            is_featured: values.isFeatured,
           })
           .eq("id", project.id);
-          
+
         if (error) throw error;
-        
-        // Invalidate related queries to trigger refetching
+
         queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
         queryClient.invalidateQueries({ queryKey: ["projects"] });
         queryClient.invalidateQueries({ queryKey: ["project", project.id] });
-        
+
         toast({
           title: "Success",
           description: "Project updated successfully",
@@ -135,21 +145,21 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
             Sponsor: values.Sponsor,
             description: values.description,
             status: values.status,
-            user_id: user.id
+            user_id: user.id,
+            is_featured: values.isFeatured,
           });
-          
+
         if (error) throw error;
-        
-        // Invalidate related queries to trigger refetching
+
         queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
         queryClient.invalidateQueries({ queryKey: ["projects"] });
-        
+
         toast({
           title: "Success",
           description: "Project created successfully",
         });
       }
-      
+
       onSuccess();
       onClose();
       form.reset();
@@ -158,7 +168,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       toast({
         title: "Error",
         description: `Failed to ${isEditing ? "update" : "create"} project. Please try again.`,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -194,7 +204,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
             </div>
           </DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -211,7 +221,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="protocol_number"
@@ -226,7 +236,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 )}
               />
             </div>
-            
+
             <FormField
               control={form.control}
               name="Sponsor"
@@ -240,7 +250,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="protocol_title"
@@ -254,7 +264,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="description"
@@ -262,17 +272,17 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <Textarea
                       placeholder="Enter project description"
                       className="min-h-[100px]"
-                      {...field} 
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="status"
@@ -288,26 +298,26 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                       }}
                       className="justify-start w-full flex"
                     >
-                      <ToggleGroupItem 
-                        value="active" 
+                      <ToggleGroupItem
+                        value="active"
                         className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}
                       >
                         Active
                       </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="pending" 
+                      <ToggleGroupItem
+                        value="pending"
                         className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}
                       >
                         Pending
                       </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="completed" 
+                      <ToggleGroupItem
+                        value="completed"
                         className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}
                       >
                         Completed
                       </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="cancelled" 
+                      <ToggleGroupItem
+                        value="cancelled"
                         className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}
                       >
                         Cancelled
@@ -318,7 +328,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 </FormItem>
               )}
             />
-            
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
