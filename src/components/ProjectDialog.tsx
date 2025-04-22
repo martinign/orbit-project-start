@@ -63,12 +63,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       status: "active"
     }
   });
-
-  const [toggleState, setToggleState] = useState(false);
-  const handleToggleChange = (value) => {
-    setToggleState(value === "on");
-  };
-
   
   // Pre-populate the form when editing
   useEffect(() => {
@@ -177,10 +171,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             {isEditing ? 'Edit Project' : 'Create New Project'}
-            <ToggleGroup type="single" value={toggleState ? "on" : "off"} onValueChange={handleToggleChange}>
-              <ToggleGroupItem value="on">On</ToggleGroupItem>
-              <ToggleGroupItem value="off">Off</ToggleGroupItem>
-            </ToggleGroup>       
+     
           </DialogTitle>
         </DialogHeader>
         
