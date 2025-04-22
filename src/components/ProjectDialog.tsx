@@ -63,16 +63,13 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       status: "active"
     }
   });
+
+  const [toggleState, setToggleState] = useState(false);
+  const handleToggleChange = (value) => {
+    setToggleState(value === "on");
+  };
+
   
-const YourComponent = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [toggleState, setToggleState] = useState(false);
-
-  const handleToggleChange = (value) => {
-    setToggleState(value === "on");
-  };
-
-
   // Pre-populate the form when editing
   useEffect(() => {
     if (project && open) {
