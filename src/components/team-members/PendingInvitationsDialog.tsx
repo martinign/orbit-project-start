@@ -35,7 +35,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<string | null>(null);
 
-  // First query to get pending invitations
   const { data: invitations, isLoading: isLoadingInvitations } = useQuery({
     queryKey: ["pending_invitations"],
     queryFn: async () => {
@@ -57,7 +56,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         `)
         .eq("invitee_id", user.user.id)
         .eq("status", "pending")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .filter('project_id', 'eq.distinct');
 
       if (error) throw error;
       return data as InvitationWithInviterId[];
@@ -65,7 +66,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
     enabled: open,
   });
 
-  // Second query to get sender profiles in bulk
   const { data: senderProfiles } = useQuery({
     queryKey: ["sender_profiles", invitations?.map((inv) => inv.inviter_id).filter(Boolean)],
     queryFn: async () => {
@@ -100,7 +100,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         throw new Error("Invitation not found");
       }
 
-      // Update invitation status
       const { error: updateError } = await supabase
         .from("project_invitations")
         .update({ status: accept ? "accepted" : "rejected" })
@@ -108,7 +107,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
 
       if (updateError) throw updateError;
 
-      // If accepted, add user to project team members
       if (accept) {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) throw new Error("User not found");
@@ -132,10 +130,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         if (teamMemberError) throw teamMemberError;
       }
 
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
       queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
-      queryClient.invalidateQueries({ queryKey: ["sender_profiles"] }); // Invalidate sender profiles
+      queryClient.invalidateQueries({ queryKey: ["sender_profiles"] });
       if (accept) {
         queryClient.invalidateQueries({ queryKey: ["team_members"] });
       }
@@ -147,11 +144,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
-      // If no more pending invitations, close the dialog
       if ((invitations?.length || 0) <= 1) {
         onClose();
       }
-
     } catch (error: any) {
       console.error("Error handling invitation:", error);
       toast({
