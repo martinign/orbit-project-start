@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,23 +12,15 @@ interface PendingInvitationsDialogProps {
   onClose: () => void;
 }
 
-interface InviterProfile {
-  full_name?: string | null;
-}
-
-interface ProjectDetails {
-  project_number?: string | null;
-  Sponsor?: string | null;
-  protocol_number?: string | null;
-}
-
 interface Invitation {
   id: string;
   project_id: string;
+  permission_level: string;
   created_at: string;
-  inviter_id: string;
-  profiles?: InviterProfile | null;
-  projects?: ProjectDetails | null;
+  projects: {
+    project_number: string;
+    Sponsor: string;
+  } | null;
 }
 
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
@@ -46,15 +39,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         .select(`
           id,
           project_id,
+          permission_level,
           created_at,
-          inviter_id,
-          profiles!project_invitations_inviter_id_fkey(
-            full_name
-          ),
-          projects(
+          projects:project_id (
             project_number,
-            Sponsor,
-            protocol_number
+            Sponsor
           )
         `)
         .eq("invitee_id", user.user.id)
@@ -80,6 +69,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         throw new Error("Invitation not found");
       }
 
+      // Update invitation status
       const { error: updateError } = await supabase
         .from("project_invitations")
         .update({ status: accept ? "accepted" : "rejected" })
@@ -87,6 +77,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
 
       if (updateError) throw updateError;
 
+      // If accepted, add user to project team members
       if (accept) {
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) throw new Error("User not found");
@@ -110,6 +101,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         if (teamMemberError) throw teamMemberError;
       }
 
+      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
       queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
       if (accept) {
@@ -123,6 +115,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
+      // If no more pending invitations, close the dialog
       if ((invitations?.length || 0) <= 1) {
         onClose();
       }
@@ -147,9 +140,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         </DialogHeader>
         <div className="space-y-4 py-4">
           {isLoading ? (
-            <div className="flex justify-center py-4">
-              <LoaderIcon className="h-6 w-6 animate-spin" />
-            </div>
+            <div className="text-center py-4">Loading invitations...</div>
           ) : !invitations || invitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No pending invitations
@@ -159,40 +150,34 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex flex-col space-y-3 p-4 border rounded-lg"
+                  className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
-                  <div>
-                    <div className="font-medium">
-                      Project: {invitation.projects?.project_number}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Sponsor: {invitation.projects?.Sponsor}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Protocol: {invitation.projects?.protocol_number}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Invited by: {invitation.profiles?.full_name || 'Unknown'}
-                    </div>
+                  <div className="font-medium">
+                    {invitation.projects ? 
+                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` : 
+                      "Unknown Project"}
                   </div>
-                  <div className="flex justify-end space-x-2">
+                  <div className="text-sm text-muted-foreground">
+                    Permission Level: {invitation.permission_level}
+                  </div>
+                  <div className="flex justify-end space-x-2 mt-2">
                     <Button
                       variant="outline"
                       onClick={() => handleInvitation(invitation.id, false)}
                       disabled={!!loading}
                     >
-                      {loading === invitation.id && (
+                      {loading === invitation.id ? (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      )}
+                      ) : null}
                       Reject
                     </Button>
                     <Button
                       onClick={() => handleInvitation(invitation.id, true)}
                       disabled={!!loading}
                     >
-                      {loading === invitation.id && (
+                      {loading === invitation.id ? (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      )}
+                      ) : null}
                       Accept
                     </Button>
                   </div>

@@ -1,7 +1,8 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LoaderIcon, Shield, User } from "lucide-react";
+import { LoaderIcon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,30 +17,18 @@ interface ProjectInvitationsListProps {
   projectId: string | null;
 }
 
-interface InviteeProfile {
+interface InvitationProfile {
   full_name?: string | null;
   email?: string | null;
-}
-
-interface InviterProfile {
-  full_name?: string | null;
-}
-
-interface ProjectDetails {
-  project_number?: string | null;
-  Sponsor?: string | null;
 }
 
 interface Invitation {
   id: string;
   invitee_id: string;
-  inviter_id: string;
   permission_level: "read_only" | "edit";
   status: string;
   created_at: string;
-  profiles?: InviteeProfile | null;
-  inviter?: InviterProfile | null;
-  projects?: ProjectDetails | null;
+  profiles?: InvitationProfile | null;
 }
 
 const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
@@ -56,20 +45,12 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         .select(`
           id,
           invitee_id,
-          inviter_id,
           permission_level,
           status,
           created_at,
-          profiles:profiles!invitee_id(
+          profiles:invitee_id (
             full_name,
             email
-          ),
-          inviter:profiles!inviter_id(
-            full_name
-          ),
-          projects(
-            project_number,
-            Sponsor
           )
         `)
         .eq("project_id", projectId)
@@ -114,9 +95,9 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "secondary";
+        return "warning";
       case "accepted":
-        return "default";
+        return "success";
       case "rejected":
         return "destructive";
       default:
@@ -153,10 +134,6 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
             </div>
             <div className="text-sm text-muted-foreground">
               {invitation.profiles?.email}
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              Invited by: {invitation.inviter?.full_name || 'Unknown'}
             </div>
             <div className="flex items-center gap-2">
               <Badge variant={getStatusBadgeVariant(invitation.status)}>
