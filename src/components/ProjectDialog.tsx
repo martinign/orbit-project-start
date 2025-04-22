@@ -171,6 +171,27 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             {isEditing ? 'Edit Project' : 'Create New Project'}
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="isFeatured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Featured
+              </Label>
+              <FormField
+                control={form.control}
+                name="isFeatured"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2">
+                    <FormControl>
+                      <Switch
+                        id="isFeatured"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </DialogTitle>
         </DialogHeader>
         
