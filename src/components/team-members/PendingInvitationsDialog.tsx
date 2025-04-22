@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,12 +22,21 @@ interface Invitation {
   } | null;
 }
 
+interface InvitationWithInviterId extends Invitation {
+  inviter_id: string;
+}
+
+interface InvitationWithSenderName extends InvitationWithInviterId {
+  inviterName?: string;
+}
+
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const { data: invitations, isLoading } = useQuery({
+  // First query to get pending invitations
+  const { data: invitations, isLoading: isLoadingInvitations } = useQuery({
     queryKey: ["pending_invitations"],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -41,6 +49,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           project_id,
           permission_level,
           created_at,
+          inviter_id,
           projects:project_id (
             project_number,
             Sponsor
@@ -51,9 +60,31 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Invitation[];
+      return data as InvitationWithInviterId[];
     },
     enabled: open,
+  });
+
+  // Second query to get sender profiles in bulk
+  const { data: senderProfiles } = useQuery({
+    queryKey: ["sender_profiles", invitations?.map((inv) => inv.inviter_id).filter(Boolean)],
+    queryFn: async () => {
+      if (!invitations?.length) return {};
+      const inviterIds = invitations.map((inv) => inv.inviter_id).filter(Boolean);
+      if (inviterIds.length === 0) return {};
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", inviterIds);
+
+      if (error) {
+        console.error("Error fetching sender profiles:", error);
+        return {};
+      }
+      return data.reduce((acc, profile) => ({ ...acc, [profile.id]: profile.full_name }), {});
+    },
+    enabled: open && !!invitations?.length,
   });
 
   const handleInvitation = async (invitationId: string, accept: boolean) => {
@@ -104,13 +135,14 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
       queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
+      queryClient.invalidateQueries({ queryKey: ["sender_profiles"] }); // Invalidate sender profiles
       if (accept) {
         queryClient.invalidateQueries({ queryKey: ["team_members"] });
       }
 
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Rejected",
-        description: accept 
+        description: accept
           ? "You have been added to the project team."
           : "The invitation has been rejected.",
       });
@@ -132,6 +164,8 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
     }
   };
 
+  const isLoadingCombined = isLoadingInvitations || !senderProfiles;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -139,7 +173,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           <DialogTitle>Pending Invitations</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {isLoading ? (
+          {isLoadingCombined ? (
             <div className="text-center py-4">Loading invitations...</div>
           ) : !invitations || invitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
@@ -153,13 +187,18 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
                   <div className="font-medium">
-                    {invitation.projects ? 
-                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` : 
+                    {invitation.projects ?
+                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
                       "Unknown Project"}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     Permission Level: {invitation.permission_level}
                   </div>
+                  {invitation.inviter_id && senderProfiles?.[invitation.inviter_id] && (
+                    <div className="text-sm text-muted-foreground">
+                      Sent by: {senderProfiles[invitation.inviter_id]}
+                    </div>
+                  )}
                   <div className="flex justify-end space-x-2 mt-2">
                     <Button
                       variant="outline"
