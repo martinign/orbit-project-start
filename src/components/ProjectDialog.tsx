@@ -170,7 +170,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            {isEditing ? 'Edit Project' : 'Create New Project'}
+            {isEditing ? 'Edit Project' : 'Create New Projecto'}
             
           </DialogTitle>
         </DialogHeader>
