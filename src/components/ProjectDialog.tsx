@@ -171,8 +171,34 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             {isEditing ? 'Edit Project' : 'Create New Project'}
-     
           </DialogTitle>
+          
+          <div className="mt-4">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <FormControl>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={field.value === 'active'}
+                        onChange={(e) => field.onChange(e.target.checked ? 'active' : 'inactive')}
+                        className="toggle-checkbox"
+                      />
+                      <span className={`toggle-slider ${field.value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                        {field.value === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    </label>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
         </DialogHeader>
         
         <Form {...form}>
