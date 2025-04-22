@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({
+  const { data: invitations, isLoading: isLoadingInvitations } = useQuery({
     queryKey: ["pending_invitations"],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -56,7 +56,9 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         `)
         .eq("invitee_id", user.user.id)
         .eq("status", "pending")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .filter('project_id', 'eq.distinct');
 
       if (error) throw error;
       return data as InvitationWithInviterId[];
@@ -64,23 +66,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
     enabled: open,
   });
 
-  const uniqueInvitationsByProject = useMemo(() => {
-    if (!allInvitations) return [];
-    const seenProjects = new Set<string>();
-    return allInvitations.filter((invitation) => {
-      if (seenProjects.has(invitation.project_id)) {
-        return false;
-      }
-      seenProjects.add(invitation.project_id);
-      return true;
-    });
-  }, [allInvitations]);
-
   const { data: senderProfiles } = useQuery({
-    queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)],
+    queryKey: ["sender_profiles", invitations?.map((inv) => inv.inviter_id).filter(Boolean)],
     queryFn: async () => {
-      if (!uniqueInvitationsByProject.length) return {};
-      const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
+      if (!invitations?.length) return {};
+      const inviterIds = invitations.map((inv) => inv.inviter_id).filter(Boolean);
       if (inviterIds.length === 0) return {};
 
       const { data, error } = await supabase
@@ -94,14 +84,19 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
       }
       return data.reduce((acc, profile) => ({ ...acc, [profile.id]: profile.full_name }), {});
     },
-    enabled: open && !!uniqueInvitationsByProject.length,
+    enabled: open && !!invitations?.length,
   });
 
   const handleInvitation = async (invitationId: string, accept: boolean) => {
     try {
       setLoading(invitationId);
-      const invitationToHandle = allInvitations?.find((inv) => inv.id === invitationId);
-      if (!invitationToHandle) {
+      const { data: invitation } = await supabase
+        .from("project_invitations")
+        .select("*")
+        .eq("id", invitationId)
+        .single();
+
+      if (!invitation) {
         throw new Error("Invitation not found");
       }
 
@@ -125,11 +120,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
-            project_id: invitationToHandle.project_id,
+            project_id: invitation.project_id,
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
             location: profile?.location,
-            permission_level: invitationToHandle.permission_level,
+            permission_level: invitation.permission_level,
           });
 
         if (teamMemberError) throw teamMemberError;
@@ -149,7 +144,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
-      if ((allInvitations?.length || 0) <= 1) {
+      if ((invitations?.length || 0) <= 1) {
         onClose();
       }
     } catch (error: any) {
@@ -175,13 +170,13 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         <div className="space-y-4 py-4">
           {isLoadingCombined ? (
             <div className="text-center py-4">Loading invitations...</div>
-          ) : !allInvitations || allInvitations.length === 0 ? (
+          ) : !invitations || invitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No pending invitations
             </div>
           ) : (
             <div className="space-y-4">
-              {uniqueInvitationsByProject.map((invitation) => (
+              {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
