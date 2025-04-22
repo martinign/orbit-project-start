@@ -181,7 +181,7 @@ export function AppSidebar() {
                 <SidebarMenuButton tooltip="Invite Members" className="hover:bg-purple-500/10 transition-colors duration-200 relative" onClick={() => setIsInviteMembersDialogOpen(true)}>
                   <UserPlus className="text-purple-500" />
                   <span>Invite Members</span>
-                  {pendingInvitationsCount > 0}
+
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {pendingInvitationsCount > 0 && <SidebarMenuItem>
