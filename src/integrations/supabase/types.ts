@@ -463,7 +463,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_task_project_id: {
+        Args: { task_id: string }
+        Returns: string
+      }
+      get_update_task_project_id: {
+        Args: { task_id: string }
+        Returns: string
+      }
+      has_project_edit_permission: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
+      has_project_read_permission: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       project_member_permission: "read_only" | "edit"

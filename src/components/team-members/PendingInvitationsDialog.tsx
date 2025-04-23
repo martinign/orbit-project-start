@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react"; // Import useMemo
+
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -14,7 +15,7 @@ interface PendingInvitationsDialogProps {
 interface Invitation {
   id: string;
   project_id: string;
-  permission_level: string;
+  permission_level: "read_only" | "edit"; // Ensure correct type
   created_at: string;
   projects: {
     project_number: string;
@@ -101,7 +102,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const handleInvitation = async (invitationId: string, accept: boolean) => {
     try {
       setLoading(invitationId);
-      const invitationToHandle = allInvitations?.find((inv) => inv.id === invitationId); // Find the specific invitation to handle
+      const invitationToHandle = allInvitations?.find((inv) => inv.id === invitationId);
       if (!invitationToHandle) {
         throw new Error("Invitation not found");
       }
@@ -123,6 +124,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
+        // Fixed: Ensure permission_level is the correct type
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
@@ -130,7 +132,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
             location: profile?.location,
-            permission_level: invitationToHandle.permission_level,
+            permission_level: invitationToHandle.permission_level as "read_only" | "edit"
           });
 
         if (teamMemberError) throw teamMemberError;

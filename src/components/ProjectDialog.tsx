@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
-import { toggleLeft, toggleRight } from "lucide-react";
+import { ToggleLeft, ToggleRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,7 +53,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!project;
 
-  // Toggle for minimal/full form, only for CREATE mode
   const [minimalMode, setMinimalMode] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,7 +67,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
     }
   });
   
-  // Pre-populate the form when editing
   useEffect(() => {
     if (project && open) {
       form.reset({
@@ -132,7 +129,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           description: "Project updated successfully",
         });
       } else {
-        // Minimal mode: fill hidden fields with "-"
         const saveValues = minimalMode
           ? {
               project_number: values.project_number,
@@ -153,7 +149,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
               user_id: user.id,
             };
 
-        // In minimal mode, "project_number" field actually acts as the title, so populate protocol_title too.
         if (minimalMode) {
           saveValues.protocol_title = values.project_number;
         }
@@ -208,13 +203,12 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                   {minimalMode ? (
                     <span className="inline-flex items-center ml-2">
                       <span className="sr-only">Switch to full form</span>
-                      {/* use lucide-react icons */}
-                      <toggleRight className="h-4 w-4" />
+                      <ToggleRight className="h-4 w-4" />
                     </span>
                   ) : (
                     <span className="inline-flex items-center ml-2">
                       <span className="sr-only">Switch to minimal form</span>
-                      <toggleLeft className="h-4 w-4" />
+                      <ToggleLeft className="h-4 w-4" />
                     </span>
                   )}
                 </Switch>
