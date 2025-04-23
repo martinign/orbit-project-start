@@ -188,7 +188,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            {isEditing ? "Edit Project" : minimalMode ? "Project Title" : "Create New Project"}
+            {isEditing ? "Edit Project" : minimalMode ? : "Create New Project"}
             {!isEditing && (
               <div className="flex items-center gap-3">
                 <span className="text-xs font-normal text-muted-foreground mr-1">
@@ -226,7 +226,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
                     <FormLabel>
-                      {minimalMode ? "Project Titlee" : "Project Number"}
+                      {minimalMode ? "Project Title" : "Project Number"}
                     </FormLabel>
                     <FormControl>
                       {minimalMode
