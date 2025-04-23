@@ -182,207 +182,204 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            {isEditing ? "Edit Project" : minimalMode ? "Create New Project" : "Create New Project"}
-            {!isEditing && (
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-normal text-muted-foreground mr-1">
-                  {minimalMode ? "Minimal" : "Full"} view
-                </span>
-                <Switch
-                  checked={minimalMode}
-                  onCheckedChange={setMinimalMode}
-                  className="data-[state=checked]:bg-blue-500"
-                  id="toggle-mode"
-                >
-                  {minimalMode ? (
-                    <span className="inline-flex items-center ml-1">
-                      <span className="sr-only">Switch to full form</span>
-                      <ToggleRight className="h-4 w-4" />
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center ml-1">
-                      <span className="sr-only">Switch to minimal form</span>
-                      <ToggleLeft className="h-4 w-4" />
-                    </span>
-                  )}
-                </Switch>
-                
-              <button
-                type="button"
-                onClick={onClose}
-                className="ml-2" // Added margin-left to the close button
-              >
-                Close
-              </button
-
-              </div>
-            )}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="project_number"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>
-                      {minimalMode ? "Project Title" : "Project Number"}
-                    </FormLabel>
-                    <FormControl>
-                      {minimalMode
-                        ? (
-                          <Textarea
-                            placeholder="Enter project title"
-                            className="min-h-[70px]"
-                            {...field}
-                            value={field.value}
-                          />
-                        ) : (
-                          <Input
-                            placeholder="Enter project number"
-                            {...field}
-                          />
-                        )
-                      }
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+return (
+  <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+    <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center justify-between">
+          {isEditing ? "Edit Project" : minimalMode ? "Create New Project" : "Create New Project"}
+          {!isEditing && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-normal text-muted-foreground mr-1">
+                {minimalMode ? "Minimal" : "Full"} view
+              </span>
+              <Switch
+                checked={minimalMode}
+                onCheckedChange={setMinimalMode}
+                className="data-[state=checked]:bg-blue-500"
+                id="toggle-mode"
+              >
+                {minimalMode ? (
+                  <span className="inline-flex items-center ml-1">
+                    <span className="sr-only">Switch to full form</span>
+                    <ToggleRight className="h-4 w-4" />
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center ml-1">
+                    <span className="sr-only">Switch to minimal form</span>
+                    <ToggleLeft className="h-4 w-4" />
+                  </span>
                 )}
-              />
-              
-              {!minimalMode && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="protocol_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Protocol Number</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter protocol number" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="Sponsor"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sponsor</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter sponsor name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="protocol_title"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Protocol Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter protocol title" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
+              </Switch>
+              <button
+                type="button"
+                onClick={onClose}
+                className="ml-2" // Added margin-left to the close button
+              >
+                Close
+              </button>
             </div>
-            
+          )}
+        </DialogTitle>
+      </DialogHeader>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="description"
+              name="project_number"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
+                <FormItem className="md:col-span-2">
+                  <FormLabel>
+                    {minimalMode ? "Project Title" : "Project Number"}
+                  </FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Enter project description"
-                      className="min-h-[100px]"
-                      {...field} 
-                    />
+                    {minimalMode
+                      ? (
+                        <Textarea
+                          placeholder="Enter project title"
+                          className="min-h-[70px]"
+                          {...field}
+                          value={field.value}
+                        />
+                      ) : (
+                        <Input
+                          placeholder="Enter project number"
+                          {...field}
+                        />
+                      )
+                    }
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <ToggleGroup
-                      type="single"
-                      value={field.value}
-                      onValueChange={(value) => {
-                        if (value) field.onChange(value);
-                      }}
-                      className="justify-start w-full flex"
+            {!minimalMode && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="protocol_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Protocol Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter protocol number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="Sponsor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sponsor</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter sponsor name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="protocol_title"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Protocol Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter protocol title" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Enter project description"
+                    className="min-h-[100px]"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <FormControl>
+                  <ToggleGroup
+                    type="single"
+                    value={field.value}
+                    onValueChange={(value) => {
+                      if (value) field.onChange(value);
+                    }}
+                    className="justify-start w-full flex"
+                  >
+                    <ToggleGroupItem 
+                      value="active" 
+                      className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}
                     >
-                      <ToggleGroupItem 
-                        value="active" 
-                        className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}
-                      >
-                        Active
-                      </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="pending" 
-                        className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}
-                      >
-                        Pending
-                      </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="completed" 
-                        className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}
-                      >
-                        Completed
-                      </ToggleGroupItem>
-                      <ToggleGroupItem 
-                        value="cancelled" 
-                        className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}
-                      >
-                        Cancelled
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      Active
+                    </ToggleGroupItem>
+                    <ToggleGroupItem 
+                      value="pending" 
+                      className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}
+                    >
+                      Pending
+                    </ToggleGroupItem>
+                    <ToggleGroupItem 
+                      value="completed" 
+                      className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}
+                    >
+                      Completed
+                    </ToggleGroupItem>
+                    <ToggleGroupItem 
+                      value="cancelled" 
+                      className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}
+                    >
+                      Cancelled
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : isEditing ? "Update Project" : "Create Project"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : isEditing ? "Update Project" : "Create Project"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </DialogContent>
+  </Dialog>
+);
+
 
 export default ProjectDialog;
