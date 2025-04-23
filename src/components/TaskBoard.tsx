@@ -49,13 +49,6 @@ const columnsConfig = [
     color: 'bg-blue-100 border-blue-300',
     badgeColor: 'bg-blue-500',
   },
-    {
-    id: 'stucked',
-    title: 'Stucked',
-    status: 'stucked',
-    color: 'bg-red-100 border-red-300',
-    badgeColor: 'bg-red-500',
-  },
   {
     id: 'completed',
     title: 'Completed',
