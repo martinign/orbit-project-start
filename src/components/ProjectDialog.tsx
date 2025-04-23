@@ -283,7 +283,7 @@ const ProjectDialog = ({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-500 hover:bg-blue-600" disabled={isSubmitting}>
+              <Button type="submit" className="bg-blue-600 hover:bg-red-600" disabled={isSubmitting}>
                 {isSubmitting ? "Saving..." : isEditing ? "Update Project" : "Create Project"}
               </Button>
             </div>
