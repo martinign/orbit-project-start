@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Switch } from "@/components/ui/switch";
+import { toggleLeft, toggleRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -52,6 +54,9 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!project;
 
+  // Toggle for minimal/full form, only for CREATE mode
+  const [minimalMode, setMinimalMode] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,6 +80,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         description: project.description || "",
         status: project.status
       });
+      setMinimalMode(false);
     } else if (!project && open) {
       form.reset({
         project_number: "",
@@ -84,6 +90,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
         description: "",
         status: "active"
       });
+      setMinimalMode(false);
     }
   }, [project, open, form]);
 
@@ -116,7 +123,6 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           
         if (error) throw error;
         
-        // Invalidate related queries to trigger refetching
         queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
         queryClient.invalidateQueries({ queryKey: ["projects"] });
         queryClient.invalidateQueries({ queryKey: ["project", project.id] });
@@ -126,21 +132,38 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
           description: "Project updated successfully",
         });
       } else {
+        // Minimal mode: fill hidden fields with "-"
+        const saveValues = minimalMode
+          ? {
+              project_number: values.project_number,
+              protocol_number: "-",
+              protocol_title: "-",
+              Sponsor: "-",
+              description: values.description,
+              status: values.status,
+              user_id: user.id,
+            }
+          : {
+              project_number: values.project_number,
+              protocol_number: values.protocol_number,
+              protocol_title: values.protocol_title,
+              Sponsor: values.Sponsor,
+              description: values.description,
+              status: values.status,
+              user_id: user.id,
+            };
+
+        // In minimal mode, "project_number" field actually acts as the title, so populate protocol_title too.
+        if (minimalMode) {
+          saveValues.protocol_title = values.project_number;
+        }
+
         const { error } = await supabase
           .from("projects")
-          .insert({
-            project_number: values.project_number,
-            protocol_number: values.protocol_number,
-            protocol_title: values.protocol_title,
-            Sponsor: values.Sponsor,
-            description: values.description,
-            status: values.status,
-            user_id: user.id
-          });
+          .insert(saveValues);
           
         if (error) throw error;
         
-        // Invalidate related queries to trigger refetching
         queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
         queryClient.invalidateQueries({ queryKey: ["projects"] });
         
@@ -170,7 +193,33 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            {isEditing ? 'Edit Project' : 'Create New Project'}
+            {isEditing ? "Edit Project" : minimalMode ? "Project Title" : "Create New Project"}
+            {!isEditing && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-normal text-muted-foreground mr-1">
+                  {minimalMode ? "Minimal" : "Full"} view
+                </span>
+                <Switch
+                  checked={minimalMode}
+                  onCheckedChange={setMinimalMode}
+                  className="data-[state=checked]:bg-blue-500"
+                  id="toggle-mode"
+                >
+                  {minimalMode ? (
+                    <span className="inline-flex items-center ml-2">
+                      <span className="sr-only">Switch to full form</span>
+                      {/* use lucide-react icons */}
+                      <toggleRight className="h-4 w-4" />
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center ml-2">
+                      <span className="sr-only">Switch to minimal form</span>
+                      <toggleLeft className="h-4 w-4" />
+                    </span>
+                  )}
+                </Switch>
+              </div>
+            )}
           </DialogTitle>
         </DialogHeader>
         
@@ -181,58 +230,78 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 control={form.control}
                 name="project_number"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project Number</FormLabel>
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>
+                      {minimalMode ? "Project Title" : "Project Number"}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter project number" {...field} />
+                      {minimalMode
+                        ? (
+                          <Textarea
+                            placeholder="Enter project title"
+                            className="min-h-[70px]"
+                            {...field}
+                            value={field.value}
+                          />
+                        ) : (
+                          <Input
+                            placeholder="Enter project number"
+                            {...field}
+                          />
+                        )
+                      }
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <FormField
-                control={form.control}
-                name="protocol_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Protocol Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter protocol number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!minimalMode && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="protocol_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Protocol Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter protocol number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="Sponsor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sponsor</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter sponsor name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="protocol_title"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Protocol Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter protocol title" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
-            
-            <FormField
-              control={form.control}
-              name="Sponsor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sponsor</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter sponsor name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="protocol_title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Protocol Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter protocol title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <FormField
               control={form.control}
@@ -297,7 +366,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 </FormItem>
               )}
             />
-            
+
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
