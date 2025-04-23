@@ -226,7 +226,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
                     <FormLabel>
-                      {minimalMode ? "Project Title" : "Project Number"}
+                      {minimalMode ? "Project Titlee" : "Project Number"}
                     </FormLabel>
                     <FormControl>
                       {minimalMode
