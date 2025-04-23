@@ -212,6 +212,15 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                     </span>
                   )}
                 </Switch>
+                
+              <button
+                type="button"
+                onClick={onClose}
+                className="ml-2" // Added margin-left to the close button
+              >
+                Close
+              </button
+
               </div>
             )}
           </DialogTitle>
