@@ -193,7 +193,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {columnsConfig.map((column) => (
               <TaskColumn
                 key={column.id}
