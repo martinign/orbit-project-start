@@ -28,7 +28,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
           <TableHead>Name</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Location</TableHead>
-          {!projectId}
+
           <TableHead className="w-[100px] text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -37,7 +37,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
             <TableCell className="font-medium">{member.full_name}</TableCell>
             <TableCell>{member.role || '-'}</TableCell>
             <TableCell>{member.location || '-'}</TableCell>
-            {!projectId}
+
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" size="icon" onClick={e => handleEdit(e, member)} aria-label="Edit team member">
