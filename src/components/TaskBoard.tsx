@@ -56,6 +56,13 @@ const columnsConfig = [
     color: 'bg-green-100 border-green-300',
     badgeColor: 'bg-green-500',
   },
+    {
+    id: 'stucked',
+    title: 'Stucked',
+    status: 'stucked',
+    color: 'bg-red-100 border-red-300',
+    badgeColor: 'bg-red-500',
+  },
 ];
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {

@@ -179,6 +179,8 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
   // Determine task status badge color
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
+      case 'stucked':
+        return <Badge className="bg-red-500">Stucked</Badge>;
       case 'completed':
         return <Badge className="bg-green-500">Completed</Badge>;
       case 'in progress':
@@ -299,6 +301,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
                           <CircleDashed className="mr-2 h-4 w-4" />
                           Set as Pending
                         </DropdownMenuItem>
+                        
                         <DropdownMenuItem
                           className="flex items-center"
                           onClick={() => updateTaskStatus(task.id, 'In Progress')}
@@ -306,6 +309,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
                           <Clock className="mr-2 h-4 w-4" />
                           Set as In Progress
                         </DropdownMenuItem>
+                        
                         <DropdownMenuItem
                           className="flex items-center"
                           onClick={() => updateTaskStatus(task.id, 'Completed')}
@@ -313,6 +317,16 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
                           <CheckCircle2 className="mr-2 h-4 w-4" />
                           Set as Completed
                         </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          className="flex items-center"
+                          onClick={() => updateTaskStatus(task.id, 'Stucked')}
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          Set as Stucked
+                        </DropdownMenuItem>
+
+                        
                         <DropdownMenuItem
                           className="flex items-center"
                           onClick={() => updateTaskStatus(task.id, 'Cancelled')}

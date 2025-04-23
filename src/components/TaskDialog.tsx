@@ -337,6 +337,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="stucked">Stucked</SelectItem>
                 </SelectContent>
               </Select>
             </div>
