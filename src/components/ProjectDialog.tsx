@@ -201,7 +201,7 @@ const ProjectDialog = ({ open, onClose, onSuccess, project }: ProjectDialogProps
                   id="toggle-mode"
                 >
                   {minimalMode ? (
-                    <span className="inline-flex items-center ml-5">
+                    <span className="inline-flex items-center ml-2">
                       <span className="sr-only">Switch to full form</span>
                       <ToggleRight className="h-4 w-4" />
                     </span>
