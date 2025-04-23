@@ -24,7 +24,7 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
             <TableHead>Phone</TableHead>
             <TableHead>Company</TableHead>
             <TableHead>Role</TableHead>
-            {!projectId}
+
             
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -36,7 +36,7 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
               <TableCell>{contact.telephone || "-"}</TableCell>
               <TableCell>{contact.company || "-"}</TableCell>
               <TableCell>{contact.role || "-"}</TableCell>
-              {!projectId}
+
               
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
