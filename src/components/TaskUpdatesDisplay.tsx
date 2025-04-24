@@ -135,7 +135,7 @@ const UpdateItem: React.FC<UpdateItemProps> = ({ update }) => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="font-normal">
-            {isLoading ? 'Loading...' : (userProfile?.full_name || 'Unknown User')}
+            {isLoading ? 'Loading...' : (userProfile ? `${userProfile.full_name} ${userProfile.last_name}` : 'Unknown User')}
           </Badge>
           <span className="text-xs text-muted-foreground">
             {formatDate(update.created_at)}
