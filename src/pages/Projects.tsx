@@ -120,22 +120,10 @@ const Projects = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button
-              variant={viewMode === "table" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("table")}
-              title="Table view"
-              className={viewMode === "table" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-            >
+            <Button variant={viewMode === "table" ? "default" : "outline"} size="icon" onClick={() => setViewMode("table")} title="Table view" className={viewMode === "table" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}>
               <LayoutList className="h-4 w-4" />
             </Button>
-            <Button
-              variant={viewMode === "card" ? "default" : "outline"}
-              size="icon"
-              onClick={() => setViewMode("card")}
-              title="Card view"
-              className={viewMode === "card" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-            >
+            <Button variant={viewMode === "card" ? "default" : "outline"} size="icon" onClick={() => setViewMode("card")} title="Card view" className={viewMode === "card" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}>
               <LayoutGrid className="h-4 w-4" />
             </Button>
 
@@ -159,7 +147,7 @@ const Projects = () => {
           {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project</TableHead>
+                    <TableHead>Project ID</TableHead>
                     <TableHead>Protocol Number</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Sponsor</TableHead>
