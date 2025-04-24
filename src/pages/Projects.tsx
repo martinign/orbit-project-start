@@ -146,7 +146,7 @@ const Projects = () => {
           {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project Number</TableHead>
+                    <TableHead>Project</TableHead>
                     <TableHead>Protocol Number</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Sponsor</TableHead>
