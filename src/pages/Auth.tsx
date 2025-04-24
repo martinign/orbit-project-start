@@ -161,6 +161,34 @@ const Auth = () => {
               </CardHeader>
               <form onSubmit={handleSignupSubmit}>
                 <CardContent className="space-y-4">
+                    <Label htmlFor="signup-full-name">First Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-full-name" 
+                        type="text" 
+                        placeholder="John Doe" 
+                        value={signupData.full_name}
+                        onChange={(e) => setSignupData({...signupData, full_name: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-last-name">Last Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-last-name" 
+                        type="text" 
+                        placeholder="John Doe" 
+                        value={signupData.last_name}
+                        onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <div className="relative">
@@ -176,6 +204,35 @@ const Auth = () => {
                       />
                     </div>
                   </div>
+                
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-location">Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-location" 
+                        type="text" 
+                        placeholder="City, Country" 
+                        value={signupData.location}
+                        onChange={(e) => setSignupData({...signupData, location: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-telephone">Telephone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-telephone" 
+                        type="tel" 
+                        placeholder="+1234567890" 
+                        value={signupData.telephone}
+                        onChange={(e) => setSignupData({...signupData, telephone: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <div className="relative">
@@ -208,62 +265,7 @@ const Auth = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signup-full-name">First Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-full-name" 
-                        type="text" 
-                        placeholder="John Doe" 
-                        value={signupData.full_name}
-                        onChange={(e) => setSignupData({...signupData, full_name: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-last-name">Last Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-last-name" 
-                        type="text" 
-                        placeholder="John Doe" 
-                        value={signupData.last_name}
-                        onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-location">Location</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-location" 
-                        type="text" 
-                        placeholder="City, Country" 
-                        value={signupData.location}
-                        onChange={(e) => setSignupData({...signupData, location: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-telephone">Telephone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-telephone" 
-                        type="tel" 
-                        placeholder="+1234567890" 
-                        value={signupData.telephone}
-                        onChange={(e) => setSignupData({...signupData, telephone: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
+                    
                   </div>
                 </CardContent>
                 <CardFooter>
