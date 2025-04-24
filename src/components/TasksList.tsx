@@ -44,6 +44,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import TaskDialog from './TaskDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useProjectInvitations } from '@/hooks/useProjectInvitations';
 
 interface Project {
   id: string;
@@ -105,6 +106,34 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     enabled: !!projectId
   });
 
+  // Fetch project invitations
+  const { data: projectInvitations = [], isLoading: invitationsLoading } = useProjectInvitations(projectId || null);
+
+  // Filter out unique users (both inviters and invitees) who are active in the project
+  const uniqueUsers = React.useMemo(() => {
+    const userMap = new Map();
+    
+    projectInvitations.forEach((invitation) => {
+      if (invitation.inviter?.id && invitation.inviter?.full_name) {
+        userMap.set(invitation.inviter.id, {
+          id: invitation.inviter.id,
+          full_name: invitation.inviter.full_name,
+          role: 'Inviter'
+        });
+      }
+      if (invitation.invitee?.id && invitation.invitee?.full_name && invitation.status === 'accepted') {
+        userMap.set(invitation.invitee.id, {
+          id: invitation.invitee.id,
+          full_name: invitation.invitee.full_name,
+          role: 'Invitee'
+        });
+      }
+    });
+    
+    return Array.from(userMap.values());
+  }, [projectInvitations]);
+
+  // Update the tasks query to filter by selected member
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', projectId, searchTerm, selectedMemberId],
     queryFn: async () => {
@@ -227,7 +256,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   };
 
-  if (isLoading) {
+  if (isLoading || invitationsLoading) {
     return <div className="text-center py-6">Loading tasks...</div>;
   }
 
@@ -240,20 +269,21 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
               <Button variant="outline" className="w-[200px]">
                 <Users className="mr-2 h-4 w-4" />
                 {selectedMemberId ? 
-                  teamMembers.find(m => m.id === selectedMemberId)?.full_name || 'All Team Members' 
-                  : 'All Team Members'}
+                  uniqueUsers.find(u => u.id === selectedMemberId)?.full_name || 'All Members' 
+                  : 'All Members'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
-                All Team Members
+                All Members
               </DropdownMenuItem>
-              {teamMembers.map((member) => (
+              <DropdownMenuSeparator />
+              {uniqueUsers.map((user) => (
                 <DropdownMenuItem
-                  key={member.id}
-                  onClick={() => setSelectedMemberId(member.id)}
+                  key={user.id}
+                  onClick={() => setSelectedMemberId(user.id)}
                 >
-                  {member.full_name}
+                  {user.full_name} ({user.role})
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -279,20 +309,21 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
             <Button variant="outline">
               <Users className="mr-2 h-4 w-4" />
               {selectedMemberId ? 
-                teamMembers.find(m => m.id === selectedMemberId)?.full_name || 'All Team Members' 
-                : 'All Team Members'}
+                uniqueUsers.find(u => u.id === selectedMemberId)?.full_name || 'All Members' 
+                : 'All Members'}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
-              All Team Members
+              All Members
             </DropdownMenuItem>
-            {teamMembers.map((member) => (
+            <DropdownMenuSeparator />
+            {uniqueUsers.map((user) => (
               <DropdownMenuItem
-                key={member.id}
-                onClick={() => setSelectedMemberId(member.id)}
+                key={user.id}
+                onClick={() => setSelectedMemberId(user.id)}
               >
-                {member.full_name}
+                {user.full_name} ({user.role})
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
