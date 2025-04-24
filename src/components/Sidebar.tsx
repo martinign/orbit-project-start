@@ -228,7 +228,16 @@ export function AppSidebar() {
                         </span>
                       </SidebarMenuButton>
                     </Link>
-
+                    <SidebarMenuAction showOnHover>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild data-dropdown="true">
+                          <Button variant="ghost" size="icon" className="h-5 w-5 p-0" data-action="true" onClick={e => e.stopPropagation()}>
+                            <MoreHorizontal className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        
+                      </DropdownMenu>
+                    </SidebarMenuAction>
                   </SidebarMenuItem>) : <SidebarMenuItem>
                   <SidebarMenuButton className="text-gray-400 cursor-default">
                     <span>No recent projects</span>
