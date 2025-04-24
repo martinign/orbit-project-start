@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +13,7 @@ import {
   Plus,
   Trash2,
   X,
+  Users,
 } from 'lucide-react';
 import {
   Table,
@@ -45,7 +45,6 @@ import { format } from 'date-fns';
 import TaskDialog from './TaskDialog';
 import { useToast } from '@/hooks/use-toast';
 
-// Define types to prevent deep type instantiation
 interface Project {
   id: string;
   project_number: string;
@@ -75,10 +74,39 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
 
-  // Fetch tasks
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['project_team_members_and_invitations', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+
+      const { data: invitations, error: invitationsError } = await supabase
+        .from('project_invitations')
+        .select('inviter_id, invitee_id, status')
+        .eq('project_id', projectId);
+
+      if (invitationsError) throw invitationsError;
+
+      const userIds = new Set([
+        ...invitations.map(inv => inv.inviter_id),
+        ...invitations.map(inv => inv.invitee_id)
+      ]);
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', Array.from(userIds));
+
+      if (profilesError) throw profilesError;
+
+      return profiles;
+    },
+    enabled: !!projectId
+  });
+
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks', projectId, searchTerm],
+    queryKey: ['tasks', projectId, searchTerm, selectedMemberId],
     queryFn: async () => {
       let query = supabase
         .from('project_tasks')
@@ -92,33 +120,33 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
         query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
 
+      if (selectedMemberId) {
+        query = query.eq('user_id', selectedMemberId);
+      }
+
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       return data as Task[];
     },
   });
 
-  // Handle task creation
   const handleCreateTask = () => {
     setDialogMode('create');
     setSelectedTask(null);
     setIsDialogOpen(true);
   };
 
-  // Handle task editing
   const handleEditTask = (task: Task) => {
     setDialogMode('edit');
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
 
-  // Handle task deletion confirmation
   const handleDeleteConfirm = (task: Task) => {
     setSelectedTask(task);
     setIsDeleteConfirmOpen(true);
   };
 
-  // Delete task
   const deleteTask = async () => {
     if (!selectedTask) return;
 
@@ -130,7 +158,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
       if (error) throw error;
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
 
       toast({
@@ -149,7 +176,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   };
 
-  // Update task status
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -159,7 +185,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
       if (error) throw error;
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
 
       toast({
@@ -176,7 +201,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   };
 
-  // Determine task status badge color
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'stucked':
@@ -194,7 +218,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   };
 
-  // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     try {
@@ -204,15 +227,38 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   };
 
-  // Loading state
   if (isLoading) {
     return <div className="text-center py-6">Loading tasks...</div>;
   }
 
-  // No tasks found
   if (!tasks || tasks.length === 0) {
     return (
       <div className="text-center p-8 border rounded-lg">
+        <div className="mb-4 flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-[200px]">
+                <Users className="mr-2 h-4 w-4" />
+                {selectedMemberId ? 
+                  teamMembers.find(m => m.id === selectedMemberId)?.full_name || 'All Team Members' 
+                  : 'All Team Members'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
+                All Team Members
+              </DropdownMenuItem>
+              {teamMembers.map((member) => (
+                <DropdownMenuItem
+                  key={member.id}
+                  onClick={() => setSelectedMemberId(member.id)}
+                >
+                  {member.full_name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <p className="text-muted-foreground mb-4">
           {searchTerm
             ? 'No tasks match your search criteria'
@@ -227,7 +273,30 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              {selectedMemberId ? 
+                teamMembers.find(m => m.id === selectedMemberId)?.full_name || 'All Team Members' 
+                : 'All Team Members'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
+              All Team Members
+            </DropdownMenuItem>
+            {teamMembers.map((member) => (
+              <DropdownMenuItem
+                key={member.id}
+                onClick={() => setSelectedMemberId(member.id)}
+              >
+                {member.full_name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button onClick={handleCreateTask} className="bg-blue-500 hover:bg-blue-600">
           <Plus className="mr-2 h-4 w-4" /> Create Task
         </Button>
@@ -344,7 +413,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
         </Table>
       </div>
 
-      {/* Task Dialog */}
       <TaskDialog
         open={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
@@ -356,7 +424,6 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
