@@ -96,7 +96,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, last_name')
         .in('id', Array.from(userIds));
 
       if (profilesError) throw profilesError;
@@ -114,22 +114,22 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     const userMap = new Map();
     
     projectInvitations.forEach((invitation) => {
-      if (invitation.inviter?.id && invitation.inviter?.full_name) {
+      if (invitation.inviter?.id && invitation.inviter?.full_name && invitation.inviter?.last_name) {
         userMap.set(invitation.inviter.id, {
           id: invitation.inviter.id,
-          full_name: invitation.inviter.full_name,
+          full_name: `${invitation.inviter.full_name} ${invitation.inviter.last_name}`,
           role: 'Inviter'
         });
       }
-      if (invitation.invitee?.id && invitation.invitee?.full_name && invitation.status === 'accepted') {
+      if (invitation.invitee?.id && invitation.invitee?.full_name && invitation.invitee?.last_name && invitation.status === 'accepted') {
         userMap.set(invitation.invitee.id, {
           id: invitation.invitee.id,
-          full_name: invitation.invitee.full_name,
+          full_name: `${invitation.invitee.full_name} ${invitation.invitee.last_name}`,
           role: 'Invitee'
         });
       }
     });
-    
+
     return Array.from(userMap.values());
   }, [projectInvitations]);
 
@@ -266,12 +266,12 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
         <div className="mb-4 flex justify-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-[200px]">
-                <Users className="mr-2 h-4 w-4" />
-                {selectedMemberId ? 
-                  uniqueUsers.find(u => u.id === selectedMemberId)?.full_name || 'All Members' 
-                  : 'All Members'}
-              </Button>
+            <Button variant="outline" className="w-[200px]">
+              <Users className="mr-2 h-4 w-4" />
+              {selectedMemberId ? 
+                uniqueUsers.find(u => u.id === selectedMemberId) ? `${uniqueUsers.find(u => u.id === selectedMemberId).full_name} ${uniqueUsers.find(u => u.id === selectedMemberId).last_name}` : 'All Members' 
+                : 'All Members'}
+            </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
@@ -279,12 +279,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {uniqueUsers.map((user) => (
-                <DropdownMenuItem
-                  key={user.id}
-                  onClick={() => setSelectedMemberId(user.id)}
-                >
-                  {user.full_name} ({user.role})
-                </DropdownMenuItem>
+              <DropdownMenuItem
+                key={user.id}
+                onClick={() => setSelectedMemberId(user.id)}
+              >
+                {`${user.full_name} ${user.last_name}`} ({user.role})
+              </DropdownMenuItem>
+
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -306,12 +307,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
       <div className="flex justify-between items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              {selectedMemberId ? 
-                uniqueUsers.find(u => u.id === selectedMemberId)?.full_name || 'All Members' 
-                : 'All Members'}
-            </Button>
+          <Button variant="outline">
+            <Users className="mr-2 h-4 w-4" />
+            {selectedMemberId ? 
+              uniqueUsers.find(u => u.id === selectedMemberId) ? `${uniqueUsers.find(u => u.id === selectedMemberId).full_name} ${uniqueUsers.find(u => u.id === selectedMemberId).last_name}` : 'All Members' 
+              : 'All Members'}
+          </Button>
+
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setSelectedMemberId(null)}>
@@ -319,12 +321,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {uniqueUsers.map((user) => (
-              <DropdownMenuItem
-                key={user.id}
-                onClick={() => setSelectedMemberId(user.id)}
-              >
-                {user.full_name} ({user.role})
-              </DropdownMenuItem>
+            <DropdownMenuItem
+              key={user.id}
+              onClick={() => setSelectedMemberId(user.id)}
+            >
+              {`${user.full_name} ${user.last_name}`} ({user.role})
+            </DropdownMenuItem>
+
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
