@@ -77,7 +77,7 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
     defaultValues: contact
       ? {
           full_name: contact.full_name || "",
-          last_name: contact.full_name || "",
+          last_name: contact.last_name || "",
           email: contact.email || "",
           telephone: contact.telephone || "",
           company: contact.company || "",
