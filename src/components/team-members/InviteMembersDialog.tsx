@@ -150,27 +150,33 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite Members</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Project</label>
-            <ProjectSelector 
-              value={projectId} 
-              onChange={setProjectId} 
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Users</label>
-            {isLoading ? (
-              <div className="py-4 text-center text-sm text-gray-500">Loading users...</div>
-            ) : profiles.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
-                {profiles.map((profile) => (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Invite Members</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-2">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Select Project</label>
+          <ProjectSelector 
+            value={projectId} 
+            onChange={setProjectId} 
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Select Users</label>
+          {isLoading ? (
+            <div className="py-4 text-center text-sm text-gray-500">Loading users...</div>
+          ) : profiles.length > 0 ? (
+            <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
+              {profiles
+                .sort((a, b) => {
+                  const nameA = `${a.full_name} ${a.last_name}`.toLowerCase();
+                  const nameB = `${b.full_name} ${b.last_name}`.toLowerCase();
+                  return nameA.localeCompare(nameB);
+                })
+                .map((profile) => (
                   <div 
                     key={profile.id} 
                     className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md"
@@ -195,7 +201,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                         </span>
                       </div>
                     </label>
-
+  
                     {selectedProfiles[profile.id] && (
                       <Select
                         value={selectedProfiles[profile.id].permission}
@@ -214,20 +220,21 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                     )}
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="py-4 text-center text-sm text-gray-500">
-                No users found in the profiles table.
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="py-4 text-center text-sm text-gray-500">
+              No users found in the profiles table.
+            </div>
+          )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="mt-2 sm:mt-0">Cancel</Button>
-          <Button onClick={handleInvite}>Invite</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onClose} className="mt-2 sm:mt-0">Cancel</Button>
+        <Button onClick={handleInvite}>Invite</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
   );
 };
 
