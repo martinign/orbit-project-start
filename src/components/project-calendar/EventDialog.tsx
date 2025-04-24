@@ -64,6 +64,27 @@ export function EventDialog({
     },
   });
 
+  // Reset the form when the dialog is opened or closed
+  React.useEffect(() => {
+    if (open) {
+      form.reset(defaultValues || {
+        title: "",
+        description: "",
+        start_date: new Date(),
+        end_date: new Date(),
+      });
+    }
+  }, [open, defaultValues, form]);
+
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      await onSubmit(data);
+      form.reset();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
@@ -71,7 +92,7 @@ export function EventDialog({
           <DialogTitle>{mode === 'create' ? 'Create Event' : 'Edit Event'}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"

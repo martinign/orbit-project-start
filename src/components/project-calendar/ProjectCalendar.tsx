@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -46,6 +47,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Get the current authenticated user
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
@@ -81,12 +83,15 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
       start_date: Date;
       end_date: Date;
     }) => {
+      if (!user) throw new Error("User not authenticated");
+      
       const { error } = await supabase.from('project_events').insert({
         project_id: projectId,
         title: data.title,
         description: data.description,
         start_date: data.start_date.toISOString(),
         end_date: data.end_date.toISOString(),
+        user_id: user.id, // Add the current user ID
       });
 
       if (error) throw error;
@@ -241,7 +246,21 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         open={isEventDialogOpen}
         onClose={() => setIsEventDialogOpen(false)}
         onSubmit={async (data) => {
-          await createEvent.mutateAsync(data);
+          // Ensure data has required properties
+          if (!data.title || !data.start_date || !data.end_date) {
+            toast({
+              title: 'Validation Error',
+              description: 'Please fill in all required fields.',
+              variant: 'destructive',
+            });
+            return;
+          }
+          await createEvent.mutateAsync({
+            title: data.title,
+            description: data.description,
+            start_date: data.start_date,
+            end_date: data.end_date,
+          });
         }}
         mode="create"
       />
