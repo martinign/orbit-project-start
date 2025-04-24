@@ -72,6 +72,7 @@ const Auth = () => {
         signupData.password, 
         {
           full_name: signupData.full_name,
+          last_name: signupData.last_name,
           location: signupData.location,
           telephone: signupData.telephone,
         }
@@ -82,6 +83,7 @@ const Auth = () => {
         password: '',
         confirmPassword: '',
         full_name: '',
+        last_name: '',
         location: '',
         telephone: '',
       });
@@ -174,37 +176,7 @@ const Auth = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-password" 
-                        type="password" 
-                        placeholder="••••••••" 
-                        value={signupData.password}
-                        onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-confirm-password" 
-                        type="password" 
-                        placeholder="••••••••" 
-                        value={signupData.confirmPassword}
-                        onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-full-name">Full Name</Label>
+                    <Label htmlFor="signup-full-name">First Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input 
@@ -216,6 +188,21 @@ const Auth = () => {
                         className="pl-10"
                       />
                     </div>
+                    
+                    <div className="space-y-2">
+                    <Label htmlFor="signup-last-name">First Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-last-name" 
+                        type="text" 
+                        placeholder="John Doe" 
+                        value={signupData.last_name}
+                        onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div> 
+
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-location">Location</Label>
@@ -231,6 +218,7 @@ const Auth = () => {
                       />
                     </div>
                   </div>
+                    
                   <div className="space-y-2">
                     <Label htmlFor="signup-telephone">Telephone</Label>
                     <div className="relative">
@@ -245,6 +233,42 @@ const Auth = () => {
                       />
                     </div>
                   </div>
+
+
+                      
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-password" 
+                        type="password" 
+                        placeholder="••••••••" 
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                      
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-confirm-password" 
+                        type="password" 
+                        placeholder="••••••••" 
+                        value={signupData.confirmPassword}
+                        onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                    
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
