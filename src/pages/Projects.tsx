@@ -162,7 +162,7 @@ const Projects = () => {
                       <TableCell>{project.Sponsor}</TableCell>
                       <TableCell>{project.protocol_number}</TableCell>
                       <TableCell className="max-w-xs truncate">{project.protocol_title}</TableCell>
-                      <TableCell>{project.description}</TableCell>
+                      <TableCell className="max-w-xs truncate">{project.description}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                           {project.status}
