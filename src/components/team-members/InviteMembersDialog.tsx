@@ -18,6 +18,7 @@ interface InviteMembersDialogProps {
 interface Profile {
   id: string;
   full_name: string | null;
+  last_name: string | null;
   created_at: string;
   avatar_url?: string | null;
 }

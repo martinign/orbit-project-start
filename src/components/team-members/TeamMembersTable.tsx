@@ -25,7 +25,8 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
   return <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead>First Name</TableHead>
+          <TableHead>Last Name</TableHead>
           <TableHead>Role</TableHead>
           <TableHead>Location</TableHead>
           {!projectId}
@@ -35,6 +36,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
       <TableBody>
         {teamMembers.map(member => <TableRow key={member.id}>
             <TableCell className="font-medium">{member.full_name}</TableCell>
+            <TableCell className="font-medium">{member.last_name}</TableCell>
             <TableCell>{member.role || '-'}</TableCell>
             <TableCell>{member.location || '-'}</TableCell>
             {!projectId}
