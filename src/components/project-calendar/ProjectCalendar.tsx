@@ -31,8 +31,6 @@ interface Event {
   id: string;
   title: string;
   description: string | null;
-  start_date: string;
-  end_date: string;
   user_id: string;
 }
 
@@ -56,7 +54,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         .from('project_events')
         .select('*')
         .eq('project_id', projectId)
-        .order('start_date', { ascending: true });
+
 
       if (error) throw error;
       return data as Event[];
@@ -80,8 +78,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     mutationFn: async (data: {
       title: string;
       description?: string;
-      start_date: Date;
-      end_date: Date;
     }) => {
       if (!user) throw new Error("User not authenticated");
       
@@ -89,8 +85,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         project_id: projectId,
         title: data.title,
         description: data.description,
-        start_date: data.start_date.toISOString(),
-        end_date: data.end_date.toISOString(),
         user_id: user.id, // Add the current user ID
       });
 
@@ -222,10 +216,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                           {event.description}
                         </p>
                       )}
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(event.start_date), 'PPP')} -{' '}
-                        {format(new Date(event.end_date), 'PPP')}
-                      </p>
                     </div>
                     <Button
                       variant="ghost"
@@ -247,7 +237,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         onClose={() => setIsEventDialogOpen(false)}
         onSubmit={async (data) => {
           // Ensure data has required properties
-          if (!data.title || !data.start_date || !data.end_date) {
+          if (!data.title) {
             toast({
               title: 'Validation Error',
               description: 'Please fill in all required fields.',
@@ -258,8 +248,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           await createEvent.mutateAsync({
             title: data.title,
             description: data.description,
-            start_date: data.start_date,
-            end_date: data.end_date,
           });
         }}
         mode="create"
