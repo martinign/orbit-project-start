@@ -19,6 +19,7 @@ interface ProjectInvitationsListProps {
 
 interface InvitationProfile {
   full_name?: string | null;
+  last_name?: string | null;
   email?: string | null;
 }
 
@@ -50,6 +51,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
           created_at,
           profiles:invitee_id (
             full_name,
+            last_name,
             email
           )
         `)
@@ -130,7 +132,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         >
           <div className="space-y-2">
             <div className="font-medium">
-              {invitation.profiles?.full_name || "Unnamed User"}
+              {invitation.profiles?`${invitation.profiles.full_name} ${invitation.profiles.last_name}` : "Unnamed User"}
             </div>
             <div className="text-sm text-muted-foreground">
               {invitation.profiles?.email}
