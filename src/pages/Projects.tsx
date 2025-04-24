@@ -120,12 +120,25 @@ const Projects = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button variant={viewMode === "table" ? "default" : "outline"} size="icon" onClick={() => setViewMode("table")} title="Table view">
+            <Button
+              variant={viewMode === "table" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("table")}
+              title="Table view"
+              className={viewMode === "table" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+            >
               <LayoutList className="h-4 w-4" />
             </Button>
-            <Button variant={viewMode === "card" ? "default" : "outline"} size="icon" onClick={() => setViewMode("card")} title="Card view" className="bg-blue-600 hover:bg-blue-500">
+            <Button
+              variant={viewMode === "card" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("card")}
+              title="Card view"
+              className={viewMode === "card" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+            >
               <LayoutGrid className="h-4 w-4" />
             </Button>
+
           </div>
           
           <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => setIsProjectDialogOpen(true)}>
