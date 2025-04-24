@@ -19,7 +19,8 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>First Name</TableHead>
+            <TableHead>Last Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
             <TableHead>Company</TableHead>
@@ -32,6 +33,7 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
         <TableBody>
           {contacts.map(contact => <TableRow key={contact.id}>
               <TableCell className="font-medium">{contact.full_name}</TableCell>
+              <TableCell className="font-medium">{contact.last_name}</TableCell>            
               <TableCell>{contact.email}</TableCell>
               <TableCell>{contact.telephone || "-"}</TableCell>
               <TableCell>{contact.company || "-"}</TableCell>

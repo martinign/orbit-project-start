@@ -29,7 +29,7 @@ const ContactsCardView: React.FC<ContactsCardViewProps> = ({
       {contacts.map((contact) => (
         <Card key={contact.id} className="overflow-hidden h-[320px] flex flex-col">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg truncate">{contact.full_name}</CardTitle>
+            <CardTitle className="text-lg truncate">{`${contact.full_name} ${contact.last_name}`}</</CardTitle>
             {contact.role && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <User className="h-3 w-3" />

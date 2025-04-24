@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface TeamMember {
   id: string;
   full_name: string;
+  last_name: string;
   role?: string;
   location?: string;
   project_id: string;
@@ -23,6 +24,7 @@ export const useTeamMembers = () => {
         .select(`
           id, 
           full_name, 
+          last_name,
           role, 
           location,
           project_id,
