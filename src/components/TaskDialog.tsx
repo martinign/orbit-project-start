@@ -37,6 +37,7 @@ import TaskTemplatesListDialog from './TaskTemplatesListDialog';
 interface TeamMember {
   id: string;
   full_name: string;
+  last_name: string;
 }
 
 interface TaskTemplate {
@@ -84,13 +85,20 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_team_members')
-        .select('id, full_name')
-        .order('full_name');
-      
+        .select('id, full_name, last_name');
+  
       if (error) throw error;
-      return data || [];
+  
+      // Concatenate full_name and last_name and sort by the concatenated name
+      const sortedTeamMembers = (data || []).map(member => ({
+        ...member,
+        full_name: `${member.full_name} ${member.last_name}`,
+      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+  
+      return sortedTeamMembers;
     },
   });
+
 
   useEffect(() => {
     // Only reset form when dialog opens
@@ -366,10 +374,11 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
                 <SelectItem value="none">Not assigned</SelectItem>
                 {teamMembers?.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
-                    {member.full_name}
+                    {`${member.full_name} ${member.last_name}`}
                   </SelectItem>
                 ))}
               </SelectContent>
+
             </Select>
           </div>
 
