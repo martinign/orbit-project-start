@@ -26,7 +26,8 @@ interface Project {
 
 // Form validation schema
 const contactSchema = z.object({
-  full_name: z.string().min(2, { message: "Full name is required" }),
+  full_name: z.string().min(2, { message: "First name is required" }),
+  last_name: z.string().min(2, { message: "Last name is required" }),
   email: z.string().email({ message: "Invalid email address" }),
   telephone: z.string().optional(),
   company: z.string().optional(),
