@@ -158,23 +158,17 @@ export function AppSidebar() {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel>CONTACTS</SidebarGroupLabel>
+          <SidebarGroupLabel>PROJECT INVITATIONS</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/contacts">
-                  <SidebarMenuButton tooltip="Contacts" className="hover:bg-purple-500/10 transition-colors duration-200">
-                    <Users className="text-purple-500" />
-                    <span>Contacts</span>
-                  </SidebarMenuButton>
+                  
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Link to="/team-members">
-                  <SidebarMenuButton tooltip="Team Members" className="hover:bg-purple-500/10 transition-colors duration-200">
-                    <UserRound className="text-purple-500" />
-                    <span>Team Members</span>
-                  </SidebarMenuButton>
+                  
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
