@@ -141,6 +141,18 @@ const Projects = () => {
           <CardDescription>
             Manage your clinical trial projects
           </CardDescription>
+                <span className="text-xs font-normal text-muted-foreground mr-1">
+                  {minimalMode ? "Minimal" : "Full"} view
+                </span>
+                <Switch checked={minimalMode} onCheckedChange={setMinimalMode} className="data-[state=checked]:bg-blue-500" id="toggle-mode">
+                  {minimalMode ? <span className="inline-flex items-center ml-1">
+                      <span className="sr-only">Switch to full form</span>
+                      <ToggleRight className="h-4 w-4" />
+                    </span> : <span className="inline-flex items-center ml-1">
+                      <span className="sr-only">Switch to minimal form</span>
+                      <ToggleLeft className="h-4 w-4" />
+                    </span>}
+                </Switch>
         </CardHeader>
         <CardContent>
           {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
