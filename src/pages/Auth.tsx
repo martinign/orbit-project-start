@@ -201,11 +201,12 @@ const Auth = () => {
                         onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
                         className="pl-10"
                       />
-                    </div> 
+                    </div>
 
 
 
-                      
+
+                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <div className="relative">
@@ -221,7 +222,6 @@ const Auth = () => {
                       />
                     </div>
                   </div>
-                      
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm-password">Confirm Password</Label>
                     <div className="relative">
@@ -253,7 +253,6 @@ const Auth = () => {
                       />
                     </div>
                   </div>
-                    
                   <div className="space-y-2">
                     <Label htmlFor="signup-telephone">Telephone</Label>
                     <div className="relative">
