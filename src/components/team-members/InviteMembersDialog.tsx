@@ -186,15 +186,16 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                     >
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-purple-100 text-purple-600">
-                          {getInitials(profile.full_name)}
+                          {getInitials(`${profile.full_name} ${profile.last_name}`)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">
-                          {profile.full_name || 'Unnamed User'}
+                          {profile.full_name && profile.last_name ? `${profile.full_name} ${profile.last_name}` : 'Unnamed User'}
                         </span>
                       </div>
                     </label>
+
                     {selectedProfiles[profile.id] && (
                       <Select
                         value={selectedProfiles[profile.id].permission}
