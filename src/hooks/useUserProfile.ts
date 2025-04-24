@@ -10,7 +10,7 @@ export const useUserProfile = (userId?: string | null) => {
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, last_name")
+        .select("id, ful_name, last_name")
         .eq("id", userId)
         .single();
 
