@@ -39,6 +39,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import ContactForm from './ContactForm';
 import ProjectNotes from './ProjectNotes';
 import ProjectInvitationsList from './project-invitations/ProjectInvitationsList';
+import { ProjectCalendar } from './project-calendar/ProjectCalendar';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -273,6 +274,7 @@ const ProjectDetailsView = () => {
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="team">Team Members</TabsTrigger>
           <TabsTrigger value="invites">Invited Members</TabsTrigger>
@@ -338,6 +340,18 @@ const ProjectDetailsView = () => {
             </CardHeader>
             <CardContent>
               <ProjectNotes projectId={id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Calendar</CardTitle>
+              <CardDescription>View and manage project events</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProjectCalendar projectId={id || ''} />
             </CardContent>
           </Card>
         </TabsContent>

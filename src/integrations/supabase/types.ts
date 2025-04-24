@@ -131,6 +131,50 @@ export type Database = {
           },
         ]
       }
+      project_events: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          project_id: string
+          start_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          project_id: string
+          start_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          project_id?: string
+          start_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_invitations: {
         Row: {
           created_at: string | null
@@ -470,6 +514,14 @@ export type Database = {
       get_update_task_project_id: {
         Args: { task_id: string }
         Returns: string
+      }
+      has_project_access: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
+      has_project_edit_access: {
+        Args: { project_id: string }
+        Returns: boolean
       }
       has_project_edit_permission: {
         Args: { project_id: string }
