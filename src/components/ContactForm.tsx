@@ -77,6 +77,7 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
     defaultValues: contact
       ? {
           full_name: contact.full_name || "",
+          last_name: contact.full_name || "",
           email: contact.email || "",
           telephone: contact.telephone || "",
           company: contact.company || "",
@@ -86,6 +87,7 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
         }
       : {
           full_name: "",
+          last_name: "",
           email: "",
           telephone: "",
           company: "",
@@ -110,6 +112,7 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
       // Ensure required fields are present
       const contactData = {
         full_name: values.full_name,
+        last_name: values.last_name,
         email: values.email,
         telephone: values.telephone || null,
         company: values.company || null,
@@ -201,9 +204,23 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
           name="full_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name*</FormLabel>
+              <FormLabel>First Name*</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="John" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="last_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Last Name*</FormLabel>
+              <FormControl>
+                <Input placeholder="Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
