@@ -15,6 +15,7 @@ export type Database = {
           created_at: string
           email: string
           full_name: string
+          last_name: string
           id: string
           location: string | null
           role: string | null
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
+          last_name: string
           id?: string
           location?: string | null
           role?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string
+          last_name: string
           id?: string
           location?: string | null
           role?: string | null
@@ -53,6 +56,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           full_name: string | null
+          last_name: string
           id: string
           location: string | null
           role: string | null
@@ -63,6 +67,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          last_name: string
           id: string
           location?: string | null
           role?: string | null
@@ -73,6 +78,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
+          last_name: string
           id?: string
           location?: string | null
           role?: string | null
@@ -87,6 +93,7 @@ export type Database = {
           created_at: string
           email: string
           full_name: string
+          last_name: string
           id: string
           location: string | null
           project_id: string
@@ -100,6 +107,7 @@ export type Database = {
           created_at?: string
           email: string
           full_name: string
+          last_name: string
           id?: string
           location?: string | null
           project_id: string
@@ -113,6 +121,7 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string
+          last_name: string
           id?: string
           location?: string | null
           project_id?: string
@@ -396,6 +405,7 @@ export type Database = {
         Row: {
           created_at: string
           full_name: string
+          last_name: string
           id: string
           location: string | null
           permission_level: Database["public"]["Enums"]["project_member_permission"]
@@ -407,6 +417,7 @@ export type Database = {
         Insert: {
           created_at?: string
           full_name: string
+          last_name: string
           id?: string
           location?: string | null
           permission_level?: Database["public"]["Enums"]["project_member_permission"]
@@ -418,6 +429,7 @@ export type Database = {
         Update: {
           created_at?: string
           full_name?: string
+          last_name: string
           id?: string
           location?: string | null
           permission_level?: Database["public"]["Enums"]["project_member_permission"]
