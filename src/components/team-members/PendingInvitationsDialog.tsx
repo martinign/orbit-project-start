@@ -87,14 +87,14 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, last_name")
         .in("id", inviterIds);
 
       if (error) {
         console.error("Error fetching sender profiles:", error);
         return {};
       }
-      return data.reduce((acc, profile) => ({ ...acc, [profile.id]: profile.full_name }), {});
+      return data.reduce((acc, profile) => ({ ...acc, [profile.id]: `${profile.full_name} ${profile.last_name}` }), {});
     },
     enabled: open && !!uniqueInvitationsByProject.length,
   });
@@ -120,7 +120,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("full_name, location")
+          .select("full_name, last_name, location")
           .eq("id", user.user.id)
           .single();
 
@@ -131,6 +131,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             project_id: invitationToHandle.project_id,
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
+            last_name: profile?.last_name || "Unnamed User",
             location: profile?.location,
             permission_level: invitationToHandle.permission_level as "read_only" | "edit"
           });
