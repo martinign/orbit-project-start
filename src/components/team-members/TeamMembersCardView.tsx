@@ -59,7 +59,7 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
           className="overflow-hidden h-[280px] flex flex-col hover:shadow-md transition-shadow"
         >
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg truncate">{member.full_name}</CardTitle>
+            <CardTitle className="text-lg truncate">{`${member.full_name} ${member.last_name}`}</</CardTitle>
             {member.role && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <User className="h-3 w-3" />
