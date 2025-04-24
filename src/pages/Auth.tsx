@@ -208,7 +208,7 @@ const Auth = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signup-full-name">Full Name</Label>
+                    <Label htmlFor="signup-full-name">First Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input 
