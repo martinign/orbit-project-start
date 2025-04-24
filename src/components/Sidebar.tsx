@@ -228,10 +228,7 @@ export function AppSidebar() {
                         </span>
                       </SidebarMenuButton>
                     </Link>
-                    <SidebarMenuAction showOnHover>
-                      <DropdownMenu>
 
-                    </SidebarMenuAction>
                   </SidebarMenuItem>) : <SidebarMenuItem>
                   <SidebarMenuButton className="text-gray-400 cursor-default">
                     <span>No recent projects</span>
