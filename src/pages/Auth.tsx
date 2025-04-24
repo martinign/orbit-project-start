@@ -34,6 +34,7 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     full_name: '',
+    last_name: '',
     location: '',
     telephone: '',
   });
@@ -72,6 +73,7 @@ const Auth = () => {
         signupData.password, 
         {
           full_name: signupData.full_name,
+          last_name: signupData.last_name,
           location: signupData.location,
           telephone: signupData.telephone,
         }
@@ -82,6 +84,7 @@ const Auth = () => {
         password: '',
         confirmPassword: '',
         full_name: '',
+        last_name: '',
         location: '',
         telephone: '',
       });
@@ -203,6 +206,7 @@ const Auth = () => {
                       />
                     </div>
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-full-name">Full Name</Label>
                     <div className="relative">
@@ -217,6 +221,22 @@ const Auth = () => {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-last-name">Last Name</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-last-name" 
+                        type="text" 
+                        placeholder="John Doe" 
+                        value={signupData.last_name}
+                        onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-location">Location</Label>
                     <div className="relative">
