@@ -77,9 +77,9 @@ const ProjectDialog = ({
     } else if (!project && open) {
       form.reset({
         project_number: "",
-        protocol_number: "",
-        protocol_title: "",
-        Sponsor: "",
+        protocol_number: "-",
+        protocol_title: "-",
+        Sponsor: "-",
         description: "",
         status: "active"
       });
