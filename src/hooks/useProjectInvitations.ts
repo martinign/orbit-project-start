@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,21 +34,7 @@ export const useProjectInvitations = (projectId: string | null) => {
         .eq("project_id", projectId);
 
       if (error) throw error;
-
-      // Concatenate full_name and last_name
-      const invitations = data.map((invitation) => ({
-        ...invitation,
-        inviter: {
-          ...invitation.inviter,
-          full_name: `${invitation.inviter.full_name} ${invitation.inviter.last_name}`,
-        },
-        invitee: {
-          ...invitation.invitee,
-          full_name: `${invitation.invitee.full_name} ${invitation.invitee.last_name}`,
-        },
-      }));
-
-      return invitations as ProjectInvitation[];
+      return data as ProjectInvitation[];
     },
     enabled: !!projectId,
   });
