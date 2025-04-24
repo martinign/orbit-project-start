@@ -208,10 +208,34 @@ const Auth = () => {
                     </div>
                   </div>
 
-
-
-
-
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-location">Location</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-location" 
+                        type="text" 
+                        placeholder="City, Country" 
+                        value={signupData.location}
+                        onChange={(e) => setSignupData({...signupData, location: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-telephone">Telephone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-telephone" 
+                        type="tel" 
+                        placeholder="+1234567890" 
+                        value={signupData.telephone}
+                        onChange={(e) => setSignupData({...signupData, telephone: e.target.value})}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -243,37 +267,7 @@ const Auth = () => {
                       />
                     </div>
                   </div>
-                  
-
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-location">Location</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-location" 
-                        type="text" 
-                        placeholder="City, Country" 
-                        value={signupData.location}
-                        onChange={(e) => setSignupData({...signupData, location: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-telephone">Telephone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        id="signup-telephone" 
-                        type="tel" 
-                        placeholder="+1234567890" 
-                        value={signupData.telephone}
-                        onChange={(e) => setSignupData({...signupData, telephone: e.target.value})}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
+                           
                 </CardContent>
                 <CardFooter>
                   <Button type="submit" className="w-full" disabled={isLoading}>
