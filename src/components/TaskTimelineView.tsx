@@ -1,48 +1,34 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours, isAfter, isBefore } from 'date-fns';
+import React, { useState, useMemo } from 'react';
+import { addDays, differenceInDays, startOfMonth, endOfMonth, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X, Timer, Plus } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import TaskDialog from './TaskDialog';
+import { TimelineFilters } from './task-timeline/TimelineFilters';
+import { TimelineLegend } from './task-timeline/TimelineLegend';
+import { Timeline } from './task-timeline/Timeline';
 
-interface TaskStatusHistory {
+export interface TaskStatusHistory {
   task_id: string;
   status: string;
   timestamp: string;
 }
 
-interface Task {
+export interface Task {
   id: string;
   title: string;
   description?: string;
   status: string;
   due_date?: string;
   priority: string;
-  user_id: string;  // Created by
-  assigned_to?: string;  // Assigned to
+  user_id: string;
+  assigned_to?: string;
   created_at: string;
-  updated_at: string; // Added the missing property
-  completion_time?: number; // Time in hours from created to completed
+  updated_at: string;
+  completion_time?: number;
 }
 
-interface TeamMember {
+export interface TeamMember {
   id: string;
   user_id: string;
   full_name: string;
@@ -165,345 +151,48 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       return true;
     });
   }, [tasks, timeRange]);
-  
-  const renderTaskBar = (task: Task) => {
-    if (!task.created_at) return null;
-    
-    const startDate = parseISO(task.created_at);
-    const endDate = task.status === 'completed' && task.updated_at 
-      ? parseISO(task.updated_at)
-      : new Date();
-
-    // Find the first visible date that's on or after the task's start date
-    let visibleStartDate = startDate;
-    if (isBefore(startDate, timelineDates[0])) {
-      visibleStartDate = timelineDates[0];
-    }
-
-    // Calculate the task's start position in the timeline
-    const taskStartIndex = timelineDates.findIndex(date => 
-      date.getFullYear() === visibleStartDate.getFullYear() &&
-      date.getMonth() === visibleStartDate.getMonth() &&
-      date.getDate() === visibleStartDate.getDate()
-    );
-
-    if (taskStartIndex === -1) return null;
-
-    // Calculate duration considering the visible range
-    let durationDays = differenceInDays(endDate, visibleStartDate) + 1;
-    const remainingDays = timelineDates.length - taskStartIndex;
-    durationDays = Math.min(durationDays, remainingDays);
-    durationDays = Math.max(1, durationDays);
-
-    const getStatusColor = (status: string) => {
-      switch (status.toLowerCase()) {
-        case 'completed': return 'bg-green-500';
-        case 'in progress': return 'bg-blue-500';
-        case 'stucked': return 'bg-red-500';
-        case 'pending': return 'bg-yellow-500';
-        case 'not started':
-        default: return 'bg-gray-500';
-      }
-    };
-
-    const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
-    const createdByTeamMember = teamMembers.find(member => member.user_id === task.user_id);
-
-    return (
-      <div key={task.id} className="flex min-h-[2.5rem] items-center border-b border-gray-100">
-        <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium truncate">{task.title}</span>
-          </div>
-        </div>
-        
-        <div 
-          className="flex-1 grid relative" 
-          style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
-        >
-          <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
-          
-          <HoverCard>
-            <HoverCardTrigger>
-              <div
-                className={`h-6 rounded-md ${getStatusColor(task.status)}`}
-                style={{ 
-                  gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
-                  transition: 'all 0.2s ease-in-out'
-                }}
-              />
-            </HoverCardTrigger>
-            <HoverCardContent className="w-80">
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold">{task.title}</h3>
-                {task.description && (
-                  <p className="text-sm text-gray-600">{task.description}</p>
-                )}
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <div className="font-medium">Status:</div>
-                    <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
-                  </div>
-                  
-                  <div>
-                    <div className="font-medium">Priority:</div>
-                    <span className="capitalize">{task.priority}</span>
-                  </div>
-                  
-                  <div>
-                    <div className="font-medium">Created by:</div>
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1" />
-                      <span>
-                        {createdByTeamMember 
-                          ? `${createdByTeamMember.full_name || ''} ${createdByTeamMember.last_name || ''}`.trim() 
-                          : 'Unknown'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="font-medium">Assigned to:</div>
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1" />
-                      <span>
-                        {assignedTeamMember 
-                          ? `${assignedTeamMember.full_name || ''} ${assignedTeamMember.last_name || ''}`.trim() 
-                          : 'Unassigned'}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="font-medium">Created:</div>
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {format(parseISO(task.created_at), 'MMM dd, yyyy')}
-                    </div>
-                  </div>
-
-                  {task.status === 'completed' && task.updated_at && (
-                    <div>
-                      <div className="font-medium">Completed:</div>
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {format(parseISO(task.updated_at), 'MMM dd, yyyy')}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <div className="font-medium">Duration:</div>
-                    <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {durationDays} days
-                    </div>
-                  </div>
-                  
-                  {task.status === 'completed' && task.completion_time !== undefined && (
-                    <div>
-                      <div className="font-medium">Time to complete:</div>
-                      <div className="flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {task.completion_time > 24 
-                          ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
-                          : `${Math.round(task.completion_time)} hours`
-                        }
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </HoverCardContent>
-          </HoverCard>
-        </div>
-      </div>
-    );
-  };
 
   if (tasksLoading) {
     return <div className="flex justify-center items-center h-64">Loading timeline...</div>;
   }
 
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setAssigneeFilter('all');
+    setPriorityFilter('all');
+    setSearchQuery('');
+  };
+
+  const hasFilters = statusFilter !== 'all' || assigneeFilter !== 'all' || priorityFilter !== 'all' || searchQuery !== '';
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 items-center justify-between">
-        <div className="flex flex-wrap gap-2 items-center">
-          <Select value={timeRange} onValueChange={(value: 'week' | 'month' | 'quarter') => setTimeRange(value)}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Time Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Time Range</SelectLabel>
-                <SelectItem value="week">Week</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
-                <SelectItem value="quarter">Quarter</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Status</SelectLabel>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="not started">Not Started</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="stucked">Stucked</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          
-          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Assignee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Assignee</SelectLabel>
-                <SelectItem value="all">All Members</SelectItem>
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.user_id} value={member.user_id}>
-                    {`${member.full_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Priority</SelectLabel>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search tasks..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-10 w-10"
-                onClick={() => setSearchQuery('')}
-                title="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          <Button 
-            onClick={() => setIsTaskDialogOpen(true)}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
-          </Button>
-        </div>
-      </div>
+      <TimelineFilters
+        timeRange={timeRange}
+        statusFilter={statusFilter}
+        assigneeFilter={assigneeFilter}
+        priorityFilter={priorityFilter}
+        searchQuery={searchQuery}
+        teamMembers={teamMembers}
+        onTimeRangeChange={setTimeRange}
+        onStatusFilterChange={setStatusFilter}
+        onAssigneeFilterChange={setAssigneeFilter}
+        onPriorityFilterChange={setPriorityFilter}
+        onSearchQueryChange={setSearchQuery}
+        onCreateTask={() => setIsTaskDialogOpen(true)}
+      />
       
-      <div className="flex flex-wrap gap-4 items-center text-sm">
-        <span className="font-medium">Status Legend:</span>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 mr-1 bg-gray-500 rounded-full"></span>
-          <span>Not Started</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 mr-1 bg-yellow-500 rounded-full"></span>
-          <span>Pending</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 mr-1 bg-blue-500 rounded-full"></span>
-          <span>In Progress</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 mr-1 bg-green-500 rounded-full"></span>
-          <span>Completed</span>
-        </div>
-        <div className="flex items-center">
-          <span className="inline-block w-3 h-3 mr-1 bg-red-500 rounded-full"></span>
-          <span>Stucked</span>
-        </div>
-      </div>
+      <TimelineLegend />
       
       <Card>
         <CardContent className="p-4">
-          {tasks.length === 0 ? (
-            <div className="text-center py-10">
-              <CircleDashed className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No tasks found with the current filters.</p>
-              {(statusFilter !== 'all' || assigneeFilter !== 'all' || priorityFilter !== 'all' || searchQuery) && (
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setStatusFilter('all');
-                    setAssigneeFilter('all');
-                    setPriorityFilter('all');
-                    setSearchQuery('');
-                  }}
-                >
-                  <Filter className="mr-2 h-4 w-4" />
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <ScrollArea className="h-[calc(100vh-400px)]">
-              <div className="min-w-[800px]">
-                <div className="flex">
-                  <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200 bg-gray-50 font-medium">
-                    Task Title
-                  </div>
-                  
-                  <div 
-                    className="flex-1 grid gap-0 border-b" 
-                    style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
-                  >
-                    {timelineDates.map((date, index) => (
-                      <div 
-                        key={index} 
-                        className={`text-center py-1 px-1 text-xs ${
-                          date.getDate() === 1 || index === 0 ? 'font-bold' : ''
-                        }`}
-                      >
-                        {date.getDate() === 1 || index === 0 
-                          ? format(date, 'MMM d')
-                          : format(date, 'd')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="divide-y divide-gray-100">
-                  {filteredTasks.map((task) => renderTaskBar(task))}
-                </div>
-              </div>
-            </ScrollArea>
-          )}
+          <Timeline
+            tasks={filteredTasks}
+            timelineDates={timelineDates}
+            teamMembers={teamMembers}
+            hasFilters={hasFilters}
+            onClearFilters={handleClearFilters}
+          />
         </CardContent>
       </Card>
 
