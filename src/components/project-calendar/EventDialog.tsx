@@ -1,10 +1,10 @@
 
 import * as React from "react";
-import { useState } from "react";  // Add this import
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -46,6 +48,7 @@ export function EventDialog({
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Reset the form when the dialog is opened or closed
   React.useEffect(() => {
@@ -54,16 +57,19 @@ export function EventDialog({
         title: "",
         description: "",
       });
+      setError(null);
     }
   }, [open, defaultValues, form]);
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
+      setError(null);
       await onSubmit(data);
       form.reset();
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (err) {
+      console.error("Error submitting form:", err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -74,7 +80,20 @@ export function EventDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Create Event' : 'Edit Event'}</DialogTitle>
+          <DialogDescription>
+            Fill in the event details below. Click save when you're done.
+          </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
