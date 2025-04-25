@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -84,6 +83,20 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
+  const { data: eventsCount } = useQuery({
+    queryKey: ['project_events_count', id],
+    queryFn: async () => {
+      if (!id) return 0;
+      const { count, error } = await supabase
+        .from('project_events')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!id,
+  });
+
   const tasksStats = React.useMemo(() => {
     if (!tasks) return { total: 0, completed: 0, inProgress: 0 };
     const total = tasks.length;
@@ -130,6 +143,7 @@ const ProjectDetailsView = () => {
         contactsCount={contactsCount || 0}
         teamMembersCount={teamMembersCount || 0}
         tasksStats={tasksStats}
+        eventsCount={eventsCount || 0}
       />
 
       <Card>

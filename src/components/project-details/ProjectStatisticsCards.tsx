@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Users, UserRound, ListTodo } from 'lucide-react';
+import { Users, UserRound, ListTodo, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface ProjectStatisticsCardsProps {
@@ -11,15 +10,17 @@ interface ProjectStatisticsCardsProps {
     completed: number;
     inProgress: number;
   };
+  eventsCount: number;
 }
 
 export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   contactsCount,
   teamMembersCount,
   tasksStats,
+  eventsCount,
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
@@ -60,6 +61,18 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
               </div>
             </div>
             <ListTodo className="h-8 w-8 text-green-500" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Events</p>
+              <p className="text-2xl font-bold">{eventsCount}</p>
+            </div>
+            <CalendarDays className="h-8 w-8 text-blue-500" />
           </div>
         </CardContent>
       </Card>
