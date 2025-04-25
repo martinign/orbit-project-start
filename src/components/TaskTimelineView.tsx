@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,8 +17,10 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X, Timer } from 'lucide-react';
+import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X, Timer, Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import TaskDialog from './TaskDialog';
 
 interface TaskStatusHistory {
   task_id: string;
@@ -57,6 +58,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
@@ -111,67 +113,16 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-  const { data: projectTeamMembers = [], isLoading: teamMembersLoading } = useQuery({
+  const { data: teamMembers = [] } = useQuery({
     queryKey: ['project_team_members', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-      
-      const { data: directMembers, error: directError } = await supabase
+      const { data, error } = await supabase
         .from('project_team_members')
-        .select('user_id, full_name, last_name, id')
+        .select('user_id, full_name, last_name')
         .eq('project_id', projectId);
-        
-      if (directError) throw directError;
-      
-      const { data: projectInvitations } = await supabase
-        .from("project_invitations")
-        .select(`
-          id,
-          status,
-          inviter:inviter_id(id, full_name, last_name),
-          invitee:invitee_id(id, full_name, last_name)
-        `)
-        .eq('project_id', projectId)
-        .eq('status', 'accepted');
-      
-      const allMembers: TeamMember[] = [
-        ...(directMembers || []).map((member) => ({
-          id: member.id,
-          user_id: member.user_id,
-          full_name: member.full_name || '',
-          last_name: member.last_name || ''
-        }))
-      ];
-      
-      if (projectInvitations) {
-        projectInvitations.forEach((inv: any) => {
-          if (inv.invitee && inv.status === 'accepted') {
-            const existingMember = allMembers.find(m => m.user_id === inv.invitee.id);
-            if (!existingMember && inv.invitee.id) {
-              allMembers.push({
-                id: inv.id,
-                user_id: inv.invitee.id,
-                full_name: inv.invitee.full_name || '',
-                last_name: inv.invitee.last_name || ''
-              });
-            }
-          }
-          
-          if (inv.inviter) {
-            const existingMember = allMembers.find(m => m.user_id === inv.inviter.id);
-            if (!existingMember && inv.inviter.id) {
-              allMembers.push({
-                id: inv.id + '_inviter',
-                user_id: inv.inviter.id,
-                full_name: inv.inviter.full_name || '',
-                last_name: inv.inviter.last_name || ''
-              });
-            }
-          }
-        });
-      }
-      
-      return allMembers;
+      if (error) throw error;
+      return data;
     },
     enabled: !!projectId,
   });
@@ -232,7 +183,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     );
     
     if (taskDayIndex === -1) return null;
-    
+
     const getStatusColor = (status: string) => {
       switch (status.toLowerCase()) {
         case 'completed': return 'bg-green-500';
@@ -244,15 +195,30 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       }
     };
 
+    const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
+    const createdByTeamMember = teamMembers.find(member => member.user_id === task.user_id);
+
     return (
       <div key={task.id} className="flex min-h-[2.5rem] items-center border-b border-gray-100">
         <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
+          <div className="flex items-center space-x-2">
+            <span className="font-medium truncate">{task.title}</span>
+            <span className="text-xs text-gray-500">({daysSinceCreation}d)</span>
+          </div>
+        </div>
+        
+        <div 
+          className="flex-1 grid relative" 
+          style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
+        >
+          <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
+          
           <HoverCard>
             <HoverCardTrigger>
-              <div className="flex items-center space-x-2">
-                <span className="font-medium truncate">{task.title}</span>
-                <span className="text-xs text-gray-500">({daysSinceCreation}d)</span>
-              </div>
+              <div
+                className={`h-6 rounded-md ${getStatusColor(task.status)}`}
+                style={{ gridColumn: `${taskDayIndex + 1} / span 1` }}
+              />
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
               <div className="space-y-2">
@@ -275,7 +241,11 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     <div className="font-medium">Created by:</div>
                     <div className="flex items-center">
                       <User className="h-3 w-3 mr-1" />
-                      <span>{task.user_id || 'Unknown'}</span>
+                      <span>
+                        {createdByTeamMember 
+                          ? `${createdByTeamMember.full_name || ''} ${createdByTeamMember.last_name || ''}`.trim() 
+                          : 'Unknown'}
+                      </span>
                     </div>
                   </div>
                   
@@ -283,7 +253,11 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     <div className="font-medium">Assigned to:</div>
                     <div className="flex items-center">
                       <User className="h-3 w-3 mr-1" />
-                      <span>{task.assigned_to || 'Unassigned'}</span>
+                      <span>
+                        {assignedTeamMember 
+                          ? `${assignedTeamMember.full_name || ''} ${assignedTeamMember.last_name || ''}`.trim() 
+                          : 'Unassigned'}
+                      </span>
                     </div>
                   </div>
                   
@@ -323,23 +297,11 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
             </HoverCardContent>
           </HoverCard>
         </div>
-        
-        <div 
-          className="flex-1 grid relative" 
-          style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
-        >
-          <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
-          
-          <div
-            className={`h-6 rounded-md ${getStatusColor(task.status)}`}
-            style={{ gridColumn: `${taskDayIndex + 1} / span 1` }}
-          />
-        </div>
       </div>
     );
   };
 
-  if (tasksLoading || teamMembersLoading) {
+  if (tasksLoading) {
     return <div className="flex justify-center items-center h-64">Loading timeline...</div>;
   }
 
@@ -411,26 +373,35 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
           </Select>
         </div>
         
-        <div className="relative w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search tasks..."
-            className="pl-9"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-10 w-10"
-              onClick={() => setSearchQuery('')}
-              title="Clear search"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
+          <div className="relative w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search tasks..."
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-10 w-10"
+                onClick={() => setSearchQuery('')}
+                title="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          <Button 
+            onClick={() => setIsTaskDialogOpen(true)}
+            className="bg-blue-500 hover:bg-blue-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Task
+          </Button>
         </div>
       </div>
       
@@ -515,6 +486,17 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
           )}
         </CardContent>
       </Card>
+
+      <TaskDialog
+        open={isTaskDialogOpen}
+        onClose={() => setIsTaskDialogOpen(false)}
+        mode="create"
+        projectId={projectId}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['tasks_timeline'] });
+          setIsTaskDialogOpen(false);
+        }}
+      />
     </div>
   );
 };
