@@ -23,18 +23,20 @@ interface InvitationData {
   created_at: string;
   permission_level: string;
   project_id: string;
-  inviter: {
-    full_name: string | null;
-    last_name: string | null;
-  } | null;
-  invitee: {
-    full_name: string | null;
-    last_name: string | null;
-    email: string | null;
-  } | null;
+  inviter_id: string;
+  invitee_id: string;
   projects: {
     project_number: string;
     Sponsor: string;
+  } | null;
+  profiles_inviter: {
+    full_name: string | null;
+    last_name: string | null;
+  } | null;
+  profiles_invitee: {
+    full_name: string | null;
+    last_name: string | null;
+    email: string | null;
   } | null;
 }
 
@@ -50,15 +52,17 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
           created_at,
           permission_level,
           project_id,
+          inviter_id,
+          invitee_id,
           projects:project_id (
             project_number,
             Sponsor
           ),
-          inviter:inviter_id (
+          profiles_inviter:inviter_id (
             full_name,
             last_name
           ),
-          invitee:invitee_id (
+          profiles_invitee:invitee_id (
             full_name,
             last_name,
             email
@@ -137,15 +141,15 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
                         {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Invitee: {formatName(invitation.invitee)}
+                        Invitee: {formatName(invitation.profiles_invitee)}
                       </p>
-                      {invitation.invitee?.email && (
+                      {invitation.profiles_invitee?.email && (
                         <p className="text-sm text-muted-foreground">
-                          Email: {invitation.invitee.email}
+                          Email: {invitation.profiles_invitee.email}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Sent by: {formatName(invitation.inviter)}
+                        Sent by: {formatName(invitation.profiles_inviter)}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
