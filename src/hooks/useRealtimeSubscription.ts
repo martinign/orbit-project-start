@@ -35,22 +35,23 @@ export function useRealtimeSubscription({
     
     // Initialize the channel
     const channel = supabase.channel(channelName);
+
+    // Configure the channel with postgres_changes
+    const subscription = channel.on(
+      'postgres_changes', 
+      { 
+        event: event,
+        schema: 'public',
+        table: table,
+        ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
+      },
+      (payload) => {
+        onRecordChange(payload);
+      }
+    );
     
-    // Subscribe to the channel with postgres_changes configuration
-    channel
-      .on(
-        'postgres_changes',
-        {
-          event: event,
-          schema: 'public',
-          table: table,
-          ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
-        },
-        (payload) => {
-          onRecordChange(payload);
-        }
-      )
-      .subscribe();
+    // Subscribe to the channel
+    subscription.subscribe();
 
     // Cleanup function
     return () => {
