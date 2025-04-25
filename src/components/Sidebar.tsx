@@ -1,8 +1,9 @@
+
 import { LayoutDashboard, Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ export function AppSidebar() {
   const {
     toast
   } = useToast();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
@@ -151,12 +153,16 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>DASHBOARD</SidebarGroupLabel>
+          <SidebarGroupLabel>OVERVIEW</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/dashboard">
-                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-indigo-500/10 transition-colors duration-200">
+                  <SidebarMenuButton 
+                    tooltip="Dashboard" 
+                    className="hover:bg-indigo-500/10 transition-colors duration-200"
+                    isActive={location.pathname === "/dashboard"}
+                  >
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
                   </SidebarMenuButton>
@@ -172,7 +178,11 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/projects">
-                  <SidebarMenuButton tooltip="Projects" className="hover:bg-blue-500/10 transition-colors duration-200">
+                  <SidebarMenuButton 
+                    tooltip="Projects" 
+                    className="hover:bg-blue-500/10 transition-colors duration-200"
+                    isActive={location.pathname === "/projects"}
+                  >
                     <Folder className="text-blue-500" />
                     <span>Projects</span>
                   </SidebarMenuButton>

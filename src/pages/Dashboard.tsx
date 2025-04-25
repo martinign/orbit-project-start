@@ -7,6 +7,7 @@ import Projects from "./Projects";
 import Contacts from "./Contacts";
 import TeamMembers from "./TeamMembers";
 import ProjectDetailsView from "@/components/ProjectDetailsView";
+import DashboardHome from "./DashboardHome";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,6 +17,10 @@ const Dashboard = () => {
   // Determine which component to render based on the current path
   const renderContent = () => {
     const path = location.pathname;
+    
+    if (path === "/dashboard") {
+      return <DashboardHome />;
+    }
     
     if (path.startsWith("/projects/") && id) {
       return <ProjectDetailsView />;
@@ -29,7 +34,7 @@ const Dashboard = () => {
       return <TeamMembers />;
     }
     
-    // Default to Projects for /projects and /dashboard routes
+    // Default to Projects for /projects route
     return <Projects />;
   };
 
