@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -96,7 +97,7 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
             <Skeleton className="h-4 w-4/5" />
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Total Invitations</span>
               <span className="text-xl font-bold">{invitationStats?.total || 0}</span>
@@ -115,14 +116,16 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
                 <span className="text-sm font-medium text-red-600">{invitationStats?.rejected || 0}</span>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              className="w-full mt-4" // Increased margin-top for more visibility
-              onClick={() => setShowDialog(true)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View All Invitations
-            </Button>
+            {invitationStats?.total > 0 && (
+              <Button 
+                variant="default"  // Changed from 'outline' to 'default' for better visibility
+                className="w-full mt-4 bg-primary text-white hover:bg-primary/90" 
+                onClick={() => setShowDialog(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View All Invitations
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
@@ -134,3 +137,4 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
     </Card>
   );
 }
+
