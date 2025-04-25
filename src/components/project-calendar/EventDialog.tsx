@@ -43,6 +43,8 @@ export function EventDialog({
       description: "",
     },
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset the form when the dialog is opened or closed
   React.useEffect(() => {
@@ -56,10 +58,13 @@ export function EventDialog({
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
+      setIsSubmitting(true);
       await onSubmit(data);
       form.reset();
     } catch (error) {
       console.error("Error submitting form:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -101,8 +106,12 @@ export function EventDialog({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-                {mode === 'create' ? 'Create Event' : 'Update Event'}
+              <Button 
+                type="submit" 
+                className="bg-blue-500 hover:bg-blue-600"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create Event' : 'Update Event'}
               </Button>
             </div>
           </form>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -22,7 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile'; // Import the hook
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -46,7 +45,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth(); // Get the current authenticated user
+  const { user } = useAuth();
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
@@ -81,14 +80,21 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     }) => {
       if (!user) throw new Error("User not authenticated");
       
-      const { error } = await supabase.from('project_events').insert({
-        project_id: projectId,
-        title: data.title,
-        description: data.description,
-        user_id: user.id, // Add the current user ID
-      });
+      const { error } = await supabase
+        .from('project_events')
+        .insert({
+          project_id: projectId,
+          title: data.title,
+          description: data.description || null,
+          user_id: user.id,
+          start_date: selectedDate ? selectedDate.toISOString() : new Date().toISOString(),
+          end_date: selectedDate ? selectedDate.toISOString() : new Date().toISOString()
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating event:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
@@ -98,7 +104,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
       });
       setIsEventDialogOpen(false);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error submitting form:", error);
       toast({
         title: 'Error',
         description: 'There was an error creating the event.',
@@ -221,7 +228,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         open={isEventDialogOpen}
         onClose={() => setIsEventDialogOpen(false)}
         onSubmit={async (data) => {
-          // Ensure data has required properties
           if (!data.title) {
             toast({
               title: 'Validation Error',
@@ -241,7 +247,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   );
 }
 
-// Separate component to handle event creator display
 function EventWithCreator({ 
   event, 
   onDelete 
