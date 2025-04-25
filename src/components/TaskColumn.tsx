@@ -48,7 +48,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="flex flex-col h-full group relative">
+    <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <Collapsible
         open={isExpanded}
         onOpenChange={setIsExpanded}
@@ -57,7 +57,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
         <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="font-medium">{column.title}</h3>
+              <h3 className="font-medium truncate">{column.title}</h3>
               <Badge className={column.badgeColor}>
                 {tasks.length}
               </Badge>
@@ -91,15 +91,15 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
           </div>
         </div>
         
-        <CollapsibleContent className="flex-grow">
+        <CollapsibleContent className="flex-grow overflow-hidden">
           <Droppable droppableId={column.id}>
             {(provided) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="bg-gray-50 rounded-b-md p-3 min-h-[200px] h-full overflow-y-auto"
+                className="p-2 min-h-[200px] h-full overflow-y-auto"
               >
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {tasks.map((task, index) => (
                     <TaskCard
                       key={task.id}

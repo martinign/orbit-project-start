@@ -255,32 +255,32 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <Card className="shadow-sm">
           <CardContent className="p-2">
             <div className="flex justify-between items-start">
-              <div className="flex-grow">
-                <div className="flex justify-between items-start">
-                  <h5 className="text-sm font-medium">{subtask.title}</h5>
-                  <Badge className={getStatusColor(subtask.status)}>
+              <div className="flex-grow min-w-0">
+                <div className="flex justify-between items-start gap-1">
+                  <h5 className="text-sm font-medium truncate">{subtask.title}</h5>
+                  <Badge className={`flex-shrink-0 ml-1 ${getStatusColor(subtask.status)}`}>
                     {subtask.status}
                   </Badge>
                 </div>
                 {subtask.description && (
-                  <p className="text-xs text-gray-600 mt-1">{subtask.description}</p>
+                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{subtask.description}</p>
                 )}
                 <div className="flex flex-wrap gap-2 mt-1">
                   {subtask.due_date && formatDate(subtask.due_date) && (
                     <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1 text-gray-500" />
-                      <span className="text-xs text-gray-600">{formatDate(subtask.due_date)}</span>
+                      <Calendar className="h-3 w-3 mr-1 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-600 truncate">{formatDate(subtask.due_date)}</span>
                     </div>
                   )}
                   {subtaskAssignedToName && (
                     <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1 text-gray-500" />
-                      <span className="text-xs text-gray-600">{subtaskAssignedToName}</span>
+                      <User className="h-3 w-3 mr-1 text-gray-500 flex-shrink-0" />
+                      <span className="text-xs text-gray-600 truncate">{subtaskAssignedToName}</span>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="flex items-start gap-1 ml-2">
+              <div className="flex items-start gap-1 ml-2 flex-shrink-0">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
@@ -336,11 +336,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                className="shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full"
+                className="shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden"
               >
                 <CardContent className="p-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-2 flex-grow">
+                  <div className="flex justify-between items-start w-full">
+                    <div className="flex items-start gap-2 min-w-0 flex-grow">
                       {subtasks.length > 0 && (
                         <button 
                           className="mt-1 flex-shrink-0" 
@@ -447,27 +447,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {assignedToName && (
-                      <div className="flex items-center text-xs text-gray-600">
-                        <User className="h-3 w-3 mr-1" />
-                        <span>{assignedToName}</span>
-                      </div>
-                    )}
-                    
-                    {subtasks.length > 0 && (
-                      <div className="flex gap-1 items-center">
-                        <List className="h-3 w-3 text-gray-500" />
-                        <span className="text-xs text-gray-500">{subtasks.length} subtask{subtasks.length !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
-                    
-                    {updateCount > 0 && (
-                      <div className="flex gap-1 items-center">
-                        <MessageCircle className="h-3 w-3 text-gray-500" />
-                        <span className="text-xs text-gray-500">{updateCount} update{updateCount !== 1 ? 's' : ''}</span>
-                      </div>
-                    )}
+                  <div className="flex flex-wrap gap-2 mt-2 w-full">
+                    <div className="flex flex-wrap items-center gap-2 overflow-hidden w-full">
+                      {assignedToName && (
+                        <div className="flex items-center text-xs text-gray-600 shrink-0">
+                          <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{assignedToName}</span>
+                        </div>
+                      )}
+                      
+                      {subtasks.length > 0 && (
+                        <div className="flex items-center text-xs text-gray-500 shrink-0">
+                          <List className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span>{subtasks.length} subtask{subtasks.length !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      
+                      {updateCount > 0 && (
+                        <div className="flex items-center text-xs text-gray-500 shrink-0">
+                          <MessageCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span>{updateCount} update{updateCount !== 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -492,7 +494,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   
                   {task.due_date && formatDate(task.due_date) && (
                     <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
+                      <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
                       {formatDate(task.due_date)}
                     </span>
                   )}
@@ -502,7 +504,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <div>
                     <h5 className="text-xs font-medium text-gray-500">Assigned To</h5>
                     <p className="text-sm flex items-center">
-                      <User className="h-3 w-3 mr-1" />
+                      <User className="h-3 w-3 mr-1 flex-shrink-0" />
                       {assignedToName}
                     </p>
                   </div>
