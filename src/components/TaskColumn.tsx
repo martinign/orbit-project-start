@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
@@ -48,49 +49,49 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
 
   return (
     <div className="flex flex-col h-full group relative">
-      <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="font-medium">{column.title}</h3>
-            <Badge className={column.badgeColor}>
-              {tasks.length}
-            </Badge>
-          </div>
-          <div className="flex flex-col gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              onClick={() => handleCreateTask(column.status)}
-              title={`Add task to ${column.title}`}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-            <CollapsibleTrigger asChild>
+      <Collapsible
+        open={isExpanded}
+        onOpenChange={setIsExpanded}
+        className="h-full flex flex-col"
+      >
+        <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-medium">{column.title}</h3>
+              <Badge className={column.badgeColor}>
+                {tasks.length}
+              </Badge>
+            </div>
+            <div className="flex flex-col gap-1">
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                onClick={() => setIsExpanded(!isExpanded)}
-                title={isExpanded ? 'Collapse section' : 'Expand section'}
+                onClick={() => handleCreateTask(column.status)}
+                title={`Add task to ${column.title}`}
               >
-                {isExpanded ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
+                <Plus className="h-4 w-4" />
               </Button>
-            </CollapsibleTrigger>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                  onClick={(e) => e.stopPropagation()}
+                  title={isExpanded ? 'Collapse section' : 'Expand section'}
+                >
+                  {isExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <Collapsible
-        open={isExpanded}
-        onOpenChange={setIsExpanded}
-        className="flex-grow"
-      >
-        <CollapsibleContent className="h-full">
+        
+        <CollapsibleContent className="flex-grow">
           <Droppable droppableId={column.id}>
             {(provided) => (
               <div
