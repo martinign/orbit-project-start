@@ -1,10 +1,11 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -274,7 +275,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     <div className="font-medium">Created by:</div>
                     <div className="flex items-center">
                       <User className="h-3 w-3 mr-1" />
-                      <TaskCreator />
+                      <span>{task.user_id || 'Unknown'}</span>
                     </div>
                   </div>
                   
@@ -282,7 +283,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     <div className="font-medium">Assigned to:</div>
                     <div className="flex items-center">
                       <User className="h-3 w-3 mr-1" />
-                      <TaskAssignee />
+                      <span>{task.assigned_to || 'Unassigned'}</span>
                     </div>
                   </div>
                   
