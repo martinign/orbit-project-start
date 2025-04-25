@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -9,6 +10,7 @@ import { InvitationsStatisticsCard } from "@/components/dashboard/InvitationsSta
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface DashboardFilters {
   projectId?: string;
@@ -17,56 +19,73 @@ interface DashboardFilters {
   showNewTasks?: boolean;
 }
 
+// Helper for debounced query invalidation
+const debounce = (func: Function, wait: number) => {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  return (...args: any[]) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 const DashboardHome = () => {
   const queryClient = useQueryClient();
-
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showNewTasks, setShowNewTasks] = useState(false);
 
+  // Create debounced invalidation functions to prevent UI freezes
+  const debouncedInvalidateProjects = useCallback(
+    debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+    }, 300),
+    [queryClient]
+  );
+
+  const debouncedInvalidateTasks = useCallback(
+    debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
+      queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+    }, 300),
+    [queryClient]
+  );
+
+  const debouncedInvalidateInvitations = useCallback(
+    debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+    }, 300),
+    [queryClient]
+  );
+
+  // Use our custom realtime subscription hook instead of creating channels directly
+  useRealtimeSubscription({
+    table: 'projects',
+    onRecordChange: debouncedInvalidateProjects
+  });
+
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    onRecordChange: debouncedInvalidateTasks
+  });
+
+  useRealtimeSubscription({
+    table: 'project_invitations',
+    onRecordChange: debouncedInvalidateInvitations
+  });
+
+  // Invalidate queries when filters change
   useEffect(() => {
-    const channels = [
-      supabase.channel('projects_changes').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'projects'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
-        queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-      }),
-      
-      supabase.channel('tasks_changes').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'project_tasks'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
-        queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
-        queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
-        queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-      }),
-      
-      supabase.channel('invitations_changes').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'project_invitations'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
-        queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-      })
-    ];
-
-    channels.forEach(channel => channel.subscribe());
-
-    return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
-    };
-  }, [queryClient]);
-
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
-    queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
-    queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
-    queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
+    const invalidateAll = debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
+      queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
+    }, 300);
+    
+    invalidateAll();
   }, [filters, queryClient]);
 
   const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks'>) => {

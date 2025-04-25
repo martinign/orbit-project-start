@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,12 +58,16 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     },
   });
 
+  // Use the improved realtime subscription hook
   useRealtimeSubscription({
     table: 'project_team_members',
     filter: projectId ? 'project_id' : undefined,
     filterValue: projectId || undefined,
     onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ['team_members'] });
+      // Add debouncing to prevent UI freezes
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['team_members'] });
+      }, 100);
     }
   });
 

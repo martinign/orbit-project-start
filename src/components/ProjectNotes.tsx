@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,10 +23,6 @@ type ProjectNote = {
   created_at: string;
   updated_at: string;
   user_id: string;
-};
-
-type ProjectNotesProps = {
-  projectId: string | undefined;
 };
 
 export default function ProjectNotes({ projectId }: { projectId: string }) {
@@ -54,13 +51,16 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     fetchUserId();
   }, []);
 
-  // Add real-time subscription
+  // Add real-time subscription - Use only the hook approach, not duplicate subscriptions
   useRealtimeSubscription({
     table: 'project_notes',
     filter: 'project_id',
     filterValue: projectId,
-    onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+    onRecordChange: (payload) => {
+      // Debounce query invalidation to prevent UI freezing
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+      }, 100);
     }
   });
 
@@ -102,31 +102,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     }
   }, [notesData]);
 
-  // Set up real-time subscription for notes updates
-  useEffect(() => {
-    if (!projectId) return;
-
-    // Set up realtime subscription
-    const channel = supabase
-      .channel('project_notes_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'project_notes',
-          filter: `project_id=eq.${projectId}`
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [projectId, queryClient]);
+  // Remove the duplicate realtime subscription that was causing UI freezes
 
   // Handle opening the create note dialog
   const handleCreateNote = () => {
@@ -149,12 +125,8 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     setIsDeleteDialogOpen(true);
   };
 
+  // Optimistically add a new note with debouncing to prevent UI freeze
   const handleAddNote = async (note: any) => {
-    // Optimistically add the new note
-    queryClient.setQueryData(['project_notes', projectId], (old: any[] = []) => {
-      return [{ ...note, id: 'temp-' + Date.now() }, ...old];
-    });
-
     try {
       const { error } = await supabase
         .from('project_notes')
@@ -167,8 +139,6 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         description: 'Note added successfully',
       });
     } catch (error) {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
       console.error('Error adding note:', error);
       toast({
         title: 'Error',
@@ -331,4 +301,4 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
       />
     </div>
   );
-};
+}

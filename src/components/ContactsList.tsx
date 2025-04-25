@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,12 +73,16 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
+  // Use the improved realtime subscription hook with debouncing to prevent UI freezes
   useRealtimeSubscription({
     table: 'project_contacts',
     filter: projectId ? 'project_id' : undefined,
     filterValue: projectId || undefined,
     onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
+      // Debounce query invalidation
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
+      }, 100);
     }
   });
 

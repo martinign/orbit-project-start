@@ -33,7 +33,7 @@ export function useRealtimeSubscription({
     const channel = supabase.channel(channelName);
     
     channel.on(
-      'postgres_changes' as const,
+      'postgres_changes',
       {
         event: event,
         schema: 'public',
@@ -56,4 +56,3 @@ export function useRealtimeSubscription({
     };
   }, [table, event, filter, filterValue, onRecordChange]);
 }
-
