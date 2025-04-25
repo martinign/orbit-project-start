@@ -1,5 +1,24 @@
 
-  // Only modifying the createEvent mutation function
+import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Calendar } from '@/components/ui/calendar';
+import { EventDialog } from './EventDialog';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface ProjectCalendarProps {
+  projectId: string;
+}
+
+export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState<boolean>(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  // Event creation mutation
   const createEvent = useMutation({
     mutationFn: async (data: {
       title: string;
@@ -44,3 +63,33 @@
       });
     },
   });
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setIsEventDialogOpen(true);
+    }
+  };
+
+  const handleSubmitEvent = async (data: { title: string; description?: string }) => {
+    return createEvent.mutateAsync(data);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Calendar
+        mode="single"
+        selected={selectedDate}
+        onSelect={handleDateSelect}
+        className="border rounded-md"
+      />
+      
+      <EventDialog
+        open={isEventDialogOpen}
+        onClose={() => setIsEventDialogOpen(false)}
+        onSubmit={handleSubmitEvent}
+        mode="create"
+      />
+    </div>
+  );
+}
