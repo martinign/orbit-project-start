@@ -1,3 +1,4 @@
+
 import { LayoutDashboard, Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,16 @@ export function AppSidebar() {
   const { toast } = useToast();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const pendingInvitationsCount = useInvitationsCount();
+  
+  // Add the missing state variables
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
+  const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
+  const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
+  const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
 
   const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
