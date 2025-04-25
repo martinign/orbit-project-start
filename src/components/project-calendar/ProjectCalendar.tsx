@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,6 +18,21 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Query to fetch events for this project
+  const { data: events } = useQuery({
+    queryKey: ['project_events', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_events')
+        .select('*')
+        .eq('project_id', projectId);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!projectId
+  });
+
   // Event creation mutation
   const createEvent = useMutation({
     mutationFn: async (data: {
@@ -26,7 +41,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     }) => {
       if (!user) throw new Error("User not authenticated");
       
-      // Use explicit field names with table prefixes to avoid ambiguity
+      // Fix the ambiguous column reference by explicitly specifying column names
+      // without table prefixes in the insert statement
       const { data: insertedData, error } = await supabase
         .from('project_events')
         .insert([{
@@ -92,6 +108,23 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         onSubmit={handleSubmitEvent}
         mode="create"
       />
+
+      {events && events.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-2">Upcoming Events</h3>
+          <div className="space-y-2">
+            {events.map((event) => (
+              <div key={event.id} className="p-3 border rounded-md bg-gray-50">
+                <h4 className="font-medium">{event.title}</h4>
+                {event.description && <p className="text-sm text-gray-600">{event.description}</p>}
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(event.start_date).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
