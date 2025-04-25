@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -113,6 +114,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
+  // Fix: Query team members and make them available
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['project_team_members', projectId],
     queryFn: async () => {
@@ -348,8 +350,8 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
               <SelectGroup>
                 <SelectLabel>Assignee</SelectLabel>
                 <SelectItem value="all">All Members</SelectItem>
-                {projectTeamMembers.map((member) => (
-                  <SelectItem key={member.id} value={member.user_id}>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.user_id} value={member.user_id}>
                     {`${member.full_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}
                   </SelectItem>
                 ))}
