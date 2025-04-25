@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -24,6 +25,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProjectEvents } from '@/hooks/useProjectEvents';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -187,7 +189,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             return;
           }
           await createEvent.mutateAsync({
-            ...data,
+            title: data.title, // Ensure title is always provided as required
+            description: data.description,
             project_id: projectId,
             event_date: selectedDate?.toISOString(),
           });
