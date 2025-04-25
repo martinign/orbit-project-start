@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +10,6 @@ import ContactsEmptyState from "./contacts/ContactsEmptyState";
 import DeleteContactDialog from "./contacts/DeleteContactDialog";
 import EditContactDialog from "./contacts/EditContactDialog";
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { Button } from '@/components/ui/button';
-import { AllContactsSheet } from './contacts/AllContactsSheet';
 
 interface ContactsListProps {
   projectId?: string | null;
@@ -29,7 +28,6 @@ const ContactsList: React.FC<ContactsListProps> = ({
   const [isEditContactOpen, setIsEditContactOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [isAllContactsOpen, setIsAllContactsOpen] = useState(false);
 
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["project_contacts", projectId],
@@ -75,11 +73,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
+  // Use the improved realtime subscription hook with debouncing to prevent UI freezes
   useRealtimeSubscription({
     table: 'project_contacts',
     filter: projectId ? 'project_id' : undefined,
     filterValue: projectId || undefined,
     onRecordChange: () => {
+      // Debounce query invalidation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
       }, 100);
@@ -87,13 +87,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
   });
 
   const handleEditContact = (e: React.MouseEvent, contact: Contact) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedContact(contact);
     setIsEditContactOpen(true);
   };
 
   const handleDeleteContact = (e: React.MouseEvent, contact: Contact) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent event bubbling
     setSelectedContact(contact);
     setIsDeleteDialogOpen(true);
   };
@@ -135,11 +135,13 @@ const ContactsList: React.FC<ContactsListProps> = ({
 
   const handleCloseEditDialog = () => {
     setIsEditContactOpen(false);
+    // Small delay to ensure state is updated correctly
     setTimeout(() => setSelectedContact(null), 100);
   };
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
+    // Small delay to ensure state is updated correctly
     setTimeout(() => setSelectedContact(null), 100);
   };
 
@@ -151,59 +153,23 @@ const ContactsList: React.FC<ContactsListProps> = ({
     return <ContactsEmptyState searchQuery={searchQuery} />;
   }
 
-  const displayContacts = filteredContacts.slice(0, 10);
-  const hasMoreContacts = filteredContacts.length > 10;
-
   return (
     <div className="space-y-4">
       {viewMode === "table" ? (
-        <>
-          <ContactsTable 
-            contacts={displayContacts}
-            projectId={projectId}
-            onEdit={handleEditContact}
-            onDelete={handleDeleteContact}
-          />
-          {hasMoreContacts && (
-            <div className="flex justify-center mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsAllContactsOpen(true)}
-              >
-                View All ({filteredContacts.length} contacts)
-              </Button>
-            </div>
-          )}
-        </>
+        <ContactsTable 
+          contacts={filteredContacts}
+          projectId={projectId}
+          onEdit={handleEditContact}
+          onDelete={handleDeleteContact}
+        />
       ) : (
-        <>
-          <ContactsCardView 
-            contacts={displayContacts}
-            projectId={projectId}
-            onEdit={handleEditContact}
-            onDelete={handleDeleteContact}
-          />
-          {hasMoreContacts && (
-            <div className="flex justify-center mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsAllContactsOpen(true)}
-              >
-                View All ({filteredContacts.length} contacts)
-              </Button>
-            </div>
-          )}
-        </>
+        <ContactsCardView 
+          contacts={filteredContacts}
+          projectId={projectId}
+          onEdit={handleEditContact}
+          onDelete={handleDeleteContact}
+        />
       )}
-
-      <AllContactsSheet
-        isOpen={isAllContactsOpen}
-        onClose={() => setIsAllContactsOpen(false)}
-        contacts={filteredContacts}
-        projectId={projectId}
-        onEdit={handleEditContact}
-        onDelete={handleDeleteContact}
-      />
 
       <EditContactDialog 
         isOpen={isEditContactOpen}
