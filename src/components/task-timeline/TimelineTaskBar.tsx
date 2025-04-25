@@ -19,8 +19,8 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   if (!task.created_at || !timelineDates.length) return null;
 
   const startDate = startOfDay(parseISO(task.created_at));
-  const lastTimelineDate = timelineDates[timelineDates.length - 1];
   const today = startOfDay(new Date());
+  const lastTimelineDate = startOfDay(timelineDates[timelineDates.length - 1]);
 
   const rawEndDate = task.status === 'completed' && task.updated_at
     ? startOfDay(parseISO(task.updated_at))
@@ -30,10 +30,9 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
 
   if (!isValid(startDate) || !isValid(endDate)) return null;
 
-  const taskStartIndex = timelineDates.findIndex(date => 
-    date.getFullYear() === startDate.getFullYear() &&
-    date.getMonth() === startDate.getMonth() &&
-    date.getDate() === startDate.getDate()
+  // 🛠️ Comparación de fechas normalizadas
+  const taskStartIndex = timelineDates.findIndex(date =>
+    startOfDay(date).getTime() === startDate.getTime()
   );
 
   if (taskStartIndex === -1) return null;

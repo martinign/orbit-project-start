@@ -124,7 +124,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     let currentDate = startDate;
 
     while (currentDate <= endDate) {
-      dates.push(new Date(currentDate));
+      dates.push(startOfDay(currentDate));
       currentDate = addDays(currentDate, 1);
     }
 
