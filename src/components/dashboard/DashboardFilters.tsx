@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Filter, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface DashboardFiltersProps {
   onFilterChange: (filters: {
@@ -14,10 +14,14 @@ interface DashboardFiltersProps {
     status?: string;
     priority?: string;
   }) => void;
+  showNewTasks?: boolean;
+  onClearNewTasks?: () => void;
 }
 
 export function DashboardFilters({
-  onFilterChange
+  onFilterChange,
+  showNewTasks,
+  onClearNewTasks
 }: DashboardFiltersProps) {
   const [projectId, setProjectId] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
@@ -43,6 +47,9 @@ export function DashboardFilters({
     setStatus("all");
     setPriority("all");
     onFilterChange({});
+    if (showNewTasks && onClearNewTasks) {
+      onClearNewTasks();
+    }
     toast({
       title: "Filters Reset",
       description: "All filters have been cleared"
@@ -65,6 +72,21 @@ export function DashboardFilters({
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
       <div className="flex flex-col md:flex-row gap-4 items-end">
+        {showNewTasks && (
+          <div className="flex items-center gap-2 text-sm text-purple-600 mb-4 md:mb-0">
+            <Badge variant="secondary" className="bg-purple-100">
+              Showing new tasks from last 24h
+            </Badge>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearNewTasks}
+              className="h-7 px-2"
+            >
+              Clear
+            </Button>
+          </div>
+        )}
         <div className="grid gap-1.5 w-full md:w-1/4">
           <Label htmlFor="project-filter">Project</Label>
           <Select value={projectId} onValueChange={value => setProjectId(value)}>

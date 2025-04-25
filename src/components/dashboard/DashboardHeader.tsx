@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +13,12 @@ import {
 } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onNewTasksClick?: () => void;
+  isNewTasksFilterActive?: boolean;
+}
+
+export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: DashboardHeaderProps) {
   const navigate = useNavigate();
   
   const { data: newTasksCount, refetch } = useQuery({
@@ -58,13 +64,19 @@ export function DashboardHeader() {
         {newTasksCount > 0 && (
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <Badge className="bg-purple-500 hover:bg-purple-600">
+              <TooltipTrigger onClick={onNewTasksClick} asChild>
+                <Badge 
+                  className={`cursor-pointer ${
+                    isNewTasksFilterActive 
+                      ? "bg-purple-700 hover:bg-purple-800" 
+                      : "bg-purple-500 hover:bg-purple-600"
+                  }`}
+                >
                   {newTasksCount} new
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                <p>New tasks in the last 24 hours</p>
+                <p>Click to {isNewTasksFilterActive ? 'hide' : 'show'} new tasks in the last 24 hours</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

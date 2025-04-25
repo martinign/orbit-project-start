@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,11 +15,13 @@ interface DashboardFilters {
   projectId?: string;
   status?: string;
   category?: string;
+  showNewTasks?: boolean;
 }
 
 const DashboardHome = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<DashboardFilters>({});
+  const [showNewTasks, setShowNewTasks] = useState(false);
 
   useEffect(() => {
     const channels = [
@@ -66,10 +69,38 @@ const DashboardHome = () => {
     queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
   }, [filters, queryClient]);
 
+  const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks'>) => {
+    setFilters(current => ({
+      ...newFilters,
+      showNewTasks: current.showNewTasks
+    }));
+  };
+
+  const toggleNewTasksFilter = () => {
+    setShowNewTasks(prev => !prev);
+    setFilters(current => ({
+      ...current,
+      showNewTasks: !current.showNewTasks
+    }));
+  };
+
   return (
     <div className="w-full space-y-6">
-      <DashboardHeader />
-      <DashboardFilters onFilterChange={setFilters} />
+      <DashboardHeader 
+        onNewTasksClick={toggleNewTasksFilter}
+        isNewTasksFilterActive={showNewTasks}
+      />
+      <DashboardFilters 
+        onFilterChange={handleFiltersChange}
+        showNewTasks={showNewTasks}
+        onClearNewTasks={() => {
+          setShowNewTasks(false);
+          setFilters(current => ({
+            ...current,
+            showNewTasks: false
+          }));
+        }}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectsStatisticsCard filters={filters} />

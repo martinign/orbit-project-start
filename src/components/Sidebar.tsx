@@ -1,4 +1,3 @@
-
 import { LayoutDashboard, Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,22 +19,26 @@ import InviteMembersDialog from "@/components/team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 
 export function AppSidebar() {
-  const {
-    signOut
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
-  const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
-  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
-  const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<any>(null);
-  const pendingInvitationsCount = useInvitationsCount();
+
+  const { data: newTasksCount } = useQuery({
+    queryKey: ["new_tasks_count"],
+    queryFn: async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const { count, error } = await supabase
+        .from("project_tasks")
+        .select("id", { count: "exact" })
+        .gte("created_at", yesterday.toISOString());
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
 
   const {
     data: recentProjects,
@@ -165,6 +168,11 @@ export function AppSidebar() {
                   >
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
+                    {newTasksCount > 0 && (
+                      <Badge className="ml-auto bg-purple-500 hover:bg-purple-600">
+                        {newTasksCount} new
+                      </Badge>
+                    )}
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
