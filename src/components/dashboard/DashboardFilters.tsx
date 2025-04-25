@@ -9,6 +9,8 @@ import { CalendarIcon, Filter, RefreshCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { cn } from "@/lib/utils";
 
 interface DashboardFiltersProps {
   onFilterChange: (filters: {
@@ -21,7 +23,7 @@ interface DashboardFiltersProps {
 
 export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
   const [projectId, setProjectId] = useState<string>("");
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: undefined, to: undefined });
   const [status, setStatus] = useState<string>("");
 
   const { data: projects } = useQuery({
@@ -39,7 +41,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
 
   const handleReset = () => {
     setProjectId("");
-    setDateRange({});
+    setDateRange({ from: undefined, to: undefined });
     setStatus("");
     onFilterChange({});
   };
@@ -47,8 +49,8 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
   const applyFilters = () => {
     onFilterChange({
       projectId: projectId || undefined,
-      startDate: dateRange.from,
-      endDate: dateRange.to,
+      startDate: dateRange?.from,
+      endDate: dateRange?.to,
       status: status || undefined,
     });
   };
@@ -63,7 +65,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Projects</SelectItem>
+              <SelectItem value="_all">All Projects</SelectItem>
               {projects?.map((project) => (
                 <SelectItem key={project.id} value={project.id}>
                   {project.project_number} - {project.Sponsor}
@@ -82,7 +84,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
                 className="w-full justify-start text-left font-normal"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateRange.from ? (
+                {dateRange?.from ? (
                   dateRange.to ? (
                     <>
                       {format(dateRange.from, "PPP")} - {format(dateRange.to, "PPP")}
@@ -101,6 +103,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
                 selected={dateRange}
                 onSelect={setDateRange}
                 initialFocus
+                className={cn("p-3 pointer-events-auto")}
               />
             </PopoverContent>
           </Popover>
@@ -113,7 +116,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="_all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
