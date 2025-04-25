@@ -23,9 +23,9 @@ interface DashboardFiltersProps {
 }
 
 export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
-  const [projectId, setProjectId] = useState<string>("");
+  const [projectId, setProjectId] = useState<string>("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: undefined, to: undefined });
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: projects } = useQuery({
@@ -42,9 +42,9 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
   });
 
   const handleReset = () => {
-    setProjectId("");
+    setProjectId("all");
     setDateRange({ from: undefined, to: undefined });
-    setStatus("");
+    setStatus("all");
     onFilterChange({});
     
     toast({
@@ -55,10 +55,10 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
 
   const applyFilters = () => {
     const filters = {
-      projectId: projectId || undefined,
+      projectId: projectId !== "all" ? projectId : undefined,
       startDate: dateRange?.from,
       endDate: dateRange?.to,
-      status: status || undefined,
+      status: status !== "all" ? status : undefined,
     };
     
     onFilterChange(filters);
@@ -79,7 +79,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Projects</SelectItem>
+              <SelectItem value="all">All Projects</SelectItem>
               {(projects || []).map((project) => (
                 <SelectItem key={project.id} value={project.id}>
                   {project.project_number} - {project.Sponsor}
@@ -130,7 +130,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>

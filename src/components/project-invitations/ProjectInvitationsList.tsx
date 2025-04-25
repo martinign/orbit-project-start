@@ -132,7 +132,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
         >
           <div className="space-y-2">
             <div className="font-medium">
-              {invitation.profiles?`${invitation.profiles.full_name} ${invitation.profiles.last_name}` : "Unnamed User"}
+              {invitation.profiles?`${invitation.profiles.full_name || ''} ${invitation.profiles.last_name || ''}`.trim() : "Unnamed User"}
             </div>
             <div className="text-sm text-muted-foreground">
               {invitation.profiles?.email}
@@ -167,6 +167,6 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
       ))}
     </div>
   );
-};
+}
 
 export default ProjectInvitationsList;

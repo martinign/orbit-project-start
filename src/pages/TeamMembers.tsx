@@ -123,7 +123,7 @@ const TeamMembers = () => {
               <SelectContent>
                 <SelectItem value="all">All Projects</SelectItem>
                 {isLoadingProjects ? (
-                  <SelectItem value="loading" disabled>
+                  <SelectItem value="loading">
                     Loading projects...
                   </SelectItem>
                 ) : projects && projects.length > 0 ? (
@@ -133,7 +133,7 @@ const TeamMembers = () => {
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="none" disabled>
+                  <SelectItem value="no-projects">
                     No projects found
                   </SelectItem>
                 )}

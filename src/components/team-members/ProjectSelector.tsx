@@ -64,7 +64,7 @@ const ProjectSelector = ({
       </SelectTrigger>
       <SelectContent>
         {isLoading ? (
-          <SelectItem value="loading" disabled>
+          <SelectItem value="loading">
             Loading projects...
           </SelectItem>
         ) : projects.length > 0 ? (
@@ -74,7 +74,7 @@ const ProjectSelector = ({
             </SelectItem>
           ))
         ) : (
-          <SelectItem value="none" disabled>
+          <SelectItem value="none">
             No projects found
           </SelectItem>
         )}
