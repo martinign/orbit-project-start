@@ -39,22 +39,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   mode = 'create',
   onSuccess
 }) => {
-  const {
-    title,
-    setTitle,
-    description,
-    setDescription,
-    status,
-    setStatus,
-    dueDate,
-    setDueDate,
-    notes,
-    setNotes,
-    assignedTo,
-    setAssignedTo,
-    isSubmitting,
-    handleSubmit,
-  } = useSubtaskForm(parentTask, subtask, mode, onSuccess);
+  const formProps = useSubtaskForm(parentTask, subtask, mode, onSuccess);
 
   const { data: teamMembers } = useQuery({
     queryKey: ['team_members'],
@@ -85,21 +70,8 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         </DialogHeader>
 
         <SubtaskForm
-          title={title}
-          description={description}
-          status={status}
-          dueDate={dueDate}
-          notes={notes}
-          assignedTo={assignedTo}
-          isSubmitting={isSubmitting}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          setStatus={setStatus}
-          setDueDate={setDueDate}
-          setNotes={setNotes}
-          setAssignedTo={setAssignedTo}
+          {...formProps}
           teamMembers={teamMembers}
-          onSubmit={handleSubmit}
           onClose={onClose}
         />
       </DialogContent>
