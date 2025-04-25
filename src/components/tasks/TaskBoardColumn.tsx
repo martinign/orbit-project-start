@@ -1,8 +1,5 @@
-
 import React, { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import {
@@ -61,11 +58,11 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
     <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
         <div className="flex justify-between items-center">
-          <div>
+          <div className="flex items-center space-x-2">
             <h3 className="font-medium truncate">{column.title}</h3>
-            <Badge className={column.badgeColor}>
+            <span className="text-sm text-muted-foreground">
               {isCollapsed && tasks.length > 2 ? `2 of ${tasks.length}` : tasks.length}
-            </Badge>
+            </span>
           </div>
           <div className="flex flex-col gap-1">
             <TooltipProvider>
