@@ -1,11 +1,10 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -19,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X, Timer } from 'lucide-react';
-import { useProjectInvitations } from '@/hooks/useProjectInvitations';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TaskStatusHistory {
   task_id: string;
@@ -59,7 +58,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const queryClient = useQueryClient();
 
-  // Query to fetch tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['tasks_timeline', projectId, timeRange, statusFilter, assigneeFilter, priorityFilter, searchQuery],
     queryFn: async () => {
@@ -89,15 +87,12 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
 
-      // Calculate completion time for each task
       const tasksWithCompletionTime = await Promise.all((data || []).map(async (task) => {
         let completionTime: number | undefined = undefined;
 
-        // For completed tasks, we calculate the completion time
         if (task.status === 'completed') {
-          // Get task history (this is simulated since we don't have actual history data yet)
           const createdDate = parseISO(task.created_at);
-          const completedDate = new Date(); // Default to now if we don't know
+          const completedDate = new Date();
           
           if (task.updated_at) {
             completionTime = differenceInHours(parseISO(task.updated_at), createdDate);
@@ -115,7 +110,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-  // Get project team members (both direct members and those from invitations)
   const { data: projectTeamMembers = [], isLoading: teamMembersLoading } = useQuery({
     queryKey: ['project_team_members', projectId],
     queryFn: async () => {
@@ -128,7 +122,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         
       if (directError) throw directError;
       
-      // Get project invitations
       const { data: projectInvitations } = await supabase
         .from("project_invitations")
         .select(`
@@ -140,7 +133,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         .eq('project_id', projectId)
         .eq('status', 'accepted');
       
-      // Combine direct members with invited members
       const allMembers: TeamMember[] = [
         ...(directMembers || []).map((member) => ({
           id: member.id,
@@ -150,9 +142,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         }))
       ];
       
-      // Add invited members (if they exist)
       if (projectInvitations) {
-        // Add project invitees
         projectInvitations.forEach((inv: any) => {
           if (inv.invitee && inv.status === 'accepted') {
             const existingMember = allMembers.find(m => m.user_id === inv.invitee.id);
@@ -166,7 +156,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
             }
           }
           
-          // Add project inviters
           if (inv.inviter) {
             const existingMember = allMembers.find(m => m.user_id === inv.inviter.id);
             if (!existingMember && inv.inviter.id) {
@@ -186,7 +175,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-  // Generate timeline dates based on selected range
   const timelineDates = useMemo(() => {
     const now = new Date();
     let startDate, endDate;
@@ -220,183 +208,132 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     return dates;
   }, [timeRange]);
   
-  // Get filtered tasks
   const filteredTasks = useMemo(() => {
     if (!tasks.length) return [];
     
     return tasks.filter(task => {
       if (!task.created_at) return false;
       
-      // Additional filtering can be added here if needed
       return true;
     });
   }, [tasks, timeRange]);
   
-  // Task rendering helper
   const renderTaskBar = (task: Task) => {
     if (!task.created_at) return null;
     
     const startDate = parseISO(task.created_at);
-    const endDate = task.due_date ? parseISO(task.due_date) : new Date();
+    const daysSinceCreation = differenceInDays(new Date(), startDate);
     
-    // Check if the task falls within our current timeline view
-    const firstTimelineDate = timelineDates[0];
-    const lastTimelineDate = timelineDates[timelineDates.length - 1];
+    const taskDayIndex = timelineDates.findIndex(date => 
+      date.getFullYear() === startDate.getFullYear() &&
+      date.getMonth() === startDate.getMonth() &&
+      date.getDate() === startDate.getDate()
+    );
     
-    // Skip tasks that are completely outside our timeline view
-    if (startDate > lastTimelineDate || (task.due_date && parseISO(task.due_date) < firstTimelineDate)) {
-      return null;
-    }
-    
-    // Calculate task position and width based on actual dates
-    // Find the index of the day in our timeline that matches or is after the task start date
-    let taskStartDayIndex = 0;
-    while (taskStartDayIndex < timelineDates.length && timelineDates[taskStartDayIndex] < startDate) {
-      taskStartDayIndex++;
-    }
-    
-    // If start date is before first timeline date, clamp to the first day
-    if (taskStartDayIndex >= timelineDates.length) {
-      taskStartDayIndex = 0; // Task starts before our timeline view
-    }
-    
-    // Calculate duration or use at least 1 day
-    let taskDuration = 1; // Minimum 1 day
-    if (task.due_date) {
-      const dueDate = parseISO(task.due_date);
-      let endDayIndex = timelineDates.findIndex(date => 
-        date.getFullYear() === dueDate.getFullYear() && 
-        date.getMonth() === dueDate.getMonth() && 
-        date.getDate() === dueDate.getDate()
-      );
-      
-      if (endDayIndex === -1) {
-        // Due date is after our timeline, extend to end of timeline
-        endDayIndex = timelineDates.length - 1;
-      }
-      
-      taskDuration = Math.max(1, endDayIndex - taskStartDayIndex + 1);
-    } else {
-      // No due date, just show 1 day
-      taskDuration = 1;
-    }
-    
-    // Ensure task is visible within timeline bounds
-    taskDuration = Math.min(taskDuration, timelineDates.length - taskStartDayIndex);
+    if (taskDayIndex === -1) return null;
     
     const getStatusColor = (status: string) => {
       switch (status.toLowerCase()) {
-        case 'completed':
-          return 'bg-green-500';
-        case 'in progress':
-          return 'bg-blue-500';
-        case 'stucked':
-          return 'bg-red-500';
-        case 'pending':
-          return 'bg-yellow-500';
+        case 'completed': return 'bg-green-500';
+        case 'in progress': return 'bg-blue-500';
+        case 'stucked': return 'bg-red-500';
+        case 'pending': return 'bg-yellow-500';
         case 'not started':
-        default:
-          return 'bg-gray-500';
+        default: return 'bg-gray-500';
       }
     };
 
-    const barStyle = {
-      gridColumn: `${taskStartDayIndex + 1} / span ${taskDuration}`,
-    };
-    
-    // Task creator
-    const TaskCreator = () => {
-      const { data: creator } = useUserProfile(task.user_id);
-      return <span>{creator?.displayName || 'Unknown'}</span>;
-    };
-    
-    // Task assignee
-    const TaskAssignee = () => {
-      const { data: assignee } = useUserProfile(task.assigned_to);
-      return <span>{assignee?.displayName || 'Unassigned'}</span>;
-    };
-    
     return (
-      <div key={task.id} className="relative h-8 mt-1 mb-1">
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <div
-              className={`absolute h-6 rounded-md cursor-pointer ${getStatusColor(task.status)} text-white text-xs flex items-center px-2 truncate`}
-              style={barStyle}
-            >
-              {task.title}
-            </div>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80 p-4">
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold">{task.title}</h3>
-              
-              {task.description && (
-                <p className="text-sm text-gray-600">{task.description}</p>
-              )}
-              
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="font-medium">Status:</div>
-                  <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
-                </div>
-                
-                <div>
-                  <div className="font-medium">Priority:</div>
-                  <span className="capitalize">{task.priority}</span>
-                </div>
-                
-                <div>
-                  <div className="font-medium">Created by:</div>
-                  <div className="flex items-center">
-                    <User className="h-3 w-3 mr-1" />
-                    <TaskCreator />
+      <div key={task.id} className="flex min-h-[2.5rem] items-center border-b border-gray-100">
+        <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
+          <HoverCard>
+            <HoverCardTrigger>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium truncate">{task.title}</span>
+                <span className="text-xs text-gray-500">({daysSinceCreation}d)</span>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold">{task.title}</h3>
+                {task.description && (
+                  <p className="text-sm text-gray-600">{task.description}</p>
+                )}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <div className="font-medium">Status:</div>
+                    <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
                   </div>
-                </div>
-                
-                <div>
-                  <div className="font-medium">Assigned to:</div>
-                  <div className="flex items-center">
-                    <User className="h-3 w-3 mr-1" />
-                    <TaskAssignee />
+                  
+                  <div>
+                    <div className="font-medium">Priority:</div>
+                    <span className="capitalize">{task.priority}</span>
                   </div>
-                </div>
-                
-                <div>
-                  <div className="font-medium">Created:</div>
-                  <div className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {format(parseISO(task.created_at), 'MMM dd, yyyy')}
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="font-medium">Due:</div>
-                  <div className="flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {task.due_date 
-                      ? format(parseISO(task.due_date), 'MMM dd, yyyy')
-                      : 'No due date'
-                    }
-                  </div>
-                </div>
-
-                {task.status === 'completed' && task.completion_time !== undefined && (
-                  <div className="col-span-2">
-                    <div className="font-medium">Time to complete:</div>
+                  
+                  <div>
+                    <div className="font-medium">Created by:</div>
                     <div className="flex items-center">
-                      <Timer className="h-3 w-3 mr-1" />
-                      {task.completion_time > 24 
-                        ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
-                        : `${Math.round(task.completion_time)} hours`
+                      <User className="h-3 w-3 mr-1" />
+                      <TaskCreator />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="font-medium">Assigned to:</div>
+                    <div className="flex items-center">
+                      <User className="h-3 w-3 mr-1" />
+                      <TaskAssignee />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="font-medium">Created:</div>
+                    <div className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {format(parseISO(task.created_at), 'MMM dd, yyyy')}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="font-medium">Due:</div>
+                    <div className="flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {task.due_date 
+                        ? format(parseISO(task.due_date), 'MMM dd, yyyy')
+                        : 'No due date'
                       }
                     </div>
                   </div>
-                )}
+
+                  {task.status === 'completed' && task.completion_time !== undefined && (
+                    <div className="col-span-2">
+                      <div className="font-medium">Time to complete:</div>
+                      <div className="flex items-center">
+                        <Timer className="h-3 w-3 mr-1" />
+                        {task.completion_time > 24 
+                          ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
+                          : `${Math.round(task.completion_time)} hours`
+                        }
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+        
+        <div 
+          className="flex-1 grid relative" 
+          style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
+        >
+          <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
+          
+          <div
+            className={`h-6 rounded-md ${getStatusColor(task.status)}`}
+            style={{ gridColumn: `${taskDayIndex + 1} / span 1` }}
+          />
+        </div>
       </div>
     );
   };
@@ -407,7 +344,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex flex-wrap gap-2 items-center">
           <Select value={timeRange} onValueChange={(value: 'week' | 'month' | 'quarter') => setTimeRange(value)}>
@@ -497,7 +433,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         </div>
       </div>
       
-      {/* Status Legend */}
       <div className="flex flex-wrap gap-4 items-center text-sm">
         <span className="font-medium">Status Legend:</span>
         <div className="flex items-center">
@@ -522,7 +457,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         </div>
       </div>
       
-      {/* Timeline */}
       <Card>
         <CardContent className="p-4">
           {tasks.length === 0 ? (
@@ -546,51 +480,37 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <ScrollArea className="h-[calc(100vh-400px)]">
               <div className="min-w-[800px]">
-                {/* Timeline header with dates */}
-                <div 
-                  className="grid gap-0 border-b" 
-                  style={{ 
-                    gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` 
-                  }}
-                >
-                  {timelineDates.map((date, index) => (
-                    <div 
-                      key={index} 
-                      className={`text-center py-1 px-1 text-xs ${date.getDate() === 1 || index === 0 ? 'font-bold' : ''}`}
-                    >
-                      {date.getDate() === 1 || index === 0 
-                        ? format(date, 'MMM d')
-                        : format(date, 'd')}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Task rows with horizontal dotted lines */}
-                <div className="space-y-0">
-                  {filteredTasks.map((task, taskIndex) => (
-                    <div 
-                      key={task.id}
-                      className={`grid border-b border-gray-100 relative ${
-                        taskIndex % 2 === 0 ? 'bg-gray-50' : ''
-                      }`}
-                      style={{ 
-                        gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` 
-                      }}
-                    >
-                      {/* Add horizontal dotted line */}
+                <div className="flex">
+                  <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200 bg-gray-50 font-medium">
+                    Task Title
+                  </div>
+                  
+                  <div 
+                    className="flex-1 grid gap-0 border-b" 
+                    style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
+                  >
+                    {timelineDates.map((date, index) => (
                       <div 
-                        className="absolute w-full border-b border-dotted border-gray-300" 
-                        style={{ left: 0, height: '1px', top: '50%' }}
-                      />
-                      {/* Render the task bar */}
-                      {renderTaskBar(task)}
-                    </div>
-                  ))}
+                        key={index} 
+                        className={`text-center py-1 px-1 text-xs ${
+                          date.getDate() === 1 || index === 0 ? 'font-bold' : ''
+                        }`}
+                      >
+                        {date.getDate() === 1 || index === 0 
+                          ? format(date, 'MMM d')
+                          : format(date, 'd')}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="divide-y divide-gray-100">
+                  {filteredTasks.map((task) => renderTaskBar(task))}
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           )}
         </CardContent>
       </Card>
