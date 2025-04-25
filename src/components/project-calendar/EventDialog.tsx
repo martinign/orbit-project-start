@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -137,8 +136,8 @@ export function EventDialog({
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={readOnly}
                         initialFocus
+                        className={cn("p-3 pointer-events-auto")}
                       />
                     </PopoverContent>
                   </Popover>

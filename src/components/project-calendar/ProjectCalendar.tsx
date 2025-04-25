@@ -189,7 +189,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             return;
           }
           await createEvent.mutateAsync({
-            title: data.title, // Ensure title is always provided as required
+            title: data.title,
             description: data.description,
             project_id: projectId,
             event_date: selectedDate?.toISOString(),
@@ -197,6 +197,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           setIsEventDialogOpen(false);
         }}
         mode="create"
+        defaultValues={{
+          title: '',
+          description: '',
+          event_date: selectedDate
+        }}
       />
     </div>
   );
