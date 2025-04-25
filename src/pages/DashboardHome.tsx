@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -130,7 +129,7 @@ const DashboardHome = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RecentActivities filters={filters} />
-        <UpcomingTasks filters={filters} />
+        <DashboardEvents filters={filters} />
       </div>
     </div>
   );
