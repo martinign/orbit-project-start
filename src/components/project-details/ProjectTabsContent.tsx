@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TasksTab } from './tabs/TasksTab';
 import { TimelineTab } from './tabs/TimelineTab';
@@ -7,6 +6,7 @@ import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
+import { GanttTab } from './tabs/GanttTab';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -36,6 +36,10 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           tasksLoading={tasksLoading}
           refetchTasks={refetchTasks}
         />
+      )}
+
+      {activeTab === 'gantt' && (
+        <GanttTab projectId={projectId} />
       )}
 
       {activeTab === 'timeline' && (

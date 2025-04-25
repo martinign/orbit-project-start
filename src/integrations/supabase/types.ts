@@ -348,10 +348,13 @@ export type Database = {
           created_at: string
           description: string | null
           due_date: string | null
+          duration_days: number | null
           id: string
+          is_gantt_task: boolean | null
           notes: string | null
           priority: string
           project_id: string
+          start_date: string | null
           status: string
           title: string
           updated_at: string
@@ -362,10 +365,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
           id?: string
+          is_gantt_task?: boolean | null
           notes?: string | null
           priority?: string
           project_id: string
+          start_date?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -376,10 +382,13 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_date?: string | null
+          duration_days?: number | null
           id?: string
+          is_gantt_task?: boolean | null
           notes?: string | null
           priority?: string
           project_id?: string
+          start_date?: string | null
           status?: string
           title?: string
           updated_at?: string
