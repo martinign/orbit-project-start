@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
@@ -328,21 +329,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <Draggable key={task.id} draggableId={task.id} index={index}>
       {(provided) => (
-        <div className="mb-2">
+        <div className="mb-0">
           <HoverCard>
             <HoverCardTrigger asChild>
               <Card
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                className="shadow-sm cursor-pointer"
+                className="shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full"
               >
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-1">
+                    <div className="flex items-start gap-2 flex-grow">
                       {subtasks.length > 0 && (
                         <button 
-                          className="mt-1 mr-1" 
+                          className="mt-1 flex-shrink-0" 
                           onClick={toggleExpand}
                           aria-label={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
                         >
@@ -355,10 +356,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       )}
                       <h4 className="font-medium truncate">{task.title}</h4>
                     </div>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 ml-2 flex-shrink-0">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -385,7 +386,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 -mr-2 relative"
+                                className="h-8 w-8 relative"
                                 onClick={handleOpenUpdateDialog}
                               >
                                 <FilePen className="h-4 w-4" />
@@ -409,7 +410,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                                 <Button 
                                   variant="ghost" 
                                   size="icon" 
-                                  className="h-8 w-8 -mr-2"
+                                  className="h-8 w-8"
                                   onClick={handleShowUpdates}
                                 >
                                   <MessageCircle className="h-4 w-4" />
@@ -428,7 +429,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 -mr-2"
+                                className="h-8 w-8"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleAddNewSubtask();
@@ -511,10 +512,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </HoverCard>
 
           {isExpanded && subtasks.length > 0 && (
-            <div className="ml-6 pl-2 border-l-2 border-gray-300 mt-1">
-              {subtasks.map((subtask) => (
-                <SubtaskItem key={subtask.id} subtask={subtask} />
-              ))}
+            <div className="ml-7 pl-2 border-l-2 border-gray-300 mt-2 mb-2">
+              <div className="space-y-2">
+                {subtasks.map((subtask) => (
+                  <SubtaskItem key={subtask.id} subtask={subtask} />
+                ))}
+              </div>
             </div>
           )}
 

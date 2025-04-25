@@ -97,19 +97,21 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="bg-gray-50 rounded-b-md p-2 min-h-[200px] h-full"
+                className="bg-gray-50 rounded-b-md p-3 min-h-[200px] h-full overflow-y-auto"
               >
-                {tasks.map((task, index) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    index={index}
-                    handleEditTask={handleEditTask}
-                    handleDeleteConfirm={handleDeleteConfirm}
-                    handleTaskUpdates={handleTaskUpdates}
-                    handleAddSubtask={handleAddSubtask}
-                  />
-                ))}
+                <div className="space-y-3">
+                  {tasks.map((task, index) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      index={index}
+                      handleEditTask={handleEditTask}
+                      handleDeleteConfirm={handleDeleteConfirm}
+                      handleTaskUpdates={handleTaskUpdates}
+                      handleAddSubtask={handleAddSubtask}
+                    />
+                  ))}
+                </div>
                 {provided.placeholder}
               </div>
             )}
