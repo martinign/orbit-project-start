@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -79,7 +78,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
 
-  // Fetch team members for assignedTo field
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
     queryKey: ['team_members'],
     queryFn: async () => {
@@ -89,21 +87,17 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   
       if (error) throw error;
   
-      // Concatenate full_name and last_name and sort by the concatenated name
       const sortedTeamMembers = (data || []).map(member => ({
         ...member,
-        full_name: `${member.full_name} ${member.last_name}`,
+        full_name: member.full_name,
       })).sort((a, b) => a.full_name.localeCompare(b.full_name));
   
       return sortedTeamMembers;
     },
   });
 
-
   useEffect(() => {
-    // Only reset form when dialog opens
     if (open && !didInitialFormSet) {
-      // Fetch projects for the dropdown if no projectId is provided
       if (!projectId) {
         const fetchProjects = async () => {
           const { data } = await supabase
@@ -117,7 +111,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         fetchProjects();
       }
 
-      // Set initial form values
       if (mode === 'edit' && task) {
         setTitle(task.title || '');
         setDescription(task.description || '');
@@ -125,7 +118,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         setPriority(task.priority || 'medium');
         setNotes(task.notes || '');
         
-        // Handle the assignedTo field correctly when editing
         if (task.assigned_to) {
           setAssignedTo(task.assigned_to);
         } else {
@@ -138,10 +130,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           setDueDate(new Date(task.due_date));
         }
       } else {
-        // For new task creation, initialize default values
         setTitle('');
         setDescription('');
-        // Only set status if provided in task prop, otherwise use default
         setStatus(task?.status || 'not started');
         setPriority('medium');
         setNotes('');
@@ -153,7 +143,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       setDidInitialFormSet(true);
     }
 
-    // Reset this flag when dialog closes
     if (!open) {
       setDidInitialFormSet(false);
     }
@@ -162,7 +151,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const handleTemplateSelect = (template: TaskTemplate) => {
     console.log("Applying template to form:", template);
     
-    // Apply template values to form - preserve task status if it was set
     setTitle(template.title || '');
     if (template.description) {
       setDescription(template.description);
@@ -213,7 +201,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       console.log("Saving task with data:", taskData);
       
       if (mode === 'edit' && task) {
-        // Update existing task
         const { error } = await supabase
           .from('project_tasks')
           .update({
@@ -229,7 +216,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           description: "Task updated successfully",
         });
       } else {
-        // Create new task
         const { error } = await supabase
           .from('project_tasks')
           .insert(taskData);
@@ -242,10 +228,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         });
       }
       
-      // Reset form and close dialog
       onClose();
       
-      // Refresh the list if onSuccess callback is provided
       if (onSuccess) {
         onSuccess();
       }
@@ -374,11 +358,10 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
                 <SelectItem value="none">Not assigned</SelectItem>
                 {teamMembers?.map((member) => (
                   <SelectItem key={member.id} value={member.id}>
-                    {`${member.full_name} ${member.last_name}`}
+                    {member.full_name}
                   </SelectItem>
                 ))}
               </SelectContent>
-
             </Select>
           </div>
 
@@ -430,7 +413,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
         </form>
       </DialogContent>
 
-      {/* Template Selection Dialog */}
       <TaskTemplatesListDialog
         open={isTemplateDialogOpen}
         onClose={() => setIsTemplateDialogOpen(false)}
