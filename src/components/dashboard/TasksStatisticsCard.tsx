@@ -9,6 +9,7 @@ interface TaskFilters {
   projectId?: string;
   status?: string;
   priority?: string;
+  showNewTasks?: boolean;
 }
 
 export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters }) {
@@ -31,6 +32,12 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         
         if (filters.priority && filters.priority !== "all") {
           query = query.eq("priority", filters.priority);
+        }
+
+        if (filters.showNewTasks) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          query = query.gte("created_at", yesterday.toISOString());
         }
         
         return query;

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,24 +8,17 @@ interface TaskPrioritiesFilters {
   projectId?: string;
   status?: string;
   priority?: string;
+  showNewTasks?: boolean;
 }
 
 interface TaskPrioritiesCardProps {
   filters?: TaskPrioritiesFilters;
 }
 
-interface PriorityStats {
-  name: string;
-  value: number;
-  color: string;
-  icon: React.ReactNode;
-}
-
 export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
   const { data: priorityStats, isLoading } = useQuery({
     queryKey: ["task_priorities", filters],
     queryFn: async () => {
-      // Only query the selected priority if filter is set, otherwise query all priorities
       const priorities = filters.priority && filters.priority !== "all" 
         ? [filters.priority] 
         : ["high", "medium", "low"];
@@ -43,6 +35,12 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         
         if (filters.status && filters.status !== "all") {
           query = query.eq("status", filters.status);
+        }
+
+        if (filters.showNewTasks) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          query = query.gte("created_at", yesterday.toISOString());
         }
         
         return query;
@@ -78,7 +76,7 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         value: results[index].data?.length || 0,
         color: priorityConfig[priority as keyof typeof priorityConfig].color,
         icon: priorityConfig[priority as keyof typeof priorityConfig].icon
-      })) as PriorityStats[];
+      }));
     },
     refetchOnWindowFocus: false,
   });
