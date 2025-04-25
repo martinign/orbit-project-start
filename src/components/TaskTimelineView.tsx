@@ -1,167 +1,191 @@
-import React from 'react';
-import { format, parseISO, differenceInDays, isAfter, isValid } from 'date-fns';
-import { Calendar, Clock, User } from 'lucide-react';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { Badge } from '@/components/ui/badge';
-import { Task, TeamMember } from '../TaskTimelineView';
 
-interface TimelineTaskBarProps {
-  task: Task;
-  timelineDates: Date[];
-  teamMembers: TeamMember[];
+import React, { useState, useMemo } from 'react';
+import { addDays, parseISO, startOfDay, endOfDay, max, min, differenceInHours } from 'date-fns';
+import { Card, CardContent } from '@/components/ui/card';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import TaskDialog from './TaskDialog';
+import { TimelineFilters } from './task-timeline/TimelineFilters';
+import { TimelineLegend } from './task-timeline/TimelineLegend';
+import { Timeline } from './task-timeline/Timeline';
+
+export interface TaskStatusHistory {
+  task_id: string;
+  status: string;
+  timestamp: string;
 }
 
-export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
-  task,
-  timelineDates,
-  teamMembers
-}) => {
-  if (!task.created_at || !timelineDates.length) return null;
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  due_date?: string;
+  priority: string;
+  user_id: string;
+  assigned_to?: string;
+  created_at: string;
+  updated_at: string;
+  completion_time?: number;
+}
 
-  const startDate = parseISO(task.created_at);
-  const endDate = task.status === 'completed' && task.updated_at
-    ? parseISO(task.updated_at)
-    : new Date();
+export interface TeamMember {
+  id?: string; // Make id optional since it's not in the actual data
+  user_id: string;
+  full_name: string;
+  last_name?: string;
+}
 
-  if (!isValid(startDate) || !isValid(endDate)) return null;
+interface TimelineProps {
+  projectId: string | undefined;
+}
 
-  // Find the starting position in the timeline
-  const taskStartIndex = timelineDates.findIndex(date =>
-    date.getFullYear() === startDate.getFullYear() &&
-    date.getMonth() === startDate.getMonth() &&
-    date.getDate() === startDate.getDate()
-  );
+const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter'>('month');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  if (taskStartIndex === -1) return null;
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ['tasks_timeline', projectId, timeRange, statusFilter, assigneeFilter, priorityFilter, searchQuery],
+    queryFn: async () => {
+      if (!projectId) return [];
+      
+      let query = supabase
+        .from('project_tasks')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true });
+        
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      
+      if (assigneeFilter !== 'all') {
+        query = query.eq('assigned_to', assigneeFilter);
+      }
+      
+      if (priorityFilter !== 'all') {
+        query = query.eq('priority', priorityFilter);
+      }
+      
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+      
+      const { data: tasksData, error } = await query;
+      if (error) throw error;
 
-  // Calculate the effective end date, ensuring it doesn't exceed the timeline's end
-  const lastTimelineDate = timelineDates[timelineDates.length - 1];
-  const effectiveEndDate = isAfter(endDate, lastTimelineDate) ? lastTimelineDate : endDate;
+      return (tasksData || []).map(task => ({
+        ...task,
+        completion_time: task.status === 'completed' && task.updated_at
+          ? differenceInHours(parseISO(task.updated_at), parseISO(task.created_at))
+          : undefined
+      }));
+    },
+    enabled: !!projectId,
+  });
 
-  // Calculate the duration in days between the start and effective end dates
-  const durationDays = differenceInDays(effectiveEndDate, startDate) + 1;
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['project_team_members', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      const { data, error } = await supabase
+        .from('project_team_members')
+        .select('user_id, full_name, last_name')
+        .eq('project_id', projectId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'completed': return 'bg-green-500';
-      case 'in progress': return 'bg-blue-500';
-      case 'stucked': return 'bg-red-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'not started':
-      default: return 'bg-gray-500';
+  const timelineDates = useMemo(() => {
+    if (!tasks.length) return [];
+
+    const today = new Date();
+    const taskDates = tasks.map(task => parseISO(task.created_at));
+    const earliestDate = startOfDay(min(taskDates));
+    const latestTaskDate = endOfDay(max([...taskDates, today]));
+    
+    const dates = [];
+    let currentDate = earliestDate;
+    
+    while (currentDate <= latestTaskDate) {
+      dates.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
     }
+    
+    return dates;
+  }, [tasks]);
+
+  const filteredTasks = useMemo(() => {
+    if (!tasks.length) return [];
+    return tasks.filter(task => {
+      if (!task.created_at) return false;
+      return true;
+    });
+  }, [tasks, timeRange]);
+
+  if (tasksLoading) {
+    return <div className="flex justify-center items-center h-64">Loading timeline...</div>;
+  }
+
+  const handleClearFilters = () => {
+    setStatusFilter('all');
+    setAssigneeFilter('all');
+    setPriorityFilter('all');
+    setSearchQuery('');
   };
 
-  const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
-  const createdByTeamMember = teamMembers.find(member => member.user_id === task.user_id);
+  const hasFilters = statusFilter !== 'all' || assigneeFilter !== 'all' || priorityFilter !== 'all' || searchQuery !== '';
 
   return (
-    <div className="flex min-h-[2.5rem] items-center border-b border-gray-100">
-      <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
-        <div className="flex items-center space-x-2">
-          <span className="font-medium truncate">{task.title}</span>
-        </div>
-      </div>
+    <div className="space-y-4">
+      <TimelineFilters
+        timeRange={timeRange}
+        statusFilter={statusFilter}
+        assigneeFilter={assigneeFilter}
+        priorityFilter={priorityFilter}
+        searchQuery={searchQuery}
+        teamMembers={teamMembers}
+        onTimeRangeChange={setTimeRange}
+        onStatusFilterChange={setStatusFilter}
+        onAssigneeFilterChange={setAssigneeFilter}
+        onPriorityFilterChange={setPriorityFilter}
+        onSearchQueryChange={setSearchQuery}
+        onCreateTask={() => setIsTaskDialogOpen(true)}
+      />
+      
+      <TimelineLegend />
+      
+      <Card>
+        <CardContent className="p-4">
+          <Timeline
+            tasks={filteredTasks}
+            timelineDates={timelineDates}
+            teamMembers={teamMembers}
+            hasFilters={hasFilters}
+            onClearFilters={handleClearFilters}
+          />
+        </CardContent>
+      </Card>
 
-      <div
-        className="flex-1 grid relative"
-        style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
-      >
-        <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
-
-        <HoverCard>
-          <HoverCardTrigger>
-            <div
-              className={`h-6 rounded-md ${getStatusColor(task.status)}`}
-              style={{
-                gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
-                transition: 'all 0.2s ease-in-out'
-              }}
-            />
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80">
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold">{task.title}</h3>
-              {task.description && (
-                <p className="text-sm text-gray-600">{task.description}</p>
-              )}
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="font-medium">Status:</div>
-                  <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
-                </div>
-
-                <div>
-                  <div className="font-medium">Priority:</div>
-                  <span className="capitalize">{task.priority}</span>
-                </div>
-
-                <div>
-                  <div className="font-medium">Created by:</div>
-                  <div className="flex items-center">
-                    <User className="h-3 w-3 mr-1" />
-                    <span>
-                      {createdByTeamMember
-                        ? `${createdByTeamMember.full_name || ''} ${createdByTeamMember.last_name || ''}`.trim()
-                        : 'Unknown'}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="font-medium">Assigned to:</div>
-                  <div className="flex items-center">
-                    <User className="h-3 w-3 mr-1" />
-                    <span>
-                      {assignedTeamMember
-                        ? `${assignedTeamMember.full_name || ''} ${assignedTeamMember.last_name || ''}`.trim()
-                        : 'Unassigned'}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="font-medium">Created:</div>
-                  <div className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {format(parseISO(task.created_at), 'MMM dd, yyyy')}
-                  </div>
-                </div>
-
-                {task.status === 'completed' && task.updated_at && (
-                  <div>
-                    <div className="font-medium">Completed:</div>
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {format(parseISO(task.updated_at), 'MMM dd, yyyy')}
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <div className="font-medium">Duration:</div>
-                  <div className="flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {durationDays} days
-                  </div>
-                </div>
-
-                {task.status === 'completed' && task.completion_time !== undefined && (
-                  <div>
-                    <div className="font-medium">Time to complete:</div>
-                    <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {task.completion_time > 24
-                        ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
-                        : `${Math.round(task.completion_time)} hours`}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      </div>
+      <TaskDialog
+        open={isTaskDialogOpen}
+        onClose={() => setIsTaskDialogOpen(false)}
+        mode="create"
+        projectId={projectId}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['tasks_timeline'] });
+          setIsTaskDialogOpen(false);
+        }}
+      />
     </div>
   );
 };
+
+export default TaskTimelineView;
