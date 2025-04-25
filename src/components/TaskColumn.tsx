@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TaskCard from './TaskCard';
 
 interface Task {
@@ -44,9 +44,11 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   handleAddSubtask,
   handleCreateTask,
 }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   return (
-    <div className="flex flex-col h-full group">
-      <div className={`p-3 rounded-t-md ${column.color} border-b-2 relative`}>
+    <div className="flex flex-col h-full group relative">
+      <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
         <div className="flex justify-between items-center">
           <div>
             <h3 className="font-medium">{column.title}</h3>
@@ -54,40 +56,65 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
               {tasks.length}
             </Badge>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2 top-2"
-            onClick={() => handleCreateTask(column.status)}
-            title={`Add task to ${column.title}`}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex flex-col gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={() => handleCreateTask(column.status)}
+              title={`Add task to ${column.title}`}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                onClick={() => setIsExpanded(!isExpanded)}
+                title={isExpanded ? 'Collapse section' : 'Expand section'}
+              >
+                {isExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
         </div>
       </div>
       
-      <Droppable droppableId={column.id}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="bg-gray-50 rounded-b-md p-2 flex-grow min-h-[200px]"
-          >
-            {tasks.map((task, index) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                index={index}
-                handleEditTask={handleEditTask}
-                handleDeleteConfirm={handleDeleteConfirm}
-                handleTaskUpdates={handleTaskUpdates}
-                handleAddSubtask={handleAddSubtask}
-              />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
+      <Collapsible
+        open={isExpanded}
+        onOpenChange={setIsExpanded}
+        className="flex-grow"
+      >
+        <CollapsibleContent className="h-full">
+          <Droppable droppableId={column.id}>
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="bg-gray-50 rounded-b-md p-2 min-h-[200px] h-full"
+              >
+                {tasks.map((task, index) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    index={index}
+                    handleEditTask={handleEditTask}
+                    handleDeleteConfirm={handleDeleteConfirm}
+                    handleTaskUpdates={handleTaskUpdates}
+                    handleAddSubtask={handleAddSubtask}
+                  />
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
