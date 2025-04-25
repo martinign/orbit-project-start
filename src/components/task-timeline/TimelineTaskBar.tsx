@@ -73,7 +73,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
             <div
               className={`h-6 rounded-md ${getStatusColor(task.status)}`}
               style={{ 
-                gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
+                gridColumn: `${taskStartIndex + 1} / span ${Math.max(1, durationDays)}`,
                 transition: 'all 0.2s ease-in-out'
               }}
             />
