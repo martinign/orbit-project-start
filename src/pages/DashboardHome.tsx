@@ -20,6 +20,9 @@ interface DashboardFilters {
 const DashboardHome = () => {
   const queryClient = useQueryClient();
 
+  const [filters, setFilters] = useState<DashboardFilters>({});
+  const [showNewTasks, setShowNewTasks] = useState(false);
+
   useEffect(() => {
     const channels = [
       supabase.channel('projects_changes').on('postgres_changes', {
@@ -65,9 +68,6 @@ const DashboardHome = () => {
     queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
     queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
   }, [filters, queryClient]);
-
-  const [filters, setFilters] = useState<DashboardFilters>({});
-  const [showNewTasks, setShowNewTasks] = useState(false);
 
   const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks'>) => {
     setFilters(current => ({
