@@ -1,5 +1,7 @@
 
+import { useState } from "react";
 import { format } from "date-fns";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -7,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EventCard } from "./EventCard";
 
 interface Event {
@@ -34,6 +38,12 @@ export function EventsGrid({
   onEdit,
   isLoading,
 }: EventsGridProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const initialEvents = events.slice(0, 6);
+  const remainingEvents = events.slice(6);
+  const hasMoreEvents = remainingEvents.length > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -49,17 +59,55 @@ export function EventsGrid({
           ) : events.length === 0 ? (
             <p className="text-muted-foreground">No events found</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onDelete={() => onDelete(event.id)}
-                  onEdit={() => onEdit(event)}
-                  hasEditAccess={hasEditAccess}
-                />
-              ))}
-            </div>
+            <Collapsible>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {initialEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onDelete={() => onDelete(event.id)}
+                    onEdit={() => onEdit(event)}
+                    hasEditAccess={hasEditAccess}
+                  />
+                ))}
+              </div>
+
+              {hasMoreEvents && (
+                <>
+                  <CollapsibleContent className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {remainingEvents.map((event) => (
+                        <EventCard
+                          key={event.id}
+                          event={event}
+                          onDelete={() => onDelete(event.id)}
+                          onEdit={() => onEdit(event)}
+                          hasEditAccess={hasEditAccess}
+                        />
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+
+                  <CollapsibleTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4" 
+                      onClick={() => setIsExpanded(!isExpanded)}
+                    >
+                      {isExpanded ? (
+                        <>
+                          Show Less <ChevronUp className="ml-2 h-4 w-4" />
+                        </>
+                      ) : (
+                        <>
+                          Show More ({remainingEvents.length} more events) <ChevronDown className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                </>
+              )}
+            </Collapsible>
           )}
         </div>
       </CardContent>
