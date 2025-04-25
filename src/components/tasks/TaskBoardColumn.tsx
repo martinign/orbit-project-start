@@ -3,14 +3,8 @@ import { Droppable } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TaskCard from '../TaskCard';
-
 interface Task {
   id: string;
   title: string;
@@ -20,7 +14,6 @@ interface Task {
   due_date?: string;
   project_id: string;
 }
-
 interface ColumnConfig {
   id: string;
   title: string;
@@ -28,7 +21,6 @@ interface ColumnConfig {
   color: string;
   badgeColor: string;
 }
-
 interface TaskBoardColumnProps {
   column: ColumnConfig;
   tasks: Task[];
@@ -38,7 +30,6 @@ interface TaskBoardColumnProps {
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
 }
-
 const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   column,
   tasks,
@@ -46,22 +37,19 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   handleDeleteConfirm,
   handleTaskUpdates,
   handleAddSubtask,
-  handleCreateTask,
+  handleCreateTask
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const visibleTasks = isCollapsed ? tasks.slice(0, 2) : tasks;
-
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
-
-  return (
-    <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
+  return <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <h3 className="font-medium truncate">{column.title}</h3>
-            <span className="text-xs text-muted-foreground">
+            <span className="font-bold text-base text-black">
               ({tasks.length})
             </span>
           </div>
@@ -69,13 +57,7 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                    onClick={() => handleCreateTask(column.status)}
-                    title={`Add task to ${column.title}`}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={() => handleCreateTask(column.status)} title={`Add task to ${column.title}`}>
                     <Plus className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -85,60 +67,30 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
               </Tooltip>
             </TooltipProvider>
 
-            {tasks.length > 2 && (
-              <TooltipProvider>
+            {tasks.length > 2 && <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      onClick={toggleCollapse}
-                      title={isCollapsed ? 'Show all tasks' : 'Show less tasks'}
-                    >
-                      {isCollapsed ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronUp className="h-4 w-4" />
-                      )}
+                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={toggleCollapse} title={isCollapsed ? 'Show all tasks' : 'Show less tasks'}>
+                      {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{isCollapsed ? 'Show all tasks' : 'Show less tasks'}</p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            )}
+              </TooltipProvider>}
           </div>
         </div>
       </div>
       
       <Droppable droppableId={column.id}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="p-2 min-h-[200px] h-full overflow-y-auto"
-          >
+        {provided => <div ref={provided.innerRef} {...provided.droppableProps} className="p-2 min-h-[200px] h-full overflow-y-auto">
             <div className="space-y-2">
-              {visibleTasks.map((task, index) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  index={index}
-                  handleEditTask={handleEditTask}
-                  handleDeleteConfirm={handleDeleteConfirm}
-                  handleTaskUpdates={handleTaskUpdates}
-                  handleAddSubtask={handleAddSubtask}
-                />
-              ))}
+              {visibleTasks.map((task, index) => <TaskCard key={task.id} task={task} index={index} handleEditTask={handleEditTask} handleDeleteConfirm={handleDeleteConfirm} handleTaskUpdates={handleTaskUpdates} handleAddSubtask={handleAddSubtask} />)}
             </div>
             {provided.placeholder}
-          </div>
-        )}
+          </div>}
       </Droppable>
-    </div>
-  );
+    </div>;
 };
-
 export default TaskBoardColumn;
