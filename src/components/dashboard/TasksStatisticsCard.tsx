@@ -38,19 +38,10 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: any }) {
         blockedQuery = blockedQuery.eq("project_id", filters.projectId);
       }
       
-      // Apply date filters if provided
-      if (filters.startDate) {
-        notStartedQuery = notStartedQuery.gte("updated_at", filters.startDate.toISOString());
-        inProgressQuery = inProgressQuery.gte("updated_at", filters.startDate.toISOString());
-        completedQuery = completedQuery.gte("updated_at", filters.startDate.toISOString());
-        blockedQuery = blockedQuery.gte("updated_at", filters.startDate.toISOString());
-      }
-      
-      if (filters.endDate) {
-        notStartedQuery = notStartedQuery.lte("updated_at", filters.endDate.toISOString());
-        inProgressQuery = inProgressQuery.lte("updated_at", filters.endDate.toISOString());
-        completedQuery = completedQuery.lte("updated_at", filters.endDate.toISOString());
-        blockedQuery = blockedQuery.lte("updated_at", filters.endDate.toISOString());
+      // Apply category filter if provided
+      if (filters.category && filters.category !== "all") {
+        // This would need to be implemented based on how categories are stored
+        // For this example, we're assuming we don't have a category field yet
       }
       
       // Execute all queries in parallel

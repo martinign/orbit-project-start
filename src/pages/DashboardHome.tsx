@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProjectsStatisticsCard } from "@/components/dashboard/ProjectsStatisticsCard";
 import { TasksStatisticsCard } from "@/components/dashboard/TasksStatisticsCard";
-import { TeamStatisticsCard } from "@/components/dashboard/TeamStatisticsCard";
+import { TaskPrioritiesCard } from "@/components/dashboard/TaskPrioritiesCard";
 import { InvitationsStatisticsCard } from "@/components/dashboard/InvitationsStatisticsCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
@@ -13,9 +13,8 @@ import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
 
 interface DashboardFilters {
   projectId?: string;
-  startDate?: Date;
-  endDate?: Date;
   status?: string;
+  category?: string;
 }
 
 const DashboardHome = () => {
@@ -39,16 +38,8 @@ const DashboardHome = () => {
         table: 'project_tasks'
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
+        queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
         queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
-        queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-      }),
-      
-      supabase.channel('team_changes').on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'project_team_members'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["team_statistics"] });
         queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
       }),
       
@@ -76,7 +67,7 @@ const DashboardHome = () => {
     // This ensures charts and statistics are refreshed when filters change
     queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
     queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
-    queryClient.invalidateQueries({ queryKey: ["team_statistics"] });
+    queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
     queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
   }, [filters, queryClient]);
 
@@ -88,7 +79,7 @@ const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectsStatisticsCard filters={filters} />
         <TasksStatisticsCard filters={filters} />
-        <TeamStatisticsCard filters={filters} />
+        <TaskPrioritiesCard filters={filters} />
         <InvitationsStatisticsCard filters={filters} />
       </div>
 
