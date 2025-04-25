@@ -1,4 +1,4 @@
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
+import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -17,6 +17,7 @@ import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 import TaskTemplatesListDialog from "@/components/TaskTemplatesListDialog";
 import InviteMembersDialog from "@/components/team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
+
 export function AppSidebar() {
   const {
     signOut
@@ -233,6 +234,22 @@ export function AppSidebar() {
                     <span>No recent projects</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>NAVIGATION</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link to="/dashboard">
+                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-blue-500/10 transition-colors duration-200">
+                    <LayoutDashboard className="text-blue-500" />
+                    <span>Dashboard</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
