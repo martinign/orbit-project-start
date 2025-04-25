@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { addDays, differenceInDays, startOfMonth, endOfMonth, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,7 +30,7 @@ export interface Task {
 }
 
 export interface TeamMember {
-  id: string;
+  id?: string; // Make id optional since it's not in the actual data
   user_id: string;
   full_name: string;
   last_name?: string;
