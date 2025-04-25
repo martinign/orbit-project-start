@@ -2,10 +2,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function TeamStatisticsCard({ filters = {} }: { filters?: any }) {
+type TeamStatisticsCardProps = {
+  filters?: {
+    projectId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    status?: string;
+  };
+};
+
+export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
   const { data: teamStats, isLoading } = useQuery({
     queryKey: ["team_statistics", filters],
     queryFn: async () => {
