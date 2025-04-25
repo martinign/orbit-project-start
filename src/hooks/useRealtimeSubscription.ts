@@ -30,34 +30,30 @@ export function useRealtimeSubscription({
     // Create a unique channel name for this subscription
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     
-    try {
-      // Create and configure the channel
-      const channel = supabase.channel(channelName)
-        .on(
-          'postgres_changes',
-          {
-            event: event,
-            schema: 'public',
-            table: table,
-            ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
-          },
-          onRecordChange
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log(`Successfully subscribed to ${table} changes`);
-          }
-          if (status === 'CHANNEL_ERROR') {
-            console.error(`Error subscribing to ${table} changes`);
-          }
-        });
+    const channel = supabase.channel(channelName);
+    
+    channel.on(
+      'postgres_changes' as const,
+      {
+        event: event,
+        schema: 'public',
+        table: table,
+        ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
+      },
+      onRecordChange
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`Successfully subscribed to ${table} changes`);
+      }
+      if (status === 'CHANNEL_ERROR') {
+        console.error(`Error subscribing to ${table} changes`);
+      }
+    });
 
-      // Cleanup function
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } catch (error) {
-      console.error('Error setting up realtime subscription:', error);
-    }
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [table, event, filter, filterValue, onRecordChange]);
 }
+
