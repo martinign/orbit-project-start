@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,47 +19,39 @@ export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
   const { data: teamStats, isLoading } = useQuery({
     queryKey: ["team_statistics", filters],
     queryFn: async () => {
-      // Base query
-      let activeQuery = supabase
+      // Base query for active members
+      let query = supabase
         .from("project_team_members")
-        .select("id", { count: "exact" })
-        .eq("status", "active");
-      
-      let inactiveQuery = supabase
-        .from("project_team_members")
-        .select("id", { count: "exact" })
-        .eq("status", "inactive");
+        .select("id", { count: "exact" });
       
       // Apply project filter if provided
       if (filters.projectId && filters.projectId !== "all") {
-        activeQuery = activeQuery.eq("project_id", filters.projectId);
-        inactiveQuery = inactiveQuery.eq("project_id", filters.projectId);
+        query = query.eq("project_id", filters.projectId);
       }
       
       // Apply date filters if provided
       if (filters.startDate) {
-        activeQuery = activeQuery.gte("updated_at", filters.startDate.toISOString());
-        inactiveQuery = inactiveQuery.gte("updated_at", filters.startDate.toISOString());
+        query = query.gte("updated_at", filters.startDate.toISOString());
       }
       
       if (filters.endDate) {
-        activeQuery = activeQuery.lte("updated_at", filters.endDate.toISOString());
-        inactiveQuery = inactiveQuery.lte("updated_at", filters.endDate.toISOString());
+        query = query.lte("updated_at", filters.endDate.toISOString());
       }
       
-      const [activeMembers, inactiveMembers] = await Promise.all([
-        activeQuery,
-        inactiveQuery
-      ]);
+      const { data: members, error } = await query;
       
-      if (activeMembers.error || inactiveMembers.error) {
+      if (error) {
         throw new Error("Failed to fetch team statistics");
       }
       
+      // Count active and inactive members
+      const active = members.length;
+      const total = members.length;
+      
       return {
-        active: activeMembers.data.length,
-        inactive: inactiveMembers.data.length,
-        total: activeMembers.data.length + inactiveMembers.data.length
+        active,
+        inactive: 0,
+        total
       };
     },
     refetchOnWindowFocus: false,

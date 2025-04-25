@@ -17,6 +17,23 @@ interface AllInvitationsDialogProps {
   };
 }
 
+// Define explicit types for the invitation data
+interface InvitationData {
+  id: string;
+  status: string;
+  created_at: string;
+  permission_level: string;
+  projects: {
+    project_number: string;
+    Sponsor: string;
+  } | null;
+  invitee: {
+    full_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+}
+
 export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitationsDialogProps) {
   const { data: invitations, isLoading } = useQuery({
     queryKey: ["all_invitations", filters],
@@ -57,7 +74,8 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      
+      return data as InvitationData[];
     },
     enabled: open,
   });
