@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardFiltersProps {
   onFilterChange: (filters: {
@@ -25,6 +26,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
   const [projectId, setProjectId] = useState<string>("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: undefined, to: undefined });
   const [status, setStatus] = useState<string>("");
+  const { toast } = useToast();
 
   const { data: projects } = useQuery({
     queryKey: ["project_filter_options"],
@@ -35,7 +37,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
         .order("updated_at", { ascending: false });
         
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -44,14 +46,26 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
     setDateRange({ from: undefined, to: undefined });
     setStatus("");
     onFilterChange({});
+    
+    toast({
+      title: "Filters Reset",
+      description: "All filters have been cleared",
+    });
   };
 
   const applyFilters = () => {
-    onFilterChange({
+    const filters = {
       projectId: projectId || undefined,
       startDate: dateRange?.from,
       endDate: dateRange?.to,
       status: status || undefined,
+    };
+    
+    onFilterChange(filters);
+    
+    toast({
+      title: "Filters Applied",
+      description: `Applied filters to dashboard data`,
     });
   };
 
@@ -65,8 +79,8 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Projects" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Projects</SelectItem>
-              {projects?.map((project) => (
+              <SelectItem value="">All Projects</SelectItem>
+              {(projects || []).map((project) => (
                 <SelectItem key={project.id} value={project.id}>
                   {project.project_number} - {project.Sponsor}
                 </SelectItem>
@@ -116,7 +130,7 @@ export function DashboardFilters({ onFilterChange }: DashboardFiltersProps) {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="_all">All Statuses</SelectItem>
+              <SelectItem value="">All Statuses</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>

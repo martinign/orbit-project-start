@@ -35,6 +35,7 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
         <Tooltip
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
+              const value = Number(payload[0].value);
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                   <div className="grid grid-cols-2 gap-2">
@@ -46,7 +47,7 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
                       <span className="font-medium">{payload[0].payload.name}</span>
                     </div>
                     <div className="text-right font-medium">
-                      {payload[0].value} ({calculatePercentage(payload[0].value)}%)
+                      {value} ({calculatePercentage(value)}%)
                     </div>
                   </div>
                 </div>
