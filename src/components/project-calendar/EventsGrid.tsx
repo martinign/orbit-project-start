@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Expand } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -46,11 +46,23 @@ export function EventsGrid({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Events</CardTitle>
-        <CardDescription>
-          {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'All events'}
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+        <div>
+          <CardTitle>Events</CardTitle>
+          <CardDescription>
+            {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'All events'}
+          </CardDescription>
+        </div>
+        {hasMoreEvents && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 transition-transform"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <Expand className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -59,7 +71,7 @@ export function EventsGrid({
           ) : events.length === 0 ? (
             <p className="text-muted-foreground">No events found</p>
           ) : (
-            <Collapsible>
+            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {initialEvents.map((event) => (
                   <EventCard
@@ -114,3 +126,4 @@ export function EventsGrid({
     </Card>
   );
 }
+
