@@ -8,6 +8,7 @@ import { TaskPrioritiesCard } from "@/components/dashboard/TaskPrioritiesCard";
 import { InvitationsStatisticsCard } from "@/components/dashboard/InvitationsStatisticsCard";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
+import { DashboardEvents } from "@/components/dashboard/DashboardEvents";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
