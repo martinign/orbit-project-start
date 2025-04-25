@@ -2,41 +2,54 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users } from "lucide-react";
+import { User, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function TeamStatisticsCard() {
+export function TeamStatisticsCard({ filters = {} }: { filters?: any }) {
   const { data: teamStats, isLoading } = useQuery({
-    queryKey: ["team_statistics"],
+    queryKey: ["team_statistics", filters],
     queryFn: async () => {
-      // Get total team members across all projects
-      const { data: teamMembers, error: teamError } = await supabase
+      // Base query
+      let activeQuery = supabase
         .from("project_team_members")
-        .select("id, project_id");
-
-      if (teamError) throw teamError;
-
-      // Get total projects
-      const { data: projects, error: projectError } = await supabase
-        .from("projects")
-        .select("id");
-
-      if (projectError) throw projectError;
-
-      // Calculate team members per project
-      const projectsWithMembers = teamMembers.reduce((acc, member) => {
-        acc[member.project_id] = (acc[member.project_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Get projects with team members
-      const projectsWithTeam = Object.keys(projectsWithMembers).length;
-
+        .select("id", { count: "exact" })
+        .eq("status", "active");
+      
+      let inactiveQuery = supabase
+        .from("project_team_members")
+        .select("id", { count: "exact" })
+        .eq("status", "inactive");
+      
+      // Apply project filter if provided
+      if (filters.projectId && filters.projectId !== "all") {
+        activeQuery = activeQuery.eq("project_id", filters.projectId);
+        inactiveQuery = inactiveQuery.eq("project_id", filters.projectId);
+      }
+      
+      // Apply date filters if provided
+      if (filters.startDate) {
+        activeQuery = activeQuery.gte("updated_at", filters.startDate.toISOString());
+        inactiveQuery = inactiveQuery.gte("updated_at", filters.startDate.toISOString());
+      }
+      
+      if (filters.endDate) {
+        activeQuery = activeQuery.lte("updated_at", filters.endDate.toISOString());
+        inactiveQuery = inactiveQuery.lte("updated_at", filters.endDate.toISOString());
+      }
+      
+      const [activeMembers, inactiveMembers] = await Promise.all([
+        activeQuery,
+        inactiveQuery
+      ]);
+      
+      if (activeMembers.error || inactiveMembers.error) {
+        throw new Error("Failed to fetch team statistics");
+      }
+      
       return {
-        totalTeamMembers: teamMembers.length,
-        totalProjects: projects.length,
-        projectsWithTeam,
-        projectsWithoutTeam: projects.length - projectsWithTeam,
+        active: activeMembers.data.length,
+        inactive: inactiveMembers.data.length,
+        total: activeMembers.data.length + inactiveMembers.data.length
       };
     },
     refetchOnWindowFocus: false,
@@ -45,44 +58,32 @@ export function TeamStatisticsCard() {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Team Overview</CardTitle>
-        <CardDescription>Team distribution across projects</CardDescription>
+        <CardTitle className="text-base font-medium">Team Members</CardTitle>
+        <CardDescription>Overview of project team members</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-4/5" />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Total Team Members</span>
-              <span className="text-xl font-bold">{teamStats?.totalTeamMembers || 0}</span>
+              <div className="flex items-center">
+                <Users className="h-5 w-5 text-blue-500 mr-2" />
+                <span className="text-sm font-medium">Total Members</span>
+              </div>
+              <span className="text-xl font-bold">{teamStats?.total || 0}</span>
             </div>
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">Projects with Team</span>
-                <span className="text-sm font-medium">{teamStats?.projectsWithTeam || 0}</span>
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Active</span>
+                <span className="text-sm font-medium text-green-600">{teamStats?.active || 0}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Projects without Team</span>
-                <span className="text-sm font-medium">{teamStats?.projectsWithoutTeam || 0}</span>
-              </div>
-              <div className="mt-2 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                {teamStats?.totalProjects && teamStats.totalProjects > 0 ? (
-                  <div 
-                    className="bg-purple-500 h-full" 
-                    style={{ 
-                      width: `${(teamStats.projectsWithTeam / teamStats.totalProjects) * 100}%` 
-                    }} 
-                  />
-                ) : null}
-              </div>
-              <div className="flex justify-between mt-1 text-xs">
-                <span>0%</span>
-                <span>100%</span>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground">Inactive</span>
+                <span className="text-sm font-medium text-gray-500">{teamStats?.inactive || 0}</span>
               </div>
             </div>
           </div>
