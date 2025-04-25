@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,12 +130,18 @@ const UpdateItem: React.FC<UpdateItemProps> = ({ update }) => {
     }
   };
 
+  const getFullName = () => {
+    if (isLoading) return 'Loading...';
+    if (!userProfile) return 'Unknown User';
+    return `${userProfile.full_name}${userProfile.last_name ? ' ' + userProfile.last_name : ''}`;
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="font-normal">
-            {isLoading ? 'Loading...' : (userProfile ? userProfile.full_name : 'Unknown User')}
+            {getFullName()}
           </Badge>
           <span className="text-xs text-muted-foreground">
             {formatDate(update.created_at)}

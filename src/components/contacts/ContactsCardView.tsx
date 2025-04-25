@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +28,9 @@ const ContactsCardView: React.FC<ContactsCardViewProps> = ({
       {contacts.map((contact) => (
         <Card key={contact.id} className="overflow-hidden h-[320px] flex flex-col">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg truncate">{`${contact.full_name} ${contact.last_name}`}</CardTitle>
+            <CardTitle className="text-lg truncate">
+              {`${contact.full_name}${contact.last_name ? ' ' + contact.last_name : ''}`}
+            </CardTitle>
             {contact.role && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <User className="h-3 w-3" />
@@ -65,7 +66,6 @@ const ContactsCardView: React.FC<ContactsCardViewProps> = ({
                 </p>
               )}
               
-              {/* Only show project badge when not filtered by project */}
               {!projectId && contact.projects && (
                 <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block mt-1">
                   {contact.projects.project_number} - {contact.projects.Sponsor}

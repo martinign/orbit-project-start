@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types/contact";
+
 interface ContactsTableProps {
   contacts: Contact[];
   projectId?: string | null;
   onEdit: (e: React.MouseEvent, contact: Contact) => void;
   onDelete: (e: React.MouseEvent, contact: Contact) => void;
 }
+
 const ContactsTable: React.FC<ContactsTableProps> = ({
   contacts,
   projectId,
@@ -33,7 +35,7 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
         <TableBody>
           {contacts.map(contact => <TableRow key={contact.id}>
               <TableCell className="font-medium">{contact.full_name}</TableCell>
-              <TableCell className="font-medium">{contact.last_name}</TableCell>            
+              <TableCell className="font-medium">{contact.last_name || "-"}</TableCell>            
               <TableCell>{contact.email}</TableCell>
               <TableCell>{contact.telephone || "-"}</TableCell>
               <TableCell>{contact.company || "-"}</TableCell>
@@ -55,4 +57,5 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
       </Table>
     </div>;
 };
+
 export default ContactsTable;
