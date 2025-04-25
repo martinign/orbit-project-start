@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -27,6 +28,7 @@ import {
   Search,
   X,
   FileText,
+  Clock,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +42,7 @@ import ContactForm from './ContactForm';
 import ProjectNotes from './ProjectNotes';
 import ProjectInvitationsList from './project-invitations/ProjectInvitationsList';
 import { ProjectCalendar } from './project-calendar/ProjectCalendar';
+import TaskTimelineView from './TaskTimelineView';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -273,12 +276,14 @@ const ProjectDetailsView = () => {
       <Tabs defaultValue="tasks" value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="calendar">Calendar</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="team">Team Members</TabsTrigger>
           <TabsTrigger value="invites">Invited Members</TabsTrigger>
         </TabsList>
+        
         <TabsContent value="tasks" className="mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -330,6 +335,21 @@ const ProjectDetailsView = () => {
               setIsTaskDialogOpen(false);
             }}
           />
+        </TabsContent>
+
+        {/* Timeline Tab */}
+        <TabsContent value="timeline" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Task Timeline</CardTitle>
+                <CardDescription>View tasks on a timeline</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TaskTimelineView projectId={id} />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="notes" className="mt-6">

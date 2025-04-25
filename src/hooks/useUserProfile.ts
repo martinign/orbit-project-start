@@ -14,7 +14,12 @@ export const useUserProfile = (userId?: string | null) => {
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        // Return a default value instead of throwing
+        return { id: userId, full_name: "", last_name: "" };
+      }
+      
       return data;
     },
     enabled: !!userId,
