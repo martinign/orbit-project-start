@@ -10,6 +10,11 @@ interface TaskStatusPieChartProps {
 }
 
 export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
+  const calculatePercentage = (value: number): number => {
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+    return total > 0 ? Math.round((value / total) * 100) : 0;
+  };
+
   return (
     <ResponsiveContainer width="100%" height={200}>
       <PieChart>
@@ -41,7 +46,7 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
                       <span className="font-medium">{payload[0].payload.name}</span>
                     </div>
                     <div className="text-right font-medium">
-                      {payload[0].value} ({Math.round((payload[0].value / data.reduce((a, b) => a + b.value, 0)) * 100)}%)
+                      {payload[0].value} ({calculatePercentage(payload[0].value)}%)
                     </div>
                   </div>
                 </div>
