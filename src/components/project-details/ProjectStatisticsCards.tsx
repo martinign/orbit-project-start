@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +12,7 @@ interface ProjectStatisticsCardsProps {
     inProgress: number;
   };
   eventsCount: number;
+  onTabChange: (tab: string) => void;
 }
 
 export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
@@ -18,10 +20,14 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   teamMembersCount,
   tasksStats,
   eventsCount,
+  onTabChange,
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <Card>
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent"
+        onClick={() => onTabChange('contacts')}
+      >
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -33,7 +39,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent"
+        onClick={() => onTabChange('team')}
+      >
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -45,7 +54,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent"
+        onClick={() => onTabChange('tasks')}
+      >
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -65,7 +77,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent"
+        onClick={() => onTabChange('calendar')}
+      >
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>

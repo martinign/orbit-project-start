@@ -144,6 +144,7 @@ const ProjectDetailsView = () => {
         teamMembersCount={teamMembersCount || 0}
         tasksStats={tasksStats}
         eventsCount={eventsCount || 0}
+        onTabChange={setActiveTab}
       />
 
       <Card>
