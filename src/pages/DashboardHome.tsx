@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,18 +52,14 @@ const DashboardHome = () => {
       })
     ];
 
-    // Subscribe to all channels
     channels.forEach(channel => channel.subscribe());
 
-    // Clean up
     return () => {
       channels.forEach(channel => supabase.removeChannel(channel));
     };
   }, [queryClient]);
 
-  // Invalidate queries when filters change
   useEffect(() => {
-    // This ensures charts and statistics are refreshed when filters change
     queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
     queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
     queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
@@ -81,7 +76,6 @@ const DashboardHome = () => {
         <TasksStatisticsCard filters={filters} />
         <TaskPrioritiesCard filters={filters} />
         <InvitationsStatisticsCard filters={filters} />
-        <ContactsAndTeamCard filters={filters} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
