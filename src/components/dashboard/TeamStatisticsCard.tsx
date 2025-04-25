@@ -5,13 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface TeamFilters {
+  projectId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  status?: string;
+}
+
 type TeamStatisticsCardProps = {
-  filters?: {
-    projectId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    status?: string;
-  };
+  filters?: TeamFilters;
 };
 
 export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
