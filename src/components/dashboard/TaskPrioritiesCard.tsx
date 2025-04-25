@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { ArrowUp, Circle, ArrowDown } from "lucide-react";
 interface TaskPrioritiesFilters {
   projectId?: string;
   status?: string;
-  category?: string;
+  priority?: string;
 }
 
 interface TaskPrioritiesCardProps {
@@ -25,7 +26,11 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
   const { data: priorityStats, isLoading } = useQuery({
     queryKey: ["task_priorities", filters],
     queryFn: async () => {
-      const priorities = ["high", "medium", "low"];
+      // Only query the selected priority if filter is set, otherwise query all priorities
+      const priorities = filters.priority && filters.priority !== "all" 
+        ? [filters.priority] 
+        : ["high", "medium", "low"];
+      
       const queries = priorities.map(priority => {
         let query = supabase
           .from("project_tasks")
@@ -43,32 +48,37 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         return query;
       });
       
-      const [highPriority, mediumPriority, lowPriority] = await Promise.all(queries);
+      const results = await Promise.all(queries);
       
-      if (highPriority.error || mediumPriority.error || lowPriority.error) {
+      if (results.some(result => result.error)) {
         throw new Error("Failed to fetch task priority statistics");
       }
-      
-      return [
-        { 
+
+      // Map priorities to their display configuration
+      const priorityConfig = {
+        high: { 
           name: "High Priority", 
-          value: highPriority.data?.length || 0, 
           color: "#f87171",
           icon: <ArrowUp className="h-4 w-4 text-red-500" />
         },
-        { 
+        medium: { 
           name: "Medium Priority", 
-          value: mediumPriority.data?.length || 0, 
           color: "#fb923c",
-          icon: <Circle className="h-4 w-4 text-amber-500" /> 
+          icon: <Circle className="h-4 w-4 text-amber-500" />
         },
-        { 
+        low: { 
           name: "Low Priority", 
-          value: lowPriority.data?.length || 0, 
           color: "#4ade80",
           icon: <ArrowDown className="h-4 w-4 text-green-500" />
-        },
-      ] as PriorityStats[];
+        }
+      };
+      
+      return priorities.map((priority, index) => ({
+        name: priorityConfig[priority as keyof typeof priorityConfig].name,
+        value: results[index].data?.length || 0,
+        color: priorityConfig[priority as keyof typeof priorityConfig].color,
+        icon: priorityConfig[priority as keyof typeof priorityConfig].icon
+      })) as PriorityStats[];
     },
     refetchOnWindowFocus: false,
   });
