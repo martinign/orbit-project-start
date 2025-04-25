@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,12 +8,11 @@ interface TeamFilters {
   projectId?: string;
   startDate?: Date;
   endDate?: Date;
-  status?: string;
 }
 
-type TeamStatisticsCardProps = {
+interface TeamStatisticsCardProps {
   filters?: TeamFilters;
-};
+}
 
 export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
   const { data: teamStats, isLoading } = useQuery({

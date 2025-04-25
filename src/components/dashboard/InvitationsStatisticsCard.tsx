@@ -1,11 +1,24 @@
-
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell } from "lucide-react";
+import { Bell, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { AllInvitationsDialog } from "./AllInvitationsDialog";
 
-export function InvitationsStatisticsCard({ filters = {} }: { filters?: any }) {
+interface InvitationsStatisticsCardProps {
+  filters?: {
+    projectId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    status?: string;
+  };
+}
+
+export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatisticsCardProps) {
+  const [showDialog, setShowDialog] = useState(false);
+
   const { data: invitationStats, isLoading } = useQuery({
     queryKey: ["invitations_statistics", filters],
     queryFn: async () => {
@@ -68,8 +81,21 @@ export function InvitationsStatisticsCard({ filters = {} }: { filters?: any }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Invitations Status</CardTitle>
-        <CardDescription>Overview of project invitations</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-medium">Invitations Status</CardTitle>
+            <CardDescription>Overview of project invitations</CardDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setShowDialog(true)}
+          >
+            <Eye className="h-4 w-4" />
+            <span className="sr-only">View all invitations</span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -107,6 +133,11 @@ export function InvitationsStatisticsCard({ filters = {} }: { filters?: any }) {
           </div>
         )}
       </CardContent>
+      <AllInvitationsDialog
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        filters={filters}
+      />
     </Card>
   );
 }

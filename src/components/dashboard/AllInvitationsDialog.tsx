@@ -1,0 +1,135 @@
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
+
+interface AllInvitationsDialogProps {
+  open: boolean;
+  onClose: () => void;
+  filters?: {
+    projectId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    status?: string;
+  };
+}
+
+export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitationsDialogProps) {
+  const { data: invitations, isLoading } = useQuery({
+    queryKey: ["all_invitations", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          status,
+          created_at,
+          permission_level,
+          projects:project_id (
+            project_number,
+            Sponsor
+          ),
+          invitee:invitee_id (
+            full_name,
+            last_name,
+            email
+          )
+        `);
+
+      if (filters.projectId && filters.projectId !== "all") {
+        query = query.eq("project_id", filters.projectId);
+      }
+
+      if (filters.startDate) {
+        query = query.gte("created_at", filters.startDate.toISOString());
+      }
+
+      if (filters.endDate) {
+        query = query.lte("created_at", filters.endDate.toISOString());
+      }
+
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: open,
+  });
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "secondary";
+      case "accepted":
+        return "default";
+      case "rejected":
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>All Invitations</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))}
+            </div>
+          ) : !invitations || invitations.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No invitations found</p>
+          ) : (
+            <div className="space-y-4">
+              {invitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="border rounded-lg p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">
+                        {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {invitation.invitee?.full_name} {invitation.invitee?.last_name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {invitation.invitee?.email}
+                      </p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <Badge variant={getStatusBadgeVariant(invitation.status)}>
+                        {invitation.status}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(invitation.created_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm">
+                    Permission Level: {invitation.permission_level}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
