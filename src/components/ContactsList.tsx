@@ -9,8 +9,8 @@ import ContactsEmptyState from "./contacts/ContactsEmptyState";
 import DeleteContactDialog from "./contacts/DeleteContactDialog";
 import EditContactDialog from "./contacts/EditContactDialog";
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import Button from '@/components/Button';
-import AllContactsSheet from './contacts/AllContactsSheet';
+import { Button } from '@/components/ui/button';
+import { AllContactsSheet } from './contacts/AllContactsSheet';
 
 interface ContactsListProps {
   projectId?: string | null;

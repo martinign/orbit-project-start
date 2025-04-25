@@ -8,8 +8,8 @@ import EditTeamMemberDialog from './team-members/EditTeamMemberDialog';
 import DeleteTeamMemberDialog from './team-members/DeleteTeamMemberDialog';
 import TeamMembersEmptyState from './team-members/TeamMembersEmptyState';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import Button from '@/components/Button';
-import AllTeamMembersSheet from './team-members/AllTeamMembersSheet';
+import { Button } from '@/components/ui/button';
+import { AllTeamMembersSheet } from './team-members/AllTeamMembersSheet';
 
 interface TeamMembersListProps {
   projectId: string | null;

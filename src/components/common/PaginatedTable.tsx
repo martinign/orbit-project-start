@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem } from '@/components/ui/pagination';
 
 interface PaginatedTableProps<T> {
   data: T[];
@@ -47,10 +47,15 @@ export function PaginatedTable<T>({
           <Pagination>
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={handlePreviousPage}
                   disabled={!canGoPrevious}
-                />
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
               </PaginationItem>
               
               <PaginationItem>
@@ -60,10 +65,15 @@ export function PaginatedTable<T>({
               </PaginationItem>
               
               <PaginationItem>
-                <PaginationNext 
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={handleNextPage}
                   disabled={!canGoNext}
-                />
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </PaginationItem>
             </PaginationContent>
           </Pagination>
