@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { AllInvitationsDialog } from "./AllInvitationsDialog";
@@ -86,18 +86,9 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
             <CardTitle className="text-base font-medium">Invitations Status</CardTitle>
             <CardDescription>Overview of project invitations</CardDescription>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => setShowDialog(true)}
-          >
-            <Eye className="h-4 w-4" />
-            <span className="sr-only">View all invitations</span>
-          </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
@@ -126,10 +117,18 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
             </div>
             {invitationStats?.pending > 0 && (
               <div className="pt-1 text-xs text-yellow-600 flex items-center">
-                <Bell className="h-3 w-3 mr-1" />
+                <Eye className="h-3 w-3 mr-1" />
                 {invitationStats.pending} pending {invitationStats.pending === 1 ? 'invitation' : 'invitations'}
               </div>
             )}
+            <Button 
+              variant="outline" 
+              className="w-full mt-2" 
+              onClick={() => setShowDialog(true)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View All Invitations
+            </Button>
           </div>
         )}
       </CardContent>
