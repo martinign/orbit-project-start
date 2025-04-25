@@ -17,20 +17,24 @@ interface AllInvitationsDialogProps {
   };
 }
 
-// Define explicit types for the invitation data
 interface InvitationData {
   id: string;
   status: string;
   created_at: string;
   permission_level: string;
-  projects: {
-    project_number: string;
-    Sponsor: string;
+  project_id: string;
+  inviter: {
+    full_name: string | null;
+    last_name: string | null;
   } | null;
   invitee: {
     full_name: string | null;
     last_name: string | null;
     email: string | null;
+  } | null;
+  projects: {
+    project_number: string;
+    Sponsor: string;
   } | null;
 }
 
@@ -45,9 +49,14 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
           status,
           created_at,
           permission_level,
+          project_id,
           projects:project_id (
             project_number,
             Sponsor
+          ),
+          inviter:inviter_id (
+            full_name,
+            last_name
           ),
           invitee:invitee_id (
             full_name,
@@ -74,14 +83,7 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
 
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
-      
-      // Safely transform the data to match our interface
-      const safeData = data.map(item => ({
-        ...item,
-        invitee: item.invitee && typeof item.invitee !== 'string' ? item.invitee : null
-      }));
-
-      return safeData as InvitationData[];
+      return data as InvitationData[];
     },
     enabled: open,
   });
@@ -89,9 +91,9 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "secondary";
+        return "warning";
       case "accepted":
-        return "default";
+        return "success";
       case "rejected":
         return "destructive";
       default:
@@ -99,9 +101,14 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
     }
   };
 
+  const formatName = (data: { full_name: string | null; last_name: string | null; } | null) => {
+    if (!data) return "Unknown";
+    return [data.full_name, data.last_name].filter(Boolean).join(" ") || "Unknown";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>All Invitations</DialogTitle>
         </DialogHeader>
@@ -125,28 +132,31 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
                   className="border rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="space-y-1">
                       <h3 className="font-medium">
                         {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {invitation.invitee?.full_name} {invitation.invitee?.last_name}
+                        Invitee: {formatName(invitation.invitee)}
                       </p>
+                      {invitation.invitee?.email && (
+                        <p className="text-sm text-muted-foreground">
+                          Email: {invitation.invitee.email}
+                        </p>
+                      )}
                       <p className="text-sm text-muted-foreground">
-                        {invitation.invitee?.email}
+                        Sent by: {formatName(invitation.inviter)}
                       </p>
                     </div>
-                    <div className="text-right space-y-1">
-                      <Badge variant={getStatusBadgeVariant(invitation.status)}>
+                    <div className="text-right space-y-2">
+                      <Badge variant={getStatusBadgeVariant(invitation.status)} className="mb-2">
                         {invitation.status}
                       </Badge>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(invitation.created_at), "MMM d, yyyy")}
-                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        <p>Permission: {invitation.permission_level}</p>
+                        <p>{format(new Date(invitation.created_at), "MMM d, yyyy")}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-sm">
-                    Permission Level: {invitation.permission_level}
                   </div>
                 </div>
               ))}
