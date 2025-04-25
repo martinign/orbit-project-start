@@ -46,7 +46,7 @@ export function CalendarCard({
   };
 
   return (
-    <Card className="bg-gray-100">
+    <Card>
       <CardHeader>
         <CardTitle>Calendar</CardTitle>
         <CardDescription>
@@ -61,14 +61,14 @@ export function CalendarCard({
           selected={selectedDate}
           onSelect={onSelect}
           className={cn(
-            "pointer-events-auto",
+            "pointer-events-auto bg-gray-100",
             hasEditAccess && "hover:cursor-pointer"
           )}
           modifiers={{ hasEvent: Object.keys(eventDates).map(d => new Date(d)) }}
           modifiersStyles={{
             hasEvent: {
-              backgroundColor: "rgb(229 217 255)",
-              color: "rgb(107 33 168)",
+              backgroundColor: "#E6F6FB",
+              color: "#1EAEDB",
               fontWeight: "bold"
             }
           }}
