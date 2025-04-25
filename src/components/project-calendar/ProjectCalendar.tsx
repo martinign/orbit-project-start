@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
@@ -26,17 +25,11 @@ interface Event {
   description: string | null;
   user_id: string;
   event_date: string | null;
-  profiles?: {
-    full_name: string | null;
-    last_name: string | null;
-  };
 }
 
-interface EventCreator {
+interface TeamMember {
   id: string;
-  full_name: string | null;
-  last_name: string | null;
-  displayName: string;
+  full_name: string;
 }
 
 export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
@@ -52,40 +45,26 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_events')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            last_name
-          )
-        `)
+        .select('*')
         .eq('project_id', projectId);
 
       if (error) throw error;
-      // Fixed: Cast the data as unknown first before casting to Event[]
-      return (data as unknown) as Event[];
+      return data as Event[];
     },
   });
 
-  const eventCreators = React.useMemo(() => {
-    const uniqueCreators = new Map<string, EventCreator>();
-    events.forEach(event => {
-      if (event.profiles && event.user_id) {
-        const displayName = [
-          event.profiles.full_name,
-          event.profiles.last_name
-        ].filter(Boolean).join(' ') || 'Unknown User';
-        
-        uniqueCreators.set(event.user_id, {
-          id: event.user_id,
-          full_name: event.profiles.full_name,
-          last_name: event.profiles.last_name,
-          displayName
-        });
-      }
-    });
-    return Array.from(uniqueCreators.values());
-  }, [events]);
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['project_team_members', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_team_members')
+        .select('id, full_name')
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+      return data as TeamMember[];
+    },
+  });
 
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -122,7 +101,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             <Button variant="outline">
               <CalendarIcon className="mr-2 h-4 w-4" />
               {selectedUserId ? 
-                eventCreators.find(c => c.id === selectedUserId)?.displayName || 'All Events' 
+                teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
                 : 'All Events'}
             </Button>
           </DropdownMenuTrigger>
@@ -130,12 +109,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             <DropdownMenuItem onClick={() => setSelectedUserId(null)}>
               All Events
             </DropdownMenuItem>
-            {eventCreators.map((creator) => (
+            {teamMembers.map((member) => (
               <DropdownMenuItem
-                key={creator.id}
-                onClick={() => setSelectedUserId(creator.id)}
+                key={member.id}
+                onClick={() => setSelectedUserId(member.id)}
               >
-                {creator.displayName}
+                {member.full_name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
