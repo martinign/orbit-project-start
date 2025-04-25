@@ -72,6 +72,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         <SubtaskForm
           {...formProps}
           teamMembers={teamMembers}
+          onSubmit={formProps.handleSubmit}
           onClose={onClose}
         />
       </DialogContent>
