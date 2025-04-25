@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PriorityHigh, PriorityMedium, PriorityLow } from "lucide-react";
+import { ArrowUp, Circle, ArrowDown } from "lucide-react";
 
 interface TaskPrioritiesFilters {
   projectId?: string;
@@ -56,7 +56,7 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         lowPriorityQuery = lowPriorityQuery.eq("status", filters.status);
       }
       
-      // Apply category filter if provided (stored as tags or in another field - this would need implementation)
+      // Apply category filter if provided
       if (filters.category && filters.category !== "all") {
         // This would need to be implemented based on how categories are stored
         // For this example, we're assuming we don't have a category field yet
@@ -78,19 +78,19 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
           name: "High Priority", 
           value: highPriority.data?.length || 0, 
           color: "#f87171",
-          icon: <PriorityHigh className="h-4 w-4 text-red-500" />
+          icon: <ArrowUp className="h-4 w-4 text-red-500" />
         },
         { 
           name: "Medium Priority", 
           value: mediumPriority.data?.length || 0, 
           color: "#fb923c",
-          icon: <PriorityMedium className="h-4 w-4 text-amber-500" /> 
+          icon: <Circle className="h-4 w-4 text-amber-500" /> 
         },
         { 
           name: "Low Priority", 
           value: lowPriority.data?.length || 0, 
           color: "#4ade80",
-          icon: <PriorityLow className="h-4 w-4 text-green-500" />
+          icon: <ArrowDown className="h-4 w-4 text-green-500" />
         },
       ] as PriorityStats[];
     },

@@ -92,8 +92,9 @@ export function DashboardFilters({
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="not started">Not Started</SelectItem>
               <SelectItem value="in progress">In Progress</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="blocked">Blocked</SelectItem>
+              <SelectItem value="stucked">Stucked</SelectItem>
             </SelectContent>
           </Select>
         </div>

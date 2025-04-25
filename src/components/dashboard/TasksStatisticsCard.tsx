@@ -20,22 +20,28 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: any }) {
         .select("id", { count: "exact" })
         .eq("status", "in progress");
         
+      let pendingQuery = supabase
+        .from("project_tasks")
+        .select("id", { count: "exact" })
+        .eq("status", "pending");
+        
       let completedQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
         .eq("status", "completed");
         
-      let blockedQuery = supabase
+      let stuckedQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
-        .eq("status", "blocked");
+        .eq("status", "stucked");
       
       // Apply project filter if provided
       if (filters.projectId && filters.projectId !== "all") {
         notStartedQuery = notStartedQuery.eq("project_id", filters.projectId);
         inProgressQuery = inProgressQuery.eq("project_id", filters.projectId);
+        pendingQuery = pendingQuery.eq("project_id", filters.projectId);
         completedQuery = completedQuery.eq("project_id", filters.projectId);
-        blockedQuery = blockedQuery.eq("project_id", filters.projectId);
+        stuckedQuery = stuckedQuery.eq("project_id", filters.projectId);
       }
       
       // Apply category filter if provided
@@ -45,22 +51,24 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: any }) {
       }
       
       // Execute all queries in parallel
-      const [notStarted, inProgress, completed, blocked] = await Promise.all([
+      const [notStarted, inProgress, pending, completed, stucked] = await Promise.all([
         notStartedQuery,
         inProgressQuery,
+        pendingQuery,
         completedQuery,
-        blockedQuery
+        stuckedQuery
       ]);
       
-      if (notStarted.error || inProgress.error || completed.error || blocked.error) {
+      if (notStarted.error || inProgress.error || pending.error || completed.error || stucked.error) {
         throw new Error("Failed to fetch task statistics");
       }
       
       return [
         { name: "Not Started", value: notStarted.data?.length || 0, color: "#f87171" },
         { name: "In Progress", value: inProgress.data?.length || 0, color: "#60a5fa" },
+        { name: "Pending", value: pending.data?.length || 0, color: "#fbbf24" },
         { name: "Completed", value: completed.data?.length || 0, color: "#4ade80" },
-        { name: "Blocked", value: blocked.data?.length || 0, color: "#fb923c" },
+        { name: "Stucked", value: stucked.data?.length || 0, color: "#fb923c" },
       ];
     },
     refetchOnWindowFocus: false,
