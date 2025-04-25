@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { addDays, parseISO, startOfDay, endOfDay, max, min, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,7 +29,7 @@ export interface Task {
 }
 
 export interface TeamMember {
-  id?: string; // Make id optional since it's not in the actual data
+  id?: string;
   user_id: string;
   full_name: string;
   last_name?: string;
@@ -106,21 +105,31 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   const timelineDates = useMemo(() => {
     if (!tasks.length) return [];
 
-    const today = new Date();
+    const today = startOfDay(new Date());
+
+    const rangeDays = {
+      week: 7,
+      month: 30,
+      quarter: 90,
+    }[timeRange];
+
     const taskDates = tasks.map(task => parseISO(task.created_at));
-    const earliestDate = startOfDay(min(taskDates));
-    const latestTaskDate = endOfDay(max([...taskDates, today]));
-    
-    const dates = [];
-    let currentDate = earliestDate;
-    
-    while (currentDate <= latestTaskDate) {
+    const earliestTaskDate = startOfDay(min(taskDates));
+
+    const startDate = min([earliestTaskDate, addDays(today, -rangeDays + 1)]);
+
+    const endDate = max([today, ...taskDates.map(date => startOfDay(date))]);
+
+    const dates: Date[] = [];
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
       dates.push(new Date(currentDate));
       currentDate = addDays(currentDate, 1);
     }
-    
+
     return dates;
-  }, [tasks]);
+  }, [tasks, timeRange]);
 
   const filteredTasks = useMemo(() => {
     if (!tasks.length) return [];
