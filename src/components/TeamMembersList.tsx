@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,8 @@ import EditTeamMemberDialog from './team-members/EditTeamMemberDialog';
 import DeleteTeamMemberDialog from './team-members/DeleteTeamMemberDialog';
 import TeamMembersEmptyState from './team-members/TeamMembersEmptyState';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import Button from '@/components/Button';
+import AllTeamMembersSheet from './team-members/AllTeamMembersSheet';
 
 interface TeamMembersListProps {
   projectId: string | null;
@@ -26,6 +27,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAllMembersOpen, setIsAllMembersOpen] = useState(false);
 
   const { data: teamMembers, isLoading } = useQuery({
     queryKey: ["team_members", projectId, searchQuery],
@@ -58,13 +60,11 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     },
   });
 
-  // Use the improved realtime subscription hook
   useRealtimeSubscription({
     table: 'project_team_members',
     filter: projectId ? 'project_id' : undefined,
     filterValue: projectId || undefined,
     onRecordChange: () => {
-      // Add debouncing to prevent UI freezes
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['team_members'] });
       }, 100);
@@ -114,13 +114,11 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
 
   const handleCloseEditDialog = () => {
     setIsEditDialogOpen(false);
-    // Small delay to ensure state is updated correctly
     setTimeout(() => setSelectedMember(null), 100);
   };
 
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
-    // Small delay to ensure state is updated correctly
     setTimeout(() => setSelectedMember(null), 100);
   };
 
@@ -132,25 +130,62 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     return <TeamMembersEmptyState projectId={projectId} />;
   }
 
+  const displayMembers = teamMembers.slice(0, 10);
+  const hasMoreMembers = teamMembers.length > 10;
+
   return (
     <div>
-      {viewMode === "table" ? (
-        <TeamMembersTable 
-          teamMembers={teamMembers} 
-          projectId={projectId}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      ) : (
-        <TeamMembersCardView 
-          teamMembers={teamMembers} 
-          projectId={projectId}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      <div className="space-y-4">
+        {viewMode === "table" ? (
+          <>
+            <TeamMembersTable 
+              teamMembers={displayMembers} 
+              projectId={projectId}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+            {hasMoreMembers && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAllMembersOpen(true)}
+                >
+                  View All ({teamMembers.length} members)
+                </Button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <TeamMembersCardView 
+              teamMembers={displayMembers}
+              projectId={projectId}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+            {hasMoreMembers && (
+              <div className="flex justify-center mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAllMembersOpen(true)}
+                >
+                  View All ({teamMembers.length} members)
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
-      {/* Dialog components */}
+      <AllTeamMembersSheet
+        isOpen={isAllMembersOpen}
+        onClose={() => setIsAllMembersOpen(false)}
+        teamMembers={teamMembers}
+        projectId={projectId}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+
       <EditTeamMemberDialog 
         isOpen={isEditDialogOpen}
         onClose={handleCloseEditDialog}
