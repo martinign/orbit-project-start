@@ -71,8 +71,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     }
   };
 
-  const handleSubmitEvent = async (data: { title: string; description?: string }) => {
-    return createEvent.mutateAsync(data);
+  // Modify this function to match the expected type in EventDialog
+  const handleSubmitEvent = async (data: { title: string; description?: string }): Promise<void> => {
+    await createEvent.mutateAsync(data);
+    // No return value needed - this matches the Promise<void> type
   };
 
   return (
