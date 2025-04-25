@@ -1,5 +1,6 @@
 
 import * as React from "react";
+import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,10 +16,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  event_date: z.date().optional(),
 });
 
 interface EventDialogProps {
@@ -27,6 +33,7 @@ interface EventDialogProps {
   onSubmit: (data: z.infer<typeof formSchema>) => Promise<void>;
   defaultValues?: Partial<z.infer<typeof formSchema>>;
   mode: 'create' | 'edit';
+  readOnly?: boolean;
 }
 
 export function EventDialog({
@@ -34,22 +41,24 @@ export function EventDialog({
   onClose,
   onSubmit,
   defaultValues,
-  mode
+  mode,
+  readOnly = false,
 }: EventDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
       title: "",
       description: "",
+      event_date: undefined,
     },
   });
 
-  // Reset the form when the dialog is opened or closed
   React.useEffect(() => {
     if (open) {
       form.reset(defaultValues || {
         title: "",
         description: "",
+        event_date: undefined,
       });
     }
   }, [open, defaultValues, form]);
@@ -78,7 +87,7 @@ export function EventDialog({
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Event title" {...field} />
+                    <Input placeholder="Event title" {...field} disabled={readOnly} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -91,8 +100,48 @@ export function EventDialog({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Event description" {...field} />
+                    <Textarea placeholder="Event description" {...field} disabled={readOnly} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="event_date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          disabled={readOnly}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={readOnly}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
@@ -101,9 +150,11 @@ export function EventDialog({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-                {mode === 'create' ? 'Create Event' : 'Update Event'}
-              </Button>
+              {!readOnly && (
+                <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                  {mode === 'create' ? 'Create Event' : 'Update Event'}
+                </Button>
+              )}
             </div>
           </form>
         </Form>

@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Calendar, CircleDashed, ArrowUpRight } from "lucide-react";
+import { Calendar, CircleDashed } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
@@ -26,6 +25,7 @@ export function DashboardEvents({ filters }: { filters: any }) {
           title,
           description,
           created_at,
+          event_date,
           user_id,
           project_id,
           projects:project_id (
@@ -33,9 +33,9 @@ export function DashboardEvents({ filters }: { filters: any }) {
             Sponsor
           )
         `)
-        .gte("created_at", today.toISOString())
-        .lte("created_at", sevenDaysLater.toISOString())
-        .order("created_at", { ascending: true })
+        .gte("event_date", today.toISOString())
+        .lte("event_date", sevenDaysLater.toISOString())
+        .order("event_date", { ascending: true })
         .limit(5);
       
       if (filters.projectId) {
@@ -90,7 +90,7 @@ export function DashboardEvents({ filters }: { filters: any }) {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(event.created_at), "MMM d")}
+                      {event.event_date ? format(new Date(event.event_date), "MMM d") : "No date"}
                     </p>
                   </div>
                 </HoverCardTrigger>
@@ -105,15 +105,12 @@ export function DashboardEvents({ filters }: { filters: any }) {
                     <div className="text-xs text-muted-foreground">
                       <p>Created by: <EventCreator userId={event.user_id} /></p>
                       <p>Project: {event.projects?.project_number}</p>
-                      <p>Date: {format(new Date(event.created_at), "MMMM d, yyyy")}</p>
+                      <p>Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}</p>
                     </div>
                   </div>
                 </HoverCardContent>
               </HoverCard>
             ))}
-            <Button variant="ghost" className="w-full mt-2 text-purple-500" onClick={() => navigate("/projects")}>
-              View all events <ArrowUpRight className="ml-1 h-4 w-4" />
-            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
