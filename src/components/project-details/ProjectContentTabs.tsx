@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChartGantt } from 'lucide-react';
 
 interface ProjectContentTabsProps {
   activeTab: string;
@@ -17,6 +18,10 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
       <TabsList>
         <TabsTrigger value="tasks">Tasks</TabsTrigger>
+        <TabsTrigger value="gantt" className="flex items-center gap-2">
+          <ChartGantt className="h-4 w-4" />
+          Gantt Chart
+        </TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
         <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -28,3 +33,4 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     </Tabs>
   );
 };
+
