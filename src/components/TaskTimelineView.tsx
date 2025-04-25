@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
-import { addDays, differenceInDays, startOfMonth, endOfMonth, parseISO, differenceInHours } from 'date-fns';
+import { addDays, parseISO, startOfDay, endOfDay, max, min } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,7 +56,8 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       let query = supabase
         .from('project_tasks')
         .select('*')
-        .eq('project_id', projectId);
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true });
         
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
@@ -75,25 +75,15 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data: tasksData, error } = await query;
       if (error) throw error;
 
-      const tasksWithCompletionTime = await Promise.all((data || []).map(async (task) => {
-        let completionTime: number | undefined = undefined;
-
-        if (task.status === 'completed' && task.updated_at) {
-          const createdDate = parseISO(task.created_at);
-          const completedDate = parseISO(task.updated_at);
-          completionTime = differenceInHours(completedDate, createdDate);
-        }
-
-        return {
-          ...task,
-          completion_time: completionTime
-        } as Task;
+      return (tasksData || []).map(task => ({
+        ...task,
+        completion_time: task.status === 'completed' && task.updated_at
+          ? differenceInHours(parseISO(task.updated_at), parseISO(task.created_at))
+          : undefined
       }));
-
-      return tasksWithCompletionTime;
     },
     enabled: !!projectId,
   });
@@ -113,38 +103,24 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   });
 
   const timelineDates = useMemo(() => {
-    const now = new Date();
-    let startDate, endDate;
-    
-    switch (timeRange) {
-      case 'week':
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - now.getDay());
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        break;
-      case 'quarter':
-        const quarter = Math.floor(now.getMonth() / 3);
-        startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        endDate = new Date(now.getFullYear(), (quarter + 1) * 3, 0);
-        break;
-      case 'month':
-      default:
-        startDate = startOfMonth(now);
-        endDate = endOfMonth(now);
-        break;
-    }
+    if (!tasks.length) return [];
+
+    const today = new Date();
+    const taskDates = tasks.map(task => parseISO(task.created_at));
+    const earliestDate = startOfDay(min(taskDates));
+    const latestTaskDate = endOfDay(max([...taskDates, today]));
     
     const dates = [];
-    const days = differenceInDays(endDate, startDate) + 1;
+    let currentDate = earliestDate;
     
-    for (let i = 0; i < days; i++) {
-      dates.push(addDays(startDate, i));
+    while (currentDate <= latestTaskDate) {
+      dates.push(new Date(currentDate));
+      currentDate = addDays(currentDate, 1);
     }
     
     return dates;
-  }, [timeRange]);
-  
+  }, [tasks]);
+
   const filteredTasks = useMemo(() => {
     if (!tasks.length) return [];
     return tasks.filter(task => {

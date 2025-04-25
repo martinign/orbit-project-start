@@ -1,5 +1,5 @@
 import React from 'react';
-import { format, parseISO, differenceInDays, isBefore } from 'date-fns';
+import { format, parseISO, differenceInDays, isBefore, isAfter } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -16,30 +16,26 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   timelineDates,
   teamMembers 
 }) => {
-  if (!task.created_at) return null;
+  if (!task.created_at || !timelineDates.length) return null;
     
   const startDate = parseISO(task.created_at);
   const endDate = task.status === 'completed' && task.updated_at 
     ? parseISO(task.updated_at)
     : new Date();
 
-  let visibleStartDate = startDate;
-  if (isBefore(startDate, timelineDates[0])) {
-    visibleStartDate = timelineDates[0];
-  }
-
+  // Find the position in the timeline
   const taskStartIndex = timelineDates.findIndex(date => 
-    date.getFullYear() === visibleStartDate.getFullYear() &&
-    date.getMonth() === visibleStartDate.getMonth() &&
-    date.getDate() === visibleStartDate.getDate()
+    date.getFullYear() === startDate.getFullYear() &&
+    date.getMonth() === startDate.getMonth() &&
+    date.getDate() === startDate.getDate()
   );
 
   if (taskStartIndex === -1) return null;
 
-  let durationDays = differenceInDays(endDate, visibleStartDate) + 1;
-  const remainingDays = timelineDates.length - taskStartIndex;
-  durationDays = Math.min(durationDays, remainingDays);
-  durationDays = Math.max(1, durationDays);
+  // Calculate the duration, ensuring we don't exceed the timeline
+  const lastTimelineDate = timelineDates[timelineDates.length - 1];
+  const effectiveEndDate = isAfter(endDate, lastTimelineDate) ? lastTimelineDate : endDate;
+  const durationDays = differenceInDays(effectiveEndDate, timelineDates[taskStartIndex]) + 1;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { CircleDashed } from 'lucide-react';
@@ -22,6 +23,15 @@ export const Timeline: React.FC<TimelineProps> = ({
   hasFilters,
   onClearFilters,
 }) => {
+  if (!timelineDates.length) {
+    return (
+      <div className="text-center py-10">
+        <CircleDashed className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">No timeline data available.</p>
+      </div>
+    );
+  }
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-10">
