@@ -26,12 +26,10 @@ export function RecentActivities({ filters }: { filters: any }) {
         tasksQuery = tasksQuery.eq("status", filters.status);
       }
       
-      if (filters.startDate) {
-        tasksQuery = tasksQuery.gte("updated_at", filters.startDate.toISOString());
-      }
-      
-      if (filters.endDate) {
-        tasksQuery = tasksQuery.lte("updated_at", filters.endDate.toISOString());
+      if (filters.showNewTasks) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        tasksQuery = tasksQuery.gte("created_at", yesterday.toISOString());
       }
       
       const { data, error } = await tasksQuery;
