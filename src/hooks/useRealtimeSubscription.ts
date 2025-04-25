@@ -34,12 +34,12 @@ export function useRealtimeSubscription({
 
     channel
       .on('postgres_changes', config, onRecordChange)
-      .subscribe((status: string) => {
+      .subscribe((status, error) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
         }
-        if (status === 'CHANNEL_ERROR') {
-          console.error(`Error subscribing to ${table} changes`);
+        if (error) {
+          console.error(`Error subscribing to ${table} changes:`, error);
         }
       });
 

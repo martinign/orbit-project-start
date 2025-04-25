@@ -1,56 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronRight, List, User, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Calendar, Edit, Trash2, FilePen, FilePlus, ChevronDown, ChevronRight, List, User, MessageCircle } from 'lucide-react';
+import { useTeamMemberName } from '@/hooks/useTeamMembers';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useToast } from '@/hooks/use-toast';
+import { Calendar } from 'lucide-react';
+import { useSubtasks } from '@/hooks/useSubtasks';
+import { useTaskUpdates } from '@/hooks/useTaskUpdates';
+import { SubtaskItem } from './tasks/SubtaskItem';
+import { TaskActions } from './tasks/TaskActions';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import SubtaskDialog from './SubtaskDialog';
 import TaskUpdateDialog from './TaskUpdateDialog';
 import TaskUpdatesDisplay from './TaskUpdatesDisplay';
-import { useTeamMemberName } from '@/hooks/useTeamMembers';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
-interface Subtask {
-  id: string;
-  title: string;
-  description?: string;
-  status: string;
-  due_date?: string;
-  parent_task_id: string;
-  notes?: string;
-  assigned_to?: string;
-}
 
 interface Task {
   id: string;
@@ -80,76 +44,48 @@ const TaskCard: React.FC<TaskCardProps> = ({
   handleTaskUpdates,
   handleAddSubtask,
 }) => {
-  const { toast } = useToast();
-  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
-  const [updateCount, setUpdateCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [editSubtask, setEditSubtask] = useState<Subtask | null>(null);
+  const [editSubtask, setEditSubtask] = useState<any | null>(null);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
-  const [deleteSubtask, setDeleteSubtask] = useState<Subtask | null>(null);
+  const [deleteSubtask, setDeleteSubtask] = useState<any | null>(null);
   const [isDeleteSubtaskDialogOpen, setIsDeleteSubtaskDialogOpen] = useState(false);
-  const { memberName: assignedToName, isLoading: isLoadingMember } = useTeamMemberName(task.assigned_to);
 
-  useEffect(() => {
-    if (task.id) {
-      fetchSubtasks();
-      fetchUpdateCount();
-      
-      const channel = supabase
-        .channel('updates-count-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'project_task_updates',
-            filter: `task_id=eq.${task.id}`
-          },
-          () => {
-            fetchUpdateCount();
-          }
-        )
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [task.id]);
+  const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
+  const { subtasks, fetchSubtasks, deleteSubtask: handleDeleteSubtask } = useSubtasks(task.id);
+  const { updateCount } = useTaskUpdates(task.id);
 
-  const fetchSubtasks = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('project_subtasks')
-        .select('*')
-        .eq('parent_task_id', task.id)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setSubtasks(data || []);
-    } catch (error) {
-      console.error('Error fetching subtasks:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
   };
 
-  const fetchUpdateCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('project_task_updates')
-        .select('*', { count: 'exact', head: true })
-        .eq('task_id', task.id);
+  const handleEditSubtask = (subtask: any) => {
+    setEditSubtask(subtask);
+    setIsSubtaskDialogOpen(true);
+  };
 
-      if (error) throw error;
-      setUpdateCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching update count:', error);
-    }
+  const handleDeleteSubtaskConfirm = (subtask: any) => {
+    setDeleteSubtask(subtask);
+    setIsDeleteSubtaskDialogOpen(true);
+  };
+
+  const confirmDeleteSubtask = async () => {
+    if (!deleteSubtask) return;
+    await handleDeleteSubtask(deleteSubtask.id);
+    setIsDeleteSubtaskDialogOpen(false);
+    setDeleteSubtask(null);
+  };
+
+  const handleOpenUpdateDialog = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsUpdateDialogOpen(true);
+  };
+
+  const handleShowUpdates = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsUpdatesDisplayOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -174,160 +110,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-200 text-green-800';
-      case 'in progress':
-        return 'bg-blue-200 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-200 text-yellow-800';
-      default:
-        return 'bg-gray-200 text-gray-800';
-    }
-  };
-
-  const toggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsExpanded(!isExpanded);
-  };
-
-  const handleEditSubtask = (subtask: Subtask) => {
-    setEditSubtask(subtask);
-    setIsSubtaskDialogOpen(true);
-  };
-
-  const handleDeleteSubtask = (subtask: Subtask) => {
-    setDeleteSubtask(subtask);
-    setIsDeleteSubtaskDialogOpen(true);
-  };
-
-  const confirmDeleteSubtask = async () => {
-    if (!deleteSubtask) return;
-
-    try {
-      const { error } = await supabase
-        .from('project_subtasks')
-        .delete()
-        .eq('id', deleteSubtask.id);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: "Subtask deleted successfully",
-      });
-      
-      fetchSubtasks();
-    } catch (error) {
-      console.error('Error deleting subtask:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete subtask. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleteSubtaskDialogOpen(false);
-      setDeleteSubtask(null);
-    }
-  };
-
-  const handleAddNewSubtask = () => {
-    setEditSubtask(null);
-    handleAddSubtask(task);
-  };
-
-  const handleOpenUpdateDialog = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsUpdateDialogOpen(true);
-  };
-
-  const handleShowUpdates = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsUpdatesDisplayOpen(true);
-  };
-
-  const SubtaskItem = ({ subtask }: { subtask: Subtask }) => {
-    const { memberName: subtaskAssignedToName } = useTeamMemberName(subtask.assigned_to);
-    
-    return (
-      <div key={subtask.id} className="mb-2 last:mb-0">
-        <Card className="shadow-sm">
-          <CardContent className="p-2">
-            <div className="flex justify-between items-start">
-              <div className="flex-grow min-w-0">
-                <div className="flex justify-between items-start gap-1">
-                  <h5 className="text-sm font-medium truncate">{subtask.title}</h5>
-                  <Badge className={`flex-shrink-0 ml-1 ${getStatusColor(subtask.status)}`}>
-                    {subtask.status}
-                  </Badge>
-                </div>
-                {subtask.description && (
-                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">{subtask.description}</p>
-                )}
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {subtask.due_date && formatDate(subtask.due_date) && (
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1 text-gray-500 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{formatDate(subtask.due_date)}</span>
-                    </div>
-                  )}
-                  {subtaskAssignedToName && (
-                    <div className="flex items-center">
-                      <User className="h-3 w-3 mr-1 text-gray-500 flex-shrink-0" />
-                      <span className="text-xs text-gray-600 truncate">{subtaskAssignedToName}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-start gap-1 ml-2 flex-shrink-0">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditSubtask(subtask);
-                      }}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit Subtask</p>
-                  </TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 text-red-500"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSubtask(subtask);
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete Subtask</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  };
-
   return (
-    <Draggable key={task.id} draggableId={task.id} index={index}>
+    <Draggable draggableId={task.id} index={index}>
       {(provided) => (
         <div className="mb-0">
           <HoverCard>
@@ -356,95 +140,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       )}
                       <h4 className="font-medium truncate">{task.title}</h4>
                     </div>
-                    <div className="flex flex-col gap-1 ml-2 flex-shrink-0">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => handleDeleteConfirm(task)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      
-                      <div className="flex items-center gap-1">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8 relative"
-                                onClick={handleOpenUpdateDialog}
-                              >
-                                <FilePen className="h-4 w-4" />
-                                {updateCount > 0 && (
-                                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {updateCount > 99 ? '99+' : updateCount}
-                                  </span>
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Add Update</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        
-                        {updateCount > 0 && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  className="h-8 w-8"
-                                  onClick={handleShowUpdates}
-                                >
-                                  <MessageCircle className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>View Updates</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddNewSubtask();
-                                }}
-                              >
-                                <FilePlus className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Add Subtask</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
+                    
+                    <TaskActions
+                      task={task}
+                      updateCount={updateCount}
+                      onEdit={handleEditTask}
+                      onDelete={handleDeleteConfirm}
+                      onUpdate={handleTaskUpdates}
+                      onAddSubtask={handleAddSubtask}
+                      onShowUpdates={handleShowUpdates}
+                    />
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-2 w-full">
@@ -517,7 +222,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div className="ml-7 pl-2 border-l-2 border-gray-300 mt-2 mb-2">
               <div className="space-y-2">
                 {subtasks.map((subtask) => (
-                  <SubtaskItem key={subtask.id} subtask={subtask} />
+                  <SubtaskItem
+                    key={subtask.id}
+                    subtask={subtask}
+                    onEdit={handleEditSubtask}
+                    onDelete={handleDeleteSubtaskConfirm}
+                  />
                 ))}
               </div>
             </div>
@@ -542,7 +252,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               open={isUpdateDialogOpen}
               onClose={() => setIsUpdateDialogOpen(false)}
               taskId={task.id}
-              onSuccess={() => fetchUpdateCount()}
+              onSuccess={() => setIsUpdateDialogOpen(false)}
             />
           )}
           
@@ -564,7 +274,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setDeleteSubtask(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setDeleteSubtask(null)}>
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction onClick={confirmDeleteSubtask} className="bg-red-500 hover:bg-red-600">
                   Delete
                 </AlertDialogAction>
