@@ -38,6 +38,7 @@ interface Task {
   user_id: string;  // Created by
   assigned_to?: string;  // Assigned to
   created_at: string;
+  updated_at: string; // Added the missing property
   completion_time?: number; // Time in hours from created to completed
 }
 
