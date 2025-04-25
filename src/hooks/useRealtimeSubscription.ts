@@ -30,10 +30,12 @@ export function useRealtimeSubscription({
       };
     }
 
-    const channel = supabase
-      .channel('db-changes')
+    const channel = supabase.channel('db-changes');
+    
+    // Add the subscription using the correct syntax
+    channel
       .on(
-        'postgres_changes', 
+        'postgres_changes',
         { 
           event, 
           schema: 'public', 
