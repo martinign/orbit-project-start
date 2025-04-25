@@ -19,11 +19,12 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   if (!task.created_at || !timelineDates.length) return null;
     
   const startDate = parseISO(task.created_at);
+  const lastTimelineDate = timelineDates[timelineDates.length - 1];
   
   // Calculate end date based on task status
   const endDate = task.status === 'completed' && task.updated_at 
     ? parseISO(task.updated_at)  // Use completion date for completed tasks
-    : new Date();                // Use current date for ongoing tasks
+    : lastTimelineDate;          // Use last timeline date for ongoing tasks
 
   if (!isValid(startDate) || !isValid(endDate)) return null;
 
@@ -50,15 +51,6 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
     }
   };
 
-  const getStatusStyles = (status: string) => {
-    const baseColor = getStatusColor(status);
-    // Add visual distinction for ongoing tasks
-    if (status !== 'completed') {
-      return `${baseColor} opacity-75 bg-gradient-to-r from-current to-transparent`;
-    }
-    return baseColor;
-  };
-
   const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
   const createdByTeamMember = teamMembers.find(member => member.user_id === task.user_id);
 
@@ -79,7 +71,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
         <HoverCard>
           <HoverCardTrigger>
             <div
-              className={`h-6 rounded-md ${getStatusStyles(task.status)}`}
+              className={`h-6 rounded-md ${getStatusColor(task.status)}`}
               style={{ 
                 gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
                 transition: 'all 0.2s ease-in-out'
