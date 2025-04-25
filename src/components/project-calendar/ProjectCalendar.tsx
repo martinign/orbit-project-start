@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
@@ -26,11 +25,17 @@ interface Event {
   description: string | null;
   user_id: string;
   event_date: string | null;
+  profiles?: {
+    full_name: string | null;
+    last_name: string | null;
+  };
 }
 
-interface TeamMember {
+interface EventCreator {
   id: string;
-  full_name: string;
+  full_name: string | null;
+  last_name: string | null;
+  displayName: string;
 }
 
 export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
@@ -41,7 +46,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
 
-  // Modified query to include user profiles for events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
     queryFn: async () => {
@@ -50,24 +54,31 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         .select(`
           *,
           profiles:user_id (
-            full_name
+            full_name,
+            last_name
           )
         `)
         .eq('project_id', projectId);
 
       if (error) throw error;
-      return data;
+      return data as Event[];
     },
   });
 
-  // Get unique event creators
   const eventCreators = React.useMemo(() => {
-    const uniqueCreators = new Map();
+    const uniqueCreators = new Map<string, EventCreator>();
     events.forEach(event => {
-      if (event.profiles?.full_name && event.user_id) {
+      if (event.profiles && event.user_id) {
+        const displayName = [
+          event.profiles.full_name,
+          event.profiles.last_name
+        ].filter(Boolean).join(' ') || 'Unknown User';
+        
         uniqueCreators.set(event.user_id, {
           id: event.user_id,
-          full_name: event.profiles.full_name
+          full_name: event.profiles.full_name,
+          last_name: event.profiles.last_name,
+          displayName
         });
       }
     });
@@ -109,7 +120,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             <Button variant="outline">
               <CalendarIcon className="mr-2 h-4 w-4" />
               {selectedUserId ? 
-                eventCreators.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
+                eventCreators.find(c => c.id === selectedUserId)?.displayName || 'All Events' 
                 : 'All Events'}
             </Button>
           </DropdownMenuTrigger>
@@ -122,7 +133,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                 key={creator.id}
                 onClick={() => setSelectedUserId(creator.id)}
               >
-                {creator.full_name}
+                {creator.displayName}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
