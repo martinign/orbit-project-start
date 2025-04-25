@@ -1,4 +1,4 @@
-import { Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
+import { LayoutDashboard, Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -17,6 +17,7 @@ import TaskTemplateDialog from "@/components/TaskTemplateDialog";
 import TaskTemplatesListDialog from "@/components/TaskTemplatesListDialog";
 import InviteMembersDialog from "@/components/team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
+
 export function AppSidebar() {
   const {
     signOut
@@ -33,6 +34,7 @@ export function AppSidebar() {
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const pendingInvitationsCount = useInvitationsCount();
+
   const {
     data: recentProjects,
     refetch: refetchRecentProjects
@@ -52,6 +54,7 @@ export function AppSidebar() {
     refetchOnWindowFocus: true,
     refetchOnMount: true
   });
+
   useEffect(() => {
     const channel = supabase.channel('projects_changes').on('postgres_changes', {
       event: '*',
@@ -67,18 +70,21 @@ export function AppSidebar() {
       supabase.removeChannel(channel);
     };
   }, [queryClient, refetchRecentProjects]);
+
   const handleEditProject = (e: React.MouseEvent, project: any) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedProject(project);
     setIsProjectDialogOpen(true);
   };
+
   const handleDeleteProject = (e: React.MouseEvent, project: any) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
   };
+
   const confirmDeleteProject = async () => {
     if (!selectedProject) return;
     try {
@@ -111,6 +117,7 @@ export function AppSidebar() {
       });
     }
   };
+
   const handleProjectSuccess = () => {
     refetchRecentProjects();
     queryClient.invalidateQueries({
@@ -118,6 +125,7 @@ export function AppSidebar() {
     });
     setIsProjectDialogOpen(false);
   };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -132,6 +140,7 @@ export function AppSidebar() {
         return "text-gray-400";
     }
   };
+
   return <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center p-2">
@@ -141,6 +150,22 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>DASHBOARD</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link to="/dashboard">
+                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-indigo-500/10 transition-colors duration-200">
+                    <LayoutDashboard className="text-indigo-500" />
+                    <span>Dashboard</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel>PROJECTS</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -156,7 +181,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         <SidebarGroup>
           <SidebarGroupLabel>PROJECT INVITATIONS</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -190,7 +215,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         <SidebarGroup>
           <SidebarGroupLabel>TASK MANAGEMENT</SidebarGroupLabel>
           <SidebarGroupContent>
