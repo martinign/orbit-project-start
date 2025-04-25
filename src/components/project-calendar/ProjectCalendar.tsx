@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Plus, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +20,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUserProfile } from '@/hooks/useUserProfile'; // Import the hook
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useProjectEvents } from '@/hooks/useProjectEvents';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -45,8 +46,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { user } = useAuth(); // Get the current authenticated user
+  const { user } = useAuth();
+  const { hasEditAccess, createEvent, deleteEvent } = useProjectEvents(projectId);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
@@ -54,7 +55,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
       const { data, error } = await supabase
         .from('project_events')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId);
 
       if (error) throw error;
       return data as Event[];
@@ -74,63 +75,21 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     },
   });
 
-  const createEvent = useMutation({
-    mutationFn: async (data: {
-      title: string;
-      description?: string;
-    }) => {
-      if (!user) throw new Error("User not authenticated");
-      
-      const { error } = await supabase.from('project_events').insert({
-        project_id: projectId,
-        title: data.title,
-        description: data.description,
-        user_id: user.id, // Add the current user ID
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return;
+    
+    if (!hasEditAccess) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to create events.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
-      toast({
-        title: 'Event created',
-        description: 'Your event has been created successfully.',
-      });
-      setIsEventDialogOpen(false);
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'There was an error creating the event.',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const deleteEvent = useMutation({
-    mutationFn: async (eventId: string) => {
-      const { error } = await supabase
-        .from('project_events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
-      toast({
-        title: 'Event deleted',
-        description: 'The event has been deleted successfully.',
-      });
-    },
-    onError: () => {
-      toast({
-        title: 'Error',
-        description: 'There was an error deleting the event.',
-        variant: 'destructive',
-      });
-    },
-  });
+    setSelectedDate(date);
+    setIsEventDialogOpen(true);
+  };
 
   const filteredEvents = events.filter(event => {
     if (!selectedUserId) return true;
@@ -140,52 +99,50 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedUserId ? 
-                  teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
-                  : 'All Events'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setSelectedUserId(null)}>
-                All Events
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedUserId ? 
+                teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
+                : 'All Events'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setSelectedUserId(null)}>
+              All Events
+            </DropdownMenuItem>
+            {teamMembers.map((member) => (
+              <DropdownMenuItem
+                key={member.id}
+                onClick={() => setSelectedUserId(member.id)}
+              >
+                {member.full_name}
               </DropdownMenuItem>
-              {teamMembers.map((member) => (
-                <DropdownMenuItem
-                  key={member.id}
-                  onClick={() => setSelectedUserId(member.id)}
-                >
-                  {member.full_name}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <Button 
-          onClick={() => setIsEventDialogOpen(true)}
-          className="bg-blue-500 hover:bg-blue-600"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Event
-        </Button>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Calendar</CardTitle>
-            <CardDescription>Select a date to view events</CardDescription>
+            <CardDescription>
+              {hasEditAccess 
+                ? "Click a date to create an event" 
+                : "Select a date to view events"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="pointer-events-auto"
+              onSelect={handleDateSelect}
+              className={cn(
+                "pointer-events-auto",
+                hasEditAccess && "hover:cursor-pointer"
+              )}
             />
           </CardContent>
         </Card>
@@ -207,7 +164,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                 filteredEvents.map((event) => (
                   <EventWithCreator 
                     key={event.id} 
-                    event={event} 
+                    event={event}
                     onDelete={() => deleteEvent.mutate(event.id)} 
                   />
                 ))
@@ -221,7 +178,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         open={isEventDialogOpen}
         onClose={() => setIsEventDialogOpen(false)}
         onSubmit={async (data) => {
-          // Ensure data has required properties
           if (!data.title) {
             toast({
               title: 'Validation Error',
@@ -231,9 +187,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             return;
           }
           await createEvent.mutateAsync({
-            title: data.title,
-            description: data.description,
+            ...data,
+            project_id: projectId,
+            event_date: selectedDate?.toISOString(),
           });
+          setIsEventDialogOpen(false);
         }}
         mode="create"
       />

@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProjectEvent {
   id: string;
@@ -27,6 +28,7 @@ interface EventInput {
 export function useProjectEvents(projectId: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: hasEditAccess } = useQuery({
     queryKey: ["project_edit_access", projectId],
@@ -41,9 +43,14 @@ export function useProjectEvents(projectId: string) {
 
   const createEvent = useMutation({
     mutationFn: async (event: EventInput) => {
+      if (!user) throw new Error("User not authenticated");
+
       const { error } = await supabase
         .from('project_events')
-        .insert(event);
+        .insert({
+          ...event,
+          user_id: user.id
+        });
 
       if (error) throw error;
     },
