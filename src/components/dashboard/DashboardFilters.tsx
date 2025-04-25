@@ -12,7 +12,7 @@ interface DashboardFiltersProps {
   onFilterChange: (filters: {
     projectId?: string;
     status?: string;
-    category?: string;
+    priority?: string;
   }) => void;
 }
 
@@ -21,7 +21,7 @@ export function DashboardFilters({
 }: DashboardFiltersProps) {
   const [projectId, setProjectId] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
-  const [category, setCategory] = useState<string>("all");
+  const [priority, setPriority] = useState<string>("all");
   
   const { toast } = useToast();
   
@@ -41,7 +41,7 @@ export function DashboardFilters({
   const handleReset = () => {
     setProjectId("all");
     setStatus("all");
-    setCategory("all");
+    setPriority("all");
     onFilterChange({});
     toast({
       title: "Filters Reset",
@@ -53,7 +53,7 @@ export function DashboardFilters({
     const filters = {
       projectId: projectId !== "all" ? projectId : undefined,
       status: status !== "all" ? status : undefined,
-      category: category !== "all" ? category : undefined
+      priority: priority !== "all" ? priority : undefined
     };
     onFilterChange(filters);
     toast({
@@ -100,19 +100,16 @@ export function DashboardFilters({
         </div>
 
         <div className="grid gap-1.5 w-full md:w-1/4">
-          <Label htmlFor="category-filter">Task Category</Label>
-          <Select value={category} onValueChange={value => setCategory(value)}>
-            <SelectTrigger id="category-filter">
-              <SelectValue placeholder="All Categories" />
+          <Label htmlFor="priority-filter">Task Priority</Label>
+          <Select value={priority} onValueChange={value => setPriority(value)}>
+            <SelectTrigger id="priority-filter">
+              <SelectValue placeholder="All Priorities" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="development">Development</SelectItem>
-              <SelectItem value="design">Design</SelectItem>
-              <SelectItem value="research">Research</SelectItem>
-              <SelectItem value="planning">Planning</SelectItem>
-              <SelectItem value="testing">Testing</SelectItem>
-              <SelectItem value="documentation">Documentation</SelectItem>
+              <SelectItem value="all">All Priorities</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
             </SelectContent>
           </Select>
         </div>

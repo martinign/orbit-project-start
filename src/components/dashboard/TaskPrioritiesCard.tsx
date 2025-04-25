@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,48 +25,25 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
   const { data: priorityStats, isLoading } = useQuery({
     queryKey: ["task_priorities", filters],
     queryFn: async () => {
-      // Base queries for each priority
-      let highPriorityQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("priority", "high");
+      const priorities = ["high", "medium", "low"];
+      const queries = priorities.map(priority => {
+        let query = supabase
+          .from("project_tasks")
+          .select("id", { count: "exact" })
+          .eq("priority", priority);
+          
+        if (filters.projectId && filters.projectId !== "all") {
+          query = query.eq("project_id", filters.projectId);
+        }
         
-      let mediumPriorityQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("priority", "medium");
+        if (filters.status && filters.status !== "all") {
+          query = query.eq("status", filters.status);
+        }
         
-      let lowPriorityQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("priority", "low");
+        return query;
+      });
       
-      // Apply project filter if provided
-      if (filters.projectId && filters.projectId !== "all") {
-        highPriorityQuery = highPriorityQuery.eq("project_id", filters.projectId);
-        mediumPriorityQuery = mediumPriorityQuery.eq("project_id", filters.projectId);
-        lowPriorityQuery = lowPriorityQuery.eq("project_id", filters.projectId);
-      }
-      
-      // Apply status filter if provided
-      if (filters.status && filters.status !== "all") {
-        highPriorityQuery = highPriorityQuery.eq("status", filters.status);
-        mediumPriorityQuery = mediumPriorityQuery.eq("status", filters.status);
-        lowPriorityQuery = lowPriorityQuery.eq("status", filters.status);
-      }
-      
-      // Apply category filter if provided
-      if (filters.category && filters.category !== "all") {
-        // This would need to be implemented based on how categories are stored
-        // For this example, we're assuming we don't have a category field yet
-      }
-      
-      // Execute all queries in parallel
-      const [highPriority, mediumPriority, lowPriority] = await Promise.all([
-        highPriorityQuery,
-        mediumPriorityQuery,
-        lowPriorityQuery
-      ]);
+      const [highPriority, mediumPriority, lowPriority] = await Promise.all(queries);
       
       if (highPriority.error || mediumPriority.error || lowPriority.error) {
         throw new Error("Failed to fetch task priority statistics");

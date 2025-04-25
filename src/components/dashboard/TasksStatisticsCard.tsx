@@ -5,71 +5,59 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TaskStatusPieChart } from "../charts/TaskStatusPieChart";
 
-export function TasksStatisticsCard({ filters = {} }: { filters?: any }) {
+interface TaskFilters {
+  projectId?: string;
+  status?: string;
+  priority?: string;
+}
+
+export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters }) {
   const { data, isLoading } = useQuery({
     queryKey: ["tasks_statistics", filters],
     queryFn: async () => {
-      // Base queries for each status
-      let notStartedQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("status", "not started");
-        
-      let inProgressQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("status", "in progress");
-        
-      let pendingQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("status", "pending");
-        
-      let completedQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("status", "completed");
-        
-      let stuckedQuery = supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .eq("status", "stucked");
+      const statuses = filters.status 
+        ? [filters.status] 
+        : ["not started", "in progress", "pending", "completed", "stucked"];
       
-      // Apply project filter if provided
-      if (filters.projectId && filters.projectId !== "all") {
-        notStartedQuery = notStartedQuery.eq("project_id", filters.projectId);
-        inProgressQuery = inProgressQuery.eq("project_id", filters.projectId);
-        pendingQuery = pendingQuery.eq("project_id", filters.projectId);
-        completedQuery = completedQuery.eq("project_id", filters.projectId);
-        stuckedQuery = stuckedQuery.eq("project_id", filters.projectId);
-      }
+      const queries = statuses.map(status => {
+        let query = supabase
+          .from("project_tasks")
+          .select("id", { count: "exact" })
+          .eq("status", status);
+        
+        if (filters.projectId && filters.projectId !== "all") {
+          query = query.eq("project_id", filters.projectId);
+        }
+        
+        if (filters.priority && filters.priority !== "all") {
+          query = query.eq("priority", filters.priority);
+        }
+        
+        return query;
+      });
       
-      // Apply category filter if provided
-      if (filters.category && filters.category !== "all") {
-        // This would need to be implemented based on how categories are stored
-        // For this example, we're assuming we don't have a category field yet
-      }
+      const results = await Promise.all(queries);
       
-      // Execute all queries in parallel
-      const [notStarted, inProgress, pending, completed, stucked] = await Promise.all([
-        notStartedQuery,
-        inProgressQuery,
-        pendingQuery,
-        completedQuery,
-        stuckedQuery
-      ]);
-      
-      if (notStarted.error || inProgress.error || pending.error || completed.error || stucked.error) {
+      // Check for errors in any query
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
         throw new Error("Failed to fetch task statistics");
       }
       
-      return [
-        { name: "Not Started", value: notStarted.data?.length || 0, color: "#f87171" },
-        { name: "In Progress", value: inProgress.data?.length || 0, color: "#60a5fa" },
-        { name: "Pending", value: pending.data?.length || 0, color: "#fbbf24" },
-        { name: "Completed", value: completed.data?.length || 0, color: "#4ade80" },
-        { name: "Stucked", value: stucked.data?.length || 0, color: "#fb923c" },
-      ];
+      // Map status colors
+      const statusColors = {
+        "not started": "#f87171",
+        "in progress": "#60a5fa",
+        "pending": "#fbbf24",
+        "completed": "#4ade80",
+        "stucked": "#fb923c"
+      };
+      
+      return statuses.map((status, index) => ({
+        name: status.charAt(0).toUpperCase() + status.slice(1),
+        value: results[index].data?.length || 0,
+        color: statusColors[status as keyof typeof statusColors]
+      }));
     },
     refetchOnWindowFocus: false,
   });
