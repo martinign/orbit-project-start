@@ -1,5 +1,5 @@
 import React from 'react';
-import { format, parseISO, differenceInDays, isBefore, isAfter, isValid } from 'date-fns';
+import { format, parseISO, differenceInDays, isValid } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +19,11 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   if (!task.created_at || !timelineDates.length) return null;
     
   const startDate = parseISO(task.created_at);
+  
+  // Calculate end date based on task status
   const endDate = task.status === 'completed' && task.updated_at 
-    ? parseISO(task.updated_at)
-    : new Date();
+    ? parseISO(task.updated_at)  // Use completion date for completed tasks
+    : new Date();                // Use current date for ongoing tasks
 
   if (!isValid(startDate) || !isValid(endDate)) return null;
 
@@ -34,12 +36,8 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
 
   if (taskStartIndex === -1) return null;
 
-  // Calculate the actual duration in days between start and end dates
-  const lastTimelineDate = timelineDates[timelineDates.length - 1];
-  const effectiveEndDate = isAfter(endDate, lastTimelineDate) ? lastTimelineDate : endDate;
-  
-  // Calculate the duration using the actual dates
-  const durationDays = differenceInDays(effectiveEndDate, startDate) + 1;
+  // Calculate the duration based on actual dates
+  const durationDays = differenceInDays(endDate, startDate) + 1;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -50,6 +48,15 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
       case 'not started':
       default: return 'bg-gray-500';
     }
+  };
+
+  const getStatusStyles = (status: string) => {
+    const baseColor = getStatusColor(status);
+    // Add visual distinction for ongoing tasks
+    if (status !== 'completed') {
+      return `${baseColor} opacity-75 bg-gradient-to-r from-current to-transparent`;
+    }
+    return baseColor;
   };
 
   const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
@@ -72,7 +79,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
         <HoverCard>
           <HoverCardTrigger>
             <div
-              className={`h-6 rounded-md ${getStatusColor(task.status)}`}
+              className={`h-6 rounded-md ${getStatusStyles(task.status)}`}
               style={{ 
                 gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
                 transition: 'all 0.2s ease-in-out'
@@ -124,7 +131,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   <div className="font-medium">Created:</div>
                   <div className="flex items-center">
                     <Calendar className="h-3 w-3 mr-1" />
-                    {format(parseISO(task.created_at), 'MMM dd, yyyy')}
+                    {format(startDate, 'MMM dd, yyyy')}
                   </div>
                 </div>
 
@@ -143,6 +150,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
                     {durationDays} days
+                    {task.status !== 'completed' && ' (ongoing)'}
                   </div>
                 </div>
                 
