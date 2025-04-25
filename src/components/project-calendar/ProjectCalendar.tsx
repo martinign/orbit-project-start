@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
@@ -40,31 +41,38 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
 
+  // Modified query to include user profiles for events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_events')
-        .select('*')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name
+          )
+        `)
         .eq('project_id', projectId);
 
       if (error) throw error;
-      return data as Event[];
+      return data;
     },
   });
 
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['project_team_members', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_team_members')
-        .select('id, full_name')
-        .eq('project_id', projectId);
-
-      if (error) throw error;
-      return data as TeamMember[];
-    },
-  });
+  // Get unique event creators
+  const eventCreators = React.useMemo(() => {
+    const uniqueCreators = new Map();
+    events.forEach(event => {
+      if (event.profiles?.full_name && event.user_id) {
+        uniqueCreators.set(event.user_id, {
+          id: event.user_id,
+          full_name: event.profiles.full_name
+        });
+      }
+    });
+    return Array.from(uniqueCreators.values());
+  }, [events]);
 
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
@@ -101,7 +109,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             <Button variant="outline">
               <CalendarIcon className="mr-2 h-4 w-4" />
               {selectedUserId ? 
-                teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
+                eventCreators.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
                 : 'All Events'}
             </Button>
           </DropdownMenuTrigger>
@@ -109,12 +117,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             <DropdownMenuItem onClick={() => setSelectedUserId(null)}>
               All Events
             </DropdownMenuItem>
-            {teamMembers.map((member) => (
+            {eventCreators.map((creator) => (
               <DropdownMenuItem
-                key={member.id}
-                onClick={() => setSelectedUserId(member.id)}
+                key={creator.id}
+                onClick={() => setSelectedUserId(creator.id)}
               >
-                {member.full_name}
+                {creator.full_name}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
