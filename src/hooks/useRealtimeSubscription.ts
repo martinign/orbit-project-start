@@ -30,12 +30,12 @@ export function useRealtimeSubscription({
       };
     }
 
-    // Create a channel
-    const channelName = `db-changes-${table}`;
+    // Create a unique channel name for this subscription
+    const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
-    // Configure the channel with postgres changes
-    const subscription = channel.on(
+    // Use the correct syntax for postgres_changes subscription
+    channel.on(
       'postgres_changes',
       {
         event: event,
@@ -46,10 +46,7 @@ export function useRealtimeSubscription({
       (payload) => {
         onRecordChange(payload);
       }
-    );
-    
-    // Subscribe to the channel
-    subscription.subscribe();
+    ).subscribe();
 
     // Cleanup function
     return () => {
