@@ -26,7 +26,7 @@ export function useRealtimeSubscription({
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
-    const config = {
+    const config: any = {
       event: event,
       schema: 'public',
       table: table,
@@ -34,7 +34,7 @@ export function useRealtimeSubscription({
     };
 
     channel
-      .on('postgres_changes', config, (payload) => {
+      .on('postgres_changes' as 'system', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
         onRecordChange(payload);
       })

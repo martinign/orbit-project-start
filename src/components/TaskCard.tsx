@@ -1,12 +1,9 @@
 
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
-import { ChevronDown, ChevronRight, List, User, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { format } from 'date-fns';
-import { Calendar } from 'lucide-react';
 import { useSubtasks } from '@/hooks/useSubtasks';
 import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 import { SubtaskItem } from './tasks/SubtaskItem';
@@ -15,6 +12,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import SubtaskDialog from './SubtaskDialog';
 import TaskUpdateDialog from './TaskUpdateDialog';
 import TaskUpdatesDisplay from './TaskUpdatesDisplay';
+import { TaskCardHeader } from './tasks/TaskCardHeader';
+import { TaskMetadata } from './tasks/TaskMetadata';
+import { TaskHoverContent } from './tasks/TaskHoverContent';
 
 interface Task {
   id: string;
@@ -78,38 +78,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setDeleteSubtask(null);
   };
 
-  const handleOpenUpdateDialog = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsUpdateDialogOpen(true);
-  };
-
-  const handleShowUpdates = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsUpdatesDisplayOpen(true);
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return null;
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch {
-      return null;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch(priority?.toLowerCase()) {
-      case 'high':
-        return 'bg-red-200 text-red-800';
-      case 'medium':
-        return 'bg-orange-200 text-orange-800';
-      case 'low':
-        return 'bg-green-200 text-green-800';
-      default:
-        return 'bg-gray-200 text-gray-800';
-    }
-  };
-
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided) => (
@@ -124,22 +92,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
               >
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start w-full">
-                    <div className="flex items-start gap-2 min-w-0 flex-grow">
-                      {subtasks.length > 0 && (
-                        <button 
-                          className="mt-1 flex-shrink-0" 
-                          onClick={toggleExpand}
-                          aria-label={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-gray-500" />
-                          )}
-                        </button>
-                      )}
-                      <h4 className="font-medium truncate">{task.title}</h4>
-                    </div>
+                    <TaskCardHeader
+                      title={task.title}
+                      hasSubtasks={subtasks.length > 0}
+                      isExpanded={isExpanded}
+                      toggleExpand={toggleExpand}
+                    />
                     
                     <TaskActions
                       task={task}
@@ -148,73 +106,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onDelete={handleDeleteConfirm}
                       onUpdate={handleTaskUpdates}
                       onAddSubtask={handleAddSubtask}
-                      onShowUpdates={handleShowUpdates}
+                      onShowUpdates={() => setIsUpdatesDisplayOpen(true)}
                     />
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mt-2 w-full">
-                    <div className="flex flex-wrap items-center gap-2 overflow-hidden w-full">
-                      {assignedToName && (
-                        <div className="flex items-center text-xs text-gray-600 shrink-0">
-                          <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{assignedToName}</span>
-                        </div>
-                      )}
-                      
-                      {subtasks.length > 0 && (
-                        <div className="flex items-center text-xs text-gray-500 shrink-0">
-                          <List className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span>{subtasks.length} subtask{subtasks.length !== 1 ? 's' : ''}</span>
-                        </div>
-                      )}
-                      
-                      {updateCount > 0 && (
-                        <div className="flex items-center text-xs text-gray-500 shrink-0">
-                          <MessageCircle className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span>{updateCount} update{updateCount !== 1 ? 's' : ''}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <TaskMetadata
+                    assignedToName={assignedToName}
+                    subtasksCount={subtasks.length}
+                    updateCount={updateCount}
+                  />
                 </CardContent>
               </Card>
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
-              <div className="space-y-2">
-                <h4 className="font-semibold">{task.title}</h4>
-                
-                {task.description && (
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-500">Description</h5>
-                    <p className="text-sm">{task.description}</p>
-                  </div>
-                )}
-                
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {task.priority && (
-                    <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                  )}
-                  
-                  {task.due_date && formatDate(task.due_date) && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-                      <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-                      {formatDate(task.due_date)}
-                    </span>
-                  )}
-                </div>
-                
-                {assignedToName && (
-                  <div>
-                    <h5 className="text-xs font-medium text-gray-500">Assigned To</h5>
-                    <p className="text-sm flex items-center">
-                      <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                      {assignedToName}
-                    </p>
-                  </div>
-                )}
-              </div>
+              <TaskHoverContent
+                title={task.title}
+                description={task.description}
+                priority={task.priority}
+                dueDate={task.due_date}
+                assignedToName={assignedToName}
+              />
             </HoverCardContent>
           </HoverCard>
 
