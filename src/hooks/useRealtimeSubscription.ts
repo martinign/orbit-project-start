@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { RealtimePostgresChangesPayload, RealtimeChannel } from '@supabase/supabase-js';
 
 type TableName = 'project_tasks' | 'project_notes' | 'project_contacts' | 
                  'project_team_members' | 'project_invitations' | 'projects' | 
@@ -31,28 +31,35 @@ export function useRealtimeSubscription({
       ? { filter: `${filter}=eq.${filterValue}` } 
       : {};
 
-    // Create the channel with the correct configuration
-    const channel = supabase.channel(channelName);
-    
-    // Configure channel to listen for postgres changes
-    const subscription = channel
-      .on(
-        'postgres_changes', 
-        { 
-          event: event,
-          schema: 'public',
-          table: table,
-          ...filterOptions
-        },
-        (payload) => {
-          onRecordChange(payload);
-        }
-      )
-      .subscribe();
+    try {
+      // Create and configure the channel
+      const channel: RealtimeChannel = supabase.channel(channelName)
+        .on('postgres_changes', 
+          { 
+            event: event,
+            schema: 'public',
+            table: table,
+            ...filterOptions
+          }, 
+          onRecordChange
+        );
 
-    // Cleanup function
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      // Subscribe to the channel
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Successfully subscribed to ${table} changes`);
+        }
+        if (status === 'CHANNEL_ERROR') {
+          console.error(`Error subscribing to ${table} changes`);
+        }
+      });
+
+      // Cleanup function
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } catch (error) {
+      console.error('Error setting up realtime subscription:', error);
+    }
   }, [table, event, filter, filterValue, onRecordChange]);
 }
