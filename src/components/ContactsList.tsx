@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,7 @@ import ContactsCardView from "./contacts/ContactsCardView";
 import ContactsEmptyState from "./contacts/ContactsEmptyState";
 import DeleteContactDialog from "./contacts/DeleteContactDialog";
 import EditContactDialog from "./contacts/EditContactDialog";
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ContactsListProps {
   projectId?: string | null;
@@ -71,6 +71,15 @@ const ContactsList: React.FC<ContactsListProps> = ({
       setFilteredContacts([]);
     }
   }, [searchQuery, contacts]);
+
+  useRealtimeSubscription({
+    table: 'project_contacts',
+    filter: projectId ? 'project_id' : undefined,
+    filterValue: projectId || undefined,
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
+    }
+  });
 
   const handleEditContact = (e: React.MouseEvent, contact: Contact) => {
     e.stopPropagation(); // Prevent event bubbling

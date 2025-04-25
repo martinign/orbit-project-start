@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useToast } from '@/hooks/use-toast';
+import { useProjectInvitations } from '@/hooks/useProjectInvitations';
+
 import { Button } from '@/components/ui/button';
 import {
   Calendar,
@@ -43,8 +47,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import TaskDialog from './TaskDialog';
-import { useToast } from '@/hooks/use-toast';
-import { useProjectInvitations } from '@/hooks/useProjectInvitations';
 
 interface Project {
   id: string;
@@ -106,10 +108,8 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     enabled: !!projectId
   });
 
-  // Fetch project invitations
   const { data: projectInvitations = [], isLoading: invitationsLoading } = useProjectInvitations(projectId || null);
 
-  // Filter out unique users (both inviters and invitees) who are active in the project
   const uniqueUsers = React.useMemo(() => {
     const userMap = new Map();
     
@@ -133,7 +133,15 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     return Array.from(userMap.values());
   }, [projectInvitations]);
 
-  // Update the tasks query to filter by selected member
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    filter: projectId ? 'project_id' : undefined,
+    filterValue: projectId || undefined,
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    }
+  });
+
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', projectId, searchTerm, selectedMemberId],
     queryFn: async () => {
@@ -179,6 +187,10 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
   const deleteTask = async () => {
     if (!selectedTask) return;
 
+    queryClient.setQueryData(['tasks', projectId, searchTerm, selectedMemberId], (old: Task[] = []) => {
+      return old.filter(task => task.id !== selectedTask.id);
+    });
+
     try {
       const { error } = await supabase
         .from('project_tasks')
@@ -187,13 +199,12 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-
       toast({
         title: 'Task Deleted',
         description: 'The task has been successfully deleted.',
       });
     } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       console.error('Error deleting task:', error);
       toast({
         title: 'Error',
@@ -206,6 +217,12 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
   };
 
   const updateTaskStatus = async (taskId: string, newStatus: string) => {
+    queryClient.setQueryData(['tasks', projectId, searchTerm, selectedMemberId], (old: Task[] = []) => {
+      return old.map(task => 
+        task.id === taskId ? { ...task, status: newStatus } : task
+      );
+    });
+
     try {
       const { error } = await supabase
         .from('project_tasks')
@@ -214,13 +231,12 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-
       toast({
         title: 'Status Updated',
         description: `Task status changed to ${newStatus}`,
       });
     } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       console.error('Error updating task status:', error);
       toast({
         title: 'Error',

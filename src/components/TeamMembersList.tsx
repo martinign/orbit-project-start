@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +7,7 @@ import TeamMembersCardView from './team-members/TeamMembersCardView';
 import EditTeamMemberDialog from './team-members/EditTeamMemberDialog';
 import DeleteTeamMemberDialog from './team-members/DeleteTeamMemberDialog';
 import TeamMembersEmptyState from './team-members/TeamMembersEmptyState';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface TeamMembersListProps {
   projectId: string | null;
@@ -55,6 +55,15 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       
       return data;
     },
+  });
+
+  useRealtimeSubscription({
+    table: 'project_team_members',
+    filter: projectId ? 'project_id' : undefined,
+    filterValue: projectId || undefined,
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['team_members'] });
+    }
   });
 
   const handleEdit = (member: any) => {

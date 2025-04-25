@@ -1,6 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,8 @@ type ProjectNotesProps = {
   projectId: string | undefined;
 };
 
-const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
-  const { toast } = useToast();
+export default function ProjectNotes({ projectId }: { projectId: string }) {
+  const queryClient = useQueryClient();
   const [notes, setNotes] = useState<ProjectNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -53,37 +54,57 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
     fetchUserId();
   }, []);
 
-  // Fetch project notes
-  const fetchNotes = async () => {
-    if (!projectId) return;
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('project_notes')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      setNotes(data || []);
-    } catch (error) {
-      console.error('Error fetching project notes:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load project notes',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+  // Add real-time subscription
+  useRealtimeSubscription({
+    table: 'project_notes',
+    filter: 'project_id',
+    filterValue: projectId,
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
     }
-  };
+  });
+
+  const { toast } = useToast();
+
+  const { data: notesData, isLoading: notesLoading } = useQuery({
+    queryKey: ['project_notes', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+      
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('project_notes')
+          .select('*')
+          .eq('project_id', projectId)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching project notes:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load project notes',
+          variant: 'destructive',
+        });
+        return [];
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    enabled: !!projectId,
+  });
+
+  useEffect(() => {
+    if (notesData) {
+      setNotes(notesData);
+    }
+  }, [notesData]);
 
   // Set up real-time subscription for notes updates
   useEffect(() => {
     if (!projectId) return;
-
-    fetchNotes();
 
     // Set up realtime subscription
     const channel = supabase
@@ -97,7 +118,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
           filter: `project_id=eq.${projectId}`
         },
         () => {
-          fetchNotes();
+          queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
         }
       )
       .subscribe();
@@ -105,7 +126,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId]);
+  }, [projectId, queryClient]);
 
   // Handle opening the create note dialog
   const handleCreateNote = () => {
@@ -126,6 +147,35 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
   const handleDeleteConfirmation = (note: ProjectNote) => {
     setSelectedNote(note);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddNote = async (note: any) => {
+    // Optimistically add the new note
+    queryClient.setQueryData(['project_notes', projectId], (old: any[] = []) => {
+      return [{ ...note, id: 'temp-' + Date.now() }, ...old];
+    });
+
+    try {
+      const { error } = await supabase
+        .from('project_notes')
+        .insert([note]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Note added successfully',
+      });
+    } catch (error) {
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+      console.error('Error adding note:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add note',
+        variant: 'destructive',
+      });
+    }
   };
 
   // Save a new note
@@ -156,7 +206,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
         title: 'Success',
         description: 'Note created successfully',
       });
-      fetchNotes();
+      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
     } catch (error) {
       console.error('Error creating note:', error);
       toast({
@@ -188,7 +238,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
         title: 'Success',
         description: 'Note updated successfully',
       });
-      fetchNotes();
+      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
     } catch (error) {
       console.error('Error updating note:', error);
       toast({
@@ -216,7 +266,7 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
         title: 'Success',
         description: 'Note deleted successfully',
       });
-      fetchNotes();
+      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
     } catch (error) {
       console.error('Error deleting note:', error);
       toast({
@@ -282,5 +332,3 @@ const ProjectNotes = ({ projectId }: ProjectNotesProps) => {
     </div>
   );
 };
-
-export default ProjectNotes;
