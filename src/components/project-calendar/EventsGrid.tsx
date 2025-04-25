@@ -1,18 +1,10 @@
-
 import { useState } from "react";
 import { format } from "date-fns";
 import { ChevronDown, ChevronUp, Expand } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EventCard } from "./EventCard";
-
 interface Event {
   id: string;
   title: string;
@@ -20,7 +12,6 @@ interface Event {
   user_id: string;
   event_date: string | null;
 }
-
 interface EventsGridProps {
   events: Event[];
   selectedDate: Date | undefined;
@@ -29,23 +20,19 @@ interface EventsGridProps {
   onEdit: (event: Event) => void;
   isLoading: boolean;
 }
-
 export function EventsGrid({
   events,
   selectedDate,
   hasEditAccess,
   onDelete,
   onEdit,
-  isLoading,
+  isLoading
 }: EventsGridProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
   const initialEvents = events.slice(0, 6);
   const remainingEvents = events.slice(6);
   const hasMoreEvents = remainingEvents.length > 0;
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div>
           <CardTitle>Events</CardTitle>
@@ -53,77 +40,30 @@ export function EventsGrid({
             {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'All events'}
           </CardDescription>
         </div>
-        {hasMoreEvents && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 transition-transform"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
+        {hasMoreEvents && <Button variant="ghost" size="icon" className="h-8 w-8 transition-transform" onClick={() => setIsExpanded(!isExpanded)}>
             <Expand className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-          </Button>
-        )}
+          </Button>}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {isLoading ? (
-            <p>Loading events...</p>
-          ) : events.length === 0 ? (
-            <p className="text-muted-foreground">No events found</p>
-          ) : (
-            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+          {isLoading ? <p>Loading events...</p> : events.length === 0 ? <p className="text-muted-foreground">No events found</p> : <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {initialEvents.map((event) => (
-                  <EventCard
-                    key={event.id}
-                    event={event}
-                    onDelete={() => onDelete(event.id)}
-                    onEdit={() => onEdit(event)}
-                    hasEditAccess={hasEditAccess}
-                  />
-                ))}
+                {initialEvents.map(event => <EventCard key={event.id} event={event} onDelete={() => onDelete(event.id)} onEdit={() => onEdit(event)} hasEditAccess={hasEditAccess} />)}
               </div>
 
-              {hasMoreEvents && (
-                <>
+              {hasMoreEvents && <>
                   <CollapsibleContent className="mt-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {remainingEvents.map((event) => (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          onDelete={() => onDelete(event.id)}
-                          onEdit={() => onEdit(event)}
-                          hasEditAccess={hasEditAccess}
-                        />
-                      ))}
+                      {remainingEvents.map(event => <EventCard key={event.id} event={event} onDelete={() => onDelete(event.id)} onEdit={() => onEdit(event)} hasEditAccess={hasEditAccess} />)}
                     </div>
                   </CollapsibleContent>
 
                   <CollapsibleTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full mt-4" 
-                      onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                      {isExpanded ? (
-                        <>
-                          Show Less <ChevronUp className="ml-2 h-4 w-4" />
-                        </>
-                      ) : (
-                        <>
-                          Show More ({remainingEvents.length} more events) <ChevronDown className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
+                    
                   </CollapsibleTrigger>
-                </>
-              )}
-            </Collapsible>
-          )}
+                </>}
+            </Collapsible>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
-
