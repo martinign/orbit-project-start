@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -30,7 +31,7 @@ export function useRealtimeSubscription({
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     
     // Define the filter settings
-    const filterOptions: RealtimePostgresChangesFilter<"*"> = {
+    const filterOptions: RealtimePostgresChangesFilter<'INSERT' | 'UPDATE' | 'DELETE' | '*'> = {
       event: event,
       schema: 'public',
       table: table,
