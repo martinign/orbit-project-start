@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye } from "lucide-react";
+import { Eye, Users, Contact } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { AllInvitationsDialog } from "./AllInvitationsDialog";
@@ -20,10 +20,20 @@ interface InvitationsStatisticsCardProps {
 export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatisticsCardProps) {
   const [showDialog, setShowDialog] = useState(false);
 
-  const { data: invitationStats, isLoading } = useQuery({
-    queryKey: ["invitations_statistics", filters],
+  const { data: combinedStats, isLoading } = useQuery({
+    queryKey: ["combined_statistics", filters],
     queryFn: async () => {
-      // Base queries
+      // Query for team members
+      let teamMembersQuery = supabase
+        .from("project_team_members")
+        .select("id", { count: "exact" });
+      
+      // Query for contacts
+      let contactsQuery = supabase
+        .from("project_contacts")
+        .select("id", { count: "exact" });
+
+      // Base queries for invitations
       let pendingQuery = supabase
         .from("project_invitations")
         .select("id")
@@ -44,6 +54,8 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         pendingQuery = pendingQuery.eq("project_id", filters.projectId);
         acceptedQuery = acceptedQuery.eq("project_id", filters.projectId);
         rejectedQuery = rejectedQuery.eq("project_id", filters.projectId);
+        teamMembersQuery = teamMembersQuery.eq("project_id", filters.projectId);
+        contactsQuery = contactsQuery.eq("project_id", filters.projectId);
       }
       
       // Apply date filters if provided
@@ -59,21 +71,32 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         rejectedQuery = rejectedQuery.lte("updated_at", filters.endDate.toISOString());
       }
       
-      const [pendingResult, acceptedResult, rejectedResult] = await Promise.all([
+      const [
+        pendingResult, 
+        acceptedResult, 
+        rejectedResult,
+        teamMembersResult,
+        contactsResult
+      ] = await Promise.all([
         pendingQuery,
         acceptedQuery,
-        rejectedQuery
+        rejectedQuery,
+        teamMembersQuery,
+        contactsQuery
       ]);
       
-      if (pendingResult.error || acceptedResult.error || rejectedResult.error) {
-        throw new Error("Failed to fetch invitation statistics");
+      if (pendingResult.error || acceptedResult.error || rejectedResult.error || 
+          teamMembersResult.error || contactsResult.error) {
+        throw new Error("Failed to fetch statistics");
       }
       
       return {
         pending: pendingResult.data.length,
         accepted: acceptedResult.data.length,
         rejected: rejectedResult.data.length,
-        total: pendingResult.data.length + acceptedResult.data.length + rejectedResult.data.length
+        total: pendingResult.data.length + acceptedResult.data.length + rejectedResult.data.length,
+        teamMembers: teamMembersResult.data.length,
+        contacts: contactsResult.data.length
       };
     },
     refetchOnWindowFocus: false,
@@ -84,8 +107,8 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-medium">Invitations Status</CardTitle>
-            <CardDescription>Overview of project invitations</CardDescription>
+            <CardTitle className="text-base font-medium">Team Overview</CardTitle>
+            <CardDescription>Team members, contacts & invitations</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -99,26 +122,42 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Total Invitations</span>
-              <span className="text-xl font-bold">{invitationStats?.total || 0}</span>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-500" />
+                <span className="text-sm font-medium">Team Members</span>
+              </div>
+              <span className="text-xl font-bold">{combinedStats?.teamMembers || 0}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t">
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Pending</span>
-                <span className="text-sm font-medium text-yellow-600">{invitationStats?.pending || 0}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Contact className="h-5 w-5 text-green-500" />
+                <span className="text-sm font-medium">Contacts</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Accepted</span>
-                <span className="text-sm font-medium text-green-600">{invitationStats?.accepted || 0}</span>
+              <span className="text-xl font-bold">{combinedStats?.contacts || 0}</span>
+            </div>
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Invitations</span>
+                <span className="text-xl font-bold">{combinedStats?.total || 0}</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-muted-foreground">Rejected</span>
-                <span className="text-sm font-medium text-red-600">{invitationStats?.rejected || 0}</span>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Pending</span>
+                  <span className="text-sm font-medium text-yellow-600">{combinedStats?.pending || 0}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Accepted</span>
+                  <span className="text-sm font-medium text-green-600">{combinedStats?.accepted || 0}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-muted-foreground">Rejected</span>
+                  <span className="text-sm font-medium text-red-600">{combinedStats?.rejected || 0}</span>
+                </div>
               </div>
             </div>
-            {invitationStats?.total > 0 && (
+            {combinedStats?.total > 0 && (
               <Button 
-                variant="default"  // Changed from 'outline' to 'default' for better visibility
+                variant="default"
                 className="w-full mt-4 bg-primary text-white hover:bg-primary/90" 
                 onClick={() => setShowDialog(true)}
               >
@@ -137,4 +176,3 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
     </Card>
   );
 }
-

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,6 @@ import { InvitationsStatisticsCard } from "@/components/dashboard/InvitationsSta
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
-import { ContactsAndTeamCard } from "@/components/dashboard/ContactsAndTeamCard";
 
 interface DashboardFilters {
   projectId?: string;
