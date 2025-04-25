@@ -34,7 +34,7 @@ export const useProjectInvitations = (projectId: string | null) => {
         .eq("project_id", projectId);
 
       if (error) throw error;
-      return data as ProjectInvitation[];
+      return data as unknown as ProjectInvitation[];
     },
     enabled: !!projectId,
   });

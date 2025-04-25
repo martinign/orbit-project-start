@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
@@ -343,7 +342,7 @@ const ProjectDetailsView = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Task Timeline</CardTitle>
-                <CardDescription>View tasks on a timeline</CardDescription>
+                <CardDescription>View tasks on a timeline with completion metrics</CardDescription>
               </div>
             </CardHeader>
             <CardContent>

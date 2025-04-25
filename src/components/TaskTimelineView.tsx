@@ -1,11 +1,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
@@ -18,7 +18,14 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X } from 'lucide-react';
+import { Calendar, Check, Clock, User, Search, Filter, CircleDashed, X, Timer } from 'lucide-react';
+import { useProjectInvitations } from '@/hooks/useProjectInvitations';
+
+interface TaskStatusHistory {
+  task_id: string;
+  status: string;
+  timestamp: string;
+}
 
 interface Task {
   id: string;
@@ -30,6 +37,14 @@ interface Task {
   user_id: string;  // Created by
   assigned_to?: string;  // Assigned to
   created_at: string;
+  completion_time?: number; // Time in hours from created to completed
+}
+
+interface TeamMember {
+  id: string;
+  user_id: string;
+  full_name: string;
+  last_name?: string;
 }
 
 interface TimelineProps {
@@ -42,6 +57,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const queryClient = useQueryClient();
 
   // Query to fetch tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
@@ -72,24 +88,100 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
-      return data as Task[];
+
+      // Calculate completion time for each task
+      const tasksWithCompletionTime = await Promise.all((data || []).map(async (task) => {
+        let completionTime: number | undefined = undefined;
+
+        // For completed tasks, we calculate the completion time
+        if (task.status === 'completed') {
+          // Get task history (this is simulated since we don't have actual history data yet)
+          const createdDate = parseISO(task.created_at);
+          const completedDate = new Date(); // Default to now if we don't know
+          
+          if (task.updated_at) {
+            completionTime = differenceInHours(parseISO(task.updated_at), createdDate);
+          }
+        }
+
+        return {
+          ...task,
+          completion_time: completionTime
+        } as Task;
+      }));
+
+      return tasksWithCompletionTime;
     },
     enabled: !!projectId,
   });
 
-  // Query to fetch team members for filter selection
-  const { data: teamMembers = [], isLoading: teamMembersLoading } = useQuery({
+  // Get project team members (both direct members and those from invitations)
+  const { data: projectTeamMembers = [], isLoading: teamMembersLoading } = useQuery({
     queryKey: ['project_team_members', projectId],
     queryFn: async () => {
       if (!projectId) return [];
       
-      const { data, error } = await supabase
+      const { data: directMembers, error: directError } = await supabase
         .from('project_team_members')
-        .select('user_id, full_name, last_name')
+        .select('user_id, full_name, last_name, id')
         .eq('project_id', projectId);
         
-      if (error) throw error;
-      return data;
+      if (directError) throw directError;
+      
+      // Get project invitations
+      const { data: projectInvitations } = await supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          status,
+          inviter:inviter_id(id, full_name, last_name),
+          invitee:invitee_id(id, full_name, last_name)
+        `)
+        .eq('project_id', projectId)
+        .eq('status', 'accepted');
+      
+      // Combine direct members with invited members
+      const allMembers: TeamMember[] = [
+        ...(directMembers || []).map((member) => ({
+          id: member.id,
+          user_id: member.user_id,
+          full_name: member.full_name || '',
+          last_name: member.last_name || ''
+        }))
+      ];
+      
+      // Add invited members (if they exist)
+      if (projectInvitations) {
+        // Add project invitees
+        projectInvitations.forEach((inv: any) => {
+          if (inv.invitee && inv.status === 'accepted') {
+            const existingMember = allMembers.find(m => m.user_id === inv.invitee.id);
+            if (!existingMember && inv.invitee.id) {
+              allMembers.push({
+                id: inv.id,
+                user_id: inv.invitee.id,
+                full_name: inv.invitee.full_name || '',
+                last_name: inv.invitee.last_name || ''
+              });
+            }
+          }
+          
+          // Add project inviters
+          if (inv.inviter) {
+            const existingMember = allMembers.find(m => m.user_id === inv.inviter.id);
+            if (!existingMember && inv.inviter.id) {
+              allMembers.push({
+                id: inv.id + '_inviter',
+                user_id: inv.inviter.id,
+                full_name: inv.inviter.full_name || '',
+                last_name: inv.inviter.last_name || ''
+              });
+            }
+          }
+        });
+      }
+      
+      return allMembers;
     },
     enabled: !!projectId,
   });
@@ -178,13 +270,13 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     // Task creator
     const TaskCreator = () => {
       const { data: creator } = useUserProfile(task.user_id);
-      return <span>{creator ? `${creator.full_name || ''} ${creator.last_name || ''}` : 'Unknown'}</span>;
+      return <span>{creator?.displayName || 'Unknown'}</span>;
     };
     
     // Task assignee
     const TaskAssignee = () => {
       const { data: assignee } = useUserProfile(task.assigned_to);
-      return <span>{assignee ? `${assignee.full_name || ''} ${assignee.last_name || ''}` : 'Unassigned'}</span>;
+      return <span>{assignee?.displayName || 'Unassigned'}</span>;
     };
     
     return (
@@ -251,6 +343,19 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     }
                   </div>
                 </div>
+
+                {task.status === 'completed' && task.completion_time !== undefined && (
+                  <div className="col-span-2">
+                    <div className="font-medium">Time to complete:</div>
+                    <div className="flex items-center">
+                      <Timer className="h-3 w-3 mr-1" />
+                      {task.completion_time > 24 
+                        ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
+                        : `${Math.round(task.completion_time)} hours`
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </HoverCardContent>
@@ -307,9 +412,9 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
               <SelectGroup>
                 <SelectLabel>Assignee</SelectLabel>
                 <SelectItem value="all">All Members</SelectItem>
-                {teamMembers.map((member) => (
-                  <SelectItem key={member.user_id} value={member.user_id}>
-                    {`${member.full_name || ''} ${member.last_name || ''}`}
+                {projectTeamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.user_id}>
+                    {`${member.full_name || ''} ${member.last_name || ''}`.trim() || 'Unknown'}
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -425,16 +530,24 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                   ))}
                 </div>
                 
-                {/* Task rows */}
-                <div className="space-y-1 py-2">
-                  {filteredTasks.map((task) => (
+                {/* Task rows with horizontal dotted lines */}
+                <div className="space-y-0">
+                  {filteredTasks.map((task, taskIndex) => (
                     <div 
                       key={task.id}
-                      className="grid" 
+                      className={`grid border-b border-gray-100 ${
+                        taskIndex % 2 === 0 ? 'bg-gray-50' : ''
+                      }`}
                       style={{ 
                         gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` 
                       }}
                     >
+                      {/* Add horizontal dotted line */}
+                      <div 
+                        className="absolute w-full border-b border-dotted border-gray-300" 
+                        style={{ left: 0, height: '1px', top: '50%' }}
+                      />
+                      {/* Render the task bar */}
                       {renderTaskBar(task)}
                     </div>
                   ))}
