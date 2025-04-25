@@ -42,6 +42,7 @@ import ProjectNotes from './ProjectNotes';
 import ProjectInvitationsList from './project-invitations/ProjectInvitationsList';
 import { ProjectCalendar } from './project-calendar/ProjectCalendar';
 import TaskTimelineView from './TaskTimelineView';
+import TeamMemberForm from './TeamMemberForm';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +51,7 @@ const ProjectDetailsView = () => {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [contactSearchQuery, setContactSearchQuery] = useState('');
   const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
+  const [isCreateTeamMemberOpen, setIsCreateTeamMemberOpen] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -336,7 +338,6 @@ const ProjectDetailsView = () => {
           />
         </TabsContent>
 
-        {/* Timeline Tab */}
         <TabsContent value="timeline" className="mt-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -459,6 +460,7 @@ const ProjectDetailsView = () => {
                 <Button 
                   className="bg-blue-500 hover:bg-blue-600"
                   size="sm"
+                  onClick={() => setIsCreateTeamMemberOpen(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Team Member
@@ -473,6 +475,27 @@ const ProjectDetailsView = () => {
               />
             </CardContent>
           </Card>
+          
+          <Dialog open={isCreateTeamMemberOpen} onOpenChange={setIsCreateTeamMemberOpen}>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add Team Member</DialogTitle>
+                <DialogDescription>
+                  Add a new team member to this project
+                </DialogDescription>
+              </DialogHeader>
+              <TeamMemberForm 
+                projectId={id}
+                onSuccess={() => {
+                  setIsCreateTeamMemberOpen(false);
+                  toast({
+                    title: "Success",
+                    description: "Team member added successfully",
+                  });
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         <TabsContent value="invites" className="mt-6">
           <Card>
