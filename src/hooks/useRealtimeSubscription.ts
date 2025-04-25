@@ -30,7 +30,8 @@ export function useRealtimeSubscription({
       };
     }
 
-    const channel: RealtimeChannel = supabase.channel('db-changes')
+    const channel = supabase
+      .channel('db-changes')
       .on(
         'postgres_changes',
         {
