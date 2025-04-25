@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, Trash2, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
 import { 
@@ -24,7 +23,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useProjectEvents } from '@/hooks/useProjectEvents';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProjectCalendarProps {
@@ -36,6 +34,7 @@ interface Event {
   title: string;
   description: string | null;
   user_id: string;
+  event_date: string | null;
 }
 
 interface TeamMember {
@@ -47,9 +46,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { hasEditAccess, createEvent, deleteEvent } = useProjectEvents(projectId);
+  const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],
@@ -90,6 +90,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     }
 
     setSelectedDate(date);
+    setEditingEvent(null);
+    setIsEventDialogOpen(true);
+  };
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event);
     setIsEventDialogOpen(true);
   };
 
@@ -163,13 +169,17 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
               ) : filteredEvents.length === 0 ? (
                 <p className="text-muted-foreground">No events found</p>
               ) : (
-                filteredEvents.map((event) => (
-                  <EventWithCreator 
-                    key={event.id} 
-                    event={event}
-                    onDelete={() => deleteEvent.mutate(event.id)} 
-                  />
-                ))
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredEvents.map((event) => (
+                    <EventWithCreator 
+                      key={event.id} 
+                      event={event}
+                      onDelete={() => deleteEvent.mutate(event.id)} 
+                      onEdit={() => handleEditEvent(event)}
+                      hasEditAccess={hasEditAccess}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </CardContent>
@@ -178,7 +188,10 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 
       <EventDialog
         open={isEventDialogOpen}
-        onClose={() => setIsEventDialogOpen(false)}
+        onClose={() => {
+          setIsEventDialogOpen(false);
+          setEditingEvent(null);
+        }}
         onSubmit={async (data) => {
           if (!data.title) {
             toast({
@@ -188,16 +201,32 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
             });
             return;
           }
-          await createEvent.mutateAsync({
-            title: data.title,
-            description: data.description,
-            project_id: projectId,
-            event_date: selectedDate?.toISOString(),
-          });
+
+          if (editingEvent) {
+            await updateEvent.mutateAsync({
+              id: editingEvent.id,
+              title: data.title,
+              description: data.description,
+              project_id: projectId,
+              event_date: data.event_date?.toISOString(),
+            });
+          } else {
+            await createEvent.mutateAsync({
+              title: data.title,
+              description: data.description,
+              project_id: projectId,
+              event_date: selectedDate?.toISOString(),
+            });
+          }
           setIsEventDialogOpen(false);
+          setEditingEvent(null);
         }}
-        mode="create"
-        defaultValues={{
+        mode={editingEvent ? 'edit' : 'create'}
+        defaultValues={editingEvent ? {
+          title: editingEvent.title,
+          description: editingEvent.description || '',
+          event_date: editingEvent.event_date ? new Date(editingEvent.event_date) : undefined,
+        } : {
           title: '',
           description: '',
           event_date: selectedDate
@@ -210,10 +239,14 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
 // Separate component to handle event creator display
 function EventWithCreator({ 
   event, 
-  onDelete 
+  onDelete,
+  onEdit,
+  hasEditAccess
 }: { 
-  event: Event, 
-  onDelete: () => void 
+  event: Event;
+  onDelete: () => void;
+  onEdit: () => void;
+  hasEditAccess: boolean;
 }) {
   const { data: userProfile, isLoading } = useUserProfile(event.user_id);
 
@@ -224,27 +257,39 @@ function EventWithCreator({
   };
 
   return (
-    <div
-      className="flex items-center justify-between p-4 border rounded-lg"
-    >
+    <div className="flex flex-col justify-between h-full p-4 border rounded-lg bg-card">
       <div>
-        <h4 className="font-medium">{event.title}</h4>
+        <h4 className="font-medium mb-2">{event.title}</h4>
         {event.description && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
             {event.description}
           </p>
         )}
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs text-muted-foreground">
           Created by: {getCreatorName()}
         </p>
+        <p className="text-xs text-muted-foreground">
+          Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}
+        </p>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onDelete}
-      >
-        <Trash2 className="h-4 w-4 text-red-500" />
-      </Button>
+      {hasEditAccess && (
+        <div className="flex justify-end gap-2 mt-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onEdit}
+          >
+            <Edit className="h-4 w-4 text-blue-500" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
