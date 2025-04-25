@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, parseISO, differenceInDays, isValid, startOfDay } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
@@ -22,6 +23,14 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   const today = startOfDay(new Date());
   const lastTimelineDate = startOfDay(timelineDates[timelineDates.length - 1]);
 
+  // Find the index where this task should start in the timeline
+  const taskStartIndex = timelineDates.findIndex(date =>
+    startOfDay(date).getTime() === startDate.getTime()
+  );
+
+  // If the task's start date is not in the timeline range, don't render it
+  if (taskStartIndex === -1) return null;
+
   const rawEndDate = task.status === 'completed' && task.updated_at
     ? startOfDay(parseISO(task.updated_at))
     : today;
@@ -30,14 +39,11 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
 
   if (!isValid(startDate) || !isValid(endDate)) return null;
 
-  // 🛠️ Comparación de fechas normalizadas
-  const taskStartIndex = timelineDates.findIndex(date =>
-    startOfDay(date).getTime() === startDate.getTime()
+  // Calculate duration ensuring it doesn't exceed the timeline length
+  const durationDays = Math.min(
+    differenceInDays(endDate, startDate) + 1,
+    timelineDates.length - taskStartIndex
   );
-
-  if (taskStartIndex === -1) return null;
-
-  const durationDays = differenceInDays(endDate, startDate) + 1;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -164,3 +170,4 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
     </div>
   );
 };
+
