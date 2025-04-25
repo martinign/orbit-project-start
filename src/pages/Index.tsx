@@ -1,38 +1,177 @@
+import React from 'react';
+import { format, parseISO, differenceInDays, isValid } from 'date-fns';
+import { Calendar, Clock, User } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Badge } from '@/components/ui/badge';
+import { Task, TeamMember } from '../TaskTimelineView';
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+interface TimelineTaskBarProps {
+  task: Task;
+  timelineDates: Date[];
+  teamMembers: TeamMember[];
+}
 
-const Index = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({ 
+  task, 
+  timelineDates,
+  teamMembers 
+}) => {
+  if (!task.created_at || !timelineDates.length) return null;
+    
+  const startDate = parseISO(task.created_at);
+  const lastTimelineDate = timelineDates[timelineDates.length - 1];
 
-  useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
+  const today = new Date();
+
+  // ✅ Opción 1: Calcular duración real hasta HOY para tareas ongoing
+  const rawEndDate = task.status === 'completed' && task.updated_at 
+    ? parseISO(task.updated_at)
+    : today;
+
+  // ✅ Opción 2: Cortar la barra al final visual del timeline si es necesario
+  const displayEndDate = rawEndDate > lastTimelineDate ? lastTimelineDate : rawEndDate;
+
+  if (!isValid(startDate) || !isValid(displayEndDate)) return null;
+
+  // Find the position in the timeline
+  const taskStartIndex = timelineDates.findIndex(date => 
+    date.getFullYear() === startDate.getFullYear() &&
+    date.getMonth() === startDate.getMonth() &&
+    date.getDate() === startDate.getDate()
+  );
+
+  if (taskStartIndex === -1) return null;
+
+  // Duración real de la barra (limitada por el grid)
+  const durationDays = differenceInDays(displayEndDate, startDate) + 1;
+
+  // Tiempo exacto hasta hoy o hasta finalización (en horas)
+  const completionTimeInHours = task.status === 'completed' && task.updated_at
+    ? Math.round((parseISO(task.updated_at).getTime() - startDate.getTime()) / (1000 * 60 * 60))
+    : null;
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'completed': return 'bg-green-500';
+      case 'in progress': return 'bg-blue-500';
+      case 'stucked': return 'bg-red-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'not started':
+      default: return 'bg-gray-500';
     }
-  }, [user, loading, navigate]);
+  };
+
+  const assignedTeamMember = teamMembers.find(member => member.user_id === task.assigned_to);
+  const createdByTeamMember = teamMembers.find(member => member.user_id === task.user_id);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <div className="text-center max-w-2xl mx-auto p-6">
-        <h1 className="text-4xl font-bold mb-4">Project Management Tool</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          Streamline your projects, collaborate with your team, and boost productivity.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
-            size="lg" 
-            onClick={() => navigate("/auth")}
-            className="w-full sm:w-auto"
-          >
-            Get Started
-          </Button>
+    <div className="flex min-h-[2.5rem] items-center border-b border-gray-100">
+      <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
+        <div className="flex items-center space-x-2">
+          <span className="font-medium truncate">{task.title}</span>
         </div>
+      </div>
+      
+      <div 
+        className="flex-1 grid relative" 
+        style={{ gridTemplateColumns: `repeat(${timelineDates.length}, minmax(30px, 1fr))` }}
+      >
+        <div className="absolute w-full border-b border-dotted border-gray-300" style={{ top: '50%' }} />
+        
+        <HoverCard>
+          <HoverCardTrigger>
+            <div
+              className={`h-6 rounded-md ${getStatusColor(task.status)}`}
+              style={{ 
+                gridColumn: `${taskStartIndex + 1} / span ${Math.max(1, durationDays)}`,
+                transition: 'all 0.2s ease-in-out'
+              }}
+            />
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80">
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold">{task.title}</h3>
+              {task.description && (
+                <p className="text-sm text-gray-600">{task.description}</p>
+              )}
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="font-medium">Status:</div>
+                  <Badge className={getStatusColor(task.status)}>{task.status}</Badge>
+                </div>
+                
+                <div>
+                  <div className="font-medium">Priority:</div>
+                  <span className="capitalize">{task.priority}</span>
+                </div>
+                
+                <div>
+                  <div className="font-medium">Created by:</div>
+                  <div className="flex items-center">
+                    <User className="h-3 w-3 mr-1" />
+                    <span>
+                      {createdByTeamMember 
+                        ? `${createdByTeamMember.full_name || ''} ${createdByTeamMember.last_name || ''}`.trim() 
+                        : 'Unknown'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="font-medium">Assigned to:</div>
+                  <div className="flex items-center">
+                    <User className="h-3 w-3 mr-1" />
+                    <span>
+                      {assignedTeamMember 
+                        ? `${assignedTeamMember.full_name || ''} ${assignedTeamMember.last_name || ''}`.trim() 
+                        : 'Unassigned'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="font-medium">Created:</div>
+                  <div className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {format(startDate, 'MMM dd, yyyy')}
+                  </div>
+                </div>
+
+                {task.status === 'completed' && task.updated_at && (
+                  <div>
+                    <div className="font-medium">Completed:</div>
+                    <div className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {format(parseISO(task.updated_at), 'MMM dd, yyyy')}
+                    </div>
+                  </div>
+                )}
+                
+                <div>
+                  <div className="font-medium">Duration:</div>
+                  <div className="flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {differenceInDays(rawEndDate, startDate) + 1} days
+                    {task.status !== 'completed' && ' (ongoing)'}
+                  </div>
+                </div>
+                
+                {completionTimeInHours !== null && (
+                  <div>
+                    <div className="font-medium">Time to complete:</div>
+                    <div className="flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {completionTimeInHours > 24 
+                        ? `${Math.floor(completionTimeInHours / 24)} days ${completionTimeInHours % 24} hours`
+                        : `${completionTimeInHours} hours`}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       </div>
     </div>
   );
 };
-
-export default Index;
