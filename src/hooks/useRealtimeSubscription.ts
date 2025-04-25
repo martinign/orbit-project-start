@@ -30,20 +30,20 @@ export function useRealtimeSubscription({
       };
     }
 
-    // Create the subscription configuration
-    const subscriptionConfig = {
-      event,
-      schema: 'public',
-      table,
-      ...filterObject
-    };
-
-    // Create and subscribe to the channel
     const channel = supabase
       .channel('db-changes')
-      .on('postgres_changes', subscriptionConfig, (payload) => {
-        onRecordChange(payload);
-      })
+      .on(
+        'postgres_changes', 
+        { 
+          event, 
+          schema: 'public', 
+          table,
+          ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
+        },
+        (payload) => {
+          onRecordChange(payload);
+        }
+      )
       .subscribe();
 
     return () => {
