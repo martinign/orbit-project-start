@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -31,14 +32,14 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
     <div className="rounded-md border">
       <ScrollArea className="h-[400px]">
         <Table>
-          <TableHeader className="sticky top-0 bg-background">
-            <TableRow>
-              <TableHead>First Name</TableHead>
-              <TableHead>Last Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Location</TableHead>
-              {!projectId && <TableHead>Project</TableHead>}
-              <TableHead className="text-right">Actions</TableHead>
+          <TableHeader>
+            <TableRow className="sticky top-0 z-20 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">First Name</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Last Name</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Role</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Location</TableHead>
+              {!projectId && <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Project</TableHead>}
+              <TableHead className="h-11 px-4 text-right align-middle font-medium text-muted-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

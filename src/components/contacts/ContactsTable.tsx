@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,16 +23,16 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
     <div className="rounded-md border">
       <ScrollArea className="h-[400px]">
         <Table>
-          <TableHeader className="sticky top-0 bg-background">
-            <TableRow>
-              <TableHead>First Name</TableHead>
-              <TableHead>Last Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Role</TableHead>
-              {!projectId && <TableHead>Project</TableHead>}
-              <TableHead className="text-right">Actions</TableHead>
+          <TableHeader>
+            <TableRow className="sticky top-0 z-20 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">First Name</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Last Name</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Email</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Phone</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Company</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Role</TableHead>
+              {!projectId && <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Project</TableHead>}
+              <TableHead className="h-11 px-4 text-right align-middle font-medium text-muted-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
