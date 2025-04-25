@@ -143,6 +143,22 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>NAVIGATION</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link to="/dashboard">
+                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-blue-500/10 transition-colors duration-200">
+                    <LayoutDashboard className="text-blue-500" />
+                    <span>Dashboard</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
           <SidebarGroupLabel>PROJECTS</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -234,22 +250,6 @@ export function AppSidebar() {
                     <span>No recent projects</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>NAVIGATION</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <Link to="/dashboard">
-                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-blue-500/10 transition-colors duration-200">
-                    <LayoutDashboard className="text-blue-500" />
-                    <span>Dashboard</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
