@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { format, parseISO, differenceInDays, isBefore, isAfter } from 'date-fns';
+import { format, parseISO, differenceInDays, isBefore, isAfter, isValid } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +23,8 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
     ? parseISO(task.updated_at)
     : new Date();
 
+  if (!isValid(startDate) || !isValid(endDate)) return null;
+
   // Find the position in the timeline
   const taskStartIndex = timelineDates.findIndex(date => 
     date.getFullYear() === startDate.getFullYear() &&
@@ -33,16 +34,12 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
 
   if (taskStartIndex === -1) return null;
 
-  // Calculate the duration, ensuring we don't exceed the timeline
+  // Calculate the actual duration in days between start and end dates
   const lastTimelineDate = timelineDates[timelineDates.length - 1];
   const effectiveEndDate = isAfter(endDate, lastTimelineDate) ? lastTimelineDate : endDate;
-  const taskEndIndex = timelineDates.findIndex(date => 
-    date.getFullYear() === effectiveEndDate.getFullYear() &&
-    date.getMonth() === effectiveEndDate.getMonth() &&
-    date.getDate() === effectiveEndDate.getDate()
-  );
-
-  const durationDays = taskEndIndex - taskStartIndex + 1;
+  
+  // Calculate the duration using the actual dates
+  const durationDays = differenceInDays(effectiveEndDate, startDate) + 1;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
