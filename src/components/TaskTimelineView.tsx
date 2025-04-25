@@ -102,42 +102,34 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-  const timelineDates = useMemo(() => {
-    if (!tasks.length) return [];
+const timelineDates = useMemo(() => {
+  if (!tasks.length) return [];
 
-    const today = startOfDay(new Date());
+  const today = startOfDay(new Date());
 
-    const rangeDays = {
-      week: 7,
-      month: 30,
-      quarter: 90,
-    }[timeRange];
+  const rangeDays = {
+    week: 7,
+    month: 30,
+    quarter: 90,
+  }[timeRange];
 
-    const taskDates = tasks.map(task => parseISO(task.created_at));
-    const earliestTaskDate = startOfDay(min(taskDates));
+  const taskStartDates = tasks.map(task => startOfDay(parseISO(task.created_at)));
 
-    const startDate = min([earliestTaskDate, addDays(today, -rangeDays + 1)]);
+  const earliestTaskDate = min(taskStartDates);
+  const startDate = startOfDay(min([earliestTaskDate, addDays(today, -rangeDays + 1)]));
+  const endDate = startOfDay(max([today, ...taskStartDates]));
 
-    const endDate = max([today, ...taskDates.map(date => startOfDay(date))]);
+  const dates: Date[] = [];
+  let currentDate = startDate;
 
-    const dates: Date[] = [];
-    let currentDate = startDate;
+  while (currentDate <= endDate) {
+    dates.push(startOfDay(currentDate)); // 👈 importante para que coincida con getTime()
+    currentDate = addDays(currentDate, 1);
+  }
 
-    while (currentDate <= endDate) {
-      dates.push(startOfDay(currentDate));
-      currentDate = addDays(currentDate, 1);
-    }
+  return dates;
+}, [tasks, timeRange]);
 
-    return dates;
-  }, [tasks, timeRange]);
-
-  const filteredTasks = useMemo(() => {
-    if (!tasks.length) return [];
-    return tasks.filter(task => {
-      if (!task.created_at) return false;
-      return true;
-    });
-  }, [tasks, timeRange]);
 
   if (tasksLoading) {
     return <div className="flex justify-center items-center h-64">Loading timeline...</div>;
