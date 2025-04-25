@@ -19,7 +19,7 @@ export const useUserProfile = (userId?: string | null) => {
         .from("profiles")
         .select("id, full_name, last_name")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching user profile:", error);
@@ -29,6 +29,16 @@ export const useUserProfile = (userId?: string | null) => {
           full_name: "", 
           last_name: "",
           displayName: "Unknown User" 
+        };
+      }
+      
+      // If no data found, return default profile
+      if (!data) {
+        return {
+          id: userId,
+          full_name: "",
+          last_name: "",
+          displayName: "Unknown User"
         };
       }
       

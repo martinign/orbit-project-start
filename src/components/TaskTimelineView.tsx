@@ -234,18 +234,55 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   
   // Task rendering helper
   const renderTaskBar = (task: Task) => {
+    if (!task.created_at) return null;
+    
     const startDate = parseISO(task.created_at);
     const endDate = task.due_date ? parseISO(task.due_date) : new Date();
     
-    // Calculate task position and width
-    const taskStartDay = Math.max(0, differenceInDays(startDate, timelineDates[0]));
-    const taskDuration = Math.max(1, differenceInDays(endDate, startDate) + 1);
-    const taskWidth = Math.min(taskDuration, timelineDates.length - taskStartDay);
+    // Check if the task falls within our current timeline view
+    const firstTimelineDate = timelineDates[0];
+    const lastTimelineDate = timelineDates[timelineDates.length - 1];
     
-    // Skip tasks that don't fall within the current timeline view
-    if (taskStartDay >= timelineDates.length || taskStartDay + taskWidth <= 0) {
+    // Skip tasks that are completely outside our timeline view
+    if (startDate > lastTimelineDate || (task.due_date && parseISO(task.due_date) < firstTimelineDate)) {
       return null;
     }
+    
+    // Calculate task position and width based on actual dates
+    // Find the index of the day in our timeline that matches or is after the task start date
+    let taskStartDayIndex = 0;
+    while (taskStartDayIndex < timelineDates.length && timelineDates[taskStartDayIndex] < startDate) {
+      taskStartDayIndex++;
+    }
+    
+    // If start date is before first timeline date, clamp to the first day
+    if (taskStartDayIndex >= timelineDates.length) {
+      taskStartDayIndex = 0; // Task starts before our timeline view
+    }
+    
+    // Calculate duration or use at least 1 day
+    let taskDuration = 1; // Minimum 1 day
+    if (task.due_date) {
+      const dueDate = parseISO(task.due_date);
+      let endDayIndex = timelineDates.findIndex(date => 
+        date.getFullYear() === dueDate.getFullYear() && 
+        date.getMonth() === dueDate.getMonth() && 
+        date.getDate() === dueDate.getDate()
+      );
+      
+      if (endDayIndex === -1) {
+        // Due date is after our timeline, extend to end of timeline
+        endDayIndex = timelineDates.length - 1;
+      }
+      
+      taskDuration = Math.max(1, endDayIndex - taskStartDayIndex + 1);
+    } else {
+      // No due date, just show 1 day
+      taskDuration = 1;
+    }
+    
+    // Ensure task is visible within timeline bounds
+    taskDuration = Math.min(taskDuration, timelineDates.length - taskStartDayIndex);
     
     const getStatusColor = (status: string) => {
       switch (status.toLowerCase()) {
@@ -264,7 +301,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     };
 
     const barStyle = {
-      gridColumn: `${taskStartDay + 1} / span ${taskWidth}`,
+      gridColumn: `${taskStartDayIndex + 1} / span ${taskDuration}`,
     };
     
     // Task creator
@@ -535,7 +572,7 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                   {filteredTasks.map((task, taskIndex) => (
                     <div 
                       key={task.id}
-                      className={`grid border-b border-gray-100 ${
+                      className={`grid border-b border-gray-100 relative ${
                         taskIndex % 2 === 0 ? 'bg-gray-50' : ''
                       }`}
                       style={{ 
