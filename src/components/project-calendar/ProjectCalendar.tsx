@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { Plus, Calendar as CalendarIcon, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile'; // Import the hook
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -54,7 +55,6 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         .from('project_events')
         .select('*')
         .eq('project_id', projectId)
-
 
       if (error) throw error;
       return data as Event[];
@@ -205,26 +205,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
                 <p className="text-muted-foreground">No events found</p>
               ) : (
                 filteredEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div>
-                      <h4 className="font-medium">{event.title}</h4>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {event.description}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteEvent.mutate(event.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
+                  <EventWithCreator 
+                    key={event.id} 
+                    event={event} 
+                    onDelete={() => deleteEvent.mutate(event.id)} 
+                  />
                 ))
               )}
             </div>
@@ -252,6 +237,48 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         }}
         mode="create"
       />
+    </div>
+  );
+}
+
+// Separate component to handle event creator display
+function EventWithCreator({ 
+  event, 
+  onDelete 
+}: { 
+  event: Event, 
+  onDelete: () => void 
+}) {
+  const { data: userProfile, isLoading } = useUserProfile(event.user_id);
+
+  const getCreatorName = () => {
+    if (isLoading) return 'Loading...';
+    if (!userProfile) return 'Unknown User';
+    return `${userProfile.full_name}${userProfile.last_name ? ' ' + userProfile.last_name : ''}`;
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between p-4 border rounded-lg"
+    >
+      <div>
+        <h4 className="font-medium">{event.title}</h4>
+        {event.description && (
+          <p className="text-sm text-muted-foreground">
+            {event.description}
+          </p>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">
+          Created by: {getCreatorName()}
+        </p>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+      >
+        <Trash2 className="h-4 w-4 text-red-500" />
+      </Button>
     </div>
   );
 }

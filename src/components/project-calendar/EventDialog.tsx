@@ -3,8 +3,6 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -50,7 +41,6 @@ export function EventDialog({
     defaultValues: defaultValues || {
       title: "",
       description: "",
-
     },
   });
 
@@ -60,7 +50,6 @@ export function EventDialog({
       form.reset(defaultValues || {
         title: "",
         description: "",
-
       });
     }
   }, [open, defaultValues, form]);
