@@ -1,14 +1,6 @@
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-
 interface Event {
   id: string;
   title: string;
@@ -16,64 +8,48 @@ interface Event {
   user_id: string;
   event_date: string | null;
 }
-
 interface CalendarCardProps {
   selectedDate: Date | undefined;
   onSelect: (date: Date | undefined) => void;
   hasEditAccess: boolean;
   events: Event[];
 }
-
-export function CalendarCard({ 
-  selectedDate, 
-  onSelect, 
+export function CalendarCard({
+  selectedDate,
+  onSelect,
   hasEditAccess,
-  events 
+  events
 }: CalendarCardProps) {
-  const eventDates = events
-    .filter(event => event.event_date)
-    .reduce((acc: { [key: string]: boolean }, event) => {
-      if (event.event_date) {
-        const date = new Date(event.event_date).toISOString().split('T')[0];
-        acc[date] = true;
-      }
-      return acc;
-    }, {});
-
+  const eventDates = events.filter(event => event.event_date).reduce((acc: {
+    [key: string]: boolean;
+  }, event) => {
+    if (event.event_date) {
+      const date = new Date(event.event_date).toISOString().split('T')[0];
+      acc[date] = true;
+    }
+    return acc;
+  }, {});
   const hasEvent = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return eventDates[dateStr];
   };
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Calendar</CardTitle>
         <CardDescription>
-          {hasEditAccess 
-            ? "Click a date to create an event" 
-            : "Select a date to view events"}
+          {hasEditAccess ? "Click a date to create an event" : "Select a date to view events"}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={onSelect}
-          className={cn(
-            "pointer-events-auto bg-gray-100",
-            hasEditAccess && "hover:cursor-pointer"
-          )}
-          modifiers={{ hasEvent: Object.keys(eventDates).map(d => new Date(d)) }}
-          modifiersStyles={{
-            hasEvent: {
-              backgroundColor: "#E6F6FB",
-              color: "#1EAEDB",
-              fontWeight: "bold"
-            }
-          }}
-        />
+      <CardContent className="bg-zinc-100">
+        <Calendar mode="single" selected={selectedDate} onSelect={onSelect} modifiers={{
+        hasEvent: Object.keys(eventDates).map(d => new Date(d))
+      }} modifiersStyles={{
+        hasEvent: {
+          backgroundColor: "#E6F6FB",
+          color: "#1EAEDB",
+          fontWeight: "bold"
+        }
+      }} className="" />
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
