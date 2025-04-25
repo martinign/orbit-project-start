@@ -5,39 +5,61 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function InvitationsStatisticsCard() {
+export function InvitationsStatisticsCard({ filters = {} }: { filters?: any }) {
   const { data: invitationStats, isLoading } = useQuery({
-    queryKey: ["invitations_statistics"],
+    queryKey: ["invitations_statistics", filters],
     queryFn: async () => {
-      // Get pending invitations
-      const { data: pendingInvitations, error: pendingError } = await supabase
+      // Base queries
+      let pendingQuery = supabase
         .from("project_invitations")
         .select("id")
         .eq("status", "pending");
       
-      if (pendingError) throw pendingError;
-
-      // Get accepted invitations
-      const { data: acceptedInvitations, error: acceptedError } = await supabase
+      let acceptedQuery = supabase
         .from("project_invitations")
         .select("id")
         .eq("status", "accepted");
       
-      if (acceptedError) throw acceptedError;
-
-      // Get rejected invitations
-      const { data: rejectedInvitations, error: rejectedError } = await supabase
+      let rejectedQuery = supabase
         .from("project_invitations")
         .select("id")
         .eq("status", "rejected");
+        
+      // Apply project filter if provided
+      if (filters.projectId && filters.projectId !== "all") {
+        pendingQuery = pendingQuery.eq("project_id", filters.projectId);
+        acceptedQuery = acceptedQuery.eq("project_id", filters.projectId);
+        rejectedQuery = rejectedQuery.eq("project_id", filters.projectId);
+      }
       
-      if (rejectedError) throw rejectedError;
+      // Apply date filters if provided
+      if (filters.startDate) {
+        pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
+        acceptedQuery = acceptedQuery.gte("updated_at", filters.startDate.toISOString());
+        rejectedQuery = rejectedQuery.gte("updated_at", filters.startDate.toISOString());
+      }
+      
+      if (filters.endDate) {
+        pendingQuery = pendingQuery.lte("updated_at", filters.endDate.toISOString());
+        acceptedQuery = acceptedQuery.lte("updated_at", filters.endDate.toISOString());
+        rejectedQuery = rejectedQuery.lte("updated_at", filters.endDate.toISOString());
+      }
+      
+      const [pendingResult, acceptedResult, rejectedResult] = await Promise.all([
+        pendingQuery,
+        acceptedQuery,
+        rejectedQuery
+      ]);
+      
+      if (pendingResult.error || acceptedResult.error || rejectedResult.error) {
+        throw new Error("Failed to fetch invitation statistics");
+      }
       
       return {
-        pending: pendingInvitations.length,
-        accepted: acceptedInvitations.length,
-        rejected: rejectedInvitations.length,
-        total: pendingInvitations.length + acceptedInvitations.length + rejectedInvitations.length
+        pending: pendingResult.data.length,
+        accepted: acceptedResult.data.length,
+        rejected: rejectedResult.data.length,
+        total: pendingResult.data.length + acceptedResult.data.length + rejectedResult.data.length
       };
     },
     refetchOnWindowFocus: false,

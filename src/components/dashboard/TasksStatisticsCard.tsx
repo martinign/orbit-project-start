@@ -5,39 +5,71 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TaskStatusPieChart } from "../charts/TaskStatusPieChart";
 
-export function TasksStatisticsCard() {
+export function TasksStatisticsCard({ filters = {} }: { filters?: any }) {
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks_statistics"],
+    queryKey: ["tasks_statistics", filters],
     queryFn: async () => {
-      const { data: notStarted, error: error1 } = await supabase
+      // Base queries for each status
+      let notStartedQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
         .eq("status", "not started");
         
-      const { data: inProgress, error: error2 } = await supabase
+      let inProgressQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
         .eq("status", "in progress");
         
-      const { data: completed, error: error3 } = await supabase
+      let completedQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
         .eq("status", "completed");
         
-      const { data: blocked, error: error4 } = await supabase
+      let blockedQuery = supabase
         .from("project_tasks")
         .select("id", { count: "exact" })
         .eq("status", "blocked");
       
-      if (error1 || error2 || error3 || error4) {
+      // Apply project filter if provided
+      if (filters.projectId && filters.projectId !== "all") {
+        notStartedQuery = notStartedQuery.eq("project_id", filters.projectId);
+        inProgressQuery = inProgressQuery.eq("project_id", filters.projectId);
+        completedQuery = completedQuery.eq("project_id", filters.projectId);
+        blockedQuery = blockedQuery.eq("project_id", filters.projectId);
+      }
+      
+      // Apply date filters if provided
+      if (filters.startDate) {
+        notStartedQuery = notStartedQuery.gte("updated_at", filters.startDate.toISOString());
+        inProgressQuery = inProgressQuery.gte("updated_at", filters.startDate.toISOString());
+        completedQuery = completedQuery.gte("updated_at", filters.startDate.toISOString());
+        blockedQuery = blockedQuery.gte("updated_at", filters.startDate.toISOString());
+      }
+      
+      if (filters.endDate) {
+        notStartedQuery = notStartedQuery.lte("updated_at", filters.endDate.toISOString());
+        inProgressQuery = inProgressQuery.lte("updated_at", filters.endDate.toISOString());
+        completedQuery = completedQuery.lte("updated_at", filters.endDate.toISOString());
+        blockedQuery = blockedQuery.lte("updated_at", filters.endDate.toISOString());
+      }
+      
+      // Execute all queries in parallel
+      const [notStarted, inProgress, completed, blocked] = await Promise.all([
+        notStartedQuery,
+        inProgressQuery,
+        completedQuery,
+        blockedQuery
+      ]);
+      
+      if (notStarted.error || inProgress.error || completed.error || blocked.error) {
         throw new Error("Failed to fetch task statistics");
       }
       
       return [
-        { name: "Not Started", value: notStarted?.length || 0, color: "#f87171" },
-        { name: "In Progress", value: inProgress?.length || 0, color: "#60a5fa" },
-        { name: "Completed", value: completed?.length || 0, color: "#4ade80" },
-        { name: "Blocked", value: blocked?.length || 0, color: "#fb923c" },
+        { name: "Not Started", value: notStarted.data?.length || 0, color: "#f87171" },
+        { name: "In Progress", value: inProgress.data?.length || 0, color: "#60a5fa" },
+        { name: "Completed", value: completed.data?.length || 0, color: "#4ade80" },
+        { name: "Blocked", value: blocked.data?.length || 0, color: "#fb923c" },
       ];
     },
     refetchOnWindowFocus: false,

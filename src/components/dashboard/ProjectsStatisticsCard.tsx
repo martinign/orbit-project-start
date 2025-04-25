@@ -5,33 +5,59 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectsBarChart } from "../charts/ProjectsBarChart";
 
-export function ProjectsStatisticsCard() {
+export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
   const { data: projects, isLoading } = useQuery({
-    queryKey: ["projects_statistics"],
+    queryKey: ["projects_statistics", filters],
     queryFn: async () => {
-      const { data: activeProjects, error: activeError } = await supabase
+      let activeQuery = supabase
         .from("projects")
         .select("status")
         .eq("status", "active");
       
-      const { data: pendingProjects, error: pendingError } = await supabase
+      let pendingQuery = supabase
         .from("projects")
         .select("status")
         .eq("status", "pending");
         
-      const { data: completedProjects, error: completedError } = await supabase
+      let completedQuery = supabase
         .from("projects")
         .select("status")
         .eq("status", "completed");
-        
-      if (activeError || pendingError || completedError) {
+      
+      // Apply date filters if provided
+      if (filters.startDate) {
+        activeQuery = activeQuery.gte("updated_at", filters.startDate.toISOString());
+        pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
+        completedQuery = completedQuery.gte("updated_at", filters.startDate.toISOString());
+      }
+      
+      if (filters.endDate) {
+        activeQuery = activeQuery.lte("updated_at", filters.endDate.toISOString());
+        pendingQuery = pendingQuery.lte("updated_at", filters.endDate.toISOString());
+        completedQuery = completedQuery.lte("updated_at", filters.endDate.toISOString());
+      }
+      
+      // Filter by specific project if provided
+      if (filters.projectId && filters.projectId !== "all") {
+        activeQuery = activeQuery.eq("id", filters.projectId);
+        pendingQuery = pendingQuery.eq("id", filters.projectId);
+        completedQuery = completedQuery.eq("id", filters.projectId);
+      }
+      
+      const [activeResult, pendingResult, completedResult] = await Promise.all([
+        activeQuery,
+        pendingQuery,
+        completedQuery
+      ]);
+      
+      if (activeResult.error || pendingResult.error || completedResult.error) {
         throw new Error("Failed to fetch project statistics");
       }
       
       return [
-        { name: "Active", value: activeProjects?.length || 0, color: "#4ade80" },
-        { name: "Pending", value: pendingProjects?.length || 0, color: "#fbbf24" },
-        { name: "Completed", value: completedProjects?.length || 0, color: "#60a5fa" }
+        { name: "Active", value: activeResult.data?.length || 0, color: "#4ade80" },
+        { name: "Pending", value: pendingResult.data?.length || 0, color: "#fbbf24" },
+        { name: "Completed", value: completedResult.data?.length || 0, color: "#60a5fa" }
       ];
     },
     refetchOnWindowFocus: false,

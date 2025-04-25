@@ -71,16 +71,25 @@ const DashboardHome = () => {
     };
   }, [queryClient]);
 
+  // Invalidate queries when filters change
+  useEffect(() => {
+    // This ensures charts and statistics are refreshed when filters change
+    queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
+    queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
+    queryClient.invalidateQueries({ queryKey: ["team_statistics"] });
+    queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
+  }, [filters, queryClient]);
+
   return (
     <div className="w-full space-y-6">
       <DashboardHeader />
       <DashboardFilters onFilterChange={setFilters} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ProjectsStatisticsCard />
-        <TasksStatisticsCard />
-        <TeamStatisticsCard />
-        <InvitationsStatisticsCard />
+        <ProjectsStatisticsCard filters={filters} />
+        <TasksStatisticsCard filters={filters} />
+        <TeamStatisticsCard filters={filters} />
+        <InvitationsStatisticsCard filters={filters} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
