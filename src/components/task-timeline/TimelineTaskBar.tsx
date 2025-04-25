@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format, parseISO, differenceInDays, isBefore, isAfter } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
@@ -35,7 +36,13 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   // Calculate the duration, ensuring we don't exceed the timeline
   const lastTimelineDate = timelineDates[timelineDates.length - 1];
   const effectiveEndDate = isAfter(endDate, lastTimelineDate) ? lastTimelineDate : endDate;
-  const durationDays = differenceInDays(effectiveEndDate, timelineDates[taskStartIndex]) + 1;
+  const taskEndIndex = timelineDates.findIndex(date => 
+    date.getFullYear() === effectiveEndDate.getFullYear() &&
+    date.getMonth() === effectiveEndDate.getMonth() &&
+    date.getDate() === effectiveEndDate.getDate()
+  );
+
+  const durationDays = taskEndIndex - taskStartIndex + 1;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
