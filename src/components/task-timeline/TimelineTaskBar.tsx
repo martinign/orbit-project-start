@@ -1,5 +1,5 @@
 import React from 'react';
-import { format, parseISO, differenceInDays, isValid } from 'date-fns';
+import { format, parseISO, differenceInDays, isValid, startOfDay } from 'date-fns';
 import { Calendar, Clock, User } from 'lucide-react';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Badge } from '@/components/ui/badge';
@@ -17,18 +17,19 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   teamMembers 
 }) => {
   if (!task.created_at || !timelineDates.length) return null;
-    
-  const startDate = parseISO(task.created_at);
+
+  const startDate = startOfDay(parseISO(task.created_at));
   const lastTimelineDate = timelineDates[timelineDates.length - 1];
-  
-  // Calculate end date based on task status
-  const endDate = task.status === 'completed' && task.updated_at 
-    ? parseISO(task.updated_at)  // Use completion date for completed tasks
-    : lastTimelineDate;          // Use last timeline date for ongoing tasks
+  const today = startOfDay(new Date());
+
+  const rawEndDate = task.status === 'completed' && task.updated_at
+    ? startOfDay(parseISO(task.updated_at))
+    : today;
+
+  const endDate = rawEndDate > lastTimelineDate ? lastTimelineDate : rawEndDate;
 
   if (!isValid(startDate) || !isValid(endDate)) return null;
 
-  // Find the position in the timeline
   const taskStartIndex = timelineDates.findIndex(date => 
     date.getFullYear() === startDate.getFullYear() &&
     date.getMonth() === startDate.getMonth() &&
@@ -37,7 +38,6 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
 
   if (taskStartIndex === -1) return null;
 
-  // Calculate the duration based on actual dates
   const durationDays = differenceInDays(endDate, startDate) + 1;
 
   const getStatusColor = (status: string) => {
@@ -141,7 +141,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   <div className="font-medium">Duration:</div>
                   <div className="flex items-center">
                     <Clock className="h-3 w-3 mr-1" />
-                    {durationDays} days
+                    {differenceInDays(rawEndDate, startDate) + 1} days
                     {task.status !== 'completed' && ' (ongoing)'}
                   </div>
                 </div>
@@ -152,9 +152,8 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                     <div className="flex items-center">
                       <Clock className="h-3 w-3 mr-1" />
                       {task.completion_time > 24 
-                        ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
-                        : `${Math.round(task.completion_time)} hours`
-                      }
+                        ? `${Math.floor(task.completion_time / 24)} days ${task.completion_time % 24} hours`
+                        : `${task.completion_time} hours`}
                     </div>
                   </div>
                 )}
