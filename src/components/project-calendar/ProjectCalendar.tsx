@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
@@ -61,7 +62,8 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         .eq('project_id', projectId);
 
       if (error) throw error;
-      return data as Event[];
+      // Fixed: Cast the data as unknown first before casting to Event[]
+      return (data as unknown) as Event[];
     },
   });
 
