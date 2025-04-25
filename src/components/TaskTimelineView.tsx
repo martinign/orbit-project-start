@@ -94,13 +94,10 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       const tasksWithCompletionTime = await Promise.all((data || []).map(async (task) => {
         let completionTime: number | undefined = undefined;
 
-        if (task.status === 'completed') {
+        if (task.status === 'completed' && task.updated_at) {
           const createdDate = parseISO(task.created_at);
-          const completedDate = new Date();
-          
-          if (task.updated_at) {
-            completionTime = differenceInHours(parseISO(task.updated_at), createdDate);
-          }
+          const completedDate = parseISO(task.updated_at);
+          completionTime = differenceInHours(completedDate, createdDate);
         }
 
         return {
@@ -177,23 +174,25 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
       ? parseISO(task.updated_at)
       : new Date();
 
+    // Find the first visible date that's on or after the task's start date
+    let visibleStartDate = startDate;
+    if (isBefore(startDate, timelineDates[0])) {
+      visibleStartDate = timelineDates[0];
+    }
+
+    // Calculate the task's start position in the timeline
     const taskStartIndex = timelineDates.findIndex(date => 
-      date.getFullYear() === startDate.getFullYear() &&
-      date.getMonth() === startDate.getMonth() &&
-      date.getDate() === startDate.getDate()
+      date.getFullYear() === visibleStartDate.getFullYear() &&
+      date.getMonth() === visibleStartDate.getMonth() &&
+      date.getDate() === visibleStartDate.getDate()
     );
 
     if (taskStartIndex === -1) return null;
 
-    let durationDays = differenceInDays(endDate, startDate) + 1;
-    
-    const visibleDays = timelineDates.length - taskStartIndex;
-    durationDays = Math.min(durationDays, visibleDays);
-    
-    if (isBefore(startDate, timelineDates[0])) {
-      durationDays = differenceInDays(endDate, timelineDates[0]) + 1;
-    }
-
+    // Calculate duration considering the visible range
+    let durationDays = differenceInDays(endDate, visibleStartDate) + 1;
+    const remainingDays = timelineDates.length - taskStartIndex;
+    durationDays = Math.min(durationDays, remainingDays);
     durationDays = Math.max(1, durationDays);
 
     const getStatusColor = (status: string) => {
@@ -276,6 +275,24 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                   </div>
                   
                   <div>
+                    <div className="font-medium">Created:</div>
+                    <div className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {format(parseISO(task.created_at), 'MMM dd, yyyy')}
+                    </div>
+                  </div>
+
+                  {task.status === 'completed' && task.updated_at && (
+                    <div>
+                      <div className="font-medium">Completed:</div>
+                      <div className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {format(parseISO(task.updated_at), 'MMM dd, yyyy')}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
                     <div className="font-medium">Duration:</div>
                     <div className="flex items-center">
                       <Clock className="h-3 w-3 mr-1" />
@@ -283,19 +300,11 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="font-medium">Created:</div>
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {format(parseISO(task.created_at), 'MMM dd, yyyy')}
-                    </div>
-                  </div>
-                  
                   {task.status === 'completed' && task.completion_time !== undefined && (
-                    <div className="col-span-2">
+                    <div>
                       <div className="font-medium">Time to complete:</div>
                       <div className="flex items-center">
-                        <Timer className="h-3 w-3 mr-1" />
+                        <Clock className="h-3 w-3 mr-1" />
                         {task.completion_time > 24 
                           ? `${Math.round(task.completion_time / 24)} days ${Math.round(task.completion_time % 24)} hours`
                           : `${Math.round(task.completion_time)} hours`
