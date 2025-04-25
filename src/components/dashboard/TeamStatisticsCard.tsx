@@ -15,6 +15,12 @@ interface TeamStatisticsCardProps {
   filters?: TeamFilters;
 }
 
+interface TeamStats {
+  active: number;
+  inactive: number;
+  total: number;
+}
+
 export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
   const { data: teamStats, isLoading } = useQuery({
     queryKey: ["team_statistics", filters],
@@ -52,7 +58,7 @@ export function TeamStatisticsCard({ filters = {} }: TeamStatisticsCardProps) {
         active,
         inactive: 0,
         total
-      };
+      } as TeamStats;
     },
     refetchOnWindowFocus: false,
   });

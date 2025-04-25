@@ -75,7 +75,13 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
       const { data, error } = await query.order("created_at", { ascending: false });
       if (error) throw error;
       
-      return data as InvitationData[];
+      // Safely transform the data to match our interface
+      const safeData = data.map(item => ({
+        ...item,
+        invitee: item.invitee && typeof item.invitee !== 'string' ? item.invitee : null
+      }));
+
+      return safeData as InvitationData[];
     },
     enabled: open,
   });
