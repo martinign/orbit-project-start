@@ -1,17 +1,11 @@
 
-import React, { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { useToast } from '@/hooks/use-toast';
-
 import TaskBoardColumn from './tasks/TaskBoardColumn';
-import TaskDialog from './TaskDialog';
-import DeleteTaskDialog from './DeleteTaskDialog';
-import SubtaskDialog from './SubtaskDialog';
-import TaskUpdateDialog from './TaskUpdateDialog';
-import TaskUpdatesDisplay from './TaskUpdatesDisplay';
+import { TaskDialogs } from './tasks/TaskDialogs';
+import { useTaskBoard } from '@/hooks/useTaskBoard';
+import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { columnsConfig } from './tasks/columns-config';
 
 interface Task {
@@ -31,121 +25,33 @@ interface TaskBoardProps {
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
-  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const {
+    selectedTask,
+    isDialogOpen,
+    isDeleteConfirmOpen,
+    isUpdateDialogOpen,
+    isSubtaskDialogOpen,
+    isCreateTaskDialogOpen,
+    selectedStatus,
+    setIsDialogOpen,
+    setIsDeleteConfirmOpen,
+    setIsUpdateDialogOpen,
+    setIsSubtaskDialogOpen,
+    setIsCreateTaskDialogOpen,
+    handleEditTask,
+    handleDeleteConfirm,
+    handleTaskUpdates,
+    handleAddSubtask,
+    handleCreateTask,
+    deleteTask,
+  } = useTaskBoard(onRefetch);
+
+  const { handleDragEnd } = useTaskDragAndDrop(onRefetch);
 
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
     );
-  };
-
-  const handleEditTask = (task: Task) => {
-    setSelectedTask(task);
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = (task: Task) => {
-    setSelectedTask(task);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const handleTaskUpdates = (task: Task) => {
-    setSelectedTask(task);
-    setIsUpdateDialogOpen(true);
-  };
-
-  const handleAddSubtask = (task: Task) => {
-    setSelectedTask(task);
-    setIsSubtaskDialogOpen(true);
-  };
-
-  const handleCreateTask = (status: string) => {
-    setSelectedStatus(status);
-    setIsCreateTaskDialogOpen(true);
-  };
-
-  const deleteTask = async () => {
-    if (!selectedTask) return;
-
-    try {
-      const { error: subtasksError } = await supabase
-        .from('project_subtasks')
-        .delete()
-        .eq('parent_task_id', selectedTask.id);
-
-      if (subtasksError) throw subtasksError;
-
-      const { error } = await supabase
-        .from('project_tasks')
-        .delete()
-        .eq('id', selectedTask.id);
-
-      if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast({
-        title: 'Task Deleted',
-        description: 'The task and its subtasks have been successfully deleted.',
-      });
-      onRefetch();
-    } catch (error) {
-      console.error('Error deleting task:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete the task. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsDeleteConfirmOpen(false);
-    }
-  };
-
-  const handleDragEnd = async (result: any) => {
-    const { destination, source, draggableId } = result;
-
-    if (!destination || 
-        (destination.droppableId === source.droppableId && 
-         destination.index === source.index)) {
-      return;
-    }
-
-    const newStatus = columnsConfig.find(
-      col => col.id === destination.droppableId
-    )?.status;
-
-    if (!newStatus) return;
-
-    try {
-      const { error } = await supabase
-        .from('project_tasks')
-        .update({ status: newStatus })
-        .eq('id', draggableId);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Task Updated',
-        description: `Task moved to ${columnsConfig.find(col => col.id === destination.droppableId)?.title}`,
-      });
-      
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      onRefetch();
-    } catch (error) {
-      console.error('Error updating task status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update task status.',
-        variant: 'destructive',
-      });
-    }
   };
 
   return (
@@ -169,64 +75,23 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         </DragDropContext>
       </TooltipProvider>
 
-      <TaskDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        mode="edit"
-        task={selectedTask}
+      <TaskDialogs
+        selectedTask={selectedTask}
         projectId={projectId}
-        onSuccess={() => {
-          onRefetch();
-          setIsDialogOpen(false);
-        }}
+        isDialogOpen={isDialogOpen}
+        isDeleteConfirmOpen={isDeleteConfirmOpen}
+        isUpdateDialogOpen={isUpdateDialogOpen}
+        isSubtaskDialogOpen={isSubtaskDialogOpen}
+        isCreateTaskDialogOpen={isCreateTaskDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
+        setIsUpdateDialogOpen={setIsUpdateDialogOpen}
+        setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
+        setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
+        onRefetch={onRefetch}
+        deleteTask={deleteTask}
+        selectedStatus={selectedStatus}
       />
-
-      <TaskDialog
-        open={isCreateTaskDialogOpen}
-        onClose={() => setIsCreateTaskDialogOpen(false)}
-        mode="create"
-        projectId={projectId}
-        task={{ status: selectedStatus }}
-        onSuccess={() => {
-          onRefetch();
-          setIsCreateTaskDialogOpen(false);
-        }}
-      />
-
-      {selectedTask && (
-        <>
-          <DeleteTaskDialog
-            open={isDeleteConfirmOpen}
-            onOpenChange={setIsDeleteConfirmOpen}
-            taskTitle={selectedTask.title}
-            onDelete={deleteTask}
-          />
-
-          <SubtaskDialog
-            open={isSubtaskDialogOpen}
-            onClose={() => setIsSubtaskDialogOpen(false)}
-            parentTask={selectedTask}
-            onSuccess={() => {
-              onRefetch();
-              setIsSubtaskDialogOpen(false);
-            }}
-          />
-
-          <TaskUpdateDialog
-            open={isUpdateDialogOpen}
-            onClose={() => setIsUpdateDialogOpen(false)}
-            taskId={selectedTask.id}
-            onSuccess={() => setIsUpdateDialogOpen(false)}
-          />
-
-          <TaskUpdatesDisplay
-            open={isUpdateDialogOpen}
-            onClose={() => setIsUpdateDialogOpen(false)}
-            taskId={selectedTask.id}
-            taskTitle={selectedTask.title}
-          />
-        </>
-      )}
     </div>
   );
 };
