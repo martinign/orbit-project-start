@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { addDays, parseISO, startOfDay, endOfDay, max, min, differenceInHours } from 'date-fns';
+import { addDays, parseISO, startOfDay, max, min, differenceInHours } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,29 +52,29 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     queryKey: ['tasks_timeline', projectId, timeRange, statusFilter, assigneeFilter, priorityFilter, searchQuery],
     queryFn: async () => {
       if (!projectId) return [];
-      
+
       let query = supabase
         .from('project_tasks')
         .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
-        
+
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
-      
+
       if (assigneeFilter !== 'all') {
         query = query.eq('assigned_to', assigneeFilter);
       }
-      
+
       if (priorityFilter !== 'all') {
         query = query.eq('priority', priorityFilter);
       }
-      
+
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
-      
+
       const { data: tasksData, error } = await query;
       if (error) throw error;
 
@@ -102,34 +102,39 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-const timelineDates = useMemo(() => {
-  if (!tasks.length) return [];
+  const timelineDates = useMemo(() => {
+    if (!tasks.length) return [];
 
-  const today = startOfDay(new Date());
+    const today = startOfDay(new Date());
 
-  const rangeDays = {
-    week: 7,
-    month: 30,
-    quarter: 90,
-  }[timeRange];
+    const rangeDays = {
+      week: 7,
+      month: 30,
+      quarter: 90,
+    }[timeRange];
 
-  const taskStartDates = tasks.map(task => startOfDay(parseISO(task.created_at)));
+    const taskStartDates = tasks.map(task => startOfDay(parseISO(task.created_at)));
 
-  const earliestTaskDate = min(taskStartDates);
-  const startDate = startOfDay(min([earliestTaskDate, addDays(today, -rangeDays + 1)]));
-  const endDate = startOfDay(max([today, ...taskStartDates]));
+    const earliestTaskDate = min(taskStartDates);
+    const startDate = startOfDay(min([earliestTaskDate, addDays(today, -rangeDays + 1)]));
+    const endDate = startOfDay(max([today, ...taskStartDates]));
 
-  const dates: Date[] = [];
-  let currentDate = startDate;
+    const dates: Date[] = [];
+    let currentDate = startDate;
 
-  while (currentDate <= endDate) {
-    dates.push(startOfDay(currentDate)); // 👈 importante para que coincida con getTime()
-    currentDate = addDays(currentDate, 1);
-  }
+    while (currentDate <= endDate) {
+      dates.push(startOfDay(currentDate));
+      currentDate = addDays(currentDate, 1);
+    }
 
-  return dates;
-}, [tasks, timeRange]);
+    return dates;
+  }, [tasks, timeRange]);
 
+  // ✅ ESTA ES LA VARIABLE QUE FALTABA
+  const filteredTasks = useMemo(() => {
+    if (!tasks.length) return [];
+    return tasks.filter(task => task.created_at);
+  }, [tasks]);
 
   if (tasksLoading) {
     return <div className="flex justify-center items-center h-64">Loading timeline...</div>;
@@ -142,7 +147,11 @@ const timelineDates = useMemo(() => {
     setSearchQuery('');
   };
 
-  const hasFilters = statusFilter !== 'all' || assigneeFilter !== 'all' || priorityFilter !== 'all' || searchQuery !== '';
+  const hasFilters =
+    statusFilter !== 'all' ||
+    assigneeFilter !== 'all' ||
+    priorityFilter !== 'all' ||
+    searchQuery !== '';
 
   return (
     <div className="space-y-4">
@@ -160,9 +169,9 @@ const timelineDates = useMemo(() => {
         onSearchQueryChange={setSearchQuery}
         onCreateTask={() => setIsTaskDialogOpen(true)}
       />
-      
+
       <TimelineLegend />
-      
+
       <Card>
         <CardContent className="p-4">
           <Timeline
