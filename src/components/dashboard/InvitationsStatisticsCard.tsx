@@ -115,15 +115,9 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
                 <span className="text-sm font-medium text-red-600">{invitationStats?.rejected || 0}</span>
               </div>
             </div>
-            {invitationStats?.pending > 0 && (
-              <div className="pt-1 text-xs text-yellow-600 flex items-center">
-                <Eye className="h-3 w-3 mr-1" />
-                {invitationStats.pending} pending {invitationStats.pending === 1 ? 'invitation' : 'invitations'}
-              </div>
-            )}
             <Button 
               variant="outline" 
-              className="w-full mt-2" 
+              className="w-full mt-4" // Increased margin-top for more visibility
               onClick={() => setShowDialog(true)}
             >
               <Eye className="h-4 w-4 mr-2" />
