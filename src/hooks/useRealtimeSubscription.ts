@@ -22,10 +22,7 @@ export function useRealtimeSubscription({
   onRecordChange
 }: SubscriptionOptions) {
   useEffect(() => {
-    // Create a unique channel name for this subscription
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
-    
-    // Create the channel and configure postgres changes listener
     const channel = supabase.channel(channelName);
     
     const config = {
@@ -37,7 +34,7 @@ export function useRealtimeSubscription({
 
     channel
       .on('postgres_changes', config, onRecordChange)
-      .subscribe((status: 'SUBSCRIBED' | 'CLOSED' | 'TIMED_OUT' | 'CHANNEL_ERROR') => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
         }

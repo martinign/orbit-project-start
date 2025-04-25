@@ -3,13 +3,16 @@ import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DragDropContext } from '@hello-pangea/dnd';
-import { useToast } from '@/hooks/use-toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useToast } from '@/hooks/use-toast';
 
-import TaskColumn from './TaskColumn';
+import TaskBoardColumn from './tasks/TaskBoardColumn';
 import TaskDialog from './TaskDialog';
 import DeleteTaskDialog from './DeleteTaskDialog';
 import SubtaskDialog from './SubtaskDialog';
+import TaskUpdateDialog from './TaskUpdateDialog';
+import TaskUpdatesDisplay from './TaskUpdatesDisplay';
+import { columnsConfig } from './tasks/columns-config';
 
 interface Task {
   id: string;
@@ -26,44 +29,6 @@ interface TaskBoardProps {
   projectId: string;
   onRefetch: () => void;
 }
-
-const columnsConfig = [
-  {
-    id: 'not-started',
-    title: 'Not Started',
-    status: 'not started',
-    color: 'bg-gray-100 border-gray-300',
-    badgeColor: 'bg-gray-500',
-  },
-  {
-    id: 'pending',
-    title: 'Pending',
-    status: 'pending',
-    color: 'bg-yellow-100 border-yellow-300',
-    badgeColor: 'bg-yellow-500',
-  },
-  {
-    id: 'in-progress',
-    title: 'In Progress',
-    status: 'in progress',
-    color: 'bg-blue-100 border-blue-300',
-    badgeColor: 'bg-blue-500',
-  },
-  {
-    id: 'completed',
-    title: 'Completed',
-    status: 'completed',
-    color: 'bg-green-100 border-green-300',
-    badgeColor: 'bg-green-500',
-  },
-    {
-    id: 'stucked',
-    title: 'Stucked',
-    status: 'stucked',
-    color: 'bg-red-100 border-red-300',
-    badgeColor: 'bg-red-500',
-  },
-];
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
   const { toast } = useToast();
@@ -95,10 +60,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   const handleTaskUpdates = (task: Task) => {
     setSelectedTask(task);
     setIsUpdateDialogOpen(true);
-    toast({
-      title: "Updates Feature",
-      description: "Updates functionality will be implemented soon.",
-    });
   };
 
   const handleAddSubtask = (task: Task) => {
@@ -115,7 +76,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     if (!selectedTask) return;
 
     try {
-      // First, delete all subtasks associated with this task
       const { error: subtasksError } = await supabase
         .from('project_subtasks')
         .delete()
@@ -123,7 +83,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
 
       if (subtasksError) throw subtasksError;
 
-      // Then delete the task itself
       const { error } = await supabase
         .from('project_tasks')
         .delete()
@@ -178,6 +137,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
       });
       
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      onRefetch();
     } catch (error) {
       console.error('Error updating task status:', error);
       toast({
@@ -185,7 +145,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         description: 'Failed to update task status.',
         variant: 'destructive',
       });
-      onRefetch();
     }
   };
 
@@ -195,7 +154,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {columnsConfig.map((column) => (
-              <TaskColumn
+              <TaskBoardColumn
                 key={column.id}
                 column={column}
                 tasks={getTasksForColumn(column.status)}
@@ -251,6 +210,20 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
               onRefetch();
               setIsSubtaskDialogOpen(false);
             }}
+          />
+
+          <TaskUpdateDialog
+            open={isUpdateDialogOpen}
+            onClose={() => setIsUpdateDialogOpen(false)}
+            taskId={selectedTask.id}
+            onSuccess={() => setIsUpdateDialogOpen(false)}
+          />
+
+          <TaskUpdatesDisplay
+            open={isUpdateDialogOpen}
+            onClose={() => setIsUpdateDialogOpen(false)}
+            taskId={selectedTask.id}
+            taskTitle={selectedTask.title}
           />
         </>
       )}

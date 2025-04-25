@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -20,6 +20,7 @@ interface TasksListProps {
 }
 
 const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => {
+  const queryClient = useQueryClient();
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
