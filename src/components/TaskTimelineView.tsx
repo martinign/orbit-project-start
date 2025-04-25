@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
-import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours } from 'date-fns';
+import { format, addDays, differenceInDays, startOfMonth, endOfMonth, isWithinInterval, parseISO, differenceInHours, isAfter, isBefore } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -114,7 +113,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     enabled: !!projectId,
   });
 
-  // Fix: Query team members and make them available
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['project_team_members', projectId],
     queryFn: async () => {
@@ -164,10 +162,8 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
   
   const filteredTasks = useMemo(() => {
     if (!tasks.length) return [];
-    
     return tasks.filter(task => {
       if (!task.created_at) return false;
-      
       return true;
     });
   }, [tasks, timeRange]);
@@ -176,15 +172,28 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
     if (!task.created_at) return null;
     
     const startDate = parseISO(task.created_at);
-    const daysSinceCreation = differenceInDays(new Date(), startDate);
-    
-    const taskDayIndex = timelineDates.findIndex(date => 
+    const endDate = task.status === 'completed' && task.updated_at 
+      ? parseISO(task.updated_at)
+      : new Date();
+
+    const taskStartIndex = timelineDates.findIndex(date => 
       date.getFullYear() === startDate.getFullYear() &&
       date.getMonth() === startDate.getMonth() &&
       date.getDate() === startDate.getDate()
     );
+
+    if (taskStartIndex === -1) return null;
+
+    let durationDays = differenceInDays(endDate, startDate) + 1;
     
-    if (taskDayIndex === -1) return null;
+    const visibleDays = timelineDates.length - taskStartIndex;
+    durationDays = Math.min(durationDays, visibleDays);
+    
+    if (isBefore(startDate, timelineDates[0])) {
+      durationDays = differenceInDays(endDate, timelineDates[0]) + 1;
+    }
+
+    durationDays = Math.max(1, durationDays);
 
     const getStatusColor = (status: string) => {
       switch (status.toLowerCase()) {
@@ -205,7 +214,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
         <div className="w-64 flex-shrink-0 px-4 py-2 border-r border-gray-200">
           <div className="flex items-center space-x-2">
             <span className="font-medium truncate">{task.title}</span>
-            <span className="text-xs text-gray-500">({daysSinceCreation}d)</span>
           </div>
         </div>
         
@@ -219,7 +227,10 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
             <HoverCardTrigger>
               <div
                 className={`h-6 rounded-md ${getStatusColor(task.status)}`}
-                style={{ gridColumn: `${taskDayIndex + 1} / span 1` }}
+                style={{ 
+                  gridColumn: `${taskStartIndex + 1} / span ${durationDays}`,
+                  transition: 'all 0.2s ease-in-out'
+                }}
               />
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
@@ -264,6 +275,14 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                   </div>
                   
                   <div>
+                    <div className="font-medium">Duration:</div>
+                    <div className="flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {durationDays} days
+                    </div>
+                  </div>
+                  
+                  <div>
                     <div className="font-medium">Created:</div>
                     <div className="flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />
@@ -271,17 +290,6 @@ const TaskTimelineView: React.FC<TimelineProps> = ({ projectId }) => {
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="font-medium">Due:</div>
-                    <div className="flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {task.due_date 
-                        ? format(parseISO(task.due_date), 'MMM dd, yyyy')
-                        : 'No due date'
-                      }
-                    </div>
-                  </div>
-
                   {task.status === 'completed' && task.completion_time !== undefined && (
                     <div className="col-span-2">
                       <div className="font-medium">Time to complete:</div>
