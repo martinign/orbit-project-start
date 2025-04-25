@@ -126,6 +126,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           selectedDate={selectedDate}
           onSelect={handleDateSelect}
           hasEditAccess={hasEditAccess}
+          events={filteredEvents}
         />
         
         <EventsGrid
