@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 type TableName = 'project_tasks' | 'project_notes' | 'project_contacts' | 
                  'project_team_members' | 'project_invitations' | 'projects' | 
@@ -11,7 +12,7 @@ interface SubscriptionOptions {
   event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
   filter?: string;
   filterValue?: string;
-  onRecordChange: (payload: any) => void;
+  onRecordChange: (payload: RealtimePostgresChangesPayload<any>) => void;
 }
 
 export function useRealtimeSubscription({
@@ -33,13 +34,13 @@ export function useRealtimeSubscription({
     };
 
     channel
-      .on('postgres_changes', config, onRecordChange)
-      .subscribe((status, error) => {
+      .on('postgres_changes', config, (payload) => {
+        console.log(`Received change for ${table}:`, payload);
+        onRecordChange(payload);
+      })
+      .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
-        }
-        if (error) {
-          console.error(`Error subscribing to ${table} changes:`, error);
         }
       });
 
