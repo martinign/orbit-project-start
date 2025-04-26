@@ -159,6 +159,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
           .from('gantt_tasks')
           .insert({
             task_id: taskResult.id,
+            project_id: projectId,
             start_date: startDate.toISOString(),
             duration_days: durationDays,
             dependencies
@@ -187,7 +188,8 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             duration_days: durationDays,
             dependencies
           })
-          .eq('task_id', task.id);
+          .eq('task_id', task.id)
+          .eq('project_id', projectId);
 
         if (ganttError) throw ganttError;
       }
@@ -397,3 +399,4 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 };
 
 export default GanttTaskDialog;
+

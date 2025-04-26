@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -42,6 +42,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
         const { data: ganttData, error: ganttError } = await supabase
           .from('gantt_tasks')
           .select('*')
+          .eq('project_id', projectId)
           .in('task_id', taskIds);
 
         if (ganttError) throw ganttError;
@@ -80,3 +81,4 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
     </Card>
   );
 };
+

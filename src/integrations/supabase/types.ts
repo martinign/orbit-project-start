@@ -54,6 +54,7 @@ export type Database = {
           dependencies: string[] | null
           duration_days: number | null
           id: string
+          project_id: string
           start_date: string | null
           task_id: string
           updated_at: string
@@ -63,6 +64,7 @@ export type Database = {
           dependencies?: string[] | null
           duration_days?: number | null
           id?: string
+          project_id: string
           start_date?: string | null
           task_id: string
           updated_at?: string
@@ -72,11 +74,19 @@ export type Database = {
           dependencies?: string[] | null
           duration_days?: number | null
           id?: string
+          project_id?: string
           start_date?: string | null
           task_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "gantt_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "gantt_tasks_task_id_fkey"
             columns: ["task_id"]
