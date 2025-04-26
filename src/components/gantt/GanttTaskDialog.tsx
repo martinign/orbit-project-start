@@ -114,6 +114,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
           throw new Error("User not authenticated");
         }
 
+        // Create the task first
         const { data: taskResult, error: taskError } = await supabase
           .from('project_tasks')
           .insert({
@@ -123,13 +124,16 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             project_id: projectId,
             assigned_to: assignedTo,
             is_gantt_task: true,
-            user_id: userId
+            user_id: userId,
+            start_date: effectiveStartDate?.toISOString(),
+            duration_days: durationDays
           })
           .select('id')
           .single();
 
         if (taskError) throw taskError;
 
+        // Then create the Gantt task with dependencies
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .insert({
@@ -137,29 +141,33 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             project_id: projectId,
             start_date: effectiveStartDate?.toISOString(),
             duration_days: durationDays,
-            dependencies
+            dependencies: dependencies.length > 0 ? dependencies : null
           });
 
         if (ganttError) throw ganttError;
       } else if (task?.id) {
+        // Update the main task
         const { error: taskError } = await supabase
           .from('project_tasks')
           .update({
             title,
             description,
             status,
-            assigned_to: assignedTo
+            assigned_to: assignedTo,
+            start_date: effectiveStartDate?.toISOString(),
+            duration_days: durationDays
           })
           .eq('id', task.id);
 
         if (taskError) throw taskError;
 
+        // Update the Gantt task
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .update({
             start_date: effectiveStartDate?.toISOString(),
             duration_days: durationDays,
-            dependencies
+            dependencies: dependencies.length > 0 ? dependencies : null
           })
           .eq('task_id', task.id)
           .eq('project_id', projectId);

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { columnsConfig } from '../tasks/columns-config';
+import { cn } from "@/lib/utils";
 
 interface GanttTaskFormProps {
   title: string;
@@ -83,16 +84,19 @@ export const GanttTaskForm: React.FC<GanttTaskFormProps> = ({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`w-full justify-start text-left font-normal ${dependencies.length ? 'opacity-50' : ''}`}
-                id="start-date"
-                type="button"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground",
+                  dependencies.length && "opacity-50"
+                )}
                 disabled={dependencies.length > 0}
+                id="start-date"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {startDate ? format(startDate, "MMM dd, yyyy") : "Select date"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto z-50" align="start">
               <Calendar
                 mode="single"
                 selected={startDate || undefined}
@@ -101,6 +105,7 @@ export const GanttTaskForm: React.FC<GanttTaskFormProps> = ({
                   setCalendarOpen(false);
                 }}
                 initialFocus
+                className="pointer-events-auto rounded-md border"
               />
             </PopoverContent>
           </Popover>

@@ -29,11 +29,14 @@ export const GanttTaskDependencies: React.FC<GanttTaskDependenciesProps> = ({
     <div className="space-y-2">
       <Label>Dependencies</Label>
       <div className="flex gap-2 mb-2">
-        <Select value={selectedDependency || "none"} onValueChange={onSelectedDependencyChange}>
+        <Select 
+          value={selectedDependency || "none"} 
+          onValueChange={(value) => onSelectedDependencyChange(value === "none" ? null : value)}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a task" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-50">
             <SelectItem value="none">None</SelectItem>
             {availableTasks.map((task) => (
               <SelectItem key={task.id} value={task.id}>
