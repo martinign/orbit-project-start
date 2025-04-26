@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { addDays, addMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { addDays, startOfMonth } from 'date-fns';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -15,7 +15,6 @@ interface GanttChartProps {
 }
 
 export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefetch }) => {
-  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
 
@@ -40,15 +39,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
 
     // Extend the range to show some context
     const start = startOfMonth(firstDate);
-    // Add more context depending on the view
-    const end = view === 'day' 
-      ? addDays(lastDate, 14)  // Add 2 weeks for day view
-      : view === 'week'
-        ? addDays(lastDate, 28) // Add 4 weeks for week view
-        : addMonths(lastDate, 3); // Add 3 months for month view
+    const end = addDays(lastDate, 14); // Add 2 weeks for context
 
     return { startDate: start, endDate: end };
-  }, [tasks, view]);
+  }, [tasks]);
 
   const handleOpenTaskDialog = (task?: any) => {
     setSelectedTask(task || null);
@@ -63,7 +57,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
     <Card>
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
-          <GanttToolbar view={view} onViewChange={setView} />
+          <GanttToolbar />
           <Button 
             onClick={() => handleOpenTaskDialog()} 
             className="bg-blue-500 hover:bg-blue-600"
@@ -78,7 +72,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
             tasks={tasks}
             startDate={startDate}
             endDate={endDate}
-            view={view}
             projectId={projectId}
             onEditTask={handleOpenTaskDialog}
           />
