@@ -9,7 +9,7 @@ export interface GanttTask {
   start_date?: string;
   duration_days?: number;
   dependencies?: string[];
-  assigned_to?: string;
+  assigned_to?: string | null;
   is_gantt_task: boolean;
 }
 

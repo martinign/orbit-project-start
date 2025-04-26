@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -14,6 +15,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover
 import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { columnsConfig } from '../tasks/columns-config';
+import { GanttTask } from '@/types/gantt';
 
 interface GanttTaskDialogProps {
   projectId: string;
@@ -34,6 +36,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: teamMembers } = useTeamMembers();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -45,7 +48,6 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [availableTasks, setAvailableTasks] = useState<any[]>([]);
   const [selectedDependency, setSelectedDependency] = useState<string | null>(null);
-  const { teamMembers } = useTeamMembers(projectId);
 
   useEffect(() => {
     if (task && mode === 'edit') {
@@ -127,6 +129,15 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
     try {
       if (mode === 'create') {
+        // Get the current user ID
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+
+        if (!userId) {
+          throw new Error("User not authenticated");
+        }
+
+        // Create the main task
         const { data: taskResult, error: taskError } = await supabase
           .from('project_tasks')
           .insert({
@@ -136,13 +147,14 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             project_id: projectId,
             assigned_to: assignedTo,
             is_gantt_task: true,
-            user_id: (await supabase.auth.getUser()).data.user?.id
+            user_id: userId
           })
           .select('id')
           .single();
 
         if (taskError) throw taskError;
 
+        // Create the gantt task data
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .insert({
@@ -154,6 +166,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
         if (ganttError) throw ganttError;
       } else if (task?.id) {
+        // Update the main task
         const { error: taskError } = await supabase
           .from('project_tasks')
           .update({
@@ -166,6 +179,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
         if (taskError) throw taskError;
 
+        // Update the gantt task data
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .update({
@@ -258,6 +272,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
                       setCalendarOpen(false);
                     }}
                     initialFocus
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
@@ -295,14 +310,14 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             
             <div className="space-y-2">
               <Label htmlFor="assigned-to">Assigned To</Label>
-              <Select value={assignedTo || ""} onValueChange={setAssignedTo}>
+              <Select value={assignedTo || "unassigned"} onValueChange={setAssignedTo}>
                 <SelectTrigger id="assigned-to" className="w-full">
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
                   {teamMembers?.map((member) => (
-                    <SelectItem key={member.user_id} value={member.user_id}>
+                    <SelectItem key={member.id} value={member.id}>
                       {`${member.full_name || ''} ${member.last_name || ''}`.trim()}
                     </SelectItem>
                   ))}
@@ -314,12 +329,12 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
           <div className="space-y-2">
             <Label>Dependencies</Label>
             <div className="flex gap-2 mb-2">
-              <Select value={selectedDependency || ""} onValueChange={setSelectedDependency}>
+              <Select value={selectedDependency || "none"} onValueChange={setSelectedDependency}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a task" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {availableTasks.map((task) => (
                     <SelectItem key={task.id} value={task.id}>
                       {task.title}
@@ -331,7 +346,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
                 type="button" 
                 variant="outline"
                 onClick={handleAddDependency}
-                disabled={!selectedDependency}
+                disabled={!selectedDependency || selectedDependency === "none"}
               >
                 Add
               </Button>

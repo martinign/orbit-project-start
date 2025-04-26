@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
         if (ganttError) throw ganttError;
 
         // Merge the data
-        const mergedTasks = taskData.map(task => {
+        const mergedTasks: GanttTask[] = taskData.map(task => {
           const ganttInfo = ganttData?.find(g => g.task_id === task.id);
           return { 
             ...task,
@@ -60,7 +60,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
         return mergedTasks;
       }
 
-      return [];
+      return [] as GanttTask[];
     },
   });
 
