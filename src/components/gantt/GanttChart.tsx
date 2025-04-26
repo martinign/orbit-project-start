@@ -54,9 +54,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
   };
 
   return (
-    <Card>
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
+    <Card className="overflow-hidden">
+      <div className="p-4 space-y-4">
+        <div className="flex justify-between items-center">
           <GanttToolbar />
           <Button 
             onClick={() => handleOpenTaskDialog()} 
@@ -67,7 +67,8 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
             Add Task
           </Button>
         </div>
-        <div className="h-[600px]">
+
+        <div className="relative rounded-md border">
           <GanttGrid
             tasks={tasks}
             startDate={startDate}

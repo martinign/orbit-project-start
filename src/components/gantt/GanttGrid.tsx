@@ -75,34 +75,31 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
   const contentWidth = visibleDates.length * timelineData.columnWidth;
 
   return (
-    <div className="relative border rounded-md h-[600px] overflow-hidden">
-      <div className="flex h-full">
-        {/* Fixed tasks title column */}
-        <div className="w-[200px] flex-none border-r bg-background sticky left-0 z-30 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]">
-          <div className="h-[80px] border-b bg-muted/50 px-4 flex items-center font-medium sticky top-0">
-            Tasks
-          </div>
-          <div className="divide-y">
-            {tasksWithDependencies.map((task) => (
-              <div
-                key={task.id}
-                className="px-4 py-3 hover:bg-accent/50 cursor-pointer h-[48px]"
-                onClick={() => onEditTask?.(task)}
-              >
-                <div className="text-sm font-medium truncate">
-                  {task.title}
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="h-[600px] flex">
+      {/* Fixed tasks title column */}
+      <div className="w-[200px] flex-none border-r bg-background sticky left-0 z-30 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="h-[80px] border-b bg-muted/50 px-4 flex items-center font-medium sticky top-0">
+          Tasks
         </div>
+        <div className="divide-y">
+          {tasksWithDependencies.map((task) => (
+            <div
+              key={task.id}
+              className="px-4 py-3 hover:bg-accent/50 cursor-pointer h-[48px]"
+              onClick={() => onEditTask?.(task)}
+            >
+              <div className="text-sm font-medium truncate">
+                {task.title}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Scrollable timeline area */}
-        <ScrollArea className="flex-1 relative">
-          <div 
-            style={{ width: contentWidth }}
-            className="relative"
-          >
+      {/* Scrollable timeline area */}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-[600px]">
+          <div style={{ width: contentWidth }} className="relative">
             {/* Timeline header */}
             <div className="sticky top-0 bg-muted/50 z-20">
               {/* Month row with collapsible buttons */}
