@@ -59,7 +59,7 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
         {visibleDates.map((date) => (
           <div
             key={date.toISOString()}
-            className="flex-shrink-0 border-r px-2 py-1 text-sm font-medium flex items-center justify-center"
+            className="flex-shrink-0 border-r px-2 py-1 text-xs font-normal flex items-center justify-center"
             style={{ width: columnWidth }}
           >
             {format(date, 'd')}
