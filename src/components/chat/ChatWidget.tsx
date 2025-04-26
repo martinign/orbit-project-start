@@ -4,10 +4,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatWidget } from '@/hooks/useChatWidget';
 import { ChatMessage } from '@/components/chat/ChatMessage';
-import { MessageCircle, Send, X, Loader, RefreshCw } from 'lucide-react';
+import { MessageCircle, Send, ChevronDown, Loader, RefreshCw } from 'lucide-react';
 import { useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const ChatWidget = () => {
   const {
@@ -47,7 +53,7 @@ export const ChatWidget = () => {
         <Card className={cn(
           "w-[380px] shadow-xl rounded-2xl border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
           "transform transition-all duration-300 ease-in-out",
-          "animate-in fade-in-0 slide-in-from-bottom-5"
+          "animate-in fade-in-0 slide-in-from-bottom-5 scale-in-95"
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-2 border-b">
             <div className="flex items-center gap-2">
@@ -70,9 +76,9 @@ export const ChatWidget = () => {
                 size="sm" 
                 onClick={toggleChat}
                 className="h-8 w-8 p-0 hover:bg-muted/80"
-                title="Close chat"
+                title="Minimize chat"
               >
-                <X className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
@@ -144,17 +150,37 @@ export const ChatWidget = () => {
         </Card>
       )}
 
-      <Button
-        onClick={toggleChat}
-        className={cn(
-          "shadow-lg rounded-full h-14 w-14 p-0",
-          "transition-transform hover:scale-110",
-          "bg-primary hover:bg-primary/90",
-          isOpen ? "rotate-180" : "animate-bounce-subtle"
-        )}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={toggleChat}
+              className={cn(
+                "shadow-lg rounded-full h-14 w-14 p-0",
+                "transition-all duration-300 ease-in-out",
+                "hover:scale-110 active:scale-95",
+                "bg-primary hover:bg-primary/90",
+                !isOpen && "animate-bounce-subtle"
+              )}
+              aria-label={isOpen ? "Close chat" : "Open chat"}
+            >
+              <div className={cn(
+                "transition-transform duration-300 ease-in-out",
+                isOpen && "rotate-180"
+              )}>
+                {isOpen ? (
+                  <ChevronDown className="h-6 w-6" />
+                ) : (
+                  <MessageCircle className="h-6 w-6" />
+                )}
+              </div>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{isOpen ? "Minimize chat" : "Open chat assistant"}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };
