@@ -2,13 +2,13 @@
 import { useState, useEffect } from 'react';
 
 interface UseGanttColumnWidthProps {
-  visibleDatesCount: number;
+  totalDatesCount: number;
   taskListWidth?: number;
   minColumnWidth?: number;
 }
 
 export const useGanttColumnWidth = ({
-  visibleDatesCount,
+  totalDatesCount,
   taskListWidth = 200,
   minColumnWidth = 60
 }: UseGanttColumnWidthProps) => {
@@ -17,7 +17,7 @@ export const useGanttColumnWidth = ({
   useEffect(() => {
     const calculateColumnWidth = () => {
       const availableWidth = window.innerWidth - taskListWidth - 48; // 48px for padding/scrollbar
-      const calculatedWidth = Math.floor(availableWidth / visibleDatesCount);
+      const calculatedWidth = Math.floor(availableWidth / totalDatesCount);
       setColumnWidth(Math.max(calculatedWidth, minColumnWidth));
     };
 
@@ -27,7 +27,7 @@ export const useGanttColumnWidth = ({
     return () => {
       window.removeEventListener('resize', calculateColumnWidth);
     };
-  }, [visibleDatesCount, taskListWidth, minColumnWidth]);
+  }, [totalDatesCount, taskListWidth, minColumnWidth]);
 
   return columnWidth;
 };

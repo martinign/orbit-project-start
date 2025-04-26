@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { eachDayOfInterval, format } from 'date-fns';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -40,18 +41,21 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
     return { dates, months };
   }, [startDate, endDate]);
 
+  // We now calculate column width based on total dates, not visible dates
+  const columnWidth = useGanttColumnWidth({
+    totalDatesCount: timelineData.dates.length,
+  });
+
+  // Calculate total content width based on all dates
+  const contentWidth = timelineData.dates.length * columnWidth;
+
+  // Filter visible dates for display purposes only
   const visibleDates = useMemo(() => {
     return timelineData.dates.filter(date => {
       const monthKey = format(date, 'MMM yyyy');
       return !collapsedMonths.has(monthKey);
     });
   }, [timelineData.dates, collapsedMonths]);
-
-  const columnWidth = useGanttColumnWidth({
-    visibleDatesCount: visibleDates.length,
-  });
-
-  const contentWidth = visibleDates.length * columnWidth;
 
   const toggleMonth = (monthKey: string) => {
     setCollapsedMonths(prev => {
@@ -78,7 +82,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
       {/* Responsive width scrollable timeline container */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-[600px]">
-          <div style={{ minWidth: contentWidth }}>
+          <div style={{ width: contentWidth }}>
             <TimelineHeader
               months={timelineData.months}
               visibleDates={visibleDates}

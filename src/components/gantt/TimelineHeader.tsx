@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { ChevronDown } from 'lucide-react';
@@ -25,26 +26,24 @@ export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
       <div className="flex border-b">
         {Object.entries(months).map(([monthKey, dates]) => {
           const isCollapsed = collapsedMonths.has(monthKey);
-          const monthWidth = isCollapsed ? columnWidth : dates.length * columnWidth;
+          const monthWidth = dates.length * columnWidth;
           
           return (
-            <Collapsible key={monthKey} open={!isCollapsed}>
-              <div 
-                className="flex-shrink-0 border-r hover:bg-accent/50 transition-colors" 
-                style={{ width: monthWidth }}
+            <div 
+              key={monthKey}
+              className="flex-shrink-0 border-r hover:bg-accent/50 transition-colors relative" 
+              style={{ width: monthWidth }}
+            >
+              <Button 
+                variant="ghost" 
+                className="w-full h-10 flex justify-start gap-2 rounded-none"
+                onClick={() => onToggleMonth(monthKey)}
               >
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full h-10 flex justify-start gap-2 rounded-none"
-                    onClick={() => onToggleMonth(monthKey)}
-                  >
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
-                    {monthKey}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </Collapsible>
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
+                {monthKey}
+              </Button>
+              <div className={`absolute inset-0 bg-background/50 transition-opacity duration-200 ${isCollapsed ? 'opacity-50' : 'opacity-0 pointer-events-none'}`} />
+            </div>
           );
         })}
       </div>
