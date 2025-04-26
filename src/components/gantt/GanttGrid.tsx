@@ -1,9 +1,11 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { eachDayOfInterval, format, startOfToday, addDays, isSameMonth } from 'date-fns';
+import { ChevronDown } from 'lucide-react';
 import { GanttTask } from './GanttTask';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 interface GanttGridProps {
   tasks: any[];
@@ -20,6 +22,8 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
   projectId,
   onEditTask
 }) => {
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+
   const timelineData = useMemo(() => {
     const dates = eachDayOfInterval({ start: startDate, end: endDate });
     const columnWidth = 80; // Fixed width for day columns
@@ -37,6 +41,25 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
     return { dates, columnWidth, months };
   }, [startDate, endDate]);
 
+  const toggleMonth = (monthKey: string) => {
+    setCollapsedMonths(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(monthKey)) {
+        newSet.delete(monthKey);
+      } else {
+        newSet.add(monthKey);
+      }
+      return newSet;
+    });
+  };
+
+  const visibleDates = useMemo(() => {
+    return timelineData.dates.filter(date => {
+      const monthKey = format(date, 'MMM yyyy');
+      return !collapsedMonths.has(monthKey);
+    });
+  }, [timelineData.dates, collapsedMonths]);
+
   const today = startOfToday();
 
   const tasksWithDependencies = useMemo(() => {
@@ -49,8 +72,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
     });
   }, [tasks]);
 
-  // Calculate total content width based on number of columns and column width
-  const contentWidth = timelineData.dates.length * timelineData.columnWidth;
+  const contentWidth = visibleDates.length * timelineData.columnWidth;
 
   return (
     <div className="relative border rounded-md h-[600px] overflow-hidden">
@@ -80,21 +102,40 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
           <div style={{ width: contentWidth }}>
             {/* Timeline header */}
             <div className="sticky top-0 bg-muted/50 z-20">
-              {/* Month row */}
-              <div className="flex border-b h-10">
-                {Object.entries(timelineData.months).map(([monthKey, dates]) => (
-                  <div
-                    key={monthKey}
-                    className="flex-shrink-0 border-r px-2 flex items-center justify-center font-medium"
-                    style={{ width: dates.length * timelineData.columnWidth }}
-                  >
-                    {monthKey}
-                  </div>
-                ))}
+              {/* Month row with collapsible buttons */}
+              <div className="flex border-b">
+                {Object.entries(timelineData.months).map(([monthKey, dates]) => {
+                  const isCollapsed = collapsedMonths.has(monthKey);
+                  const monthWidth = isCollapsed ? timelineData.columnWidth : dates.length * timelineData.columnWidth;
+                  
+                  return (
+                    <Collapsible key={monthKey} open={!isCollapsed}>
+                      <div
+                        className="flex-shrink-0 border-r hover:bg-accent/50 transition-colors"
+                        style={{ width: monthWidth }}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            className="w-full h-10 flex justify-start gap-2 rounded-none"
+                            onClick={() => toggleMonth(monthKey)}
+                          >
+                            <ChevronDown 
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isCollapsed ? '' : 'rotate-180'
+                              }`}
+                            />
+                            {monthKey}
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                    </Collapsible>
+                  );
+                })}
               </div>
               {/* Day numbers row */}
               <div className="flex h-10 border-b">
-                {timelineData.dates.map((date) => (
+                {visibleDates.map((date) => (
                   <div
                     key={date.toISOString()}
                     className="flex-shrink-0 border-r px-2 py-1 text-sm font-medium flex items-center justify-center"
@@ -128,6 +169,9 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
                   (endDate.getTime() - startDate.getTime())) * contentWidth;
                   
                 const taskWidth = taskDuration * timelineData.columnWidth;
+
+                const taskMonth = format(taskStart, 'MMM yyyy');
+                if (collapsedMonths.has(taskMonth)) return null;
 
                 return (
                   <GanttTask
