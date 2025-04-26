@@ -1,10 +1,23 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Initialize Supabase client with admin privileges
+const createAdminClient = () => {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error('Missing Supabase URL or service role key');
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey);
 };
 
 // Handle context extraction for projects
@@ -47,7 +60,7 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
           .select(`
             id, title, description, status, priority,
             due_date, start_date, duration_days,
-            notes, is_gantt_task
+            notes, is_gantt_task, assigned_to
           `)
           .eq('project_id', project.id)
           .order('created_at', { ascending: false });
@@ -294,10 +307,7 @@ serve(async (req) => {
     console.log('Processing for userId:', userId);
     
     // Create Supabase client with admin privileges for data access
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseAdmin = createAdminClient();
 
     // Get user context data
     console.log('Fetching user context for userId:', userId);
@@ -444,44 +454,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function to create a Supabase client
-const createClient = (supabaseUrl: string, serviceRoleKey: string) => {
-  return {
-    from: (table: string) => ({
-      select: (columns: string) => ({
-        eq: (column: string, value: any) => ({
-          order: (column: string, { ascending }: { ascending: boolean }) => ({
-            limit: (limit: number) => {
-              return { data: [], error: null }; // Mock implementation for Deno
-            },
-            single: () => {
-              return { data: {}, error: null }; // Mock implementation for Deno
-            }
-          }),
-          limit: (limit: number) => {
-            return { data: [], error: null }; // Mock implementation for Deno
-          },
-          single: () => {
-            return { data: {}, error: null }; // Mock implementation for Deno
-          },
-          in: (column: string, values: any[]) => ({
-            limit: (limit: number) => {
-              return { data: [], error: null }; // Mock implementation for Deno
-            }
-          })
-        }),
-        in: (column: string, values: any[]) => ({
-          order: (column: string, { ascending }: { ascending: boolean }) => ({
-            limit: (limit: number) => {
-              return { data: [], error: null }; // Mock implementation for Deno
-            }
-          }),
-          limit: (limit: number) => {
-            return { data: [], error: null }; // Mock implementation for Deno
-          }
-        })
-      })
-    })
-  };
-};
