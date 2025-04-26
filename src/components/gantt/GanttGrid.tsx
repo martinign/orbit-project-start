@@ -98,8 +98,11 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
         </div>
 
         {/* Scrollable timeline area */}
-        <ScrollArea className="flex-1">
-          <div style={{ width: contentWidth }}>
+        <ScrollArea className="flex-1 relative">
+          <div 
+            style={{ width: contentWidth }}
+            className="relative"
+          >
             {/* Timeline header */}
             <div className="sticky top-0 bg-muted/50 z-20">
               {/* Month row with collapsible buttons */}
@@ -252,7 +255,11 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
               })}
             </div>
           </div>
-          <ScrollBar orientation="horizontal" />
+          <ScrollBar 
+            orientation="horizontal" 
+            className="h-2 !block select-none rounded-none border-none bg-gray-100 transition-colors hover:bg-gray-200" 
+            thumbnailClassName="bg-gray-400 hover:bg-gray-500 transition-colors rounded-none !h-full"
+          />
         </ScrollArea>
       </div>
     </div>
