@@ -130,6 +130,9 @@ serve(async (req) => {
 
     const { message, history, userId } = await req.json();
     
+    console.log('Request received with message:', message);
+    console.log('History length:', history?.length || 0);
+    
     // Create Supabase client with admin privileges for data access
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -137,6 +140,7 @@ serve(async (req) => {
     );
 
     // Get user context data
+    console.log('Fetching user context for userId:', userId);
     const userProfile = await getUserProfile(supabaseAdmin, userId);
     const projectsContext = await extractProjectInfo(supabaseAdmin, userId);
     
@@ -172,6 +176,7 @@ serve(async (req) => {
       { role: "user", content: message }
     ];
 
+    console.log('Calling OpenAI API with model: gpt-4o');
     try {
       // Call OpenAI API with proper error handling
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -188,7 +193,14 @@ serve(async (req) => {
         })
       });
 
+      const responseStatus = response.status;
+      console.log('OpenAI API response status:', responseStatus);
+      
       const data = await response.json();
+      
+      if (data.error) {
+        console.error('OpenAI API error details:', data.error);
+      }
 
       // Handle specific OpenAI API errors
       if (!response.ok) {
@@ -198,7 +210,7 @@ serve(async (req) => {
         if (data.error?.type === 'insufficient_quota') {
           return new Response(
             JSON.stringify({ 
-              message: "You have exceeded your OpenAI API quota. Please check your billing details on the OpenAI dashboard."
+              message: "Your OpenAI API quota has been exceeded. Please check your billing details on the OpenAI dashboard."
             }),
             { 
               status: 429, 
@@ -220,6 +232,8 @@ serve(async (req) => {
         );
       }
 
+      console.log('OpenAI API successful response received');
+      
       // Return successful response
       return new Response(
         JSON.stringify({ 

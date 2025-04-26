@@ -79,6 +79,10 @@ export const useChatWidget = () => {
         errorMessage = 'OpenAI API quota exceeded. The API key may need to be updated or billing limits increased.';
       } else if (error.message?.includes('API key')) {
         errorMessage = 'OpenAI API key issue. Please check that a valid API key has been configured.';
+      } else if (error.message?.includes('429')) {
+        errorMessage = 'OpenAI API rate limit reached. Please try again in a few minutes.';
+      } else if (error.message?.includes('401')) {
+        errorMessage = 'OpenAI API authentication failed. Please check your API key.';
       }
       
       toast({
