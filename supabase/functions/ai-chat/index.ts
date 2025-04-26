@@ -100,94 +100,137 @@ serve(async (req) => {
 
     console.log('Calling OpenAI API with model: gpt-4o');
     try {
-      // Call OpenAI API with proper error handling
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages,
-          temperature: 0.7,
-          max_tokens: 800,
-        })
-      });
+      // Call OpenAI API with proper error handling and exponential backoff
+      const MAX_RETRIES = 2;
+      let retries = 0;
+      let delay = 1000; // Start with a 1s delay
+      let lastError = null;
+      
+      while (retries <= MAX_RETRIES) {
+        try {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o', // Explicitly using gpt-4o model
+              messages,
+              temperature: 0.7,
+              max_tokens: 800,
+            })
+          });
 
-      const responseStatus = response.status;
-      console.log('OpenAI API response status:', responseStatus);
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        console.error('OpenAI API error details:', data.error);
+          const responseStatus = response.status;
+          console.log('OpenAI API response status:', responseStatus);
+          
+          const data = await response.json();
+          
+          // Success case - break out of retry loop
+          if (response.ok) {
+            console.log('OpenAI API successful response received');
+            console.log('Token usage:', data.usage);
+            
+            // Return successful response
+            return new Response(
+              JSON.stringify({ 
+                message: data.choices[0]?.message?.content || 'No response from AI',
+                usage: data.usage
+              }),
+              { 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              }
+            );
+          }
+          
+          // Error handling
+          if (data.error) {
+            console.error('OpenAI API error details:', data.error);
+            lastError = data.error;
+            
+            // Break the loop if not a rate limit error (no point retrying)
+            if (data.error?.type !== 'tokens' && data.error?.code !== 'rate_limit_exceeded') {
+              break;
+            }
+            
+            // For rate limits, extract wait time and retry after delay
+            if (data.error?.type === 'tokens' || data.error?.code === 'rate_limit_exceeded') {
+              const retryAfter = data.error.message.match(/try again in (\d+\.\d+)s/);
+              const waitTime = retryAfter ? (parseFloat(retryAfter[1]) * 1000) : delay;
+              
+              console.log(`Rate limit hit. Retrying after ${waitTime}ms. Retry ${retries + 1}/${MAX_RETRIES}`);
+              
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              retries++;
+              delay *= 2; // Exponential backoff
+              continue;
+            }
+          }
+          
+          break; // Break if we reach here (non-rate-limit error)
+          
+        } catch (fetchError) {
+          console.error('Fetch error on attempt', retries, fetchError);
+          lastError = fetchError;
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, delay));
+          retries++;
+          delay *= 2; // Exponential backoff
+        }
       }
 
-      // Handle specific OpenAI API errors
-      if (!response.ok) {
-        console.error('OpenAI API error:', data);
-        
-        // Handle quota exceeded error specifically
-        if (data.error?.type === 'insufficient_quota') {
-          return new Response(
-            JSON.stringify({ 
-              message: "Your OpenAI API quota has been exceeded. Please check your billing details on the OpenAI dashboard."
-            }),
-            { 
-              status: 429, 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            }
-          );
-        }
-        
-        // Handle rate limit error specifically
-        if (data.error?.type === 'tokens' || data.error?.code === 'rate_limit_exceeded') {
-          const retryAfter = data.error.message.match(/try again in (\d+\.\d+)s/);
-          const waitTime = retryAfter ? parseFloat(retryAfter[1]) : 60;
-
-          return new Response(
-            JSON.stringify({
-              message: `OpenAI API rate limit exceeded. Please try again in ${Math.ceil(waitTime)} seconds.`,
-              retryAfter: waitTime
-            }),
-            {
-              status: 429,
-              headers: {
-                ...corsHeaders,
-                'Content-Type': 'application/json',
-                'Retry-After': String(Math.ceil(waitTime))
-              }
-            }
-          );
-        }
-        
-        // Handle other API errors
+      // If we get here, all retries failed or we had a non-rate-limit error
+      
+      // Handle quota exceeded error specifically
+      if (lastError?.type === 'insufficient_quota') {
         return new Response(
           JSON.stringify({ 
-            message: data.error?.message || 'Error calling OpenAI API',
-            details: data.error
+            message: "Your OpenAI API quota has been exceeded. Please check your billing details on the OpenAI dashboard.",
+            error: lastError
           }),
           { 
-            status: 500, 
+            status: 429, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         );
       }
-
-      console.log('OpenAI API successful response received');
-      console.log('Token usage:', data.usage);
       
-      // Return successful response
+      // Handle rate limit error specifically
+      if (lastError?.type === 'tokens' || lastError?.code === 'rate_limit_exceeded') {
+        const retryAfter = lastError.message.match(/try again in (\d+\.\d+)s/);
+        const waitTime = retryAfter ? parseFloat(retryAfter[1]) : 60;
+
+        return new Response(
+          JSON.stringify({
+            message: `OpenAI API rate limit exceeded. Please try again in ${Math.ceil(waitTime)} seconds.`,
+            retryAfter: waitTime,
+            error: lastError
+          }),
+          {
+            status: 429,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Retry-After': String(Math.ceil(waitTime))
+            }
+          }
+        );
+      }
+      
+      // Handle other API errors
       return new Response(
         JSON.stringify({ 
-          message: data.choices[0]?.message?.content || 'No response from AI',
-          usage: data.usage
+          message: lastError?.message || 'Error calling OpenAI API',
+          details: lastError
         }),
         { 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
+      
     } catch (openaiError) {
       console.error('Error calling OpenAI API:', openaiError);
       return new Response(

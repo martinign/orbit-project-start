@@ -17,6 +17,8 @@ export const useChatWidget = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -62,6 +64,9 @@ export const useChatWidget = () => {
         throw new Error('Received invalid response from AI');
       }
 
+      // Reset retry count on success
+      setRetryCount(0);
+      
       const aiResponse: ChatMessage = {
         role: 'assistant',
         content: data.message,
@@ -73,6 +78,7 @@ export const useChatWidget = () => {
       console.error('Error calling AI chat function:', error);
       
       let errorMessage = 'Failed to get a response from the AI. Please try again.';
+      let retryAfterSeconds = 0;
       
       // Check for specific known errors
       if (error.message?.includes('quota') || error.message?.includes('billing')) {
@@ -80,7 +86,26 @@ export const useChatWidget = () => {
       } else if (error.message?.includes('API key')) {
         errorMessage = 'OpenAI API key issue. Please check that a valid API key has been configured.';
       } else if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-        errorMessage = 'OpenAI API rate limit reached. Please try again in a few minutes.';
+        // Extract retry time if available
+        const retryMatch = error.message?.match(/try again in (\d+\.?\d*)/i);
+        retryAfterSeconds = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 60;
+        
+        errorMessage = `OpenAI API rate limit reached. Please try again in ${retryAfterSeconds} seconds.`;
+        
+        // If we have a retry time and haven't retried too many times, set up automatic retry
+        if (retryAfterSeconds > 0 && retryCount < 2) {
+          // Clear any existing timeout
+          if (retryTimeout) clearTimeout(retryTimeout);
+          
+          const timeout = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            sendMessage();
+          }, retryAfterSeconds * 1000);
+          
+          setRetryTimeout(timeout);
+          
+          errorMessage += ` (Will retry automatically in ${retryAfterSeconds} seconds)`;
+        }
       } else if (error.message?.includes('401')) {
         errorMessage = 'OpenAI API authentication failed. Please check your API key.';
       }
@@ -102,15 +127,20 @@ export const useChatWidget = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputMessage, messages, user, toast]);
+  }, [inputMessage, messages, user, toast, retryCount, retryTimeout]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+      setRetryTimeout(null);
+    }
+    setRetryCount(0);
     toast({
       title: 'Chat cleared',
       description: 'All chat messages have been cleared.',
     });
-  }, [toast]);
+  }, [toast, retryTimeout]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -118,6 +148,15 @@ export const useChatWidget = () => {
       sendMessage();
     }
   }, [sendMessage, isLoading]);
+
+  // Clean up timeout on unmount
+  useCallback(() => {
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [retryTimeout]);
 
   return {
     isOpen,
