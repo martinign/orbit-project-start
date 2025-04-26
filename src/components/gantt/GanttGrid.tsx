@@ -64,14 +64,18 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
 
   return (
     <div className="h-[600px] flex">
-      <TasksList 
-        tasks={tasks}
-        onEditTask={onEditTask}
-      />
+      {/* Fixed width task list column */}
+      <div className="w-[200px] flex-none">
+        <TasksList 
+          tasks={tasks}
+          onEditTask={onEditTask}
+        />
+      </div>
 
+      {/* Fixed width scrollable timeline container */}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-[600px]">
-          <div style={{ width: contentWidth }} className="relative">
+        <ScrollArea className="h-[600px]" type="scroll">
+          <div className="min-w-full" style={{ width: contentWidth }}>
             <TimelineHeader
               months={timelineData.months}
               visibleDates={visibleDates}

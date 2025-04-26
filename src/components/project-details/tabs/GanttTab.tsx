@@ -70,15 +70,14 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Project Timeline</CardTitle>
         <CardDescription>View and manage project tasks in a Gantt chart</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-hidden">
         <GanttChart tasks={tasks || []} projectId={projectId} onRefetch={() => refetch()} />
       </CardContent>
     </Card>
   );
 };
-

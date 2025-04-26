@@ -68,14 +68,17 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
           </Button>
         </div>
 
-        <div className="relative rounded-md border">
-          <GanttGrid
-            tasks={tasks}
-            startDate={startDate}
-            endDate={endDate}
-            projectId={projectId}
-            onEditTask={handleOpenTaskDialog}
-          />
+        <div className="relative bg-white rounded-md border w-full">
+          {/* The fixed-width container for the Gantt chart */}
+          <div className="w-full overflow-hidden">
+            <GanttGrid
+              tasks={tasks}
+              startDate={startDate}
+              endDate={endDate}
+              projectId={projectId}
+              onEditTask={handleOpenTaskDialog}
+            />
+          </div>
         </div>
 
         {isTaskDialogOpen && (
