@@ -11,10 +11,13 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
   const isUser = message.role === 'user';
   const timestamp = message.timestamp ? format(new Date(message.timestamp), 'HH:mm') : '';
 
+  // Split message into paragraphs for better formatting
+  const paragraphs = message.content.split('\n').filter(line => line.trim() !== '');
+
   return (
     <div
       className={cn(
-        'flex gap-2',
+        'flex gap-2 animate-in fade-in-0 slide-in-from-bottom-2',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}
     >
@@ -32,7 +35,15 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
               : 'bg-muted/50 text-foreground'
           )}
         >
-          {message.content}
+          {paragraphs.length > 1 ? (
+            <div className="space-y-2">
+              {paragraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+          ) : (
+            message.content
+          )}
         </div>
         {timestamp && (
           <span className="text-xs text-muted-foreground px-2">

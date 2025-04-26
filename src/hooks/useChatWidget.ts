@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -10,21 +10,76 @@ export interface ChatMessage {
   timestamp?: string;
 }
 
+// Local storage key for chat history
+const CHAT_HISTORY_KEY = 'chat_history';
+
+// Debounce helper function
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: any[]) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 export const useChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Cache last context fetch time to avoid excessive fetch calls
+  const lastContextFetchRef = useRef<number>(0);
+
+  // Load chat history from localStorage on initial render
+  useEffect(() => {
+    if (user) {
+      const savedHistory = localStorage.getItem(`${CHAT_HISTORY_KEY}_${user.id}`);
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory);
+          if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+            setMessages(parsedHistory);
+          }
+        } catch (e) {
+          console.error('Error parsing chat history from localStorage:', e);
+        }
+      }
+    }
+  }, [user]);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (user && messages.length > 0) {
+      // Only save last 50 messages to prevent local storage issues
+      const messagesToSave = messages.slice(-50);
+      localStorage.setItem(`${CHAT_HISTORY_KEY}_${user.id}`, JSON.stringify(messagesToSave));
+    }
+  }, [messages, user]);
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
   }, []);
 
-  const sendMessage = useCallback(async () => {
+  // Create a debounced version of the send message function
+  const debouncedSendMessage = debounce(() => {
+    if (inputMessage.trim().length > 0) {
+      sendMessageInternal();
+    }
+  }, 300);
+
+  // Simulate typing effect for better UX
+  const simulateTyping = useCallback(() => {
+    setIsTyping(true);
+    setTimeout(() => setIsTyping(false), 1500 + Math.random() * 1000);
+  }, []);
+
+  const sendMessageInternal = useCallback(async () => {
     if (!inputMessage.trim() || !user) return;
     
     const newUserMessage: ChatMessage = {
@@ -36,12 +91,13 @@ export const useChatWidget = () => {
     setMessages(prev => [...prev, newUserMessage]);
     setInputMessage('');
     setIsLoading(true);
+    simulateTyping();
 
     try {
       const formattedHistory = messages.map(({ role, content }) => ({ role, content }));
 
       console.log('Calling AI chat function with:', {
-        message: inputMessage,
+        messageLength: inputMessage.length,
         historyLength: formattedHistory.length,
         userId: user.id
       });
@@ -74,7 +130,7 @@ export const useChatWidget = () => {
       };
 
       setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error calling AI chat function:', error);
       
       let errorMessage = 'Failed to get a response from the AI. Please try again.';
@@ -99,7 +155,7 @@ export const useChatWidget = () => {
           
           const timeout = setTimeout(() => {
             setRetryCount(prev => prev + 1);
-            sendMessage();
+            sendMessageInternal();
           }, retryAfterSeconds * 1000);
           
           setRetryTimeout(timeout);
@@ -126,8 +182,13 @@ export const useChatWidget = () => {
       ]);
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
-  }, [inputMessage, messages, user, toast, retryCount, retryTimeout]);
+  }, [inputMessage, messages, user, toast, retryCount, retryTimeout, simulateTyping]);
+
+  const sendMessage = useCallback(() => {
+    debouncedSendMessage();
+  }, [debouncedSendMessage]);
 
   const clearChat = useCallback(() => {
     setMessages([]);
@@ -136,11 +197,14 @@ export const useChatWidget = () => {
       setRetryTimeout(null);
     }
     setRetryCount(0);
+    if (user) {
+      localStorage.removeItem(`${CHAT_HISTORY_KEY}_${user.id}`);
+    }
     toast({
       title: 'Chat cleared',
       description: 'All chat messages have been cleared.',
     });
-  }, [toast, retryTimeout]);
+  }, [toast, retryTimeout, user]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
@@ -150,7 +214,7 @@ export const useChatWidget = () => {
   }, [sendMessage, isLoading]);
 
   // Clean up timeout on unmount
-  useCallback(() => {
+  useEffect(() => {
     return () => {
       if (retryTimeout) {
         clearTimeout(retryTimeout);
@@ -167,6 +231,7 @@ export const useChatWidget = () => {
     sendMessage,
     clearChat,
     isLoading,
+    isTyping,
     handleKeyDown
   };
 };
