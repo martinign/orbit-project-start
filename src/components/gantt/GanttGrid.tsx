@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { eachDayOfInterval, format } from 'date-fns';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -6,6 +5,7 @@ import { TasksList } from './TasksList';
 import { TimelineHeader } from './TimelineHeader';
 import { TaskGrid } from './TaskGrid';
 import { GanttTask } from '@/types/gantt';
+import { useGanttColumnWidth } from '@/hooks/useGanttColumnWidth';
 
 interface GanttGridProps {
   tasks: GanttTask[];
@@ -26,7 +26,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
 
   const timelineData = useMemo(() => {
     const dates = eachDayOfInterval({ start: startDate, end: endDate });
-    const columnWidth = 80; // Fixed width for day columns
 
     // Group dates by month
     const months = dates.reduce((acc, date) => {
@@ -38,8 +37,21 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
       return acc;
     }, {} as Record<string, Date[]>);
 
-    return { dates, columnWidth, months };
+    return { dates, months };
   }, [startDate, endDate]);
+
+  const visibleDates = useMemo(() => {
+    return timelineData.dates.filter(date => {
+      const monthKey = format(date, 'MMM yyyy');
+      return !collapsedMonths.has(monthKey);
+    });
+  }, [timelineData.dates, collapsedMonths]);
+
+  const columnWidth = useGanttColumnWidth({
+    visibleDatesCount: visibleDates.length,
+  });
+
+  const contentWidth = visibleDates.length * columnWidth;
 
   const toggleMonth = (monthKey: string) => {
     setCollapsedMonths(prev => {
@@ -53,15 +65,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
     });
   };
 
-  const visibleDates = useMemo(() => {
-    return timelineData.dates.filter(date => {
-      const monthKey = format(date, 'MMM yyyy');
-      return !collapsedMonths.has(monthKey);
-    });
-  }, [timelineData.dates, collapsedMonths]);
-
-  const contentWidth = visibleDates.length * timelineData.columnWidth;
-
   return (
     <div className="h-[600px] flex">
       {/* Fixed width task list column */}
@@ -72,15 +75,15 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
         />
       </div>
 
-      {/* Fixed width scrollable timeline container */}
+      {/* Responsive width scrollable timeline container */}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-[600px]" type="scroll">
-          <div className="min-w-full" style={{ width: contentWidth }}>
+        <ScrollArea className="h-[600px]">
+          <div style={{ minWidth: contentWidth }}>
             <TimelineHeader
               months={timelineData.months}
               visibleDates={visibleDates}
               collapsedMonths={collapsedMonths}
-              columnWidth={timelineData.columnWidth}
+              columnWidth={columnWidth}
               onToggleMonth={toggleMonth}
             />
 
@@ -89,7 +92,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
               startDate={startDate}
               endDate={endDate}
               contentWidth={contentWidth}
-              columnWidth={timelineData.columnWidth}
+              columnWidth={columnWidth}
               onEditTask={onEditTask}
               collapsedMonths={collapsedMonths}
               projectId={projectId}
