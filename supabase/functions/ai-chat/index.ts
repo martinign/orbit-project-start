@@ -138,6 +138,52 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${invitations?.length || 0} invitations for project ${project.id}`);
 
+        // Get Gantt tasks
+        const { data: ganttTasks, error: ganttTasksError } = await supabase
+          .from('gantt_tasks')
+          .select(`
+            id, duration_days, start_date, dependencies
+          `)
+          .eq('project_id', project.id);
+
+        if (ganttTasksError) {
+          console.error(`Error fetching Gantt tasks for project ${project.id}:`, ganttTasksError);
+          throw ganttTasksError;
+        }
+        
+        console.log(`Found ${ganttTasks?.length || 0} Gantt tasks for project ${project.id}`);
+
+        // Get task updates
+        const { data: taskUpdates, error: taskUpdatesError } = await supabase
+          .from('project_task_updates')
+          .select(`
+            id, content, task_id, created_at
+          `)
+          .in('task_id', tasks?.map((t: any) => t.id) || []);
+
+        if (taskUpdatesError && tasks?.length > 0) {
+          console.error(`Error fetching task updates for project ${project.id}:`, taskUpdatesError);
+          throw taskUpdatesError;
+        }
+        
+        console.log(`Found ${taskUpdates?.length || 0} task updates for project ${project.id}`);
+
+        // Get subtasks
+        const { data: subtasks, error: subtasksError } = await supabase
+          .from('project_subtasks')
+          .select(`
+            id, title, description, status, assigned_to,
+            due_date, notes
+          `)
+          .in('parent_task_id', tasks?.map((t: any) => t.id) || []);
+
+        if (subtasksError && tasks?.length > 0) {
+          console.error(`Error fetching subtasks for project ${project.id}:`, subtasksError);
+          throw subtasksError;
+        }
+        
+        console.log(`Found ${subtasks?.length || 0} subtasks for project ${project.id}`);
+
         return {
           ...project,
           tasks: tasks || [],
@@ -145,7 +191,10 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
           teamMembers: teamMembers || [],
           events: events || [],
           contacts: contacts || [],
-          invitations: invitations || []
+          invitations: invitations || [],
+          ganttTasks: ganttTasks || [],
+          taskUpdates: taskUpdates || [],
+          subtasks: subtasks || []
         };
       })
     );
@@ -179,6 +228,30 @@ const getUserProfile = async (supabase: any, userId: string) => {
   } catch (error) {
     console.error('Error getting user profile:', error);
     return null;
+  }
+};
+
+// Get user templates
+const getUserTemplates = async (supabase: any, userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('task_templates')
+      .select(`
+        id, title, description, created_at
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching user templates:', error);
+      throw error;
+    }
+    
+    console.log(`Fetched ${data?.length || 0} templates for user ${userId}`);
+    return data || [];
+  } catch (error) {
+    console.error('Error getting user templates:', error);
+    return [];
   }
 };
 
@@ -230,6 +303,7 @@ serve(async (req) => {
     console.log('Fetching user context for userId:', userId);
     const userProfile = await getUserProfile(supabaseAdmin, userId);
     const projectsContext = await extractProjectInfo(supabaseAdmin, userId);
+    const userTemplates = await getUserTemplates(supabaseAdmin, userId);
     
     // Format context for OpenAI prompt
     let contextText = '';
@@ -242,6 +316,10 @@ serve(async (req) => {
       contextText += JSON.stringify(projectsContext, null, 2);
     } else {
       contextText += 'No projects found for this user.';
+    }
+
+    if (userTemplates?.length > 0) {
+      contextText += `\n\nTask Templates: ${JSON.stringify(userTemplates, null, 2)}`;
     }
     
     console.log(`Context built with ${projectsContext?.length || 0} projects and user profile ${userProfile ? 'found' : 'not found'}`);
@@ -386,10 +464,24 @@ const createClient = (supabaseUrl: string, serviceRoleKey: string) => {
           },
           single: () => {
             return { data: {}, error: null }; // Mock implementation for Deno
+          },
+          in: (column: string, values: any[]) => ({
+            limit: (limit: number) => {
+              return { data: [], error: null }; // Mock implementation for Deno
+            }
+          })
+        }),
+        in: (column: string, values: any[]) => ({
+          order: (column: string, { ascending }: { ascending: boolean }) => ({
+            limit: (limit: number) => {
+              return { data: [], error: null }; // Mock implementation for Deno
+            }
+          }),
+          limit: (limit: number) => {
+            return { data: [], error: null }; // Mock implementation for Deno
           }
         })
       })
     })
   };
 };
-
