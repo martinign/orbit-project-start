@@ -1,11 +1,10 @@
-
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatWidget } from '@/hooks/useChatWidget';
 import { ChatMessage } from '@/components/chat/ChatMessage';
-import { MessageCircle, Send, ChevronDown, Loader, RefreshCw } from 'lucide-react';
-import { useRef, useEffect } from 'react';
+import { MessageCircle, Send, ChevronDown, Loader, RefreshCw, Maximize2 } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export const ChatWidget = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     isOpen,
     toggleChat,
@@ -38,7 +38,6 @@ export const ChatWidget = () => {
     }
   }, [messages, isTyping]);
 
-  // Auto-resize textarea as user types
   useEffect(() => {
     const textarea = textAreaRef.current;
     if (textarea) {
@@ -47,13 +46,20 @@ export const ChatWidget = () => {
     }
   }, [inputMessage]);
 
+  const toggleExpand = () => {
+    setIsExpanded(prev => !prev);
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-4">
       {isOpen && (
         <Card className={cn(
-          "w-[380px] shadow-xl rounded-2xl border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
+          "shadow-xl rounded-2xl border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80",
           "transform transition-all duration-300 ease-in-out",
-          "animate-in fade-in-0 slide-in-from-bottom-5 scale-in-95"
+          "animate-in fade-in-0 slide-in-from-bottom-5 scale-in-95",
+          isExpanded 
+            ? "w-[80vw] max-w-[800px] h-[80vh] max-h-[800px]" 
+            : "w-[380px]"
         )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-2 border-b">
             <div className="flex items-center gap-2">
@@ -74,6 +80,18 @@ export const ChatWidget = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={toggleExpand}
+                className="h-8 w-8 p-0 hover:bg-muted/80"
+                title={isExpanded ? "Minimize window" : "Maximize window"}
+              >
+                <Maximize2 className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isExpanded && "rotate-180"
+                )} />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={toggleChat}
                 className="h-8 w-8 p-0 hover:bg-muted/80"
                 title="Minimize chat"
@@ -83,7 +101,10 @@ export const ChatWidget = () => {
             </div>
           </CardHeader>
           
-          <ScrollArea className="h-[400px] px-4">
+          <ScrollArea className={cn(
+            "px-4",
+            isExpanded ? "h-[calc(80vh-120px)]" : "h-[400px]"
+          )}>
             <CardContent className="pt-4">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
