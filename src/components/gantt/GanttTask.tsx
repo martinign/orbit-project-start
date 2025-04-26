@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,20 +15,13 @@ import { getStatusBadge } from '@/utils/statusBadge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { columnsConfig } from '../tasks/columns-config';
+import { GanttTask as GanttTaskType } from '@/types/gantt';
 
 interface GanttTaskProps {
-  task: {
-    id: string;
-    title: string;
-    status: string;
-    start_date?: string | null;
-    duration_days?: number | null;
-    dependencies?: string[];
-    dependencyObjects?: any[];
-  };
+  task: GanttTaskType;
   projectId: string;
   style: React.CSSProperties;
-  onEditTask?: (task: any) => void;
+  onEditTask?: (task: GanttTaskType) => void;
 }
 
 export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, onEditTask }) => {
@@ -37,24 +29,20 @@ export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, on
   const queryClient = useQueryClient();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Find the matching status config
   const statusConfig = columnsConfig.find(config => 
     config.status.toLowerCase() === task.status.toLowerCase()
   ) || columnsConfig[0];
 
-  // Helper function to update task status
   const updateTaskStatus = async (status: string) => {
     try {
-      // Update the task's status in project_tasks table
-      const { error: taskError } = await supabase
+      const { error } = await supabase
         .from('project_tasks')
         .update({ status })
         .eq('id', task.id);
 
-      if (taskError) throw taskError;
+      if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['gantt_tasks', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
       toast({
         title: "Status Updated",
@@ -87,7 +75,9 @@ export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, on
               <div className="p-4 space-y-2">
                 <h3 className="text-lg font-bold">{task.title}</h3>
                 <div>{getStatusBadge(task.status)}</div>
-                <p className="text-sm text-gray-600">{task.description}</p>
+                {task.description && (
+                  <p className="text-sm text-gray-600">{task.description}</p>
+                )}
                 <div className="space-y-1">
                   <p className="text-sm">
                     <span className="font-medium">Start:</span> {task.start_date ? format(new Date(task.start_date), 'MMM dd, yyyy') : 'Not set'}
@@ -96,12 +86,12 @@ export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, on
                     <span className="font-medium">Duration:</span> {task.duration_days || 0} days
                   </p>
                   
-                  {task.dependencyObjects && task.dependencyObjects.length > 0 && (
+                  {task.dependencies && task.dependencies.length > 0 && (
                     <div>
                       <p className="font-medium text-sm">Dependencies:</p>
                       <ul className="list-disc list-inside text-xs space-y-0.5">
-                        {task.dependencyObjects.map((dep: any) => (
-                          <li key={dep.id}>{dep.title}</li>
+                        {task.dependencies.map((depId) => (
+                          <li key={depId}>{depId}</li>
                         ))}
                       </ul>
                     </div>
@@ -111,7 +101,7 @@ export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, on
             </TooltipContent>
           </Tooltip>
           
-          <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <div className="p-1 rounded hover:bg-black/10">
                 <MoreVertical className="h-4 w-4" />

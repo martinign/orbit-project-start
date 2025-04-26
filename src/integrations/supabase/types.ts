@@ -48,6 +48,44 @@ export type Database = {
         }
         Relationships: []
       }
+      gantt_tasks: {
+        Row: {
+          created_at: string
+          dependencies: string[] | null
+          duration_days: number | null
+          id: string
+          start_date: string | null
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dependencies?: string[] | null
+          duration_days?: number | null
+          id?: string
+          start_date?: string | null
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dependencies?: string[] | null
+          duration_days?: number | null
+          id?: string
+          start_date?: string | null
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gantt_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

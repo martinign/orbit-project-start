@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -21,7 +20,7 @@ interface GanttTaskDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  task?: any;
+  task?: GanttTask;
   mode?: 'create' | 'edit';
 }
 
@@ -61,12 +60,10 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
       
       setDurationDays(task.duration_days || 1);
       
-      // Load dependencies if any
       if (task.dependencies) {
         setDependencies(Array.isArray(task.dependencies) ? task.dependencies : []);
       }
     } else {
-      // Reset form for create mode
       setTitle('');
       setDescription('');
       setStartDate(null);
@@ -91,7 +88,6 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
         
         if (error) throw error;
         
-        // Filter out the current task and already selected dependencies
         const filteredTasks = data?.filter(t => 
           t.id !== task?.id && !dependencies.includes(t.id)
         ) || [];
@@ -130,71 +126,65 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      let taskData = {
-        title,
-        description,
-        status,
-        project_id: projectId,
-        assigned_to: assignedTo,
-        is_gantt_task: true
-      };
-
-      let ganttData = {
-        start_date: startDate?.toISOString(),
-        duration_days: durationDays,
-        dependencies
-      };
-
       if (mode === 'create') {
-        // First create the task
         const { data: taskResult, error: taskError } = await supabase
           .from('project_tasks')
-          .insert([taskData])
+          .insert({
+            title,
+            description,
+            status,
+            project_id: projectId,
+            assigned_to: assignedTo,
+            is_gantt_task: true,
+            user_id: (await supabase.auth.getUser()).data.user?.id
+          })
           .select('id')
           .single();
 
         if (taskError) throw taskError;
 
-        // Then create the gantt_task entry
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
-          .insert([{
+          .insert({
             task_id: taskResult.id,
-            ...ganttData
-          }]);
+            start_date: startDate.toISOString(),
+            duration_days: durationDays,
+            dependencies
+          });
 
         if (ganttError) throw ganttError;
-        
-        toast({
-          title: "Success",
-          description: "Gantt task created successfully",
-        });
       } else if (task?.id) {
-        // Update the task
         const { error: taskError } = await supabase
           .from('project_tasks')
-          .update(taskData)
+          .update({
+            title,
+            description,
+            status,
+            assigned_to: assignedTo
+          })
           .eq('id', task.id);
 
         if (taskError) throw taskError;
 
-        // Update the gantt_task
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
-          .update(ganttData)
+          .update({
+            start_date: startDate.toISOString(),
+            duration_days: durationDays,
+            dependencies
+          })
           .eq('task_id', task.id);
 
         if (ganttError) throw ganttError;
-        
-        toast({
-          title: "Success",
-          description: "Gantt task updated successfully",
-        });
       }
 
       queryClient.invalidateQueries({ queryKey: ['gantt_tasks', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
+      toast({
+        title: "Success",
+        description: mode === 'create' ? "Gantt task created successfully" : "Gantt task updated successfully",
+      });
+
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {

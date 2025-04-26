@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { GanttChart } from '@/components/gantt/GanttChart';
+import { GanttTask } from '@/types/gantt';
 
 interface GanttTabProps {
   projectId: string;
@@ -13,10 +14,21 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
   const { data: tasks, isLoading, refetch } = useQuery({
     queryKey: ['gantt_tasks', projectId],
     queryFn: async () => {
-      // Fetch both project_tasks that are gantt tasks and their corresponding gantt_tasks data
+      // First fetch the project tasks that are marked as Gantt tasks
       const { data: taskData, error: taskError } = await supabase
         .from('project_tasks')
-        .select('*')
+        .select(`
+          id,
+          title,
+          description,
+          status,
+          project_id,
+          user_id,
+          assigned_to,
+          is_gantt_task,
+          created_at,
+          updated_at
+        `)
         .eq('project_id', projectId)
         .eq('is_gantt_task', true)
         .order('created_at', { ascending: true });
@@ -24,7 +36,7 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
       if (taskError) throw taskError;
 
       if (taskData && taskData.length > 0) {
-        // Fetch gantt-specific data for these tasks
+        // Then fetch the Gantt-specific data for these tasks
         const taskIds = taskData.map(task => task.id);
         
         const { data: ganttData, error: ganttError } = await supabase
@@ -38,16 +50,17 @@ export const GanttTab: React.FC<GanttTabProps> = ({ projectId }) => {
         const mergedTasks = taskData.map(task => {
           const ganttInfo = ganttData?.find(g => g.task_id === task.id);
           return { 
-            ...task, 
-            ...ganttInfo,
+            ...task,
+            start_date: ganttInfo?.start_date,
+            duration_days: ganttInfo?.duration_days,
             dependencies: ganttInfo?.dependencies || []
-          };
+          } as GanttTask;
         });
 
         return mergedTasks;
       }
 
-      return taskData || [];
+      return [];
     },
   });
 
