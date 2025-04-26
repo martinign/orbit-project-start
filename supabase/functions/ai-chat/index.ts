@@ -141,6 +141,27 @@ serve(async (req) => {
           );
         }
         
+        // Handle rate limit error specifically
+        if (data.error?.type === 'tokens' || data.error?.code === 'rate_limit_exceeded') {
+          const retryAfter = data.error.message.match(/try again in (\d+\.\d+)s/);
+          const waitTime = retryAfter ? parseFloat(retryAfter[1]) : 60;
+
+          return new Response(
+            JSON.stringify({
+              message: `OpenAI API rate limit exceeded. Please try again in ${Math.ceil(waitTime)} seconds.`,
+              retryAfter: waitTime
+            }),
+            {
+              status: 429,
+              headers: {
+                ...corsHeaders,
+                'Content-Type': 'application/json',
+                'Retry-After': String(Math.ceil(waitTime))
+              }
+            }
+          );
+        }
+        
         // Handle other API errors
         return new Response(
           JSON.stringify({ 
