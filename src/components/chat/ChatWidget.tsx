@@ -5,14 +5,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChatWidget } from '@/hooks/useChatWidget';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { MessageCircle, Send, X, Loader, RefreshCw } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { useRef, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export const ChatWidget = () => {
   const {
@@ -29,7 +24,6 @@ export const ChatWidget = () => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -37,64 +31,64 @@ export const ChatWidget = () => {
   }, [messages]);
 
   return (
-    <>
-      {/* Floating button */}
-      <Button
-        onClick={toggleChat}
-        className="fixed bottom-4 right-4 shadow-lg z-40 rounded-full h-14 w-14 p-0"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </Button>
-
-      {/* Chat sheet */}
-      <Sheet open={isOpen} onOpenChange={toggleChat}>
-        <SheetContent className="sm:max-w-[400px] p-0 flex flex-col h-[600px] sm:h-[80vh] max-h-screen">
-          <SheetHeader className="px-4 py-2 border-b">
-            <div className="flex justify-between items-center">
-              <SheetTitle>AI Project Assistant</SheetTitle>
-              <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={clearChat} 
-                  disabled={messages.length === 0 || isLoading}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={toggleChat}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-4">
+      {isOpen && (
+        <Card className="w-[380px] shadow-lg rounded-2xl border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 px-4 py-2 border-b">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              <h4 className="font-semibold">AI Project Assistant</h4>
             </div>
-          </SheetHeader>
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearChat} 
+                disabled={messages.length === 0 || isLoading}
+                className="h-8 w-8 p-0"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleChat}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
           
-          <ScrollArea className="flex-1 p-4">
-            {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
-                <div>
-                  <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Start a conversation with your project AI assistant.</p>
-                  <p className="text-sm mt-1">Ask about your projects, tasks, or get help with project management.</p>
+          <ScrollArea className="h-[400px] px-4">
+            <CardContent className="pt-4">
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-center p-4">
+                  <div>
+                    <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>Start a conversation with your project AI assistant.</p>
+                    <p className="text-sm mt-1">Ask about your projects, tasks, or get help with project management.</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {messages.map((message, index) => (
-                  <ChatMessage key={index} message={message} />
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {messages.map((message, index) => (
+                    <ChatMessage key={index} message={message} />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </CardContent>
           </ScrollArea>
           
-          <SheetFooter className="p-4 border-t">
+          <CardFooter className="p-4 border-t">
             <div className="flex w-full gap-2">
               <Textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                className="resize-none min-h-[60px]"
+                className="resize-none min-h-[44px] max-h-[144px]"
                 disabled={isLoading}
               />
               <Button 
@@ -109,9 +103,22 @@ export const ChatWidget = () => {
                 )}
               </Button>
             </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </>
+          </CardFooter>
+        </Card>
+      )}
+
+      <Button
+        onClick={toggleChat}
+        className={cn(
+          "shadow-lg rounded-full h-14 w-14 p-0",
+          "transition-transform hover:scale-110",
+          "bg-primary hover:bg-primary/90",
+          isOpen && "rotate-180"
+        )}
+      >
+        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+      </Button>
+    </div>
   );
 };
+
