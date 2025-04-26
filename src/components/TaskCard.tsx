@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +24,7 @@ interface Task {
   due_date?: string;
   project_id: string;
   assigned_to?: string;
+  is_gantt_task?: boolean;
 }
 
 interface TaskCardProps {
@@ -88,7 +88,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                className="shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden"
+                className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${
+                  task.is_gantt_task ? 'bg-[#F2FCE2]' : ''
+                }`}
               >
                 <CardContent className="p-3">
                   <div className="flex justify-between items-start w-full">
