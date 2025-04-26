@@ -2,7 +2,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-// Headers for CORS
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -11,10 +10,20 @@ const corsHeaders = {
 // Handle context extraction for projects
 const extractProjectInfo = async (supabase: any, userId: string) => {
   try {
-    // Get user's projects
+    // Get user's projects with detailed information
     const { data: projects, error: projectsError } = await supabase
       .from('projects')
-      .select('id, project_number, protocol_title, Sponsor, status, description')
+      .select(`
+        id, 
+        project_number,
+        protocol_title,
+        protocol_number,
+        Sponsor,
+        status,
+        description,
+        created_at,
+        updated_at
+      `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -25,16 +34,23 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
 
     console.log(`Found ${projects?.length || 0} projects for user ${userId}`);
 
-    // For each project, get the most recent tasks
-    const projectsWithTasks = await Promise.all(
+    if (!projects || projects.length === 0) {
+      return [];
+    }
+
+    // For each project, get all related data
+    const projectsWithData = await Promise.all(
       projects.map(async (project: any) => {
-        // Get the most recent tasks for this project
+        // Get tasks with detailed information
         const { data: tasks, error: tasksError } = await supabase
           .from('project_tasks')
-          .select('id, title, status, priority, due_date')
+          .select(`
+            id, title, description, status, priority,
+            due_date, start_date, duration_days,
+            notes, is_gantt_task
+          `)
           .eq('project_id', project.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+          .order('created_at', { ascending: false });
 
         if (tasksError) {
           console.error(`Error fetching tasks for project ${project.id}:`, tasksError);
@@ -43,13 +59,12 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${tasks?.length || 0} tasks for project ${project.id}`);
 
-        // Get the most recent project notes
+        // Get project notes
         const { data: notes, error: notesError } = await supabase
           .from('project_notes')
-          .select('id, title, content')
+          .select('id, title, content, created_at')
           .eq('project_id', project.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
+          .order('created_at', { ascending: false });
 
         if (notesError) {
           console.error(`Error fetching notes for project ${project.id}:`, notesError);
@@ -58,12 +73,14 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${notes?.length || 0} notes for project ${project.id}`);
 
-        // Get team members
+        // Get team members with detailed info
         const { data: teamMembers, error: teamError } = await supabase
           .from('project_team_members')
-          .select('id, full_name, role')
-          .eq('project_id', project.id)
-          .limit(10);
+          .select(`
+            id, full_name, last_name, role,
+            location, permission_level
+          `)
+          .eq('project_id', project.id);
 
         if (teamError) {
           console.error(`Error fetching team members for project ${project.id}:`, teamError);
@@ -72,13 +89,15 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${teamMembers?.length || 0} team members for project ${project.id}`);
 
-        // Get events
+        // Get project events
         const { data: events, error: eventsError } = await supabase
           .from('project_events')
-          .select('id, title, event_date, description')
+          .select(`
+            id, title, description, event_date,
+            created_at
+          `)
           .eq('project_id', project.id)
-          .order('event_date', { ascending: true })
-          .limit(5);
+          .order('event_date', { ascending: true });
 
         if (eventsError) {
           console.error(`Error fetching events for project ${project.id}:`, eventsError);
@@ -87,12 +106,14 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${events?.length || 0} events for project ${project.id}`);
 
-        // Get contacts
+        // Get project contacts
         const { data: contacts, error: contactsError } = await supabase
           .from('project_contacts')
-          .select('id, full_name, role, email, company')
-          .eq('project_id', project.id)
-          .limit(10);
+          .select(`
+            id, full_name, last_name, role,
+            company, email, telephone, location
+          `)
+          .eq('project_id', project.id);
 
         if (contactsError) {
           console.error(`Error fetching contacts for project ${project.id}:`, contactsError);
@@ -101,6 +122,22 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
         
         console.log(`Found ${contacts?.length || 0} contacts for project ${project.id}`);
 
+        // Get project invitations
+        const { data: invitations, error: invitationsError } = await supabase
+          .from('project_invitations')
+          .select(`
+            id, status, permission_level,
+            created_at
+          `)
+          .eq('project_id', project.id);
+
+        if (invitationsError) {
+          console.error(`Error fetching invitations for project ${project.id}:`, invitationsError);
+          throw invitationsError;
+        }
+        
+        console.log(`Found ${invitations?.length || 0} invitations for project ${project.id}`);
+
         return {
           ...project,
           tasks: tasks || [],
@@ -108,11 +145,12 @@ const extractProjectInfo = async (supabase: any, userId: string) => {
           teamMembers: teamMembers || [],
           events: events || [],
           contacts: contacts || [],
+          invitations: invitations || []
         };
       })
     );
 
-    return projectsWithTasks;
+    return projectsWithData;
   } catch (error) {
     console.error('Error extracting project info:', error);
     return [];
@@ -124,7 +162,10 @@ const getUserProfile = async (supabase: any, userId: string) => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, last_name, role, location')
+      .select(`
+        id, full_name, last_name, role,
+        location, telephone, avatar_url
+      `)
       .eq('id', userId)
       .single();
 
@@ -197,7 +238,7 @@ serve(async (req) => {
     }
     
     if (projectsContext?.length > 0) {
-      contextText += `Projects information (${projectsContext.length} projects with their tasks, notes, team members, events, and contacts):\n`;
+      contextText += `Projects information (${projectsContext.length} projects with their detailed information):\n`;
       contextText += JSON.stringify(projectsContext, null, 2);
     } else {
       contextText += 'No projects found for this user.';
@@ -209,19 +250,21 @@ serve(async (req) => {
     const messages = [
       {
         role: "system",
-        content: `You are an AI assistant for a project management tool. You have access to information about the user's projects, tasks, team members, notes, events, and contacts.
+        content: `You are an AI project management assistant that helps users manage their projects, tasks, and teams. You have access to detailed information about the user's projects, tasks, team members, notes, events, and contacts.
         
         Use this context information to provide helpful responses:
         
         ${contextText}
         
         When answering:
-        - Be friendly and professional.
-        - When the user asks about specific projects, tasks, or people, use the context to provide accurate information.
-        - If information isn't in the context, acknowledge it's not available rather than making it up.
-        - For project management advice, give practical, actionable recommendations.
-        - If asked to create or modify data, explain that you can't directly change database records but can guide them on how to use the application to make those changes.
-        - At the end of each response, ask if there's anything else you can help with.`
+        - Be professional and friendly
+        - When users ask about specific projects, tasks, or team members, use the context to provide accurate information
+        - If information isn't in the context, acknowledge it's not available rather than making assumptions
+        - For project management advice, give practical, actionable recommendations based on their actual project data
+        - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application
+        - At the end of each response, ask if you can help with anything else.
+        - When discussing tasks, notes, or events, reference specific items from their projects to make responses more relevant
+        - Help identify patterns or potential issues in their project management based on the available data`
       },
       ...history,
       { role: "user", content: message }
@@ -349,3 +392,4 @@ const createClient = (supabaseUrl: string, serviceRoleKey: string) => {
     })
   };
 };
+
