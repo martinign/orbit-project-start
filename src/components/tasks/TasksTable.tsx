@@ -19,12 +19,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Calendar, Edit, MoreHorizontal, Trash2 } from 'lucide-react';
 import { getStatusBadge } from '@/utils/statusBadge';
+import { Badge } from '@/components/ui/badge';
 
 interface Task {
   id: string;
   title: string;
   status: string;
   due_date?: string;
+  is_gantt_task?: boolean;
   projects?: {
     project_number: string;
     Sponsor: string;
@@ -70,7 +72,16 @@ export const TasksTable: React.FC<TasksTableProps> = ({
         <TableBody>
           {tasks.map((task) => (
             <TableRow key={task.id}>
-              <TableCell className="font-medium">{task.title}</TableCell>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  {task.title}
+                  {task.is_gantt_task && (
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200/80">
+                      G
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
               <TableCell>{getStatusBadge(task.status)}</TableCell>
               <TableCell>
                 {task.due_date ? (
