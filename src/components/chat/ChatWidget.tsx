@@ -1,5 +1,4 @@
 
-import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -26,13 +25,6 @@ export const ChatWidget = () => {
     isLoading,
     handleKeyDown
   } = useChatWidget();
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   return (
     <>
@@ -45,7 +37,7 @@ export const ChatWidget = () => {
       </Button>
 
       {/* Chat sheet */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isOpen} onOpenChange={toggleChat}>
         <SheetContent className="sm:max-w-[400px] p-0 flex flex-col h-[600px] sm:h-[80vh] max-h-screen">
           <SheetHeader className="px-4 py-2 border-b">
             <div className="flex justify-between items-center">
@@ -80,7 +72,6 @@ export const ChatWidget = () => {
                 {messages.map((message, index) => (
                   <ChatMessage key={index} message={message} />
                 ))}
-                <div ref={messagesEndRef} />
               </div>
             )}
           </ScrollArea>

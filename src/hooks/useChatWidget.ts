@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,16 +30,13 @@ export const useChatWidget = () => {
       timestamp: new Date().toISOString()
     };
 
-    // Add user message to the chat
     setMessages(prev => [...prev, newUserMessage]);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      // Prepare history format for OpenAI (without timestamps)
       const formattedHistory = messages.map(({ role, content }) => ({ role, content }));
 
-      // Call the Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,
@@ -66,7 +62,6 @@ export const useChatWidget = () => {
         variant: 'destructive',
       });
       
-      // Add an error message to the chat
       setMessages(prev => [
         ...prev,
         {
