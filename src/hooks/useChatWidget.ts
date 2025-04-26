@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,6 +38,12 @@ export const useChatWidget = () => {
     try {
       const formattedHistory = messages.map(({ role, content }) => ({ role, content }));
 
+      console.log('Calling AI chat function with:', {
+        message: inputMessage,
+        historyLength: formattedHistory.length,
+        userId: user.id
+      });
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,
@@ -45,7 +52,15 @@ export const useChatWidget = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from AI chat function:', error);
+        throw new Error(error.message || 'Error calling AI function');
+      }
+
+      if (!data || !data.message) {
+        console.error('Invalid response data:', data);
+        throw new Error('Received invalid response from AI');
+      }
 
       const aiResponse: ChatMessage = {
         role: 'assistant',
@@ -56,9 +71,19 @@ export const useChatWidget = () => {
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('Error calling AI chat function:', error);
+      
+      let errorMessage = 'Failed to get a response from the AI. Please try again.';
+      
+      // Check for specific known errors
+      if (error.message?.includes('quota') || error.message?.includes('billing')) {
+        errorMessage = 'OpenAI API quota exceeded. The API key may need to be updated or billing limits increased.';
+      } else if (error.message?.includes('API key')) {
+        errorMessage = 'OpenAI API key issue. Please check that a valid API key has been configured.';
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to get a response from the AI. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
       
@@ -66,7 +91,7 @@ export const useChatWidget = () => {
         ...prev,
         {
           role: 'assistant',
-          content: 'Sorry, I encountered an error processing your request. Please try again.',
+          content: 'Sorry, I encountered an error processing your request. ' + errorMessage,
           timestamp: new Date().toISOString()
         }
       ]);

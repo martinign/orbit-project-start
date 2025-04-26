@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useRef, useEffect } from 'react';
 
 export const ChatWidget = () => {
   const {
@@ -25,6 +26,13 @@ export const ChatWidget = () => {
     isLoading,
     handleKeyDown
   } = useChatWidget();
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <>
@@ -72,6 +80,7 @@ export const ChatWidget = () => {
                 {messages.map((message, index) => (
                   <ChatMessage key={index} message={message} />
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </ScrollArea>

@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -99,16 +100,6 @@ const getUserProfile = async (supabase: any, userId: string) => {
 serve(async (req) => {
   const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-  if (!OPENAI_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: 'OpenAI API key not configured' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-  }
-
   // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -123,6 +114,20 @@ serve(async (req) => {
   }
 
   try {
+    // Check for OpenAI API key
+    if (!OPENAI_API_KEY) {
+      console.error('OpenAI API key not configured');
+      return new Response(
+        JSON.stringify({ 
+          message: 'OpenAI API key not configured. Please add your API key to the Supabase secrets.'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     const { message, history, userId } = await req.json();
     
     // Create Supabase client with admin privileges for data access
@@ -167,41 +172,84 @@ serve(async (req) => {
       { role: "user", content: message }
     ];
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages,
-        temperature: 0.7,
-        max_tokens: 800,
-      })
-    });
+    try {
+      // Call OpenAI API with proper error handling
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages,
+          temperature: 0.7,
+          max_tokens: 800,
+        })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      console.error('OpenAI API error:', data);
-      throw new Error(data.error?.message || 'Error calling OpenAI API');
+      // Handle specific OpenAI API errors
+      if (!response.ok) {
+        console.error('OpenAI API error:', data);
+        
+        // Handle quota exceeded error specifically
+        if (data.error?.type === 'insufficient_quota') {
+          return new Response(
+            JSON.stringify({ 
+              message: "You have exceeded your OpenAI API quota. Please check your billing details on the OpenAI dashboard."
+            }),
+            { 
+              status: 429, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        
+        // Handle other API errors
+        return new Response(
+          JSON.stringify({ 
+            message: data.error?.message || 'Error calling OpenAI API',
+            details: data.error
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+
+      // Return successful response
+      return new Response(
+        JSON.stringify({ 
+          message: data.choices[0]?.message?.content || 'No response from AI',
+          usage: data.usage
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    } catch (openaiError) {
+      console.error('Error calling OpenAI API:', openaiError);
+      return new Response(
+        JSON.stringify({ 
+          message: 'Failed to get a response from OpenAI. Please try again later.',
+          error: openaiError.message || 'Unknown error'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
-
+  } catch (error) {
+    console.error('General error in Edge Function:', error);
     return new Response(
       JSON.stringify({ 
-        message: data.choices[0]?.message?.content || 'No response from AI',
-        usage: data.usage
+        message: 'An unexpected error occurred',
+        error: error.message || 'Unknown error'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-  } catch (error) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred' }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
