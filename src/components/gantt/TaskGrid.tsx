@@ -26,9 +26,31 @@ export const TaskGrid: React.FC<TaskGridProps> = ({
   projectId,
 }) => {
   const today = startOfToday();
+  const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
   return (
     <div className="relative" style={{ height: tasks.length * 48 }}>
+      {/* Grid lines */}
+      <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
+        {/* Vertical lines for days */}
+        {Array.from({ length: totalDays + 1 }).map((_, index) => (
+          <div
+            key={`vline-${index}`}
+            className="absolute top-0 bottom-0 border-l border-dotted border-gray-200"
+            style={{ left: `${index * columnWidth}px` }}
+          />
+        ))}
+        
+        {/* Horizontal lines for tasks */}
+        {Array.from({ length: tasks.length + 1 }).map((_, index) => (
+          <div
+            key={`hline-${index}`}
+            className="absolute left-0 right-0 border-t border-dotted border-gray-200"
+            style={{ top: `${index * 48}px` }}
+          />
+        ))}
+      </div>
+
       {/* Today marker */}
       <div
         className="absolute top-0 bottom-0 w-px bg-blue-500 z-20"
