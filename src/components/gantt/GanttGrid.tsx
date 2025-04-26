@@ -65,7 +65,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
         </div>
 
         {/* Scrollable timeline area */}
-        <ScrollArea className="flex-1 overflow-x-auto" orientation="horizontal">
+        <ScrollArea className="flex-1 overflow-x-auto">
           <div style={{ width: contentWidth }}>
             {/* Timeline header */}
             <div className="flex h-10 border-b sticky top-0 bg-muted/50 z-20">
