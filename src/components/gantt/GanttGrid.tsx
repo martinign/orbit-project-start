@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { eachDayOfInterval, format, startOfToday, addDays } from 'date-fns';
 import { GanttTask } from './GanttTask';
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 interface GanttGridProps {
@@ -42,18 +42,18 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
   const contentWidth = timelineData.dates.length * timelineData.columnWidth;
 
   return (
-    <div className="relative border rounded-md">
-      <div className="flex">
+    <div className="relative border rounded-md h-[600px] overflow-hidden">
+      <div className="flex h-full">
         {/* Fixed tasks title column */}
-        <div className="w-[200px] flex-shrink-0 bg-background border-r z-20">
-          <div className="h-10 border-b bg-muted/50 px-4 flex items-center font-medium">
+        <div className="w-[200px] flex-none border-r bg-background sticky left-0 z-30 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]">
+          <div className="h-10 border-b bg-muted/50 px-4 flex items-center font-medium sticky top-0">
             Tasks
           </div>
           <div className="divide-y">
             {tasksWithDependencies.map((task) => (
               <div
                 key={task.id}
-                className="px-4 py-3 hover:bg-accent/50 cursor-pointer"
+                className="px-4 py-3 hover:bg-accent/50 cursor-pointer h-[48px]"
                 onClick={() => onEditTask?.(task)}
               >
                 <div className="text-sm font-medium truncate">
@@ -64,11 +64,11 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
           </div>
         </div>
 
-        {/* Scrollable timeline */}
-        <ScrollArea className="flex-1">
+        {/* Scrollable timeline area */}
+        <ScrollArea className="flex-1 overflow-x-auto" orientation="horizontal">
           <div style={{ width: contentWidth }}>
             {/* Timeline header */}
-            <div className="flex h-10 border-b sticky top-0 bg-muted/50 z-10">
+            <div className="flex h-10 border-b sticky top-0 bg-muted/50 z-20">
               {timelineData.dates.map((date) => (
                 <div
                   key={date.toISOString()}
@@ -182,6 +182,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
               })}
             </div>
           </div>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
     </div>
