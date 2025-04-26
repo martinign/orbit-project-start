@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { addDays, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, format, startOfToday } from 'date-fns';
 import { GanttTask } from './GanttTask';
@@ -43,7 +42,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
 
   const today = startOfToday();
 
-  // Process tasks to include their dependencies
   const tasksWithDependencies = useMemo(() => {
     return tasks.map(task => {
       const dependencies = tasks.filter(t => 
@@ -57,7 +55,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
   return (
     <div className="relative overflow-x-auto">
       <div className="min-w-full" style={{ height: tasks.length * 50 + 40 }}>
-        {/* Timeline header */}
         <div className="flex border-b sticky top-0 bg-background z-10">
           {timelineData.dates.map((date, index) => (
             <div
@@ -70,7 +67,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
           ))}
         </div>
 
-        {/* Today marker */}
         <div
           className="absolute top-0 bottom-0 w-px bg-blue-500 z-20"
           style={{
@@ -79,7 +75,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
           }}
         />
 
-        {/* Tasks */}
         {tasksWithDependencies.map((task, index) => {
           if (!task.start_date) return null;
 
@@ -105,7 +100,6 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
           );
         })}
 
-        {/* Dependencies arrows */}
         {tasksWithDependencies.map((task) => {
           if (!task.dependencyObjects?.length) return null;
 
@@ -115,20 +109,20 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
             const startTaskStart = new Date(dependency.start_date);
             const startTaskDuration = dependency.duration_days || 1;
             const startTaskEnd = addDays(startTaskStart, startTaskDuration);
-            
             const endTaskStart = new Date(task.start_date);
             
             const startLeft = ((startTaskEnd.getTime() - startDate.getTime()) / 
               (endDate.getTime() - startDate.getTime())) * 100;
-            
             const endLeft = ((endTaskStart.getTime() - startDate.getTime()) / 
               (endDate.getTime() - startDate.getTime())) * 100;
             
             const startIndex = tasksWithDependencies.findIndex(t => t.id === dependency.id);
             const endIndex = tasksWithDependencies.findIndex(t => t.id === task.id);
             
-            const startTop = startIndex * 50 + 40 + 20; // Middle of the task
+            const startTop = startIndex * 50 + 40 + 20;
             const endTop = endIndex * 50 + 40 + 20;
+            
+            const isValidDependency = startTaskEnd <= endTaskStart;
             
             return (
               <svg
@@ -141,23 +135,26 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
                     id={`arrowhead-${dependency.id}-${task.id}`}
                     markerWidth="10"
                     markerHeight="7"
-                    refX="0"
+                    refX="9"
                     refY="3.5"
                     orient="auto"
                   >
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
+                    <polygon 
+                      points="0 0, 10 3.5, 0 7" 
+                      fill={isValidDependency ? "#4B5563" : "#EF4444"}
+                    />
                   </marker>
                 </defs>
                 <path
                   d={`M${startLeft}% ${startTop}
-                      C${(startLeft + endLeft) / 2}% ${startTop},
-                      ${(startLeft + endLeft) / 2}% ${endTop},
+                      C${(startLeft + ((endLeft - startLeft) * 0.5))}% ${startTop},
+                      ${(startLeft + ((endLeft - startLeft) * 0.5))}% ${endTop},
                       ${endLeft}% ${endTop}`}
-                  stroke="#888"
-                  strokeWidth="1"
-                  strokeDasharray="4 2"
+                  stroke={isValidDependency ? "#4B5563" : "#EF4444"}
+                  strokeWidth="2"
                   fill="none"
                   markerEnd={`url(#arrowhead-${dependency.id}-${task.id})`}
+                  className="transition-colors duration-200 hover:stroke-primary hover:stroke-[3px]"
                 />
               </svg>
             );
