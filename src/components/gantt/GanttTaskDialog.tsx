@@ -1,20 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { format, addDays } from 'date-fns';
-import { Calendar, Clock, FileText, Users, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Select, SelectValue, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { columnsConfig } from '../tasks/columns-config';
 import { GanttTask } from '@/types/gantt';
+import { useGanttTaskDependencies } from '@/hooks/useGanttTaskDependencies';
+import { GanttTaskForm } from './GanttTaskForm';
+import { GanttTaskDependencies } from './GanttTaskDependencies';
 
 interface GanttTaskDialogProps {
   projectId: string;
@@ -45,10 +40,13 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
   const [dependencies, setDependencies] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [availableTasks, setAvailableTasks] = useState<any[]>([]);
-  const [selectedDependency, setSelectedDependency] = useState<string | null>(null);
 
-  const [dependencyEndDate, setDependencyEndDate] = useState<Date | null>(null);
+  const { 
+    availableTasks, 
+    selectedDependency, 
+    setSelectedDependency,
+    dependencyEndDate 
+  } = useGanttTaskDependencies(projectId, task?.id, dependencies);
 
   useEffect(() => {
     if (task && mode === 'edit') {
@@ -77,66 +75,6 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
     }
   }, [task, mode, open]);
 
-  useEffect(() => {
-    const fetchAvailableTasks = async () => {
-      if (!projectId || !open) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('project_tasks')
-          .select('id, title')
-          .eq('project_id', projectId)
-          .eq('is_gantt_task', true)
-          .order('title', { ascending: true });
-        
-        if (error) throw error;
-        
-        const filteredTasks = data?.filter(t => 
-          t.id !== task?.id && !dependencies.includes(t.id)
-        ) || [];
-        
-        setAvailableTasks(filteredTasks);
-      } catch (error) {
-        console.error('Error fetching available tasks:', error);
-      }
-    };
-
-    fetchAvailableTasks();
-  }, [projectId, open, task?.id, dependencies]);
-
-  useEffect(() => {
-    const calculateLatestDependencyEndDate = async () => {
-      if (dependencies.length === 0) {
-        setDependencyEndDate(null);
-        return;
-      }
-
-      try {
-        const { data: depTasks } = await supabase
-          .from('gantt_tasks')
-          .select('task_id, start_date, duration_days')
-          .in('task_id', dependencies);
-
-        if (!depTasks?.length) return;
-
-        const latestEnd = depTasks.reduce((latest, dep) => {
-          if (!dep.start_date || !dep.duration_days) return latest;
-          const endDate = addDays(new Date(dep.start_date), dep.duration_days);
-          return endDate > latest ? endDate : latest;
-        }, new Date(0));
-
-        setDependencyEndDate(latestEnd);
-        if (!startDate || mode === 'create') {
-          setStartDate(latestEnd);
-        }
-      } catch (error) {
-        console.error('Error calculating dependency end date:', error);
-      }
-    };
-
-    calculateLatestDependencyEndDate();
-  }, [dependencies]);
-
   const handleAddDependency = () => {
     if (selectedDependency && !dependencies.includes(selectedDependency)) {
       setDependencies([...dependencies, selectedDependency]);
@@ -159,21 +97,16 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
       return;
     }
 
-    // If we have dependencies, ensure we have a valid start date
-    if (dependencies.length > 0 && !dependencyEndDate) {
-      toast({
-        title: "Error",
-        description: "Calculating dependency dates. Please wait.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
+      const effectiveStartDate = dependencies.length > 0 ? dependencyEndDate : startDate;
+      
+      if (!effectiveStartDate && !dependencies.length) {
+        throw new Error("Start date is required when there are no dependencies");
+      }
+
       if (mode === 'create') {
-        // Get the current user ID
         const { data: userData } = await supabase.auth.getUser();
         const userId = userData.user?.id;
 
@@ -181,7 +114,6 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
           throw new Error("User not authenticated");
         }
 
-        // Create the main task
         const { data: taskResult, error: taskError } = await supabase
           .from('project_tasks')
           .insert({
@@ -198,20 +130,18 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
         if (taskError) throw taskError;
 
-        // Create the gantt task data
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .insert({
             task_id: taskResult.id,
             project_id: projectId,
-            start_date: startDate?.toISOString(),
+            start_date: effectiveStartDate?.toISOString(),
             duration_days: durationDays,
             dependencies
           });
 
         if (ganttError) throw ganttError;
       } else if (task?.id) {
-        // Update the main task
         const { error: taskError } = await supabase
           .from('project_tasks')
           .update({
@@ -224,11 +154,10 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
         if (taskError) throw taskError;
 
-        // Update the gantt task data
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .update({
-            start_date: startDate?.toISOString(),
+            start_date: effectiveStartDate?.toISOString(),
             duration_days: durationDays,
             dependencies
           })
@@ -273,169 +202,35 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Task Title <span className="text-red-500">*</span></Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter task title"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter task description"
-              rows={3}
-            />
-          </div>
+          <GanttTaskForm
+            title={title}
+            description={description}
+            startDate={startDate}
+            durationDays={durationDays}
+            status={status}
+            assignedTo={assignedTo}
+            dependencies={dependencies}
+            dependencyEndDate={dependencyEndDate}
+            teamMembers={teamMembers || []}
+            calendarOpen={calendarOpen}
+            onTitleChange={setTitle}
+            onDescriptionChange={setDescription}
+            onStartDateSelect={setStartDate}
+            onDurationChange={(value) => setDurationDays(parseInt(value) || 1)}
+            onStatusChange={setStatus}
+            onAssignedToChange={setAssignedTo}
+            setCalendarOpen={setCalendarOpen}
+          />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start-date">
-                Start Date {!dependencies.length && <span className="text-red-500">*</span>}
-              </Label>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={`w-full justify-start text-left font-normal ${dependencies.length ? 'opacity-50' : ''}`}
-                    id="start-date"
-                    type="button"
-                    disabled={dependencies.length > 0}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "MMM dd, yyyy") : "Select date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <CalendarComponent
-                    mode="single"
-                    selected={startDate || undefined}
-                    onSelect={(date) => {
-                      setStartDate(date);
-                      setCalendarOpen(false);
-                    }}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              {dependencies.length > 0 && dependencyEndDate && (
-                <p className="text-sm text-muted-foreground">
-                  Start date will be set to {format(dependencyEndDate, "MMM dd, yyyy")} based on dependencies
-                </p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (Days) <span className="text-red-500">*</span></Label>
-              <Input
-                id="duration"
-                type="number"
-                min="1"
-                value={durationDays}
-                onChange={(e) => setDurationDays(parseInt(e.target.value) || 1)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger id="status" className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {columnsConfig.map((column) => (
-                    <SelectItem key={column.id} value={column.status}>
-                      {column.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="assigned-to">Assigned To</Label>
-              <Select value={assignedTo || "unassigned"} onValueChange={setAssignedTo}>
-                <SelectTrigger id="assigned-to" className="w-full">
-                  <SelectValue placeholder="Select team member" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {teamMembers?.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {`${member.full_name || ''} ${member.last_name || ''}`.trim()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Dependencies</Label>
-            <div className="flex gap-2 mb-2">
-              <Select value={selectedDependency || "none"} onValueChange={setSelectedDependency}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a task" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {availableTasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id}>
-                      {task.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={handleAddDependency}
-                disabled={!selectedDependency || selectedDependency === "none"}
-              >
-                Add
-              </Button>
-            </div>
-
-            {dependencies.length > 0 && (
-              <div className="border rounded-md p-2">
-                <p className="text-sm text-muted-foreground mb-2">Dependencies:</p>
-                <ul className="space-y-1">
-                  {dependencies.map(depId => {
-                    const depTask = availableTasks.find(t => t.id === depId) || 
-                                    { id: depId, title: 'Unknown Task' };
-                    return (
-                      <li key={depId} className="flex justify-between items-center text-sm">
-                        <span className="flex items-center">
-                          <ArrowRight className="h-3 w-3 mr-1" />
-                          {depTask.title}
-                        </span>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 px-2 text-red-500"
-                          onClick={() => handleRemoveDependency(depId)}
-                        >
-                          Remove
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
-          </div>
+          <GanttTaskDependencies
+            availableTasks={availableTasks}
+            dependencies={dependencies}
+            selectedDependency={selectedDependency}
+            dependencyEndDate={dependencyEndDate}
+            onSelectedDependencyChange={setSelectedDependency}
+            onAddDependency={handleAddDependency}
+            onRemoveDependency={handleRemoveDependency}
+          />
 
           <DialogFooter>
             <Button variant="outline" type="button" onClick={onClose}>
