@@ -76,7 +76,10 @@ export const TasksTable: React.FC<TasksTableProps> = ({
                 <div className="flex items-center gap-2">
                   {task.title}
                   {task.is_gantt_task && (
-                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200/80">
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-purple-600 text-white px-1.5 py-0.5 rounded-full text-xs"
+                    >
                       G
                     </Badge>
                   )}
