@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { eachDayOfInterval, format, startOfToday } from 'date-fns';
+import { eachDayOfInterval, format, startOfToday, addDays } from 'date-fns';
 import { GanttTask } from './GanttTask';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
