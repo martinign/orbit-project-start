@@ -37,6 +37,7 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
       });
       
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['gantt_tasks'] });
       onRefetch();
     } catch (error) {
       console.error('Error updating task status:', error);

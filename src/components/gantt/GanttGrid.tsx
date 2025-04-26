@@ -8,9 +8,18 @@ interface GanttGridProps {
   startDate: Date;
   endDate: Date;
   view: 'day' | 'week' | 'month';
+  projectId: string;
+  onEditTask?: (task: any) => void;
 }
 
-export const GanttGrid: React.FC<GanttGridProps> = ({ tasks, startDate, endDate, view }) => {
+export const GanttGrid: React.FC<GanttGridProps> = ({ 
+  tasks, 
+  startDate, 
+  endDate, 
+  view,
+  projectId,
+  onEditTask
+}) => {
   const timelineData = useMemo(() => {
     let dates;
     let dateFormat;
@@ -33,6 +42,17 @@ export const GanttGrid: React.FC<GanttGridProps> = ({ tasks, startDate, endDate,
   }, [startDate, endDate, view]);
 
   const today = startOfToday();
+
+  // Process tasks to include their dependencies
+  const tasksWithDependencies = useMemo(() => {
+    return tasks.map(task => {
+      const dependencies = tasks.filter(t => 
+        task.dependencies && Array.isArray(task.dependencies) && 
+        task.dependencies.includes(t.id)
+      );
+      return { ...task, dependencyObjects: dependencies };
+    });
+  }, [tasks]);
 
   return (
     <div className="relative overflow-x-auto">
@@ -60,7 +80,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({ tasks, startDate, endDate,
         />
 
         {/* Tasks */}
-        {tasks.map((task, index) => {
+        {tasksWithDependencies.map((task, index) => {
           if (!task.start_date) return null;
 
           const taskStart = new Date(task.start_date);
@@ -73,14 +93,75 @@ export const GanttGrid: React.FC<GanttGridProps> = ({ tasks, startDate, endDate,
             <GanttTask
               key={task.id}
               task={task}
+              projectId={projectId}
               style={{
                 left: `${taskLeft}%`,
                 top: index * 50 + 40,
                 width: taskWidth,
                 height: 40,
               }}
+              onEditTask={onEditTask}
             />
           );
+        })}
+
+        {/* Dependencies arrows */}
+        {tasksWithDependencies.map((task) => {
+          if (!task.dependencyObjects?.length) return null;
+
+          return task.dependencyObjects.map((dependency: any) => {
+            if (!task.start_date || !dependency.start_date) return null;
+
+            const startTaskStart = new Date(dependency.start_date);
+            const startTaskDuration = dependency.duration_days || 1;
+            const startTaskEnd = addDays(startTaskStart, startTaskDuration);
+            
+            const endTaskStart = new Date(task.start_date);
+            
+            const startLeft = ((startTaskEnd.getTime() - startDate.getTime()) / 
+              (endDate.getTime() - startDate.getTime())) * 100;
+            
+            const endLeft = ((endTaskStart.getTime() - startDate.getTime()) / 
+              (endDate.getTime() - startDate.getTime())) * 100;
+            
+            const startIndex = tasksWithDependencies.findIndex(t => t.id === dependency.id);
+            const endIndex = tasksWithDependencies.findIndex(t => t.id === task.id);
+            
+            const startTop = startIndex * 50 + 40 + 20; // Middle of the task
+            const endTop = endIndex * 50 + 40 + 20;
+            
+            return (
+              <svg
+                key={`${dependency.id}-${task.id}`}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
+                style={{ overflow: 'visible' }}
+              >
+                <defs>
+                  <marker
+                    id={`arrowhead-${dependency.id}-${task.id}`}
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="0"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
+                  </marker>
+                </defs>
+                <path
+                  d={`M${startLeft}% ${startTop}
+                      C${(startLeft + endLeft) / 2}% ${startTop},
+                      ${(startLeft + endLeft) / 2}% ${endTop},
+                      ${endLeft}% ${endTop}`}
+                  stroke="#888"
+                  strokeWidth="1"
+                  strokeDasharray="4 2"
+                  fill="none"
+                  markerEnd={`url(#arrowhead-${dependency.id}-${task.id})`}
+                />
+              </svg>
+            );
+          });
         })}
       </div>
     </div>

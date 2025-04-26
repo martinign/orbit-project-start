@@ -1,9 +1,21 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  DropdownMenu, 
+  DropdownMenuTrigger, 
+  DropdownMenuContent, 
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Edit, MoreVertical } from 'lucide-react';
 import { getStatusBadge } from '@/utils/statusBadge';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { columnsConfig } from '../tasks/columns-config';
 
 interface GanttTaskProps {
   task: {
@@ -12,47 +24,121 @@ interface GanttTaskProps {
     status: string;
     start_date?: string | null;
     duration_days?: number | null;
+    dependencies?: string[];
+    dependencyObjects?: any[];
   };
+  projectId: string;
   style: React.CSSProperties;
+  onEditTask?: (task: any) => void;
 }
 
-const statusColors = {
-  'not started': 'bg-gray-100',
-  'pending': 'bg-yellow-100',
-  'in progress': 'bg-blue-100',
-  'completed': 'bg-green-100',
-  'stucked': 'bg-red-100',
-};
+export const GanttTask: React.FC<GanttTaskProps> = ({ task, projectId, style, onEditTask }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-export const GanttTask: React.FC<GanttTaskProps> = ({ task, style }) => {
-  const statusColor = statusColors[task.status.toLowerCase()] || 'bg-gray-100';
+  // Find the matching status config
+  const statusConfig = columnsConfig.find(config => 
+    config.status.toLowerCase() === task.status.toLowerCase()
+  ) || columnsConfig[0];
+
+  // Helper function to update task status
+  const updateTaskStatus = async (status: string) => {
+    try {
+      // Update the task's status in project_tasks table
+      const { error: taskError } = await supabase
+        .from('project_tasks')
+        .update({ status })
+        .eq('id', task.id);
+
+      if (taskError) throw taskError;
+
+      queryClient.invalidateQueries({ queryKey: ['gantt_tasks', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      
+      toast({
+        title: "Status Updated",
+        description: `Task status changed to ${status}`,
+      });
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Card 
-            className={`${statusColor} border absolute cursor-pointer transition-colors hover:brightness-95`} 
-            style={style}
-          >
-            <CardContent className="p-2 truncate text-sm">
-              {task.title}
-            </CardContent>
-          </Card>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="space-y-1">
-            <p className="font-semibold">{task.title}</p>
-            <div>{getStatusBadge(task.status)}</div>
-            <p className="text-sm">
-              Start: {task.start_date ? format(new Date(task.start_date), 'MMM dd, yyyy') : 'Not set'}
-            </p>
-            <p className="text-sm">
-              Duration: {task.duration_days || 0} days
-            </p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
+      <Card 
+        className={`${statusConfig.color} border absolute cursor-pointer transition-colors hover:brightness-95`} 
+        style={style}
+      >
+        <CardContent className="p-2 flex justify-between items-center h-full">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="truncate text-sm flex-1">
+                {task.title}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="w-80 p-0">
+              <div className="p-4 space-y-2">
+                <h3 className="text-lg font-bold">{task.title}</h3>
+                <div>{getStatusBadge(task.status)}</div>
+                <p className="text-sm text-gray-600">{task.description}</p>
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    <span className="font-medium">Start:</span> {task.start_date ? format(new Date(task.start_date), 'MMM dd, yyyy') : 'Not set'}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Duration:</span> {task.duration_days || 0} days
+                  </p>
+                  
+                  {task.dependencyObjects && task.dependencyObjects.length > 0 && (
+                    <div>
+                      <p className="font-medium text-sm">Dependencies:</p>
+                      <ul className="list-disc list-inside text-xs space-y-0.5">
+                        {task.dependencyObjects.map((dep: any) => (
+                          <li key={dep.id}>{dep.title}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+          
+          <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <div className="p-1 rounded hover:bg-black/10">
+                <MoreVertical className="h-4 w-4" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => onEditTask && onEditTask(task)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Task
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <div className="p-1 text-xs text-muted-foreground">Status</div>
+              {columnsConfig.map(column => (
+                <DropdownMenuItem 
+                  key={column.id}
+                  className="gap-2"
+                  onClick={() => updateTaskStatus(column.status)}
+                  disabled={task.status === column.status}
+                >
+                  <div className={`w-3 h-3 rounded-full ${column.badgeColor}`} />
+                  {column.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </CardContent>
+      </Card>
     </TooltipProvider>
   );
 };

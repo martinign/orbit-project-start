@@ -54,6 +54,24 @@ export const useTaskBoard = (onRefetch: () => void) => {
     if (!selectedTask) return;
 
     try {
+      // Check if this is a Gantt task
+      const { data: ganttTask } = await supabase
+        .from('gantt_tasks')
+        .select('task_id')
+        .eq('task_id', selectedTask.id)
+        .maybeSingle();
+      
+      if (ganttTask) {
+        // Delete from gantt_tasks first (due to foreign key constraint)
+        const { error: ganttError } = await supabase
+          .from('gantt_tasks')
+          .delete()
+          .eq('task_id', selectedTask.id);
+          
+        if (ganttError) throw ganttError;
+      }
+
+      // Delete any subtasks
       const { error: subtasksError } = await supabase
         .from('project_subtasks')
         .delete()
@@ -61,6 +79,15 @@ export const useTaskBoard = (onRefetch: () => void) => {
 
       if (subtasksError) throw subtasksError;
 
+      // Delete task updates
+      const { error: updatesError } = await supabase
+        .from('project_task_updates')
+        .delete()
+        .eq('task_id', selectedTask.id);
+        
+      if (updatesError) throw updatesError;
+
+      // Delete the main task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
@@ -69,9 +96,11 @@ export const useTaskBoard = (onRefetch: () => void) => {
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['gantt_tasks'] });
+      
       toast({
         title: 'Task Deleted',
-        description: 'The task and its subtasks have been successfully deleted.',
+        description: 'The task and its related data have been successfully deleted.',
       });
       onRefetch();
     } catch (error) {
