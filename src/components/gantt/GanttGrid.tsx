@@ -60,22 +60,12 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
     });
   }, [timelineData.dates, collapsedMonths]);
 
-  const tasksWithDependencies = useMemo(() => {
-    return tasks.map(task => ({
-      ...task,
-      dependencyObjects: tasks.filter(t => 
-        task.dependencies && Array.isArray(task.dependencies) && 
-        task.dependencies.includes(t.id)
-      )
-    }));
-  }, [tasks]);
-
   const contentWidth = visibleDates.length * timelineData.columnWidth;
 
   return (
     <div className="h-[600px] flex">
       <TasksList 
-        tasks={tasksWithDependencies}
+        tasks={tasks}
         onEditTask={onEditTask}
       />
 
@@ -91,7 +81,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
             />
 
             <TaskGrid
-              tasks={tasksWithDependencies}
+              tasks={tasks}
               startDate={startDate}
               endDate={endDate}
               contentWidth={contentWidth}

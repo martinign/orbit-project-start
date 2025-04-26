@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { addDays, startOfToday } from 'date-fns';
+import { addDays, startOfToday, format } from 'date-fns';
 import { GanttTask } from '@/types/gantt';
 import { GanttTaskBar } from './GanttTaskBar';
 
@@ -71,9 +71,15 @@ export const TaskGrid: React.FC<TaskGridProps> = ({
 
       {/* Dependencies */}
       {tasks.map((task) => {
-        if (!task.dependencyObjects?.length) return null;
+        // Safe check for dependencies array existence
+        if (!task.dependencies?.length) return null;
 
-        return task.dependencyObjects.map((dependency: GanttTask) => {
+        // Filter tasks that are dependencies for the current task
+        const dependencyTasks = tasks.filter(depTask => 
+          task.dependencies?.includes(depTask.id)
+        );
+
+        return dependencyTasks.map((dependency) => {
           if (!task.start_date || !dependency.start_date) return null;
 
           const startTaskStart = new Date(dependency.start_date);
