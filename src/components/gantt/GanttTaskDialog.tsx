@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { GanttTask } from '@/types/gantt';
 import { useGanttTaskForm } from '@/hooks/useGanttTaskForm';
+import { useGanttTaskDependencies } from '@/hooks/useGanttTaskDependencies';
 import { GanttTaskForm } from './GanttTaskForm';
 import { GanttTaskDependencies } from './GanttTaskDependencies';
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,24 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
     onClose
   });
 
+  const {
+    availableTasks,
+    selectedDependency,
+    setSelectedDependency,
+    dependencyEndDate
+  } = useGanttTaskDependencies(projectId, task?.id, formState.dependencies);
+
+  const handleAddDependency = () => {
+    if (selectedDependency && !formState.dependencies.includes(selectedDependency)) {
+      setDependencies([...formState.dependencies, selectedDependency]);
+      setSelectedDependency(null);
+    }
+  };
+
+  const handleRemoveDependency = (depId: string) => {
+    setDependencies(formState.dependencies.filter(id => id !== depId));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
@@ -68,16 +88,17 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
             onStatusChange={setStatus}
             onAssignedToChange={setAssignedTo}
             setCalendarOpen={setCalendarOpen}
+            dependencyEndDate={dependencyEndDate}
           />
 
           <GanttTaskDependencies
-            availableTasks={[]}
+            availableTasks={availableTasks}
             dependencies={formState.dependencies}
-            selectedDependency={null}
-            dependencyEndDate={null}
-            onSelectedDependencyChange={() => {}}
-            onAddDependency={() => {}}
-            onRemoveDependency={() => {}}
+            selectedDependency={selectedDependency}
+            dependencyEndDate={dependencyEndDate}
+            onSelectedDependencyChange={setSelectedDependency}
+            onAddDependency={handleAddDependency}
+            onRemoveDependency={handleRemoveDependency}
           />
 
           <DialogFooter>
