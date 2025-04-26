@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { eachDayOfInterval, format, startOfToday, addDays } from 'date-fns';
+import { eachDayOfInterval, format, startOfToday, addDays, isSameMonth } from 'date-fns';
 import { GanttTask } from './GanttTask';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -23,7 +23,18 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
   const timelineData = useMemo(() => {
     const dates = eachDayOfInterval({ start: startDate, end: endDate });
     const columnWidth = 80; // Fixed width for day columns
-    return { dates, columnWidth };
+
+    // Group dates by month
+    const months = dates.reduce((acc, date) => {
+      const monthKey = format(date, 'MMM yyyy');
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push(date);
+      return acc;
+    }, {} as Record<string, Date[]>);
+
+    return { dates, columnWidth, months };
   }, [startDate, endDate]);
 
   const today = startOfToday();
@@ -46,7 +57,7 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
       <div className="flex h-full">
         {/* Fixed tasks title column */}
         <div className="w-[200px] flex-none border-r bg-background sticky left-0 z-30 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]">
-          <div className="h-10 border-b bg-muted/50 px-4 flex items-center font-medium sticky top-0">
+          <div className="h-[80px] border-b bg-muted/50 px-4 flex items-center font-medium sticky top-0">
             Tasks
           </div>
           <div className="divide-y">
@@ -65,19 +76,34 @@ export const GanttGrid: React.FC<GanttGridProps> = ({
         </div>
 
         {/* Scrollable timeline area */}
-        <ScrollArea className="flex-1 overflow-x-auto">
+        <ScrollArea className="flex-1">
           <div style={{ width: contentWidth }}>
             {/* Timeline header */}
-            <div className="flex h-10 border-b sticky top-0 bg-muted/50 z-20">
-              {timelineData.dates.map((date) => (
-                <div
-                  key={date.toISOString()}
-                  className="flex-shrink-0 border-r px-2 py-1 text-sm font-medium"
-                  style={{ width: timelineData.columnWidth }}
-                >
-                  {format(date, 'MMM dd')}
-                </div>
-              ))}
+            <div className="sticky top-0 bg-muted/50 z-20">
+              {/* Month row */}
+              <div className="flex border-b h-10">
+                {Object.entries(timelineData.months).map(([monthKey, dates]) => (
+                  <div
+                    key={monthKey}
+                    className="flex-shrink-0 border-r px-2 flex items-center justify-center font-medium"
+                    style={{ width: dates.length * timelineData.columnWidth }}
+                  >
+                    {monthKey}
+                  </div>
+                ))}
+              </div>
+              {/* Day numbers row */}
+              <div className="flex h-10 border-b">
+                {timelineData.dates.map((date) => (
+                  <div
+                    key={date.toISOString()}
+                    className="flex-shrink-0 border-r px-2 py-1 text-sm font-medium flex items-center justify-center"
+                    style={{ width: timelineData.columnWidth }}
+                  >
+                    {format(date, 'd')}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Tasks grid */}
