@@ -1,9 +1,12 @@
+
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +22,8 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: DashboardHeaderProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: userProfile } = useUserProfile(user?.id);
   
   const { data: newTasksCount, refetch } = useQuery({
     queryKey: ["new_tasks_count"],
@@ -56,6 +61,8 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
     navigate("/projects");
   };
 
+  const displayName = userProfile?.displayName || "Welcome";
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
       <div className="flex items-center gap-2">
@@ -81,8 +88,11 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
           </TooltipProvider>
         )}
       </div>
-      <div className="flex gap-2 mt-2 md:mt-0">
-        
+      <div className="flex items-center gap-4 mt-2 md:mt-0">
+        <span className="text-muted-foreground">{displayName}</span>
+        <div className="flex gap-2">
+          
+        </div>
       </div>
     </div>
   );
