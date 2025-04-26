@@ -8,6 +8,7 @@ import Contacts from "./Contacts";
 import TeamMembers from "./TeamMembers";
 import ProjectDetailsView from "@/components/ProjectDetailsView";
 import DashboardHome from "./DashboardHome";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -48,6 +49,9 @@ const Dashboard = () => {
           </main>
         </div>
       </SidebarProvider>
+      
+      {/* Add the ChatWidget component */}
+      <ChatWidget />
     </div>
   );
 };
