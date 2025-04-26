@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { Calendar, Clock, FileText, Users, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,6 +47,8 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [availableTasks, setAvailableTasks] = useState<any[]>([]);
   const [selectedDependency, setSelectedDependency] = useState<string | null>(null);
+
+  const [dependencyEndDate, setDependencyEndDate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (task && mode === 'edit') {
@@ -103,6 +104,39 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
     fetchAvailableTasks();
   }, [projectId, open, task?.id, dependencies]);
 
+  useEffect(() => {
+    const calculateLatestDependencyEndDate = async () => {
+      if (dependencies.length === 0) {
+        setDependencyEndDate(null);
+        return;
+      }
+
+      try {
+        const { data: depTasks } = await supabase
+          .from('gantt_tasks')
+          .select('task_id, start_date, duration_days')
+          .in('task_id', dependencies);
+
+        if (!depTasks?.length) return;
+
+        const latestEnd = depTasks.reduce((latest, dep) => {
+          if (!dep.start_date || !dep.duration_days) return latest;
+          const endDate = addDays(new Date(dep.start_date), dep.duration_days);
+          return endDate > latest ? endDate : latest;
+        }, new Date(0));
+
+        setDependencyEndDate(latestEnd);
+        if (!startDate || mode === 'create') {
+          setStartDate(latestEnd);
+        }
+      } catch (error) {
+        console.error('Error calculating dependency end date:', error);
+      }
+    };
+
+    calculateLatestDependencyEndDate();
+  }, [dependencies]);
+
   const handleAddDependency = () => {
     if (selectedDependency && !dependencies.includes(selectedDependency)) {
       setDependencies([...dependencies, selectedDependency]);
@@ -116,10 +150,20 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !startDate) {
+    if (!title.trim()) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in the title",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // If we have dependencies, ensure we have a valid start date
+    if (dependencies.length > 0 && !dependencyEndDate) {
+      toast({
+        title: "Error",
+        description: "Calculating dependency dates. Please wait.",
         variant: "destructive",
       });
       return;
@@ -160,7 +204,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
           .insert({
             task_id: taskResult.id,
             project_id: projectId,
-            start_date: startDate.toISOString(),
+            start_date: startDate?.toISOString(),
             duration_days: durationDays,
             dependencies
           });
@@ -184,7 +228,7 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
         const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .update({
-            start_date: startDate.toISOString(),
+            start_date: startDate?.toISOString(),
             duration_days: durationDays,
             dependencies
           })
@@ -253,13 +297,17 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start-date">Start Date <span className="text-red-500">*</span></Label>
+              <Label htmlFor="start-date">
+                Start Date {!dependencies.length && <span className="text-red-500">*</span>}
+              </Label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className={`w-full justify-start text-left font-normal ${dependencies.length ? 'opacity-50' : ''}`}
                     id="start-date"
+                    type="button"
+                    disabled={dependencies.length > 0}
                   >
                     <Calendar className="mr-2 h-4 w-4" />
                     {startDate ? format(startDate, "MMM dd, yyyy") : "Select date"}
@@ -278,6 +326,11 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
                   />
                 </PopoverContent>
               </Popover>
+              {dependencies.length > 0 && dependencyEndDate && (
+                <p className="text-sm text-muted-foreground">
+                  Start date will be set to {format(dependencyEndDate, "MMM dd, yyyy")} based on dependencies
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -399,4 +452,3 @@ const GanttTaskDialog: React.FC<GanttTaskDialogProps> = ({
 };
 
 export default GanttTaskDialog;
-
