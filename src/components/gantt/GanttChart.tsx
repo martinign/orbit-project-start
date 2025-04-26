@@ -40,10 +40,15 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
 
     // Extend the range to show some context
     const start = startOfMonth(firstDate);
-    const end = endOfMonth(addMonths(lastDate, 1));
+    // Add more context depending on the view
+    const end = view === 'day' 
+      ? addDays(lastDate, 14)  // Add 2 weeks for day view
+      : view === 'week'
+        ? addDays(lastDate, 28) // Add 4 weeks for week view
+        : addMonths(lastDate, 3); // Add 3 months for month view
 
     return { startDate: start, endDate: end };
-  }, [tasks]);
+  }, [tasks, view]);
 
   const handleOpenTaskDialog = (task?: any) => {
     setSelectedTask(task || null);
@@ -68,7 +73,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ tasks, projectId, onRefe
             Add Task
           </Button>
         </div>
-        <div className="overflow-x-auto">
+        <div className="h-[600px]">
           <GanttGrid
             tasks={tasks}
             startDate={startDate}
