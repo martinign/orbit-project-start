@@ -61,7 +61,8 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
     navigate("/projects");
   };
 
-  const displayName = userProfile?.displayName || "Welcome";
+  // Modify the displayName to include an exclamation mark
+  const displayName = userProfile?.displayName ? `Welcome, ${userProfile.displayName}!` : "Welcome!";
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -89,7 +90,7 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
         )}
       </div>
       <div className="flex items-center gap-4 mt-2 md:mt-0">
-        <span className="text-muted-foreground">{displayName}</span>
+        <span className="text-muted-foreground font-medium">{displayName}</span>
         <div className="flex gap-2">
           
         </div>
