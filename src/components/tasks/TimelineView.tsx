@@ -64,10 +64,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   return (
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-
-        {/* Task List Panel */}
         <ResizablePanel 
-          defaultSize={10}
+          defaultSize={10} 
           minSize={6}
           maxSize={Math.min(10, (maxTitleWidth / window.innerWidth) * 100)}
         >
@@ -78,14 +76,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        {/* Timeline Panel */}
         <ResizablePanel defaultSize={85}>
           <ScrollArea className="h-full">
             <div className="relative" style={{ width: `${days.length * 20}px` }}>
-
               {/* Timeline Header (Months and Days) */}
               <div className="sticky top-0 bg-background z-10">
-
                 {/* Months Row */}
                 <div className="flex h-8 border-b">
                   {months.map((monthInfo, i) => (
@@ -104,13 +99,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   {days.map((day, i) => (
                     <div 
                       key={i}
-                      className={`w-[20px] flex-none flex justify-center items-center text-[10px] border-r ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
+                      className={`w-[20px] flex-none flex justify-center items-center text-[10px] border-r ${
+                        isToday(day) ? 'bg-blue-100 font-bold' : ''
+                      }`}
                     >
                       {format(day, 'd')}
                     </div>
                   ))}
                 </div>
-
               </div>
 
               {/* Task Timeline Bars */}
@@ -121,13 +117,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   const isCompleted = task.status === 'completed';
 
                   const startOfTimeline = days[0];
-                  const daysFromStart = startOfTimeline ? Math.max(0, Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+                  const daysFromStart = startOfTimeline 
+                    ? Math.max(0, Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))) 
+                    : 0;
 
                   const endDate = isCompleted ? updatedDate : today;
                   const durationDays = Math.max(1, Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
 
                   return (
-                    <div key={task.id} className="h-8 relative">
+                    <div key={task.id} className="h-7 relative">
                       <TimelineTaskBar
                         task={task}
                         style={{ 
@@ -147,10 +145,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   style={{ left: `${days.findIndex(day => isToday(day)) * 20}px` }}
                 />
               </div>
-
             </div>
-
-            {/* Bottom Horizontal ScrollBar */}
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </ResizablePanel>

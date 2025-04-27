@@ -35,7 +35,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <Card
-            className={`absolute top-2 h-6 rounded-md cursor-pointer transition-colors
+            className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-sm cursor-pointer transition-colors
               ${isCompleted ? 'bg-green-200 hover:bg-green-300' : 'bg-blue-200 hover:bg-blue-300'}`}
             style={style}
             onClick={onClick}

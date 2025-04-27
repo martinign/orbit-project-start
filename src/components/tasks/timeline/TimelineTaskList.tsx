@@ -18,9 +18,11 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
   tasks
 }) => {
   return (
-    <div className="min-w-[80px] bg-background border-r shadow-lg z-20">
-      <div className="sticky top-0 h-[82px] border-b bg-background flex items-center px-4 font-medium">
-        Tasks
+    <div className="min-w-[80px] bg-background border-r">
+      <div className="sticky top-0 z-20 bg-background">
+        {/* Match the double-header height of timeline */}
+        <div className="h-8 border-b flex items-center px-4 font-medium">Tasks</div>
+        <div className="h-8 border-b" /> {/* Spacer to match timeline's day row */}
       </div>
       <div className="divide-y">
         {tasks.map(task => (
@@ -28,7 +30,7 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 
-                  className="h-[33px] flex items-center px-3 text-left truncate overflow-hidden whitespace-nowrap hover:bg-gray-50 transition-colors"
+                  className="h-7 flex items-center px-3 text-left truncate overflow-hidden whitespace-nowrap hover:bg-gray-50 transition-colors"
                 >
                   {task.title}
                 </div>
