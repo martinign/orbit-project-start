@@ -57,11 +57,11 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
           0, 
           Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
         ) : 0;
-        
-        // Use completion data for completed tasks if available
+
+        // Calculate duration based on status
         const durationDays = isCompleted && completionInfo?.total_duration_days 
-          ? completionInfo.total_duration_days
-          : Math.max(1, todayColumnIndex - daysFromStart);
+          ? completionInfo.total_duration_days 
+          : Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
 
         return (
           <div key={task.id} className="h-[33px] relative">
@@ -69,7 +69,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
               task={task}
               style={{ 
                 left: `${daysFromStart * 30}px`,
-                width: `${durationDays * 30}px`
+                width: `${Math.max(1, durationDays) * 30}px`
               }}
               onClick={() => onTaskClick(task)}
               durationDays={durationDays}
