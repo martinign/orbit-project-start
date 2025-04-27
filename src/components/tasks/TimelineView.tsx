@@ -10,8 +10,8 @@ interface Task {
   id: string;
   title: string;
   status: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface TimelineViewProps {
@@ -66,7 +66,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   
   return (
     <div className="border rounded-md">
-      <ScrollArea className="h-[600px]" orientation="horizontal">
+      <ScrollArea className="h-[600px]">
         <div className="min-w-[1500px]">
           {/* Header with months and days */}
           <div className="flex border-b sticky top-0 bg-background z-10">
@@ -108,26 +108,29 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           {/* Tasks rows */}
           <div>
             {tasks.map((task) => {
-              const createdDate = new Date(task.created_at);
-              const updatedDate = new Date(task.updated_at);
+              // Safely create date objects with null checks
+              const createdDate = task.created_at ? new Date(task.created_at) : new Date();
+              const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
               const isCompleted = task.status === 'completed';
               
               // Calculate days from start of timeline
               const startOfTimeline = days[0];
-              const daysFromStart = Math.max(
+              
+              // Add null checks to avoid errors with getTime()
+              const daysFromStart = startOfTimeline ? Math.max(
                 0, 
                 Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
-              );
+              ) : 0;
               
-              // Calculate task duration
+              // Calculate task duration with null checks
               const endDate = isCompleted ? updatedDate : today;
               const durationDays = Math.max(
                 1, 
                 Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
               );
               
-              // Check if task is visible in timeline
-              if (createdDate < addMonths(startOfTimeline, -1)) {
+              // Check if task is visible in timeline with null check
+              if (startOfTimeline && createdDate < addMonths(startOfTimeline, -1)) {
                 return null; // Skip tasks that started too far in the past
               }
               
