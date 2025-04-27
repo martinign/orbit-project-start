@@ -97,6 +97,20 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
+  const { data: notesCount } = useQuery({
+    queryKey: ['project_notes_count', id],
+    queryFn: async () => {
+      if (!id) return 0;
+      const { count, error } = await supabase
+        .from('project_notes')
+        .select('id', { count: 'exact', head: true })
+        .eq('project_id', id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!id,
+  });
+
   const tasksStats = React.useMemo(() => {
     if (!tasks) return { total: 0, completed: 0, inProgress: 0 };
     const total = tasks.length;
@@ -144,7 +158,9 @@ const ProjectDetailsView = () => {
         teamMembersCount={teamMembersCount || 0}
         tasksStats={tasksStats}
         eventsCount={eventsCount || 0}
+        notesCount={notesCount || 0}
         onTabChange={setActiveTab}
+        projectId={id || ''}
       />
 
       <Card>

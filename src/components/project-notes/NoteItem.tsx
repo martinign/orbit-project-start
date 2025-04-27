@@ -1,15 +1,9 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { useNewItems } from '@/hooks/useNewItems';
+import { cn } from '@/lib/utils';
 
 type ProjectNote = {
   id: string;
@@ -28,53 +22,38 @@ type NoteItemProps = {
 };
 
 const NoteItem = ({ note, onEdit, onDelete }: NoteItemProps) => {
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy • h:mm a');
-    } catch (error) {
-      return dateString;
-    }
-  };
+  const { newItemsCount, markItemViewed } = useNewItems(note.project_id);
+  const isNew = newItemsCount['note'] > 0;
+
+  useEffect(() => {
+    const handleViewItem = async () => {
+      if (isNew) {
+        await markItemViewed(note.id, 'note');
+      }
+    };
+
+    handleViewItem();
+  }, [isNew, note.id, markItemViewed]);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{note.title}</CardTitle>
-            <CardDescription>
-              {formatDate(note.created_at)}
-              {note.created_at !== note.updated_at && 
-                ` • Updated ${formatDate(note.updated_at)}`}
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => onEdit(note)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              onClick={() => onDelete(note)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+    <Card 
+      className={cn(
+        "transition-colors duration-300",
+        isNew && "bg-blue-50 dark:bg-blue-900/10"
+      )}
+    >
+      <CardContent className="flex items-center justify-between">
+        <div>
+          <h4 className="font-semibold">{note.title}</h4>
+          <p className="text-sm text-muted-foreground line-clamp-2">{note.content || 'No content'}</p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="prose max-w-none">
-          {note.content ? (
-            <div className="whitespace-pre-wrap">{note.content}</div>
-          ) : (
-            <p className="text-muted-foreground italic">No content</p>
-          )}
+        <div className="flex gap-2">
+          <Button variant="ghost" size="icon" onClick={() => onEdit(note)}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" onClick={() => onDelete(note)}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>
