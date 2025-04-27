@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -67,22 +66,24 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
             <div className="relative">
               {/* Timeline Header */}
               <div className="sticky top-0 bg-background z-10">
-                <div className="flex border-b">
+                {/* Months row */}
+                <div className="flex h-10 border-b">
                   {months.map((monthInfo, i) => (
                     <div 
                       key={i}
-                      className="text-center font-medium border-r"
+                      className="text-center font-medium border-r flex items-center justify-center"
                       style={{ width: `${monthInfo.days * 30}px` }}
                     >
                       {monthInfo.month}
                     </div>
                   ))}
                 </div>
-                <div className="flex h-8 border-b">
+                {/* Days row */}
+                <div className="flex h-[42px] border-b">
                   {days.map((day, i) => (
                     <div 
                       key={i}
-                      className={`w-[30px] flex justify-center items-center text-xs border-r
+                      className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
                         ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
                     >
                       {format(day, 'd')}
@@ -92,7 +93,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
               </div>
 
               {/* Task Timeline */}
-              <div className="relative">
+              <div className="relative divide-y">
                 {tasks.map((task, index) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : new Date();
                   const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
@@ -109,13 +110,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                     1, 
                     Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
                   );
-                  
+
                   if (startOfTimeline && createdDate < addMonths(startOfTimeline, -1)) {
                     return null;
                   }
 
                   return (
-                    <div key={task.id} className="relative h-[33px] border-b">
+                    <div key={task.id} className="h-[33px] relative">
                       <TimelineTaskBar
                         task={task}
                         style={{ 

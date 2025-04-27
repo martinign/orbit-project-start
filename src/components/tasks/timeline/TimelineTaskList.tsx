@@ -11,14 +11,17 @@ interface TimelineTaskListProps {
 export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({ tasks }) => {
   return (
     <div className="w-[200px] flex-none bg-background border-r shadow-lg z-20">
-      <div className="sticky top-0 p-2 font-medium border-b bg-background">
-        Task
+      <div className="sticky top-0 h-[82px] border-b bg-background">
+        <div className="h-10 p-2 font-medium border-b flex items-center">
+          Task
+        </div>
+        <div className="h-[42px]" /> {/* Spacer to match timeline header height */}
       </div>
-      <div>
+      <div className="divide-y">
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="p-2 border-b truncate"
+            className="h-[33px] flex items-center px-2 truncate"
             title={task.title}
           >
             {task.title}
