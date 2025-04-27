@@ -67,7 +67,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         <ResizablePanel 
           defaultSize={10} 
           minSize={6}
-          maxSize={Math.min(10, (maxTitleWidth / window.innerWidth) * 100)}
+          maxSize={Math.min(15, (maxTitleWidth / window.innerWidth) * 100)}
         >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
@@ -76,7 +76,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        <ResizablePanel defaultSize={20}>
+        <ResizablePanel defaultSize={85}>
           <ScrollArea className="h-full">
             <div className="relative" style={{ width: `${days.length * 20}px` }}>
               {/* Timeline Header (Months and Days) */}
