@@ -18,7 +18,7 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
   tasks
 }) => {
   return (
-    <div className="min-w-[150px] bg-background border-r shadow-lg z-20">
+    <div className="min-w-[80px] bg-background border-r shadow-lg z-20">
       <div className="sticky top-0 h-[82px] border-b bg-background flex items-center px-4 font-medium">
         Tasks
       </div>
@@ -28,7 +28,7 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 
-                  className="h-[33px] flex items-center px-4 truncate hover:bg-gray-50 transition-colors"
+                  className="h-[33px] flex items-center px-3 text-left truncate hover:bg-gray-50 transition-colors"
                 >
                   {task.title}
                 </div>

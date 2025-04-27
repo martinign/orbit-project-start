@@ -64,7 +64,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         direction="horizontal"
         className="h-full"
       >
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={40}>
+        <ResizablePanel defaultSize={15} minSize={8} maxSize={40}>
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
         
@@ -72,7 +72,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
         
-        <ResizablePanel defaultSize={80}>
+        <ResizablePanel defaultSize={85}>
           <div className="overflow-hidden">
             <ScrollArea className="h-full">
               <div className="relative">
