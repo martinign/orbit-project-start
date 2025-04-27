@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TasksTab } from './tabs/TasksTab';
 import { NotesTab } from './tabs/NotesTab';
@@ -27,6 +26,14 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   contactSearchQuery,
   setContactSearchQuery,
 }) => {
+  const handleRefetch = async () => {
+    try {
+      await refetchTasks();
+    } catch (error) {
+      console.error('Error refetching tasks:', error);
+    }
+  };
+
   return (
     <>
       {activeTab === 'tasks' && (
@@ -34,7 +41,7 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           projectId={projectId}
           tasks={tasks}
           tasksLoading={tasksLoading}
-          refetchTasks={refetchTasks}
+          refetchTasks={handleRefetch}
         />
       )}
 

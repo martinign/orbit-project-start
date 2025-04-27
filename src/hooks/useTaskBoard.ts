@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +23,28 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [isRefetching, setIsRefetching] = useState(false);
+
+  const handleCloseDialogs = () => {
+    setSelectedTask(null);
+    setIsDialogOpen(false);
+    setIsDeleteConfirmOpen(false);
+    setIsUpdateDialogOpen(false);
+    setIsSubtaskDialogOpen(false);
+    setIsCreateTaskDialogOpen(false);
+  };
+
+  const safeRefetch = async () => {
+    if (!isRefetching) {
+      setIsRefetching(true);
+      try {
+        await onRefetch();
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      } finally {
+        setIsRefetching(false);
+      }
+    }
+  };
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -95,14 +116,13 @@ export const useTaskBoard = (onRefetch: () => void) => {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['gantt_tasks'] });
+      await safeRefetch();
+      handleCloseDialogs();
       
       toast({
         title: 'Task Deleted',
         description: 'The task and its related data have been successfully deleted.',
       });
-      onRefetch();
     } catch (error) {
       console.error('Error deleting task:', error);
       toast({
@@ -110,8 +130,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
         description: 'Failed to delete the task. Please try again.',
         variant: 'destructive',
       });
-    } finally {
-      setIsDeleteConfirmOpen(false);
     }
   };
 
@@ -134,5 +152,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
     handleAddSubtask,
     handleCreateTask,
     deleteTask,
+    handleCloseDialogs,
   };
 };

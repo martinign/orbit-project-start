@@ -227,12 +227,15 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           description: "Task created successfully",
         });
       }
+
+      // Use setTimeout to ensure state updates complete before closing
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        }
+        onClose();
+      }, 100);
       
-      onClose();
-      
-      if (onSuccess) {
-        onSuccess();
-      }
     } catch (error) {
       console.error("Error saving task:", error);
       toast({
