@@ -1,4 +1,3 @@
-
 import { LayoutDashboard, Folder, LogOut, List, Plus, FileText, Users, UserRound, MoreHorizontal, Circle, Eye, UserPlus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +25,6 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const pendingInvitationsCount = useInvitationsCount();
   
-  // Add the missing state variables
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -180,7 +178,7 @@ export function AppSidebar() {
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
                     {newTasksCount > 0 && (
-                      <Badge className="ml-auto bg-purple-500 hover:bg-purple-600">
+                      <Badge className="ml-auto bg-purple-500">
                         {newTasksCount} new
                       </Badge>
                     )}
@@ -217,19 +215,24 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/contacts">
-                  
+                  <SidebarMenuButton tooltip="Contacts" className="hover:bg-purple-500/10 transition-colors duration-200">
+                    <Users className="text-purple-500" />
+                    <span>Contacts</span>
+                  </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Link to="/team-members">
-                  
+                  <SidebarMenuButton tooltip="Team Members" className="hover:bg-purple-500/10 transition-colors duration-200">
+                    <UserRound className="text-purple-500" />
+                    <span>Team Members</span>
+                  </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Invite Members" className="hover:bg-purple-500/10 transition-colors duration-200 relative" onClick={() => setIsInviteMembersDialogOpen(true)}>
                   <UserPlus className="text-purple-500" />
                   <span>Invite Members</span>
-
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {pendingInvitationsCount > 0 && <SidebarMenuItem>

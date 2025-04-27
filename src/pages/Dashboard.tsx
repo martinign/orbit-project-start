@@ -6,14 +6,12 @@ import { useLocation, useParams } from "react-router-dom";
 import Projects from "./Projects";
 import Contacts from "./Contacts";
 import TeamMembers from "./TeamMembers";
-import ProjectDetailsView from "@/components/ProjectDetailsView";
 import DashboardHome from "./DashboardHome";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 
 const Dashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { id } = useParams<{ id: string }>();
 
   // Determine which component to render based on the current path
   const renderContent = () => {
@@ -21,10 +19,6 @@ const Dashboard = () => {
     
     if (path === "/dashboard") {
       return <DashboardHome />;
-    }
-    
-    if (path.startsWith("/projects/") && id) {
-      return <ProjectDetailsView />;
     }
     
     if (path === "/contacts") {
@@ -35,7 +29,7 @@ const Dashboard = () => {
       return <TeamMembers />;
     }
     
-    // Default to Projects for /projects route
+    // Default to Projects for /projects and /projects/:id routes
     return <Projects />;
   };
 
@@ -50,7 +44,6 @@ const Dashboard = () => {
         </div>
       </SidebarProvider>
       
-      {/* Add the ChatWidget component */}
       <ChatWidget />
     </div>
   );

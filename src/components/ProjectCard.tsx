@@ -1,10 +1,7 @@
-
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,31 +33,31 @@ interface ProjectCardProps {
 const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Stop event from propagating up
+    e.stopPropagation();
     setIsEditDialogOpen(true);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Stop event from propagating up
+    e.stopPropagation();
     onDelete(project.id);
   };
 
-  const handleEditSuccess = () => {
-    // Invalidate all relevant queries when a project is updated
-    queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
-    queryClient.invalidateQueries({ queryKey: ["projects"] });
-    queryClient.invalidateQueries({ queryKey: ["project", project.id] });
-    onUpdate();
-  };
-
   const handleCardClick = (e: React.MouseEvent) => {
-    // If the click is from the dropdown or its contents, don't do anything
     if ((e.target as HTMLElement).closest('[data-dropdown-trigger]') || 
         (e.target as HTMLElement).closest('[data-dropdown-content]')) {
       return;
     }
+    navigate(`/projects/${project.id}`);
+  };
+
+  const handleEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["recent_projects"] });
+    queryClient.invalidateQueries({ queryKey: ["projects"] });
+    queryClient.invalidateQueries({ queryKey: ["project", project.id] });
+    onUpdate();
   };
 
   return (
