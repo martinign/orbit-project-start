@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChartGantt, ListTodo, CalendarDays, Users, FileText, UserRound, Mail } from 'lucide-react';
+import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail } from 'lucide-react';
 
 interface ProjectContentTabsProps {
   activeTab: string;
@@ -17,17 +17,11 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   return (
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
       <div className="overflow-x-auto pb-2">
-        <TabsList className="grid grid-cols-7 md:grid-cols-7 sm:grid-cols-4 xs:grid-cols-2 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-6 md:grid-cols-6 sm:grid-cols-4 xs:grid-cols-2 w-full max-w-3xl">
           <TabsTrigger value="tasks" className="flex items-center gap-2">
             <ListTodo className="h-4 w-4" />
             <span className="hidden sm:inline">Tasks</span>
             <span className="sm:hidden">Tasks</span>
-          </TabsTrigger>
-          
-          <TabsTrigger value="gantt" className="flex items-center gap-2">
-            <ChartGantt className="h-4 w-4" />
-            <span className="hidden sm:inline">Gantt Chart</span>
-            <span className="sm:hidden">Gantt</span>
           </TabsTrigger>
           
           <TabsTrigger value="notes" className="flex items-center gap-2">
