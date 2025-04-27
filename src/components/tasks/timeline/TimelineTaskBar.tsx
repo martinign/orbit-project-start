@@ -20,6 +20,7 @@ interface TimelineTaskBarProps {
   style: React.CSSProperties;
   onClick: () => void;
   durationDays: number;
+  isCompleted: boolean;
 }
 
 export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
@@ -27,8 +28,10 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   style,
   onClick,
   durationDays,
+  isCompleted,
 }) => {
-  const isCompleted = task.status === 'completed';
+  const startDate = new Date(task.created_at);
+  const endDate = isCompleted && task.updated_at ? new Date(task.updated_at) : new Date();
   
   return (
     <TooltipProvider>
@@ -36,13 +39,16 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
         <TooltipTrigger asChild>
           <Card
             className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-sm cursor-pointer transition-colors
-              ${isCompleted ? 'bg-green-200 hover:bg-green-300' : 'bg-blue-200 hover:bg-blue-300'}`}
+              ${isCompleted 
+                ? 'bg-green-200 hover:bg-green-300' 
+                : 'bg-blue-200 hover:bg-blue-300'
+              }`}
             style={style}
             onClick={onClick}
           >
             {durationDays > 3 && (
               <div className="px-2 text-xs font-medium truncate flex items-center h-full">
-                {durationDays} days {isCompleted ? '(completed)' : ''}
+                {durationDays} days {isCompleted ? '(completed)' : '(in progress)'}
               </div>
             )}
           </Card>
@@ -51,14 +57,14 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
           <div className="space-y-1">
             <p className="font-medium">{task.title}</p>
             <p className="text-xs">
-              Started: {format(new Date(task.created_at), 'MMM d, yyyy')}
+              Started: {format(startDate, 'MMM d, yyyy')}
             </p>
             <p className="text-xs">
               {isCompleted 
-                ? `Completed: ${format(new Date(task.updated_at), 'MMM d, yyyy')}` 
-                : 'In progress'}
+                ? `Completed: ${format(endDate, 'MMM d, yyyy')}` 
+                : `In progress: ${durationDays} days`
+              }
             </p>
-            <p className="text-xs">Duration: {durationDays} days</p>
           </div>
         </TooltipContent>
       </Tooltip>

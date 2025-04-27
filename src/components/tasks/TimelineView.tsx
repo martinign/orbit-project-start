@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
@@ -62,7 +63,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const today = new Date();
 
   return (
-    <div className="border rounded-md h-full overflow-hidden">
+    <div className="border rounded-md h-[calc(100vh-300px)] overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
         <ResizablePanel 
           defaultSize={10} 
@@ -113,16 +114,17 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
               <div className="relative divide-y">
                 {tasks.map((task) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : today;
-                  const updatedDate = task.updated_at ? new Date(task.updated_at) : today;
                   const isCompleted = task.status === 'completed';
+                  const endDate = isCompleted && task.updated_at 
+                    ? new Date(task.updated_at)
+                    : today;
 
                   const startOfTimeline = days[0];
                   const daysFromStart = startOfTimeline 
                     ? Math.max(0, Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))) 
                     : 0;
 
-                  const endDate = isCompleted ? updatedDate : today;
-                  const durationDays = Math.max(1, Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
+                  const durationDays = Math.max(1, differenceInDays(endDate, createdDate));
 
                   return (
                     <div key={task.id} className="h-7 relative">
@@ -134,6 +136,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                         }}
                         onClick={() => setSelectedTask(task)}
                         durationDays={durationDays}
+                        isCompleted={isCompleted}
                       />
                     </div>
                   );
