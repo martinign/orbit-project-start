@@ -2,6 +2,8 @@
 import React from 'react';
 import { isToday } from 'date-fns';
 import { TimelineTaskBar } from './TimelineTaskBar';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Task {
   id: string;
@@ -26,26 +28,40 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
   const startOfTimeline = days[0];
   const todayColumnIndex = days.findIndex(day => isToday(day));
 
+  // Fetch completion data for completed tasks
+  const { data: completionData } = useQuery({
+    queryKey: ['task-completion-data'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('task_status_history')
+        .select('task_id, completion_date, total_duration_days')
+        .eq('new_status', 'completed')
+        .is('completion_date', 'NOT NULL');
+
+      if (error) throw error;
+      return data?.reduce((acc, item) => ({
+        ...acc,
+        [item.task_id]: item
+      }), {}) || {};
+    }
+  });
+
   return (
     <div className="relative divide-y">
       {tasks.map((task) => {
         const createdDate = task.created_at ? new Date(task.created_at) : new Date();
         const isCompleted = task.status === 'completed';
+        const completionInfo = isCompleted ? completionData?.[task.id] : null;
         
         const daysFromStart = startOfTimeline ? Math.max(
           0, 
           Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
         ) : 0;
         
-        // For completed tasks, use updated_at as end date
-        // For in-progress tasks, extend to today's vertical line
-        const endDate = isCompleted && task.updated_at ? new Date(task.updated_at) : today;
-        const durationDays = Math.max(
-          1,
-          isCompleted
-            ? Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
-            : todayColumnIndex - daysFromStart
-        );
+        // Use completion data for completed tasks if available
+        const durationDays = isCompleted && completionInfo?.total_duration_days 
+          ? completionInfo.total_duration_days
+          : Math.max(1, todayColumnIndex - daysFromStart);
 
         return (
           <div key={task.id} className="h-[33px] relative">
@@ -58,6 +74,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
               onClick={() => onTaskClick(task)}
               durationDays={durationDays}
               isCompleted={isCompleted}
+              completionDate={completionInfo?.completion_date}
             />
           </div>
         );

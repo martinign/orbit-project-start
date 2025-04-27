@@ -21,6 +21,7 @@ interface TimelineTaskBarProps {
   onClick: () => void;
   durationDays: number;
   isCompleted: boolean;
+  completionDate?: string;
 }
 
 export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
@@ -29,9 +30,10 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   onClick,
   durationDays,
   isCompleted,
+  completionDate,
 }) => {
   const startDate = new Date(task.created_at);
-  const endDate = isCompleted && task.updated_at ? new Date(task.updated_at) : new Date();
+  const endDate = completionDate ? new Date(completionDate) : new Date();
   
   return (
     <TooltipProvider>
@@ -61,7 +63,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
             </p>
             <p className="text-xs">
               {isCompleted 
-                ? `Completed: ${format(endDate, 'MMM d, yyyy')}` 
+                ? `Completed: ${format(endDate, 'MMM d, yyyy')} (${durationDays} days)` 
                 : `In progress: ${durationDays} days`
               }
             </p>

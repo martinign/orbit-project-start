@@ -541,29 +541,35 @@ export type Database = {
       task_status_history: {
         Row: {
           changed_at: string
+          completion_date: string | null
           created_at: string
           id: string
           new_status: string
           previous_status: string | null
           task_id: string
+          total_duration_days: number | null
           user_id: string
         }
         Insert: {
           changed_at?: string
+          completion_date?: string | null
           created_at?: string
           id?: string
           new_status: string
           previous_status?: string | null
           task_id: string
+          total_duration_days?: number | null
           user_id: string
         }
         Update: {
           changed_at?: string
+          completion_date?: string | null
           created_at?: string
           id?: string
           new_status?: string
           previous_status?: string | null
           task_id?: string
+          total_duration_days?: number | null
           user_id?: string
         }
         Relationships: [
