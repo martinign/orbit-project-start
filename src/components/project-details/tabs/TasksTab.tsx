@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Kanban, Calendar, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Switch } from '@/components/ui/switch';
 import TaskBoard from '@/components/TaskBoard';
 import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/TaskDialog';
@@ -22,7 +22,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   refetchTasks,
 }) => {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'kanban' | 'timeline'>('kanban');
+  const [isTimelineView, setIsTimelineView] = useState(false);
 
   return (
     <Card>
@@ -32,21 +32,15 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           <CardDescription>Manage tasks for this project</CardDescription>
         </div>
         <div className="flex items-center gap-4">
-          <ToggleGroup 
-            type="single" 
-            value={viewMode} 
-            onValueChange={(value) => value && setViewMode(value as 'kanban' | 'timeline')}
-            className="border rounded-md"
-          >
-            <ToggleGroupItem value="kanban" aria-label="Kanban View" className="flex items-center gap-1">
-              <Kanban className="h-4 w-4" />
-              Kanban
-            </ToggleGroupItem>
-            <ToggleGroupItem value="timeline" aria-label="Timeline View" className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              Timeline
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <div className="flex items-center gap-2">
+            <Kanban className="h-4 w-4" />
+            <Switch
+              checked={isTimelineView}
+              onCheckedChange={setIsTimelineView}
+              className="data-[state=checked]:bg-blue-500"
+            />
+            <Calendar className="h-4 w-4" />
+          </div>
           <Button 
             onClick={() => setIsTaskDialogOpen(true)} 
             className="bg-blue-500 hover:bg-blue-600"
@@ -61,7 +55,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         {tasksLoading ? (
           <div className="text-center py-6">Loading tasks...</div>
         ) : tasks && tasks.length > 0 ? (
-          viewMode === 'kanban' ? (
+          !isTimelineView ? (
             <TaskBoard 
               tasks={tasks} 
               projectId={projectId} 
@@ -73,7 +67,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         ) : (
           <div className="text-center p-8 border rounded-lg">
             <p className="text-muted-foreground mb-4">
-              {viewMode === 'kanban' 
+              {!isTimelineView 
                 ? 'No tasks found for this project' 
                 : 'No tasks available for timeline view'}
             </p>
