@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
@@ -112,6 +113,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   </div>
                 </div>
 
+                {/* Horizontal ScrollBar */}
+                <div className="sticky top-[82px] z-10 bg-background">
+                  <ScrollBar orientation="horizontal" />
+                </div>
+
                 {/* Task Timeline */}
                 <div className="relative divide-y">
                   {tasks.map((task, index) => {
@@ -159,6 +165,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   />
                 </div>
               </div>
+              <ScrollBar />
             </ScrollArea>
           </div>
         </ResizablePanel>
