@@ -31,10 +31,10 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           <CardTitle>Project Tasks</CardTitle>
           <CardDescription>Manage tasks for this project</CardDescription>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">
-              {isTimelineView ? "Timeline View" : "Board View"}
+            <span className="text-sm font-medium hidden sm:inline">
+              {isTimelineView ? "Timeline" : "Board"}
             </span>
             <Switch 
               checked={isTimelineView} 
@@ -57,7 +57,12 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       </CardHeader>
       <CardContent>
         {tasksLoading ? (
-          <div className="text-center py-6">Loading tasks...</div>
+          <div className="text-center py-6 border rounded-lg bg-gray-50">
+            <div className="animate-pulse flex flex-col items-center justify-center">
+              <div className="h-6 w-24 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+          </div>
         ) : tasks && tasks.length > 0 ? (
           !isTimelineView ? (
             <TaskBoard tasks={tasks} projectId={projectId} onRefetch={refetchTasks} />
@@ -65,7 +70,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             <TimelineView tasks={tasks} isLoading={tasksLoading} />
           )
         ) : (
-          <div className="text-center p-8 border rounded-lg">
+          <div className="text-center p-8 border rounded-lg bg-gray-50">
             <p className="text-muted-foreground mb-4">
               {!isTimelineView ? 'No tasks found for this project' : 'No tasks available for timeline view'}
             </p>

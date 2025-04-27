@@ -37,13 +37,24 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   isCompleted && task.updated_at ? new Date(task.updated_at) : new Date();
   
   const getStatusColor = () => {
-    if (isCompleted) return 'bg-green-200 hover:bg-green-300';
+    if (isCompleted) return 'bg-green-200 hover:bg-green-300 border-green-400';
     
     switch (task.status) {
-      case 'in progress': return 'bg-blue-200 hover:bg-blue-300';
-      case 'stucked': return 'bg-red-200 hover:bg-red-300';
-      case 'pending': return 'bg-orange-200 hover:bg-orange-300';
-      default: return 'bg-gray-200 hover:bg-gray-300';
+      case 'in progress': return 'bg-blue-200 hover:bg-blue-300 border-blue-400';
+      case 'stucked': return 'bg-red-200 hover:bg-red-300 border-red-400';
+      case 'pending': return 'bg-orange-200 hover:bg-orange-300 border-orange-400';
+      default: return 'bg-gray-200 hover:bg-gray-300 border-gray-400';
+    }
+  };
+
+  const getStatusBadge = () => {
+    if (isCompleted) return 'bg-green-500 text-white';
+    
+    switch (task.status) {
+      case 'in progress': return 'bg-blue-500 text-white';
+      case 'stucked': return 'bg-red-500 text-white';
+      case 'pending': return 'bg-orange-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
   
@@ -52,30 +63,45 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <Card
-            className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-sm cursor-pointer transition-colors
+            className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-sm cursor-pointer transition-colors border
               ${getStatusColor()}`}
             style={style}
             onClick={onClick}
           >
             {durationDays > 3 && (
               <div className="px-2 text-xs font-medium truncate flex items-center h-full">
-                {durationDays} days {isCompleted ? '(completed)' : `(${task.status})`}
+                {durationDays} days 
+                {durationDays > 5 && (
+                  <span className={`ml-1 rounded-full text-[10px] py-0 px-1 ${getStatusBadge()}`}>
+                    {isCompleted ? '✓' : task.status}
+                  </span>
+                )}
               </div>
             )}
           </Card>
         </TooltipTrigger>
         <TooltipContent>
-          <div className="space-y-1">
+          <div className="space-y-2 max-w-xs">
             <p className="font-medium">{task.title}</p>
-            <p className="text-xs">
-              Started: {format(startDate, 'MMM d, yyyy')}
-            </p>
-            <p className="text-xs">
-              {isCompleted 
-                ? `Completed: ${format(endDate, 'MMM d, yyyy')} (${durationDays} days)` 
-                : `Status: ${task.status} (${durationDays} days)`
-              }
-            </p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <p>
+                <span className="text-muted-foreground">Started:</span> {format(startDate, 'MMM d, yyyy')}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Duration:</span> {durationDays} days
+              </p>
+              <p className="col-span-2">
+                <span className="text-muted-foreground">Status:</span>{' '}
+                <span className={`px-1.5 py-0.5 rounded ${getStatusBadge()}`}>
+                  {isCompleted ? 'Completed' : task.status}
+                </span>
+              </p>
+              {isCompleted && (
+                <p className="col-span-2">
+                  <span className="text-muted-foreground">Completed:</span> {format(endDate, 'MMM d, yyyy')}
+                </p>
+              )}
+            </div>
           </div>
         </TooltipContent>
       </Tooltip>
