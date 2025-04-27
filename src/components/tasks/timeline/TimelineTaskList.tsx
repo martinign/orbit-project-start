@@ -1,5 +1,11 @@
 
 import React from 'react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface TimelineTaskListProps {
   tasks: Array<{
@@ -12,19 +18,26 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
   tasks
 }) => {
   return (
-    <div className="w-[200px] flex-none bg-background border-r shadow-lg z-20">
-      <div className="sticky top-0 h-[82px] border-b bg-background flex items-center justify-center font-medium">
+    <div className="min-w-[150px] bg-background border-r shadow-lg z-20">
+      <div className="sticky top-0 h-[82px] border-b bg-background flex items-center px-4 font-medium">
         Tasks
       </div>
       <div className="divide-y">
         {tasks.map(task => (
-          <div 
-            key={task.id} 
-            className="h-[33px] flex items-center justify-center px-2 truncate hover:bg-gray-50 transition-colors"
-            title={task.title}
-          >
-            {task.title}
-          </div>
+          <TooltipProvider key={task.id}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="h-[33px] flex items-center px-4 truncate hover:bg-gray-50 transition-colors"
+                >
+                  {task.title}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{task.title}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
     </div>
