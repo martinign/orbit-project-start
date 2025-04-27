@@ -36,7 +36,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
         .from('task_status_history')
         .select('task_id, completion_date, total_duration_days')
         .eq('new_status', 'completed')
-        .is('completion_date', 'NOT NULL');
+        .not('completion_date', 'is', null);
 
       if (error) throw error;
       return data?.reduce((acc, item) => ({
