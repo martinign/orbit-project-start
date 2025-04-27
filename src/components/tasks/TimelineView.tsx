@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -81,7 +82,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         </ResizableHandle>
         
         <ResizablePanel defaultSize={85}>
-          <ScrollArea className="h-full" orientation="both">
+          <ScrollArea className="h-full">
             <div style={{ minWidth: `${days.length * 30}px` }}>
               {/* Timeline Header */}
               <div className="sticky top-0 bg-background z-10">
@@ -90,7 +91,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   {months.map((monthInfo, i) => (
                     <div 
                       key={i}
-                      className="text-center text-sm font-medium border-r flex items-center justify-center"
+                      className="text-center text-xs font-medium border-r flex items-center justify-center"
                       style={{ width: `${monthInfo.days * 30}px` }}
                     >
                       {monthInfo.month}
@@ -158,6 +159,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                 />
               </div>
             </div>
+            <ScrollBar orientation="vertical" />
             <ScrollBar orientation="horizontal" className="h-3" />
           </ScrollArea>
         </ResizablePanel>
