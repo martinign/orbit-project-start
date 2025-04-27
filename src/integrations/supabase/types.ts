@@ -538,6 +538,44 @@ export type Database = {
         }
         Relationships: []
       }
+      task_status_history: {
+        Row: {
+          changed_at: string
+          created_at: string
+          id: string
+          new_status: string
+          previous_status: string | null
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          created_at?: string
+          id?: string
+          new_status: string
+          previous_status?: string | null
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          previous_status?: string | null
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_status_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_templates: {
         Row: {
           created_at: string
