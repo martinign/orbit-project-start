@@ -76,7 +76,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        <ResizablePanel defaultSize={50}>
+        <ResizablePanel defaultSize={20}>
           <ScrollArea className="h-full">
             <div className="relative" style={{ width: `${days.length * 20}px` }}>
               {/* Timeline Header (Months and Days) */}
