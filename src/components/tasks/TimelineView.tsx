@@ -87,7 +87,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                     <div 
                       key={i}
                       className="text-center font-medium border-r flex items-center justify-center text-xs"
-                      style={{ width: `${monthInfo.days * 10}px` }}
+                      style={{ width: `${monthInfo.days * 20}px` }}
                     >
                       {monthInfo.month}
                     </div>
