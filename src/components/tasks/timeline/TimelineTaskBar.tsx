@@ -35,13 +35,13 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <Card
-            className={`absolute top-1 h-5 rounded-sm cursor-pointer transition-colors
+            className={`absolute top-2 h-6 rounded-md cursor-pointer transition-colors
               ${isCompleted ? 'bg-green-200 hover:bg-green-300' : 'bg-blue-200 hover:bg-blue-300'}`}
             style={style}
             onClick={onClick}
           >
             {durationDays > 3 && (
-              <div className="px-1.5 text-xs font-medium truncate flex items-center h-full">
+              <div className="px-2 text-xs font-medium truncate flex items-center h-full">
                 {durationDays} days {isCompleted ? '(completed)' : ''}
               </div>
             )}
