@@ -16,15 +16,26 @@ export function useNewItems(projectId: string) {
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
       const types: ItemType[] = ['note', 'contact', 'task', 'event', 'team_member'];
+      
+      // Directly query the database for each item type
       const counts = await Promise.all(
         types.map(async (type) => {
-          const { count } = await supabase.rpc('get_new_items_count', {
-            p_project_id: projectId,
-            p_item_type: type
-          });
-          return { type, count: count || 0 };
+          // Get counts of items created in the last 24 hours
+          const { data, error } = await supabase
+            .from(`project_${type}s`)
+            .select('id', { count: 'exact', head: true })
+            .eq('project_id', projectId)
+            .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            
+          if (error) {
+            console.error(`Error fetching new ${type}s count:`, error);
+            return { type, count: 0 };
+          }
+          
+          return { type, count: data || 0 };
         })
       );
+      
       return Object.fromEntries(counts.map(({ type, count }) => [type, count]));
     },
     enabled: !!projectId,
@@ -37,12 +48,14 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
+  // Simplified function to mark an item as viewed
+  // Instead of updating a separate table, we'll track this in local state
   const markItemViewed = async (itemId: string, itemType: ItemType) => {
-    await supabase
-      .from('item_views')
-      .update({ viewed_at: new Date().toISOString() })
-      .eq('item_id', itemId)
-      .eq('item_type', itemType);
+    // Update local state to remove the badge for this item type
+    setNewItemsCount(prev => ({
+      ...prev,
+      [itemType]: Math.max(0, (prev[itemType] || 0) - 1)
+    }));
   };
 
   return {
