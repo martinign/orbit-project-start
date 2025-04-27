@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
@@ -63,7 +63,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const today = new Date();
   
   return (
-    <div className="border rounded-md h-full overflow-hidden">
+    <div className="border rounded-md h-full">
       <ResizablePanelGroup
         direction="horizontal"
         className="h-full"
@@ -81,86 +81,85 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         </ResizableHandle>
         
         <ResizablePanel defaultSize={85}>
-          <div className="overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="relative">
-                {/* Timeline Header */}
-                <div className="sticky top-0 bg-background z-10">
-                  {/* Months row */}
-                  <div className="flex h-10 border-b">
-                    {months.map((monthInfo, i) => (
-                      <div 
-                        key={i}
-                        className="text-center font-medium border-r flex items-center justify-center"
-                        style={{ width: `${monthInfo.days * 30}px` }}
-                      >
-                        {monthInfo.month}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Days row */}
-                  <div className="flex h-[42px] border-b">
-                    {days.map((day, i) => (
-                      <div 
-                        key={i}
-                        className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
-                          ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
-                      >
-                        {format(day, 'd')}
-                      </div>
-                    ))}
-                  </div>
+          <ScrollArea className="h-full" orientation="both">
+            <div style={{ minWidth: `${days.length * 30}px` }}>
+              {/* Timeline Header */}
+              <div className="sticky top-0 bg-background z-10">
+                {/* Months row */}
+                <div className="flex h-8 border-b">
+                  {months.map((monthInfo, i) => (
+                    <div 
+                      key={i}
+                      className="text-center text-sm font-medium border-r flex items-center justify-center"
+                      style={{ width: `${monthInfo.days * 30}px` }}
+                    >
+                      {monthInfo.month}
+                    </div>
+                  ))}
                 </div>
-
-                {/* Task Timeline */}
-                <div className="relative divide-y">
-                  {tasks.map((task, index) => {
-                    const createdDate = task.created_at ? new Date(task.created_at) : new Date();
-                    const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
-                    const isCompleted = task.status === 'completed';
-                    
-                    const startOfTimeline = days[0];
-                    const daysFromStart = startOfTimeline ? Math.max(
-                      0, 
-                      Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
-                    ) : 0;
-                    
-                    const endDate = isCompleted ? updatedDate : today;
-                    const durationDays = Math.max(
-                      1, 
-                      Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
-                    );
-
-                    if (startOfTimeline && createdDate < addMonths(startOfTimeline, -1)) {
-                      return null;
-                    }
-
-                    return (
-                      <div key={task.id} className="h-[33px] relative">
-                        <TimelineTaskBar
-                          task={task}
-                          style={{ 
-                            left: `${daysFromStart * 30}px`,
-                            width: `${durationDays * 30}px`
-                          }}
-                          onClick={() => setSelectedTask(task)}
-                          durationDays={durationDays}
-                        />
-                      </div>
-                    );
-                  })}
-
-                  {/* Today's Line */}
-                  <div 
-                    className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-                    style={{
-                      left: `${days.findIndex(day => isToday(day)) * 30}px`
-                    }}
-                  />
+                {/* Days row */}
+                <div className="flex h-8 border-b">
+                  {days.map((day, i) => (
+                    <div 
+                      key={i}
+                      className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
+                        ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
+                    >
+                      {format(day, 'd')}
+                    </div>
+                  ))}
                 </div>
               </div>
-            </ScrollArea>
-          </div>
+
+              {/* Task Timeline */}
+              <div className="relative divide-y">
+                {tasks.map((task, index) => {
+                  const createdDate = task.created_at ? new Date(task.created_at) : new Date();
+                  const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
+                  const isCompleted = task.status === 'completed';
+                  
+                  const startOfTimeline = days[0];
+                  const daysFromStart = startOfTimeline ? Math.max(
+                    0, 
+                    Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
+                  ) : 0;
+                  
+                  const endDate = isCompleted ? updatedDate : today;
+                  const durationDays = Math.max(
+                    1, 
+                    Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+                  );
+
+                  if (startOfTimeline && createdDate < addMonths(startOfTimeline, -1)) {
+                    return null;
+                  }
+
+                  return (
+                    <div key={task.id} className="h-7 relative">
+                      <TimelineTaskBar
+                        task={task}
+                        style={{ 
+                          left: `${daysFromStart * 30}px`,
+                          width: `${durationDays * 30}px`
+                        }}
+                        onClick={() => setSelectedTask(task)}
+                        durationDays={durationDays}
+                      />
+                    </div>
+                  );
+                })}
+
+                {/* Today's Line */}
+                <div 
+                  className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
+                  style={{
+                    left: `${days.findIndex(day => isToday(day)) * 30}px`
+                  }}
+                />
+              </div>
+            </div>
+            <ScrollBar orientation="horizontal" className="h-3" />
+          </ScrollArea>
         </ResizablePanel>
       </ResizablePanelGroup>
 
