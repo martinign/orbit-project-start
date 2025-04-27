@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { TasksTab } from './tabs/TasksTab';
-import { TimelineTab } from './tabs/TimelineTab';
 import { NotesTab } from './tabs/NotesTab';
 import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
@@ -40,10 +40,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
 
       {activeTab === 'gantt' && (
         <GanttTab projectId={projectId} />
-      )}
-
-      {activeTab === 'timeline' && (
-        <TimelineTab projectId={projectId} />
       )}
 
       {activeTab === 'notes' && (
