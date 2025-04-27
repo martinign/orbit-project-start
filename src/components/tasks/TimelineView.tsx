@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { TimelineTaskBar } from './timeline/TimelineTaskBar';
+import { TimelineTaskList } from './timeline/TimelineTaskList';
 
 interface Task {
   id: string;
@@ -19,6 +22,7 @@ interface TimelineViewProps {
 export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) => {
   const [days, setDays] = useState<Date[]>([]);
   const [months, setMonths] = useState<{month: string, days: number}[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
   useEffect(() => {
     const today = new Date();
@@ -34,18 +38,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
     const monthsMap: {[key: string]: number} = {};
     allDays.forEach(day => {
       const monthKey = format(day, 'MMM yyyy');
-      if (!monthsMap[monthKey]) {
-        monthsMap[monthKey] = 0;
-      }
-      monthsMap[monthKey]++;
+      monthsMap[monthKey] = (monthsMap[monthKey] || 0) + 1;
     });
     
-    const monthsArray = Object.entries(monthsMap).map(([month, days]) => ({
+    setMonths(Object.entries(monthsMap).map(([month, days]) => ({
       month,
       days
-    }));
-    
-    setMonths(monthsArray);
+    })));
   }, []);
   
   if (isLoading) {
@@ -59,28 +58,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const today = new Date();
   
   return (
-    <div className="border rounded-md h-full">
+    <div className="border rounded-md h-full overflow-hidden">
       <div className="flex h-full">
-        <div className="w-[200px] flex-none bg-background border-r">
-          <div className="sticky top-0 p-2 font-medium border-b bg-background z-20">
-            Task
-          </div>
-          <div>
-            {tasks.map((task) => (
-              <div key={task.id} className="p-2 border-b truncate" title={task.title}>
-                {task.title}
-              </div>
-            ))}
-          </div>
-        </div>
+        <TimelineTaskList tasks={tasks} />
+        
         <div className="flex-1 overflow-hidden">
-          <ScrollArea>
+          <ScrollArea className="h-full">
             <div className="relative">
+              {/* Timeline Header */}
               <div className="sticky top-0 bg-background z-10">
                 <div className="flex border-b">
                   {months.map((monthInfo, i) => (
                     <div 
-                      key={i} 
+                      key={i}
                       className="text-center font-medium border-r"
                       style={{ width: `${monthInfo.days * 30}px` }}
                     >
@@ -91,7 +81,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                 <div className="flex h-8 border-b">
                   {days.map((day, i) => (
                     <div 
-                      key={i} 
+                      key={i}
                       className={`w-[30px] flex justify-center items-center text-xs border-r
                         ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
                     >
@@ -100,8 +90,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   ))}
                 </div>
               </div>
-              <div>
-                {tasks.map((task) => {
+
+              {/* Task Timeline */}
+              <div className="relative">
+                {tasks.map((task, index) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : new Date();
                   const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
                   const isCompleted = task.status === 'completed';
@@ -121,50 +113,52 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   if (startOfTimeline && createdDate < addMonths(startOfTimeline, -1)) {
                     return null;
                   }
-                  
+
                   return (
                     <div key={task.id} className="relative h-[33px] border-b">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div 
-                              className={`absolute top-2 h-6 rounded-md ${isCompleted ? 'bg-green-200' : 'bg-blue-200'}`}
-                              style={{ 
-                                left: `${daysFromStart * 30}px`,
-                                width: `${durationDays * 30}px`
-                              }}
-                            >
-                              {durationDays > 3 && (
-                                <div className="px-2 text-xs font-medium truncate flex items-center h-full">
-                                  {durationDays} days {isCompleted ? '(completed)' : ''}
-                                </div>
-                              )}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-1">
-                              <p className="font-medium">{task.title}</p>
-                              <p className="text-xs">
-                                Created: {format(createdDate, 'MMM d, yyyy')}
-                              </p>
-                              <p className="text-xs">
-                                {isCompleted 
-                                  ? `Completed: ${format(updatedDate, 'MMM d, yyyy')}` 
-                                  : 'In progress'}
-                              </p>
-                              <p className="text-xs">Duration: {durationDays} days</p>
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <TimelineTaskBar
+                        task={task}
+                        style={{ 
+                          left: `${daysFromStart * 30}px`,
+                          width: `${durationDays * 30}px`
+                        }}
+                        onClick={() => setSelectedTask(task)}
+                        durationDays={durationDays}
+                      />
                     </div>
                   );
                 })}
+
+                {/* Today's Line */}
+                <div 
+                  className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
+                  style={{
+                    left: `${days.findIndex(day => isToday(day)) * 30}px`
+                  }}
+                />
               </div>
             </div>
           </ScrollArea>
         </div>
       </div>
+
+      {/* Task Details Dialog */}
+      <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          {selectedTask && (
+            <div className="space-y-4 p-4">
+              <h3 className="text-lg font-semibold">{selectedTask.title}</h3>
+              <div className="space-y-2">
+                <p>Status: {selectedTask.status}</p>
+                <p>Created: {format(new Date(selectedTask.created_at!), 'PPP')}</p>
+                {selectedTask.status === 'completed' && selectedTask.updated_at && (
+                  <p>Completed: {format(new Date(selectedTask.updated_at), 'PPP')}</p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
