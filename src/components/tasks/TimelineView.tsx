@@ -6,6 +6,7 @@ import { TimelineTaskBar } from './timeline/TimelineTaskBar';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { GripVertical } from 'lucide-react';
+import { useTextWidth } from '@/hooks/useTextWidth';
 
 interface Task {
   id: string;
@@ -24,6 +25,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const [days, setDays] = useState<Date[]>([]);
   const [months, setMonths] = useState<{month: string, days: number}[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
+  const taskTitles = tasks.map(task => task.title);
+  const maxTitleWidth = useTextWidth(taskTitles);
   
   useEffect(() => {
     const today = new Date();
@@ -64,7 +68,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         direction="horizontal"
         className="h-full"
       >
-        <ResizablePanel defaultSize={15} minSize={8} maxSize={40}>
+        <ResizablePanel 
+          defaultSize={15} 
+          minSize={8} 
+          maxSize={Math.min(40, (maxTitleWidth / window.innerWidth) * 100)}
+        >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
         
