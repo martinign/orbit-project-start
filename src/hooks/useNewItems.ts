@@ -21,7 +21,7 @@ export function useNewItems(projectId: string) {
       const counts = await Promise.all(
         types.map(async (type) => {
           // Get counts of items created in the last 24 hours
-          const { data, error } = await supabase
+          const { count, error } = await supabase
             .from(`project_${type}s`)
             .select('id', { count: 'exact', head: true })
             .eq('project_id', projectId)
@@ -32,7 +32,7 @@ export function useNewItems(projectId: string) {
             return { type, count: 0 };
           }
           
-          return { type, count: data || 0 };
+          return { type, count: count || 0 };
         })
       );
       
