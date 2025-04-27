@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -134,6 +135,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                         }}
                         onClick={() => setSelectedTask(task)}
                         durationDays={durationDays}
+                        isCompleted={isCompleted}
                       />
                     </div>
                   );
