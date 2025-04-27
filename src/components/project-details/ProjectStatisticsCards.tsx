@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNewItems } from '@/hooks/useNewItems';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { format } from 'date-fns';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -30,26 +31,36 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 }) => {
   const { newItemsCount } = useNewItems(projectId);
 
-  const renderBadge = (type: string) => {
+  const renderBadge = (type: 'task' | 'note') => {
     const count = newItemsCount[type];
     if (!count) return null;
+    
+    const timeAgo = format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'pp');
     return (
-      <Badge 
-        variant="success" 
-        className="absolute top-2 right-2 animate-in fade-in"
-      >
-        {count} new
-      </Badge>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Badge 
+              variant="success" 
+              className="absolute top-2 right-2 animate-in fade-in"
+            >
+              {count} new
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Added since {timeAgo}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('contacts')}
       >
-        {renderBadge('contact')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -62,10 +73,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('team')}
       >
-        {renderBadge('team_member')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -102,10 +112,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('calendar')}
       >
-        {renderBadge('event')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export type ItemType = 'note' | 'contact' | 'task' | 'event' | 'team_member';
+export type ItemType = 'task' | 'note';
 
 interface NewItemsCount {
   [key: string]: number;
@@ -15,7 +15,7 @@ export function useNewItems(projectId: string) {
   const { data: counts } = useQuery({
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
-      const types: ItemType[] = ['note', 'contact', 'task', 'event', 'team_member'];
+      const types: ItemType[] = ['task', 'note'];
       
       // Directly query the database for each item type
       const counts = await Promise.all(
@@ -49,7 +49,6 @@ export function useNewItems(projectId: string) {
   }, [counts]);
 
   // Simplified function to mark an item as viewed
-  // Instead of updating a separate table, we'll track this in local state
   const markItemViewed = async (itemId: string, itemType: ItemType) => {
     // Update local state to remove the badge for this item type
     setNewItemsCount(prev => ({
