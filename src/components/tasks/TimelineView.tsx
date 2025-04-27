@@ -14,7 +14,6 @@ interface Task {
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  duration_date?: number; // <-- added here!
 }
 
 interface TimelineViewProps {
@@ -24,7 +23,7 @@ interface TimelineViewProps {
 
 export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) => {
   const [days, setDays] = useState<Date[]>([]);
-  const [months, setMonths] = useState<{ month: string, days: number }[]>([]);
+  const [months, setMonths] = useState<{month: string, days: number}[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const taskTitles = tasks.map(task => task.title);
@@ -68,7 +67,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         <ResizablePanel 
           defaultSize={10} 
           minSize={6}
-          maxSize={Math.min(10, (maxTitleWidth / window.innerWidth) * 100)}
+          maxSize={Math.min(15, (maxTitleWidth / window.innerWidth) * 100)}
         >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
@@ -114,6 +113,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
               <div className="relative divide-y">
                 {tasks.map((task) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : today;
+                  const updatedDate = task.updated_at ? new Date(task.updated_at) : today;
                   const isCompleted = task.status === 'completed';
 
                   const startOfTimeline = days[0];
@@ -121,13 +121,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                     ? Math.max(0, Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))) 
                     : 0;
 
-                  let durationDays = 1;
-
-                  if (isCompleted) {
-                    durationDays = task.duration_date ? task.duration_date : 1;
-                  } else {
-                    durationDays = Math.max(1, Math.ceil((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
-                  }
+                  const endDate = isCompleted ? updatedDate : today;
+                  const durationDays = Math.max(1, Math.ceil((endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
 
                   return (
                     <div key={task.id} className="h-7 relative">
