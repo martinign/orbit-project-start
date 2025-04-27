@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth, differenceInDays } from 'date-fns';
+import { format, isToday, eachDayOfInterval, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
@@ -15,6 +14,7 @@ interface Task {
   status: string;
   created_at: string | null;
   updated_at: string | null;
+  duration_date?: number; // <-- added here!
 }
 
 interface TimelineViewProps {
@@ -24,7 +24,7 @@ interface TimelineViewProps {
 
 export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) => {
   const [days, setDays] = useState<Date[]>([]);
-  const [months, setMonths] = useState<{month: string, days: number}[]>([]);
+  const [months, setMonths] = useState<{ month: string, days: number }[]>([]);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const taskTitles = tasks.map(task => task.title);
@@ -63,12 +63,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const today = new Date();
 
   return (
-    <div className="border rounded-md h-[calc(100vh-300px)] overflow-hidden">
+    <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
         <ResizablePanel 
-          defaultSize={20} 
-          minSize={10}
-          maxSize={40}
+          defaultSize={10} 
+          minSize={6}
+          maxSize={Math.min(10, (maxTitleWidth / window.innerWidth) * 100)}
         >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
@@ -77,7 +77,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        <ResizablePanel defaultSize={80}>
+        <ResizablePanel defaultSize={85}>
           <ScrollArea className="h-full">
             <div className="relative" style={{ width: `${days.length * 20}px` }}>
               {/* Timeline Header (Months and Days) */}
@@ -115,16 +115,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                 {tasks.map((task) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : today;
                   const isCompleted = task.status === 'completed';
-                  const endDate = isCompleted && task.updated_at 
-                    ? new Date(task.updated_at)
-                    : today;
 
                   const startOfTimeline = days[0];
                   const daysFromStart = startOfTimeline 
                     ? Math.max(0, Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))) 
                     : 0;
 
-                  const durationDays = Math.max(1, differenceInDays(endDate, createdDate));
+                  let durationDays = 1;
+
+                  if (isCompleted) {
+                    durationDays = task.duration_date ? task.duration_date : 1;
+                  } else {
+                    durationDays = Math.max(1, Math.ceil((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)));
+                  }
 
                   return (
                     <div key={task.id} className="h-7 relative">
@@ -136,7 +139,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                         }}
                         onClick={() => setSelectedTask(task)}
                         durationDays={durationDays}
-                        isCompleted={isCompleted}
                       />
                     </div>
                   );
