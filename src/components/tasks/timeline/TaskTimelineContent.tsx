@@ -58,10 +58,30 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
           Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
         ) : 0;
 
-        // Calculate duration based on status
-        const durationDays = isCompleted && completionInfo?.total_duration_days 
-          ? completionInfo.total_duration_days 
-          : Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+        // Add debug logs to track values
+        console.log('Task:', {
+          id: task.id,
+          title: task.title,
+          status: task.status,
+          createdDate,
+          isCompleted,
+          completionInfo,
+          daysFromStart
+        });
+
+        let durationDays;
+        if (isCompleted && completionInfo?.total_duration_days) {
+          durationDays = completionInfo.total_duration_days;
+          console.log('Completed task duration:', durationDays);
+        } else {
+          durationDays = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+          console.log('In progress task duration:', durationDays);
+        }
+
+        // Ensure minimum width of 1 day
+        const finalDuration = Math.max(1, durationDays);
+
+        console.log('Final duration for render:', finalDuration);
 
         return (
           <div key={task.id} className="h-[33px] relative">
@@ -69,7 +89,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
               task={task}
               style={{ 
                 left: `${daysFromStart * 30}px`,
-                width: `${Math.max(1, durationDays) * 30}px`
+                width: `${finalDuration * 30}px`
               }}
               onClick={() => onTaskClick(task)}
               durationDays={durationDays}
