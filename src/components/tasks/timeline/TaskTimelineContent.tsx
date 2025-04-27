@@ -53,6 +53,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
               }}
               onClick={() => onTaskClick(task)}
               durationDays={durationDays}
+              isCompleted={isCompleted}
             />
           </div>
         );
