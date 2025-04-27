@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Kanban, Calendar } from 'lucide-react';
+import { Kanban, Calendar, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
