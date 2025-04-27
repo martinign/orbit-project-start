@@ -28,13 +28,14 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
   const startOfTimeline = days[0];
   const todayColumnIndex = days.findIndex(day => isToday(day));
 
-  // Fetch the latest status change data for all tasks
+  // Fetch the latest status change data for all tasks with duration information
   const { data: statusChangeData } = useQuery({
-    queryKey: ['task-status-history', tasks.map(t => t.status)],
+    queryKey: ['task-status-history', tasks.map(t => t.id)],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('task_status_history')
         .select('task_id, completion_date, total_duration_days, new_status')
+        .in('task_id', tasks.map(t => t.id))
         .order('changed_at', { ascending: false });
 
       if (error) throw error;
@@ -59,26 +60,25 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
         const isCompleted = task.status === 'completed';
         const statusChange = statusChangeData?.[task.id];
         
+        console.log(`Task ${task.id} (${task.title}):`, {
+          status: task.status,
+          statusChange,
+          createdDate: createdDate.toISOString(),
+          isCompleted
+        });
+
         const daysFromStart = startOfTimeline ? Math.max(
           0, 
           Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
         ) : 0;
 
-        console.log(`Task ${task.id} (${task.title}):`, {
-          status: task.status,
-          createdDate: createdDate.toISOString(),
-          daysFromStart,
-          isCompleted,
-          statusChange
-        });
-
         let durationDays;
-        if (statusChange?.total_duration_days) {
-          // Use the recorded duration from status history
-          durationDays = statusChange.total_duration_days;
-          console.log(`Task ${task.id} duration from history:`, durationDays);
+        if (isCompleted && statusChange) {
+          // For completed tasks, use the total_duration_days from status history
+          durationDays = statusChange.total_duration_days || 1; // Fallback to 1 if NULL
+          console.log(`Task ${task.id} completed duration from history:`, durationDays);
         } else {
-          // Calculate current duration for tasks without history or in progress
+          // For in-progress tasks, calculate current duration
           durationDays = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
           console.log(`Task ${task.id} calculated duration:`, durationDays);
         }
@@ -95,7 +95,7 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
                 width: `${finalDuration * 30}px`
               }}
               onClick={() => onTaskClick(task)}
-              durationDays={durationDays}
+              durationDays={finalDuration}
               isCompleted={isCompleted}
               completionDate={statusChange?.completion_date}
             />
