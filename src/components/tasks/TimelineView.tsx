@@ -30,24 +30,31 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
   const maxTitleWidth = useTextWidth(taskTitles);
 
   useEffect(() => {
+    if (tasks.length === 0) return;
+
     const today = new Date();
-    const twoMonthsLater = addMonths(today, 2);
+    const createdDates = tasks
+      .map(task => task.created_at ? new Date(task.created_at) : null)
+      .filter((date): date is Date => date !== null);
 
-    const allDays = eachDayOfInterval({
-      start: startOfMonth(today),
-      end: endOfMonth(twoMonthsLater)
-    });
+    const earliestCreated = createdDates.length > 0
+      ? new Date(Math.min(...createdDates.map(d => d.getTime())))
+      : today;
 
+    const start = startOfMonth(addMonths(earliestCreated, -1));
+    const end = endOfMonth(addMonths(today, 2));
+
+    const allDays = eachDayOfInterval({ start, end });
     setDays(allDays);
 
-    const monthsMap: {[key: string]: number} = {};
+    const monthsMap: { [key: string]: number } = {};
     allDays.forEach(day => {
       const monthKey = format(day, 'MMM yyyy');
       monthsMap[monthKey] = (monthsMap[monthKey] || 0) + 1;
     });
 
     setMonths(Object.entries(monthsMap).map(([month, days]) => ({ month, days })));
-  }, []);
+  }, [tasks]);
 
   if (isLoading) return <div className="text-center py-6">Loading tasks...</div>;
   if (!tasks || tasks.length === 0) return <div className="text-center py-6">No tasks found.</div>;
