@@ -71,8 +71,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
       >
         <ResizablePanel 
           defaultSize={10} 
-          minSize={4} 
-          maxSize={Math.min(30, (maxTitleWidth / window.innerWidth) * 100)}
+          minSize={6} 
+          maxSize={Math.min(20, (maxTitleWidth / window.innerWidth) * 100)}
         >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
