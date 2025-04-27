@@ -72,7 +72,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
           defaultSize={15} 
           minSize={8} 
           maxSize={Math.min(40, (maxTitleWidth / window.innerWidth) * 100)}
-          className="overflow-hidden"
         >
           <TimelineTaskList tasks={tasks} />
         </ResizablePanel>
@@ -82,30 +81,38 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
         </ResizableHandle>
         
         <ResizablePanel defaultSize={85}>
-          <div className="relative">
-            <div className="sticky top-0 bg-background z-10 border-b">
-              {months.map((monthInfo, i) => (
-                <div 
-                  key={i}
-                  className="text-center font-medium border-r flex items-center justify-center"
-                  style={{ width: `${monthInfo.days * 30}px` }}
-                >
-                  {monthInfo.month}
+          <ScrollArea className="h-full" orientation="both">
+            <div style={{ minWidth: `${days.length * 30}px` }}>
+              {/* Timeline Header */}
+              <div className="sticky top-0 bg-background z-10">
+                {/* Months row */}
+                <div className="flex h-8 border-b">
+                  {months.map((monthInfo, i) => (
+                    <div 
+                      key={i}
+                      className="text-center text-sm font-medium border-r flex items-center justify-center"
+                      style={{ width: `${monthInfo.days * 30}px` }}
+                    >
+                      {monthInfo.month}
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {days.map((day, i) => (
-                <div 
-                  key={i}
-                  className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
-                    ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
-                >
-                  {format(day, 'd')}
+                {/* Days row */}
+                <div className="flex h-8 border-b">
+                  {days.map((day, i) => (
+                    <div 
+                      key={i}
+                      className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
+                        ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
+                    >
+                      {format(day, 'd')}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
 
-            <ScrollArea className="h-[calc(100vh-250px)]" type="scroll">
-              <div className="relative divide-y" style={{ minWidth: `${days.length * 30}px` }}>
+              {/* Task Timeline */}
+              <div className="relative divide-y">
                 {tasks.map((task, index) => {
                   const createdDate = task.created_at ? new Date(task.created_at) : new Date();
                   const updatedDate = task.updated_at ? new Date(task.updated_at) : new Date();
@@ -128,7 +135,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   }
 
                   return (
-                    <div key={task.id} className="h-[33px] relative">
+                    <div key={task.id} className="h-7 relative">
                       <TimelineTaskBar
                         task={task}
                         style={{ 
@@ -142,6 +149,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   );
                 })}
 
+                {/* Today's Line */}
                 <div 
                   className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
                   style={{
@@ -149,12 +157,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   }}
                 />
               </div>
-              <ScrollBar orientation="horizontal" className="h-3" />
-            </ScrollArea>
-          </div>
+            </div>
+            <ScrollBar orientation="horizontal" className="h-3" />
+          </ScrollArea>
         </ResizablePanel>
       </ResizablePanelGroup>
 
+      {/* Task Details Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
         <DialogContent className="sm:max-w-[425px]">
           {selectedTask && (
