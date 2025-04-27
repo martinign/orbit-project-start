@@ -28,7 +28,7 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div 
-                  className="h-[33px] flex items-center px-3 text-left truncate hover:bg-gray-50 transition-colors"
+                  className="h-[33px] flex items-center px-3 text-left truncate overflow-hidden whitespace-nowrap hover:bg-gray-50 transition-colors"
                 >
                   {task.title}
                 </div>
