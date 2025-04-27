@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export type ItemType = 'task' | 'note';
 
@@ -10,6 +11,7 @@ interface NewItemsCount {
 }
 
 export function useNewItems(projectId: string) {
+  const queryClient = useQueryClient();
   const [newItemsCount, setNewItemsCount] = useState<NewItemsCount>({});
 
   const { data: counts } = useQuery({
@@ -17,10 +19,8 @@ export function useNewItems(projectId: string) {
     queryFn: async () => {
       const types: ItemType[] = ['task', 'note'];
       
-      // Directly query the database for each item type
       const counts = await Promise.all(
         types.map(async (type) => {
-          // Get counts of items created in the last 24 hours
           const { count, error } = await supabase
             .from(`project_${type}s`)
             .select('id', { count: 'exact', head: true })
@@ -39,7 +39,6 @@ export function useNewItems(projectId: string) {
       return Object.fromEntries(counts.map(({ type, count }) => [type, count]));
     },
     enabled: !!projectId,
-    refetchInterval: 60000, // Refresh every minute to update badge visibility
   });
 
   useEffect(() => {
@@ -48,17 +47,48 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
-  // Simplified function to mark an item as viewed
-  const markItemViewed = async (itemId: string, itemType: ItemType) => {
-    // Update local state to remove the badge for this item type
-    setNewItemsCount(prev => ({
-      ...prev,
-      [itemType]: Math.max(0, (prev[itemType] || 0) - 1)
-    }));
-  };
+  // Add real-time subscription for both tasks and notes
+  useEffect(() => {
+    if (!projectId) return;
+
+    const channels = ['project_tasks', 'project_notes'].map(table => {
+      const channel = supabase.channel(`${table}_changes_${projectId}`);
+      
+      channel
+        .on('postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table,
+            filter: `project_id=eq.${projectId}`
+          },
+          async () => {
+            // Invalidate the query to trigger a refresh
+            queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+          }
+        )
+        .subscribe((status) => {
+          console.log(`Subscription status for ${table}:`, status);
+        });
+
+      return channel;
+    });
+
+    // Cleanup function
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [projectId, queryClient]);
 
   return {
     newItemsCount,
-    markItemViewed
+    markItemViewed: async (itemId: string, itemType: ItemType) => {
+      setNewItemsCount(prev => ({
+        ...prev,
+        [itemType]: Math.max(0, (prev[itemType] || 0) - 1)
+      }));
+    }
   };
 }

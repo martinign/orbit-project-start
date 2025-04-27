@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { useNewItems } from '@/hooks/useNewItems';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -30,6 +33,36 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   projectId,
 }) => {
   const { newItemsCount } = useNewItems(projectId);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channels = ['project_tasks', 'project_notes'].map(table => {
+      const channel = supabase.channel(`stats_${table}_${projectId}`);
+      
+      channel
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table,
+            filter: `project_id=eq.${projectId}`
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ['project_tasks', projectId] });
+            queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+          }
+        )
+        .subscribe();
+
+      return channel;
+    });
+
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [projectId, queryClient]);
 
   const renderBadge = (type: 'task' | 'note') => {
     const count = newItemsCount[type];

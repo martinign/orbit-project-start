@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DashboardHeaderProps {
   onNewTasksClick?: () => void;
@@ -24,8 +24,9 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile(user?.id);
+  const queryClient = useQueryClient();
   
-  const { data: newTasksCount, refetch } = useQuery({
+  const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
     queryFn: async () => {
       const yesterday = new Date();
@@ -48,20 +49,19 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
         schema: 'public',
         table: 'project_tasks'
       }, () => {
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+  }, [queryClient]);
 
   const handleCreateProject = () => {
     navigate("/projects");
   };
 
-  // Modify the displayName to include an exclamation mark
   const displayName = userProfile?.displayName ? `Welcome, ${userProfile.displayName}!` : "Welcome!";
 
   return (
