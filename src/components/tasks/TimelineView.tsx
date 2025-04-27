@@ -78,7 +78,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
 
         <ResizablePanel defaultSize={85}>
           <ScrollArea className="h-full">
-            <div className="relative" style={{ width: `${days.length * 20}px` }}>
+            <div className="relative" style={{ width: ${days.length * 20}px }}>
               {/* Timeline Header (Months and Days) */}
               <div className="sticky top-0 bg-background z-10">
                 {/* Months Row */}
@@ -87,7 +87,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                     <div 
                       key={i}
                       className="text-center font-medium border-r flex items-center justify-center text-xs"
-                      style={{ width: `${monthInfo.days * 20}px` }}
+                      style={{ width: ${monthInfo.days * 20}px }}
                     >
                       {monthInfo.month}
                     </div>
@@ -99,9 +99,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                   {days.map((day, i) => (
                     <div 
                       key={i}
-                      className={`w-[20px] flex-none flex justify-center items-center text-[10px] border-r ${
+                      className={w-[20px] flex-none flex justify-center items-center text-[10px] border-r ${
                         isToday(day) ? 'bg-blue-100 font-bold' : ''
-                      }`}
+                      }}
                     >
                       {format(day, 'd')}
                     </div>
@@ -129,8 +129,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                       <TimelineTaskBar
                         task={task}
                         style={{ 
-                          left: `${daysFromStart * 20}px`,
-                          width: `${durationDays * 20}px`
+                          left: ${daysFromStart * 20}px,
+                          width: ${durationDays * 20}px
                         }}
                         onClick={() => setSelectedTask(task)}
                         durationDays={durationDays}
@@ -142,7 +142,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ tasks, isLoading }) 
                 {/* Today's Line */}
                 <div 
                   className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-                  style={{ left: `${days.findIndex(day => isToday(day)) * 20}px` }}
+                  style={{ left: ${days.findIndex(day => isToday(day)) * 20}px }}
                 />
               </div>
             </div>
