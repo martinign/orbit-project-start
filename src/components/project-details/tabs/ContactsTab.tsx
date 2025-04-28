@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import ContactsList from '@/components/ContactsList';
 import ContactForm from '@/components/ContactForm';
 
@@ -20,12 +21,28 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
         <div>
           <CardTitle>Project Contacts</CardTitle>
           <CardDescription>View and manage project contacts</CardDescription>
         </div>
-        <div>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search contacts..."
+              value={contactSearchQuery}
+              className="pl-8 w-[200px]"
+              onChange={(e) => {
+                // The parent component handles the state
+                const event = new CustomEvent('contactSearchQueryChange', {
+                  detail: e.target.value
+                });
+                window.dispatchEvent(event);
+              }}
+            />
+          </div>
           <Button 
             onClick={() => setIsCreateContactOpen(true)} 
             className="bg-blue-500 hover:bg-blue-600"

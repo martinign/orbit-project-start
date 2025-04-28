@@ -6,8 +6,6 @@ import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -38,18 +36,19 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     }
   };
 
-  const renderSearchBar = (value: string, onChange: (value: string) => void, placeholder: string) => (
-    <div className="mb-4 relative">
-      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-      <Input
-        type="search"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="pl-8 w-full max-w-xs"
-      />
-    </div>
-  );
+  // Add event listeners for search queries
+  React.useEffect(() => {
+    const handleTeamSearch = (e: any) => setTeamSearchQuery(e.detail);
+    const handleContactSearch = (e: any) => setContactSearchQuery(e.detail);
+
+    window.addEventListener('searchQueryChange', handleTeamSearch);
+    window.addEventListener('contactSearchQueryChange', handleContactSearch);
+
+    return () => {
+      window.removeEventListener('searchQueryChange', handleTeamSearch);
+      window.removeEventListener('contactSearchQueryChange', handleContactSearch);
+    };
+  }, [setContactSearchQuery]);
 
   return (
     <>
@@ -71,23 +70,17 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       )}
 
       {activeTab === 'contacts' && (
-        <>
-          {renderSearchBar(contactSearchQuery, setContactSearchQuery, "Search contacts by name...")}
-          <ContactsTab
-            projectId={projectId}
-            contactSearchQuery={contactSearchQuery}
-          />
-        </>
+        <ContactsTab
+          projectId={projectId}
+          contactSearchQuery={contactSearchQuery}
+        />
       )}
 
       {activeTab === 'team' && (
-        <>
-          {renderSearchBar(teamSearchQuery, setTeamSearchQuery, "Search team members by name...")}
-          <TeamMembersTab 
-            projectId={projectId}
-            searchQuery={teamSearchQuery}
-          />
-        </>
+        <TeamMembersTab 
+          projectId={projectId}
+          searchQuery={teamSearchQuery}
+        />
       )}
 
       {activeTab === 'invites' && (
