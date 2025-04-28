@@ -6,6 +6,11 @@ import { CircleDashed, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 
+interface DashboardHeaderProps {
+  onNewTasksClick?: () => void;
+  isNewTasksFilterActive?: boolean;
+}
+
 export function RecentActivities({ filters }: { filters: any }) {
   const navigate = useNavigate();
 
