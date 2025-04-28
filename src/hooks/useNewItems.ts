@@ -102,10 +102,11 @@ export function useNewItems(projectId: string) {
     const channels = tables.map(table => {
       const channel = supabase.channel(`${table}_changes_${projectId}`);
       
+      // Subscribe to both INSERT and DELETE events
       channel
         .on('postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`

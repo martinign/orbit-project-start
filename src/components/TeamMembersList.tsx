@@ -61,12 +61,11 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   // Use the improved realtime subscription hook
   useRealtimeSubscription({
     table: 'project_team_members',
-    filter: projectId ? 'project_id' : undefined,
-    filterValue: projectId || undefined,
+    projectId: projectId || undefined,
     onRecordChange: () => {
       // Add debouncing to prevent UI freezes
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['team_members'] });
+        queryClient.invalidateQueries({ queryKey: ['team_members', projectId] });
       }, 100);
     }
   });
@@ -94,7 +93,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         throw error;
       }
 
-      queryClient.invalidateQueries({ queryKey: ["team_members"] });
+      queryClient.invalidateQueries({ queryKey: ["team_members", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
 
       toast({
         title: "Success",

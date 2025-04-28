@@ -7,8 +7,6 @@ import { useNewItems } from '@/hooks/useNewItems';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ProjectStatisticsCardsProps {
@@ -37,9 +35,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   const { newItemsCount } = useNewItems(projectId);
   const queryClient = useQueryClient();
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions for all tables
   useRealtimeSubscription({
     table: 'project_tasks',
+    projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
     }
@@ -47,6 +46,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 
   useRealtimeSubscription({
     table: 'project_notes',
+    projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
     }
@@ -54,6 +54,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 
   useRealtimeSubscription({
     table: 'project_contacts',
+    projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
     }
@@ -61,6 +62,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 
   useRealtimeSubscription({
     table: 'project_team_members',
+    projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
     }
@@ -68,6 +70,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 
   useRealtimeSubscription({
     table: 'project_events',
+    projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
     }
