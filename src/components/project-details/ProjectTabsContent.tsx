@@ -6,6 +6,8 @@ import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -26,6 +28,8 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   contactSearchQuery,
   setContactSearchQuery,
 }) => {
+  const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
+
   const handleRefetch = async () => {
     try {
       await refetchTasks();
@@ -33,6 +37,19 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       console.error('Error refetching tasks:', error);
     }
   };
+
+  const renderSearchBar = (value: string, onChange: (value: string) => void, placeholder: string) => (
+    <div className="mb-4 relative">
+      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Input
+        type="search"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="pl-8 w-full max-w-xs"
+      />
+    </div>
+  );
 
   return (
     <>
@@ -54,14 +71,23 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       )}
 
       {activeTab === 'contacts' && (
-        <ContactsTab
-          projectId={projectId}
-          contactSearchQuery={contactSearchQuery}
-        />
+        <>
+          {renderSearchBar(contactSearchQuery, setContactSearchQuery, "Search contacts by name...")}
+          <ContactsTab
+            projectId={projectId}
+            contactSearchQuery={contactSearchQuery}
+          />
+        </>
       )}
 
       {activeTab === 'team' && (
-        <TeamMembersTab projectId={projectId} />
+        <>
+          {renderSearchBar(teamSearchQuery, setTeamSearchQuery, "Search team members by name...")}
+          <TeamMembersTab 
+            projectId={projectId}
+            searchQuery={teamSearchQuery}
+          />
+        </>
       )}
 
       {activeTab === 'invites' && (

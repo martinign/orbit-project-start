@@ -9,9 +9,13 @@ import TeamMemberForm from '@/components/TeamMemberForm';
 
 interface TeamMembersTabProps {
   projectId: string;
+  searchQuery?: string;
 }
 
-export const TeamMembersTab: React.FC<TeamMembersTabProps> = ({ projectId }) => {
+export const TeamMembersTab: React.FC<TeamMembersTabProps> = ({ 
+  projectId,
+  searchQuery = ""
+}) => {
   const [isCreateTeamMemberOpen, setIsCreateTeamMemberOpen] = useState(false);
 
   return (
@@ -35,7 +39,7 @@ export const TeamMembersTab: React.FC<TeamMembersTabProps> = ({ projectId }) => 
       <CardContent>
         <TeamMembersList 
           projectId={projectId} 
-          searchQuery="" 
+          searchQuery={searchQuery} 
           viewMode="table" 
         />
       </CardContent>
