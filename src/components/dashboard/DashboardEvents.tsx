@@ -1,13 +1,16 @@
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CircleDashed, Calendar } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useNewEventsCount } from "@/hooks/useNewEventsCount";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CircleDashed, CalendarClock } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,107 +19,79 @@ import {
 } from "@/components/ui/tooltip";
 
 interface DashboardEventsProps {
-  filters: any;
+  filters: {
+    projectId?: string;
+    status?: string;
+    showNewEvents?: boolean;
+    onToggleNewEvents?: () => void;
+  };
+  newEventsCount?: number;
 }
 
-export function DashboardEvents({ filters }: DashboardEventsProps) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [showNewEventsBadge, setShowNewEventsBadge] = useState(false);
-  const [showOnlyNewEvents, setShowOnlyNewEvents] = useState(false);
-  
-  const { data: newEventsCount } = useNewEventsCount();
-
-  // Set the badge visibility based on new events count
-  useEffect(() => {
-    setShowNewEventsBadge(!!newEventsCount && newEventsCount > 0);
-  }, [newEventsCount]);
+export function DashboardEvents({ filters, newEventsCount = 0 }: DashboardEventsProps) {
+  // Track if the new events filter is active
+  const isNewEventsFilterActive = filters.showNewEvents || false;
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["dashboard_events", filters, showOnlyNewEvents],
+    queryKey: ["dashboard_events", filters],
     queryFn: async () => {
-      let eventsQuery = supabase
+      let query = supabase
         .from("project_events")
         .select("id, title, description, event_date, project_id, projects:project_id(project_number, Sponsor)")
         .order("event_date", { ascending: true })
+        .gte("event_date", new Date().toISOString())
         .limit(5);
-      
+
       if (filters.projectId) {
-        eventsQuery = eventsQuery.eq("project_id", filters.projectId);
+        query = query.eq("project_id", filters.projectId);
       }
-      
-      // If showing only new events, filter for those created in the last 24 hours
-      if (showOnlyNewEvents) {
+
+      if (filters.showNewEvents) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
-        eventsQuery = eventsQuery.gte("created_at", yesterday.toISOString());
-      } else {
-        // Show upcoming events (events with a date in the future)
-        const today = new Date();
-        eventsQuery = eventsQuery.gte("event_date", today.toISOString());
+        query = query.gte("created_at", yesterday.toISOString());
       }
       
-      const { data, error } = await eventsQuery;
+      const { data, error } = await query;
       
       if (error) throw error;
       return data || [];
     },
   });
 
-  const navigateToEvent = (eventId: string, projectId: string) => {
-    navigate(`/projects/${projectId}`);
+  const handleNewEventsClick = () => {
+    if (filters.onToggleNewEvents) {
+      filters.onToggleNewEvents();
+    }
   };
-
-  const toggleNewEventsFilter = () => {
-    setShowOnlyNewEvents(prev => !prev);
-    // Invalidate the query to trigger a refetch
-    queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
-  };
-
-  useEffect(() => {
-    const channel = supabase.channel('events_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'project_events'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
 
   return (
     <Card className="min-h-[300px]">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+      <CardHeader>
+        <div className="flex items-center justify-between">
           <CardTitle>Upcoming Events</CardTitle>
-          <CardDescription>Events scheduled for your projects</CardDescription>
+          {newEventsCount > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger onClick={handleNewEventsClick} asChild>
+                  <Badge 
+                    className={`cursor-pointer ${
+                      isNewEventsFilterActive 
+                        ? "bg-purple-700 hover:bg-purple-800" 
+                        : "bg-purple-500 hover:bg-purple-600"
+                    }`}
+                  >
+                    {newEventsCount} new
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to {isNewEventsFilterActive ? 'hide' : 'show'} new events in the last 24 hours</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
-        {showNewEventsBadge && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger onClick={toggleNewEventsFilter} asChild>
-                <Badge 
-                  className={`cursor-pointer ${
-                    showOnlyNewEvents 
-                      ? "bg-indigo-700 hover:bg-indigo-800" 
-                      : "bg-indigo-500 hover:bg-indigo-600"
-                  }`}
-                >
-                  {newEventsCount} new
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Click to {showOnlyNewEvents ? 'show all' : 'show only new'} events</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+        <CardDescription>Events happening soon</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -126,14 +101,10 @@ export function DashboardEvents({ filters }: DashboardEventsProps) {
         ) : events && events.length > 0 ? (
           <div className="space-y-4">
             {events.map((event) => (
-              <div 
-                key={event.id} 
-                className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                onClick={() => navigateToEvent(event.id, event.project_id)}
-              >
+              <div key={event.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <Calendar className="h-5 w-5 text-indigo-500" />
+                    <CalendarClock className="h-5 w-5 text-orange-500" />
                   </div>
                   <div>
                     <p className="font-medium">{event.title}</p>
@@ -144,7 +115,7 @@ export function DashboardEvents({ filters }: DashboardEventsProps) {
                 </div>
                 <div className="flex flex-col items-end">
                   <span className="text-xs text-muted-foreground">
-                    {format(new Date(event.event_date), "MMM d, h:mm a")}
+                    {event.event_date ? format(new Date(event.event_date), "MMM d, h:mm a") : "No date"}
                   </span>
                 </div>
               </div>
@@ -153,10 +124,8 @@ export function DashboardEvents({ filters }: DashboardEventsProps) {
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
             <CircleDashed className="h-8 w-8 mb-2" />
-            <p>No {showOnlyNewEvents ? 'new' : 'upcoming'} events found</p>
-            <p className="text-sm mt-1">
-              {showOnlyNewEvents ? 'Try viewing all events' : 'Schedule events in your projects'}
-            </p>
+            <p>No upcoming events found</p>
+            <p className="text-sm mt-1">Try adjusting your filters</p>
           </div>
         )}
       </CardContent>

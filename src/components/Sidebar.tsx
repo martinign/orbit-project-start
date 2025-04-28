@@ -29,11 +29,13 @@ import TaskTemplatesListDialog from "./TaskTemplatesListDialog";
 import InviteMembersDialog from "./team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
   const pendingInvitationsCount = useInvitationsCount();
+  const { totalCount } = useTotalNewItemsCount();
   
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
@@ -47,6 +49,15 @@ export function AppSidebar() {
     event: '*',
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+    }
+  });
+
+  // Subscribe to real-time event changes to update the new events badge
+  useRealtimeSubscription({
+    table: 'project_events',
+    event: '*',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
     }
   });
 
@@ -122,9 +133,9 @@ export function AppSidebar() {
                   >
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
-                    {newTasksCount > 0 && (
+                    {totalCount > 0 && (
                       <Badge className="ml-auto bg-purple-500">
-                        {newTasksCount} new
+                        {totalCount} new
                       </Badge>
                     )}
                   </SidebarMenuButton>

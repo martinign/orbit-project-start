@@ -12,12 +12,14 @@ import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { DashboardEvents } from "@/components/dashboard/DashboardEvents";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 
 interface DashboardFilters {
   projectId?: string;
   status?: string;
   category?: string;
   showNewTasks?: boolean;
+  showNewEvents?: boolean;
 }
 
 // Helper for debounced query invalidation
@@ -33,6 +35,8 @@ const DashboardHome = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showNewTasks, setShowNewTasks] = useState(false);
+  const [showNewEvents, setShowNewEvents] = useState(false);
+  const { newTasksCount, newEventsCount } = useTotalNewItemsCount();
 
   // Create debounced invalidation functions to prevent UI freezes
   const debouncedInvalidateProjects = useCallback(
@@ -106,10 +110,11 @@ const DashboardHome = () => {
     invalidateAll();
   }, [filters, queryClient]);
 
-  const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks'>) => {
+  const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks' | 'showNewEvents'>) => {
     setFilters(current => ({
       ...newFilters,
-      showNewTasks: current.showNewTasks
+      showNewTasks: current.showNewTasks,
+      showNewEvents: current.showNewEvents
     }));
   };
 
@@ -121,11 +126,25 @@ const DashboardHome = () => {
     }));
   };
 
-  // Create a filter object that includes the toggle callback
+  const toggleNewEventsFilter = () => {
+    setShowNewEvents(prev => !prev);
+    setFilters(current => ({
+      ...current,
+      showNewEvents: !current.showNewEvents
+    }));
+  };
+
+  // Create filter objects that include the toggle callbacks
   const activitiesFilters = {
     ...filters,
     showNewTasks,
     onToggleNewTasks: toggleNewTasksFilter
+  };
+
+  const eventsFilters = {
+    ...filters,
+    showNewEvents,
+    onToggleNewEvents: toggleNewEventsFilter
   };
 
   return (
@@ -152,7 +171,7 @@ const DashboardHome = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <RecentActivities filters={activitiesFilters} />
-        <DashboardEvents filters={filters} />
+        <DashboardEvents filters={eventsFilters} newEventsCount={newEventsCount} />
       </div>
     </div>
   );
