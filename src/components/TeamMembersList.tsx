@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +8,7 @@ import TeamMembersCardView from './team-members/TeamMembersCardView';
 import EditTeamMemberDialog from './team-members/EditTeamMemberDialog';
 import DeleteTeamMemberDialog from './team-members/DeleteTeamMemberDialog';
 import TeamMembersEmptyState from './team-members/TeamMembersEmptyState';
-import { useRealtime } from '@/contexts/RealtimeContext';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface TeamMembersListProps {
   projectId: string | null;
@@ -26,26 +26,6 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { addSubscription } = useRealtime();
-  
-  // Setup team members realtime subscription
-  useEffect(() => {
-    // Add subscription for all team members
-    addSubscription({
-      table: 'project_team_members',
-      queryKey: ['team_members', projectId, searchQuery]
-    });
-    
-    // If we have a project ID, add a project-specific subscription
-    if (projectId) {
-      addSubscription({
-        table: 'project_team_members',
-        filter: 'project_id',
-        filterValue: projectId,
-        queryKey: ['team_members', projectId, searchQuery]
-      });
-    }
-  }, [addSubscription, projectId, searchQuery]);
 
   const { data: teamMembers, isLoading } = useQuery({
     queryKey: ["team_members", projectId, searchQuery],
@@ -78,6 +58,19 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     },
   });
 
+  // Use the improved realtime subscription hook
+  useRealtimeSubscription({
+    table: 'project_team_members',
+    filter: projectId ? 'project_id' : undefined,
+    filterValue: projectId || undefined,
+    onRecordChange: () => {
+      // Add debouncing to prevent UI freezes
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['team_members'] });
+      }, 100);
+    }
+  });
+
   const handleEdit = (member: any) => {
     setSelectedMember(member);
     setIsEditDialogOpen(true);
@@ -100,6 +93,8 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       if (error) {
         throw error;
       }
+
+      queryClient.invalidateQueries({ queryKey: ["team_members"] });
 
       toast({
         title: "Success",
@@ -162,6 +157,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         teamMember={selectedMember}
         onSuccess={() => {
           handleCloseEditDialog();
+          queryClient.invalidateQueries({ queryKey: ["team_members"] });
         }}
       />
       
