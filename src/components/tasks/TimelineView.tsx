@@ -21,6 +21,8 @@ import {
 import { GripVertical } from 'lucide-react';
 import { useTextWidth } from '@/hooks/useTextWidth';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Task {
   id: string;
@@ -39,6 +41,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   tasks,
   isLoading,
 }) => {
+  const queryClient = useQueryClient();
   const [days, setDays] = useState<Date[]>([]);
   const [months, setMonths] = useState<{ month: string; days: number }[]>(
     []
@@ -48,6 +51,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   // Measure for list width
   const titles = tasks.map((t) => t.title);
   const maxTitleW = useTextWidth(titles);
+
+  // Subscribe to realtime changes for tasks
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    event: '*',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+    }
+  });
 
   // Build days & months
   useEffect(() => {

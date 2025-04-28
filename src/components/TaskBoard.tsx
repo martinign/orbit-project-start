@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,6 +6,9 @@ import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { columnsConfig } from './tasks/columns-config';
+import { useQueryClient } from 'react-query';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Task {
   id: string;
@@ -25,6 +27,7 @@ interface TaskBoardProps {
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
+  const queryClient = useQueryClient();
   const {
     selectedTask,
     isDialogOpen,
@@ -47,6 +50,24 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
   } = useTaskBoard(onRefetch);
 
   const { handleDragEnd } = useTaskDragAndDrop(onRefetch);
+
+  useEffect(() => {
+    const channel = supabase.channel('taskboard-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_tasks'
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        if (onRefetch) onRefetch();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, onRefetch]);
 
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 

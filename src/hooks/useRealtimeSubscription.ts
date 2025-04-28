@@ -17,8 +17,6 @@ type TableName =
   | 'task_status_history'
   | 'task_templates';
 
-
-
 interface SubscriptionOptions {
   table: TableName;
   event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';

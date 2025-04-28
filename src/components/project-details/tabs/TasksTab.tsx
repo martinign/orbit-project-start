@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Kanban, Calendar, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import TaskBoard from '@/components/TaskBoard';
 import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/TaskDialog';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TasksTabProps {
   projectId: string;
@@ -23,6 +25,28 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 }) => {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isTimelineView, setIsTimelineView] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Add realtime subscription for task badges
+  useEffect(() => {
+    const channel = supabase.channel('project-tasks-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_tasks',
+        filter: `project_id=eq.${projectId}`
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
+        refetchTasks();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient, refetchTasks]);
   
   return (
     <Card>
@@ -91,6 +115,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         projectId={projectId} 
         onSuccess={() => {
           refetchTasks();
+          queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
           setIsTaskDialogOpen(false);
         }} 
       />

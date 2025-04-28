@@ -30,7 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { CalendarIcon, BookTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TaskTemplatesListDialog from './TaskTemplatesListDialog';
 
 interface TeamMember {
@@ -77,6 +77,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [projects, setProjects] = useState<any[]>([]);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
     queryKey: ['team_members'],
@@ -221,6 +222,9 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
           .insert(taskData);
           
         if (error) throw error;
+        
+        // Explicitly invalidate the new tasks count query
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
         
         toast({
           title: "Success",
