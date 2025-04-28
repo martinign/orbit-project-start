@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useEffect } from "react";
 
 
 interface DashboardHeaderProps {
