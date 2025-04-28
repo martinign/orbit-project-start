@@ -125,7 +125,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                       <div
                         key={i}
                         className="flex items-center justify-center border-r text-xs font-medium"
-                        style={{ width: 10px }}
+                        style={{ width: `${m.days * dayPct+10}%` }}
                       >
                         {m.month}
                       </div>
