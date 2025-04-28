@@ -1,4 +1,5 @@
 // src/components/tasks/timeline/TimelineView.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   format,
@@ -38,35 +39,39 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   isLoading,
 }) => {
   const [days, setDays] = useState<Date[]>([]);
-  const [months, setMonths] = useState<{ month: string; days: number }[]>([]);
+  const [months, setMonths] = useState<{ month: string; days: number }[]>(
+    []
+  );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // measure longest title for list width
-  const titles = tasks.map(t => t.title);
+  // measure longest title so we can size the list panel
+  const titles = tasks.map((t) => t.title);
   const maxTitleW = useTextWidth(titles);
 
-  // build days/month buckets
+  // build out the days & month buckets
   useEffect(() => {
     if (!tasks.length) return;
     try {
       const today = new Date();
       const createdDates = tasks
-        .map(t => (t.created_at ? new Date(t.created_at) : null))
+        .map((t) => (t.created_at ? new Date(t.created_at) : null))
         .filter((d): d is Date => !!d);
       const earliest = createdDates.length
-        ? new Date(Math.min(...createdDates.map(d => d.getTime())))
+        ? new Date(Math.min(...createdDates.map((d) => d.getTime())))
         : today;
       const start = startOfMonth(addMonths(earliest, -1));
       const end = endOfMonth(addMonths(today, 2));
       const all = eachDayOfInterval({ start, end });
       setDays(all);
 
-      const counts: Record<string, number> = {};
-      all.forEach(d => {
+      const cnts: Record<string, number> = {};
+      all.forEach((d) => {
         const key = format(d, 'MMM yyyy');
-        counts[key] = (counts[key] || 0) + 1;
+        cnts[key] = (cnts[key] || 0) + 1;
       });
-      setMonths(Object.entries(counts).map(([month, cnt]) => ({ month, days: cnt })));
+      setMonths(
+        Object.entries(cnts).map(([month, cnt]) => ({ month, days: cnt }))
+      );
     } catch (err) {
       console.error(err);
       toast({
@@ -87,26 +92,32 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   return (
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Left: Task list (pinned) */}
-        <ResizablePanel defaultSize={15} minSize={5} maxSize={15} className="min-w-0">
-          <TimelineTaskList tasks={tasks} width={maxTitleW + 30} />
+        {/* Left panel: task list (pinned) */}
+        <ResizablePanel
+          defaultSize={15}
+          minSize={10}
+          maxSize={25}
+          className="min-w-0"
+        >
+          <TimelineTaskList tasks={tasks} width={maxTitleW + 32} />
         </ResizablePanel>
 
         <ResizableHandle withHandle>
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        {/* Right: Timeline (overflow-x) */}
-        <ResizablePanel defaultSize={10} className="min-w-0 overflow-hidden">
+        {/* Right panel: timeline (always scrollable) */}
+        <ResizablePanel
+          defaultSize={85}     // reserve most of the space
+          className="min-w-0 overflow-hidden"
+        >
           <div className="flex flex-col h-full">
-            {/* horizontal scroll container */}
-            <div className="flex-1 overflow-x-auto">
-              {/* fixed‐height wrapper to contain header+bars */}
+            {/* This div will ALWAYS show its horizontal scrollbar */}
+            <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
               <div
                 className="relative"
                 style={{ width: days.length * dayWidth }}
               >
-
                 {/* Sticky header: months */}
                 <div className="sticky top-0 bg-background z-10">
                   <div className="flex h-8 border-b">
@@ -137,18 +148,26 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
                 {/* Task bars */}
                 <div className="relative divide-y">
-                  {tasks.map(task => {
-                    const start = task.created_at ? new Date(task.created_at) : today;
-                    const end = task.updated_at ? new Date(task.updated_at) : today;
+                  {tasks.map((task) => {
+                    const start = task.created_at
+                      ? new Date(task.created_at)
+                      : today;
+                    const end = task.updated_at
+                      ? new Date(task.updated_at)
+                      : today;
                     const completed = task.status === 'completed';
 
                     const offsetDays = Math.max(
                       0,
-                      Math.floor((start.getTime() - days[0].getTime()) / (1000*60*60*24))
+                      Math.floor(
+                        (start.getTime() - days[0].getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
                     );
                     const rawDur = Math.ceil(
-                      ((completed ? end : today).getTime() - start.getTime()) /
-                        (1000*60*60*24)
+                      ((completed ? end : today).getTime() -
+                        start.getTime()) /
+                        (1000 * 60 * 60 * 24)
                     );
                     const duration = Math.max(1, rawDur);
 
@@ -168,10 +187,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     );
                   })}
 
-                  {/* Today line */}
+                  {/* Today indicator */}
                   <div
                     className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-                    style={{ left: days.findIndex(d => isToday(d)) * dayWidth }}
+                    style={{
+                      left: days.findIndex((d) => isToday(d)) * dayWidth,
+                    }}
                   />
                 </div>
               </div>
