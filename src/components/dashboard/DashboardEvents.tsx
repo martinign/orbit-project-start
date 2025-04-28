@@ -1,49 +1,59 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { CircleDashed, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNewEventsCount } from "@/hooks/useNewEventsCount";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-export function DashboardEvents({ filters }: { filters: any }) {
+interface DashboardEventsProps {
+  filters: any;
+}
+
+export function DashboardEvents({ filters }: DashboardEventsProps) {
   const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const queryClient = useQueryClient();
+  const [showNewEventsBadge, setShowNewEventsBadge] = useState(false);
+  const [showOnlyNewEvents, setShowOnlyNewEvents] = useState(false);
+  
+  const { data: newEventsCount } = useNewEventsCount();
+
+  // Set the badge visibility based on new events count
+  useEffect(() => {
+    setShowNewEventsBadge(!!newEventsCount && newEventsCount > 0);
+  }, [newEventsCount]);
 
   const { data: events, isLoading } = useQuery({
-    queryKey: ["dashboard_events", filters],
+    queryKey: ["dashboard_events", filters, showOnlyNewEvents],
     queryFn: async () => {
-      const today = new Date();
-      const sevenDaysLater = new Date();
-      sevenDaysLater.setDate(today.getDate() + 7);
-      
       let eventsQuery = supabase
         .from("project_events")
-        .select(`
-          id,
-          title,
-          description,
-          created_at,
-          event_date,
-          user_id,
-          project_id,
-          projects:project_id (
-            project_number,
-            Sponsor
-          )
-        `)
-        .gte("event_date", today.toISOString())
-        .lte("event_date", sevenDaysLater.toISOString())
+        .select("id, title, description, event_date, project_id, projects:project_id(project_number, Sponsor)")
         .order("event_date", { ascending: true })
         .limit(5);
       
       if (filters.projectId) {
         eventsQuery = eventsQuery.eq("project_id", filters.projectId);
+      }
+      
+      // If showing only new events, filter for those created in the last 24 hours
+      if (showOnlyNewEvents) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        eventsQuery = eventsQuery.gte("created_at", yesterday.toISOString());
+      } else {
+        // Show upcoming events (events with a date in the future)
+        const today = new Date();
+        eventsQuery = eventsQuery.gte("event_date", today.toISOString());
       }
       
       const { data, error } = await eventsQuery;
@@ -53,157 +63,100 @@ export function DashboardEvents({ filters }: { filters: any }) {
     },
   });
 
-  const navigateToProject = (projectId: string) => {
+  const navigateToEvent = (eventId: string, projectId: string) => {
     navigate(`/projects/${projectId}`);
   };
 
-  const EventCreator = ({ userId }: { userId: string }) => {
-    const { data: userProfile } = useUserProfile(userId);
-    return <span>{userProfile?.full_name || "Unknown user"}</span>;
+  const toggleNewEventsFilter = () => {
+    setShowOnlyNewEvents(prev => !prev);
+    // Invalidate the query to trigger a refetch
+    queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
   };
 
-  if (isLoading) {
-    return (
-      <Card className="min-h-[300px]">
-        <CardHeader>
-          <CardTitle>Upcoming Events</CardTitle>
-          <CardDescription>Events in the next 7 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-40">
-            <p className="text-muted-foreground">Loading events...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  useEffect(() => {
+    const channel = supabase.channel('events_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_events'
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+      })
+      .subscribe();
 
-  const initialEvents = events?.slice(0, 2) || [];
-  const remainingEvents = events?.slice(2) || [];
-  const hasMoreEvents = remainingEvents.length > 0;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return (
     <Card className="min-h-[300px]">
-      <CardHeader>
-        <CardTitle>Upcoming Events</CardTitle>
-        <CardDescription>Events in the next 7 days</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Upcoming Events</CardTitle>
+          <CardDescription>Events scheduled for your projects</CardDescription>
+        </div>
+        {showNewEventsBadge && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger onClick={toggleNewEventsFilter} asChild>
+                <Badge 
+                  className={`cursor-pointer ${
+                    showOnlyNewEvents 
+                      ? "bg-indigo-700 hover:bg-indigo-800" 
+                      : "bg-indigo-500 hover:bg-indigo-600"
+                  }`}
+                >
+                  {newEventsCount} new
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to {showOnlyNewEvents ? 'show all' : 'show only new'} events</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </CardHeader>
       <CardContent>
-        {events && events.length > 0 ? (
-          <Collapsible>
-            <div className="space-y-4">
-              {initialEvents.map((event) => (
-                <HoverCard key={event.id}>
-                  <HoverCardTrigger asChild>
-                    <div 
-                      className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer" 
-                      onClick={() => navigateToProject(event.project_id)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5">
-                          <Calendar className="h-5 w-5 text-purple-500" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{event.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {event.projects?.project_number} - {event.projects?.Sponsor}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {event.event_date ? format(new Date(event.event_date), "MMM d") : "No date"}
-                      </p>
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-80">
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">{event.title}</h4>
-                      {event.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {event.description}
-                        </p>
-                      )}
-                      <div className="text-xs text-muted-foreground">
-                        <p>Created by: <EventCreator userId={event.user_id} /></p>
-                        <p>Project: {event.projects?.project_number}</p>
-                        <p>Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}</p>
-                      </div>
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              ))}
-
-              {hasMoreEvents && (
-                <>
-                  <CollapsibleContent className="space-y-4">
-                    {remainingEvents.map((event) => (
-                      <HoverCard key={event.id}>
-                        <HoverCardTrigger asChild>
-                          <div 
-                            className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer" 
-                            onClick={() => navigateToProject(event.project_id)}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="mt-0.5">
-                                <Calendar className="h-5 w-5 text-purple-500" />
-                              </div>
-                              <div>
-                                <p className="font-medium">{event.title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {event.projects?.project_number} - {event.projects?.Sponsor}
-                                </p>
-                              </div>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {event.event_date ? format(new Date(event.event_date), "MMM d") : "No date"}
-                            </p>
-                          </div>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80">
-                          <div className="space-y-2">
-                            <h4 className="text-sm font-semibold">{event.title}</h4>
-                            {event.description && (
-                              <p className="text-sm text-muted-foreground">
-                                {event.description}
-                              </p>
-                            )}
-                            <div className="text-xs text-muted-foreground">
-                              <p>Created by: <EventCreator userId={event.user_id} /></p>
-                              <p>Project: {event.projects?.project_number}</p>
-                              <p>Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}</p>
-                            </div>
-                          </div>
-                        </HoverCardContent>
-                      </HoverCard>
-                    ))}
-                  </CollapsibleContent>
-                  
-                  <CollapsibleTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={() => setIsExpanded(!isExpanded)}
-                    >
-                      {isExpanded ? (
-                        <>
-                          Show Less <ChevronUp className="ml-2 h-4 w-4" />
-                        </>
-                      ) : (
-                        <>
-                          Show More ({remainingEvents.length} more) <ChevronDown className="ml-2 h-4 w-4" />
-                        </>
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                </>
-              )}
-            </div>
-          </Collapsible>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-40">
+            <p className="text-muted-foreground">Loading events...</p>
+          </div>
+        ) : events && events.length > 0 ? (
+          <div className="space-y-4">
+            {events.map((event) => (
+              <div 
+                key={event.id} 
+                className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                onClick={() => navigateToEvent(event.id, event.project_id)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <Calendar className="h-5 w-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">{event.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {event.projects?.project_number} - {event.projects?.Sponsor}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(event.event_date), "MMM d, h:mm a")}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-            <Calendar className="h-8 w-8 mb-2" />
-            <p>No upcoming events</p>
-            <p className="text-sm mt-1">Nothing scheduled for the next 7 days</p>
+            <CircleDashed className="h-8 w-8 mb-2" />
+            <p>No {showOnlyNewEvents ? 'new' : 'upcoming'} events found</p>
+            <p className="text-sm mt-1">
+              {showOnlyNewEvents ? 'Try viewing all events' : 'Schedule events in your projects'}
+            </p>
           </div>
         )}
       </CardContent>

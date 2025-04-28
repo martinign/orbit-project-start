@@ -1,21 +1,32 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CircleDashed, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface DashboardHeaderProps {
-  onNewTasksClick?: () => void;
-  isNewTasksFilterActive?: boolean;
+interface RecentActivitiesProps {
+  filters: any;
 }
 
-export function RecentActivities({ filters }: { filters: any }) {
+export function RecentActivities({ filters }: RecentActivitiesProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile(user?.id);
   const queryClient = useQueryClient();
+  const [showNewTasksBadge, setShowNewTasksBadge] = useState(false);
 
   const { data: recentActivities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["recent_activities", filters],
@@ -67,6 +78,11 @@ export function RecentActivities({ filters }: { filters: any }) {
     },
   });
 
+  // Set the badge visibility based on new tasks count
+  useEffect(() => {
+    setShowNewTasksBadge(!!newTasksCount && newTasksCount > 0);
+  }, [newTasksCount]);
+
   useEffect(() => {
     const channel = supabase.channel('tasks_changes')
       .on('postgres_changes', {
@@ -75,6 +91,7 @@ export function RecentActivities({ filters }: { filters: any }) {
         table: 'project_tasks'
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
       })
       .subscribe();
 
@@ -83,15 +100,40 @@ export function RecentActivities({ filters }: { filters: any }) {
     };
   }, [queryClient]);
 
-  const handleCreateProject = () => {
-    navigate("/projects");
+  const toggleNewTasksFilter = () => {
+    // Toggle the showNewTasks filter by calling back to the parent
+    if (filters.onToggleNewTasks) {
+      filters.onToggleNewTasks();
+    }
   };
 
   return (
     <Card className="min-h-[300px]">
-      <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-        <CardDescription>Latest actions across all projects</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Latest actions across all projects</CardDescription>
+        </div>
+        {showNewTasksBadge && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger onClick={toggleNewTasksFilter} asChild>
+                <Badge 
+                  className={`cursor-pointer ${
+                    filters.showNewTasks 
+                      ? "bg-purple-700 hover:bg-purple-800" 
+                      : "bg-purple-500 hover:bg-purple-600"
+                  }`}
+                >
+                  {newTasksCount} new
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to {filters.showNewTasks ? 'hide' : 'show'} new tasks in the last 24 hours</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </CardHeader>
       <CardContent>
         {activitiesLoading ? (

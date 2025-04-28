@@ -18,6 +18,7 @@ interface DashboardFilters {
   status?: string;
   category?: string;
   showNewTasks?: boolean;
+  onToggleNewTasks?: () => void;
 }
 
 // Helper for debounced query invalidation
@@ -49,6 +50,7 @@ const DashboardHome = () => {
       queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
       queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
       queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
     }, 300),
     [queryClient]
   );
@@ -65,7 +67,7 @@ const DashboardHome = () => {
   const debouncedInvalidateEvents = useCallback(
     debounce(() => {
       queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
-      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+      queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
     }, 300),
     [queryClient]
   );
@@ -120,6 +122,12 @@ const DashboardHome = () => {
     }));
   };
 
+  // Create a filter object that includes the toggle callback
+  const activitiesFilters = {
+    ...filters,
+    onToggleNewTasks: toggleNewTasksFilter
+  };
+
   return (
     <div className="w-full space-y-6">
       <DashboardHeader 
@@ -146,7 +154,7 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <RecentActivities filters={filters} />
+        <RecentActivities filters={activitiesFilters} />
         <DashboardEvents filters={filters} />
       </div>
     </div>
