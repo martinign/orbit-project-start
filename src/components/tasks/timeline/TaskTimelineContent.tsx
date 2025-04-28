@@ -24,6 +24,11 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
   dayWidth,
   onTaskClick,
 }) => {
+  // Don’t render until days[] is populated
+  if (!days || days.length === 0) {
+    return null
+  }
+
   const today = new Date()
   const start = days[0]
   const todayIndex = days.findIndex(d => isToday(d))
@@ -35,13 +40,16 @@ export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
         const isCompleted = task.status === 'completed'
         const updated = task.updated_at ? new Date(task.updated_at) : today
 
+        // Safe to call getTime() on start now
         const daysFromStart = Math.max(
           0,
-          Math.floor((created.getTime() - start.getTime()) / 86400000)
+          Math.floor((created.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
         )
+
         const rawDuration = isCompleted
-          ? Math.ceil((updated.getTime() - created.getTime()) / 86400000)
-          : Math.ceil((today.getTime() - created.getTime()) / 86400000)
+          ? Math.ceil((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+          : Math.ceil((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+
         const duration = Math.max(1, rawDuration)
 
         return (
