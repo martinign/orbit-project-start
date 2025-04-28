@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -6,9 +7,9 @@ import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { columnsConfig } from './tasks/columns-config';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Task {
   id: string;
