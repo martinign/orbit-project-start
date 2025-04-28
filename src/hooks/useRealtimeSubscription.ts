@@ -3,9 +3,21 @@ import { useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
-type TableName = 'project_tasks' | 'project_notes' | 'project_contacts' | 
-                 'project_team_members' | 'project_invitations' | 'projects' | 
-                 'project_events';
+type TableName =
+  | 'profiles'
+  | 'project_contacts'
+  | 'project_events'
+  | 'project_invitations'
+  | 'project_notes'
+  | 'project_subtasks'
+  | 'project_task_updates'
+  | 'project_tasks'
+  | 'project_team_members'
+  | 'projects'
+  | 'task_status_history'
+  | 'task_templates';
+
+
 
 interface SubscriptionOptions {
   table: TableName;
