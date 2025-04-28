@@ -1,4 +1,5 @@
 // src/components/tasks/timeline/TimelineView.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   format,
@@ -43,18 +44,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // measure longest title for list width
+  // Measure for list width
   const titles = tasks.map((t) => t.title);
   const maxTitleW = useTextWidth(titles);
 
-  // build the days/month buckets
+  // Build days & months
   useEffect(() => {
     if (!tasks.length) return;
     try {
       const today = new Date();
       const createdDates = tasks
         .map((t) => (t.created_at ? new Date(t.created_at) : null))
-        .filter((d): d is Date => !!d);
+        .filter((d): d is Date => Boolean(d));
       const earliest = createdDates.length
         ? new Date(Math.min(...createdDates.map((d) => d.getTime())))
         : today;
@@ -81,26 +82,25 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
   }, [tasks]);
 
-  // loading / empty states
   if (isLoading) return <div className="text-center py-6">Loading tasks…</div>;
   if (!tasks.length) return <div className="text-center py-6">No tasks found.</div>;
   if (!days.length) return <div className="text-center py-6">Building timeline…</div>;
 
-  // FIXED PIXELS PER DAY for readability
-  const DAY_WIDTH = 40; // px per day
-  // total chart width in px
-  const chartWidth = days.length * DAY_WIDTH;
+  // percent width per day
+  const totalDays = days.length;
+  const dayPct = 100 / totalDays;
 
   const today = new Date();
 
   return (
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Left: pinned task list */}
+
+        {/* Left: Task list (pinned) */}
         <ResizablePanel
           defaultSize={15}
-          minSize={5}
-          maxSize={25}
+          minSize={10}
+          maxSize={30}
           className="min-w-0"
         >
           <TimelineTaskList tasks={tasks} width={maxTitleW + 32} />
@@ -110,39 +110,37 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        {/* Right: timeline (scrolls horizontally) */}
-        <ResizablePanel
-          defaultSize={85}
-          className="min-w-0 overflow-hidden"
-        >
+        {/* Right: Timeline */}
+        <ResizablePanel defaultSize={85} className="min-w-0 overflow-hidden">
           <div className="flex flex-col h-full">
-            {/* only this div scrolls */}
+
+            {/* Scroll container for header + bars */}
             <div className="flex-1 overflow-x-auto">
-              {/* enormously wide inner chart */}
-              <div className="relative" style={{ width: chartWidth }}>
+              {/* Chart always 100% wide */}
+              <div className="relative w-full">
                 {/* Sticky header: months */}
                 <div className="sticky top-0 bg-background z-10">
-                  <div className="flex h-10 border-b">
+                  <div className="flex h-8 border-b">
                     {months.map((m, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-center border-r text-sm font-medium"
-                        style={{ width: m.days * DAY_WIDTH }}
+                        className="flex items-center justify-center border-r text-xs font-medium"
+                        style={{ width: `${m.days * dayPct}%` }}
                       >
                         {m.month}
                       </div>
                     ))}
                   </div>
-                  <div className="flex h-10 border-b">
+                  <div className="flex h-8 border-b">
                     {days.map((d, i) => (
                       <div
                         key={i}
-                        className={`flex-none flex items-center justify-center border-r ${
+                        className={`flex-none flex items-center justify-center text-[10px] border-r ${
                           isToday(d) ? 'bg-blue-100 font-bold' : ''
                         }`}
-                        style={{ width: DAY_WIDTH }}
+                        style={{ width: `${dayPct}%` }}
                       >
-                        <span className="text-xs">{format(d, 'd')}</span>
+                        {format(d, 'd')}
                       </div>
                     ))}
                   </div>
@@ -161,28 +159,24 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
                     const offsetDays = Math.max(
                       0,
-                      Math.floor(
-                        (start.getTime() - days[0].getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      )
+                      Math.floor((start.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
                     );
                     const rawDur = Math.ceil(
-                      ((completed ? end : today).getTime() -
-                        start.getTime()) /
+                      ((completed ? end : today).getTime() - start.getTime()) /
                         (1000 * 60 * 60 * 24)
                     );
-                    const durationDays = Math.max(1, rawDur);
+                    const duration = Math.max(1, rawDur);
 
                     return (
-                      <div key={task.id} className="h-[36px] relative">
+                      <div key={task.id} className="h-[33px] relative">
                         <TimelineTaskBar
                           task={task}
                           style={{
-                            left: offsetDays * DAY_WIDTH,
-                            width: durationDays * DAY_WIDTH,
+                            left: `${offsetDays * dayPct}%`,
+                            width: `${duration * dayPct}%`,
                           }}
                           onClick={() => setSelectedTask(task)}
-                          durationDays={durationDays}
+                          durationDays={duration}
                           isCompleted={completed}
                         />
                       </div>
@@ -191,19 +185,17 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
                   {/* Today indicator */}
                   <div
-                    className="absolute top-0 bottom-0 w-1 bg-blue-500 z-20"
-                    style={{
-                      left: days.findIndex((d) => isToday(d)) * DAY_WIDTH,
-                    }}
+                    className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
+                    style={{ left: `${days.findIndex((d) => isToday(d)) * dayPct}%` }}
                   />
                 </div>
               </div>
             </div>
           </div>
         </ResizablePanel>
+
       </ResizablePanelGroup>
 
-      {/* Task Details Modal */}
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}
