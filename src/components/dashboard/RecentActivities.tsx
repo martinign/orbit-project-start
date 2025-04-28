@@ -11,6 +11,28 @@ interface DashboardHeaderProps {
   isNewTasksFilterActive?: boolean;
 }
 
+export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: DashboardHeaderProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: userProfile } = useUserProfile(user?.id);
+  const queryClient = useQueryClient();
+  
+  const { data: newTasksCount } = useQuery({
+    queryKey: ["new_tasks_count"],
+    queryFn: async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const { count, error } = await supabase
+        .from("project_tasks")
+        .select("id", { count: "exact" })
+        .gte("created_at", yesterday.toISOString());
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
 export function RecentActivities({ filters }: { filters: any }) {
   const navigate = useNavigate();
 
