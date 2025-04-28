@@ -1,23 +1,23 @@
-
-import React from 'react';
-import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+// src/components/tasks/timeline/TaskDetailsDialog.tsx
+import React from 'react'
+import { format } from 'date-fns'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 
 interface Task {
-  id: string;
-  title: string;
-  status: string;
-  created_at: string | null;
-  updated_at: string | null;
-  description?: string;
-  priority?: string;
+  id: string
+  title: string
+  status: string
+  created_at: string | null
+  updated_at: string | null
+  description?: string
+  priority?: string
 }
 
 interface TaskDetailsDialogProps {
-  task: Task | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  task: Task | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
@@ -25,26 +25,34 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   open,
   onOpenChange,
 }) => {
-  if (!task) return null;
+  if (!task) return null
 
-  const getStatusColor = () => {
+  const statusColor = () => {
     switch (task.status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in progress': return 'bg-blue-100 text-blue-800';
-      case 'stucked': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800'
+      case 'in progress':
+        return 'bg-blue-100 text-blue-800'
+      case 'stucked':
+        return 'bg-red-100 text-red-800'
+      case 'pending':
+        return 'bg-orange-100 text-orange-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
-  };
-
-  const getPriorityColor = () => {
+  }
+  const priorityColor = () => {
     switch (task.priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'high':
+        return 'bg-red-100 text-red-800'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'low':
+        return 'bg-green-100 text-green-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,29 +62,28 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className={getStatusColor()}>
+            <Badge variant="outline" className={statusColor()}>
               {task.status}
             </Badge>
             {task.priority && (
-              <Badge variant="outline" className={getPriorityColor()}>
+              <Badge variant="outline" className={priorityColor()}>
                 {task.priority} priority
               </Badge>
             )}
           </div>
-          
           {task.description && (
-            <div className="mt-2">
+            <div>
               <h4 className="text-sm font-medium">Description</h4>
               <p className="text-sm text-muted-foreground">{task.description}</p>
             </div>
           )}
-          
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
               <span className="font-medium">Created:</span>{' '}
-              {task.created_at ? format(new Date(task.created_at), 'PPP') : 'N/A'}
+              {task.created_at
+                ? format(new Date(task.created_at), 'PPP')
+                : 'N/A'}
             </div>
-            
             {task.status === 'completed' && task.updated_at && (
               <div>
                 <span className="font-medium">Completed:</span>{' '}
@@ -87,5 +94,5 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
