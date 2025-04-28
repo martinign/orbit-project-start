@@ -52,13 +52,20 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         throw new Error("Failed to fetch task statistics");
       }
 
-      // Map status to colors based on columnsConfig
+      // Direct color mapping based on columnsConfig
+      const colorMap = {
+        "not started": "#ef4444", // red-500
+        "in progress": "#3b82f6", // blue-500
+        "pending": "#eab308", // yellow-500
+        "completed": "#22c55e", // green-500
+        "stucked": "#ef4444"  // red-500
+      };
+
       return statuses.map((status, index) => {
-        const column = columnsConfig.find(col => col.status === status);
         return {
           name: status.charAt(0).toUpperCase() + status.slice(1),
           value: results[index].data?.length || 0,
-          color: column ? `var(--${column.badgeColor.replace('bg-', '')})` : '#888888'
+          color: colorMap[status] || '#888888'
         };
       });
     },
@@ -87,33 +94,18 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
             <TaskStatusPieChart data={data || []} />
             
             {/* Two-row layout for status legend */}
-            <div className="grid grid-rows-2 gap-2">
-              <div className="grid grid-cols-3 gap-2">
-                {data?.slice(0, 3).map((item) => (
-                  <div key={item.name} className="flex items-center gap-2">
-                    <div 
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {item.name} ({Math.round((item.value / total) * 100)}%)
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {data?.slice(3).map((item) => (
-                  <div key={item.name} className="flex items-center gap-2">
-                    <div 
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {item.name} ({Math.round((item.value / total) * 100)}%)
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-3 grid-rows-2 gap-2">
+              {data?.map((item, index) => (
+                <div key={item.name} className="flex items-center gap-2">
+                  <div 
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {item.name} ({item.value})
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
