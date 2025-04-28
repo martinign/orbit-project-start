@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -9,34 +9,12 @@ import { ProjectHeader } from './project-details/ProjectHeader';
 import { ProjectStatisticsCards } from './project-details/ProjectStatisticsCards';
 import { ProjectContentTabs } from './project-details/ProjectContentTabs';
 import { ProjectTabsContent } from './project-details/ProjectTabsContent';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('tasks');
   const [contactSearchQuery, setContactSearchQuery] = useState('');
-
-  useRealtimeSubscription({
-    table: 'project_tasks',
-    filter: 'project_id',
-    filterValue: id,
-    onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', id] });
-      queryClient.invalidateQueries({ queryKey: ['project_tasks_count', id] });
-    }
-  });
-
-  useRealtimeSubscription({
-    table: 'project_notes',
-    filter: 'project_id',
-    filterValue: id,
-    onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ['project_notes', id] });
-      queryClient.invalidateQueries({ queryKey: ['project_notes_count', id] });
-    }
-  });
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -160,14 +138,14 @@ const ProjectDetailsView = () => {
   return (
     <div className="space-y-6">
       <ProjectHeader
-        projectNumber={project?.project_number}
-        protocolTitle={project?.protocol_title}
-        sponsor={project?.Sponsor}
-        protocolNumber={project?.protocol_number}
-        status={project?.status}
+        projectNumber={project.project_number}
+        protocolTitle={project.protocol_title}
+        sponsor={project.Sponsor}
+        protocolNumber={project.protocol_number}
+        status={project.status}
       />
 
-      {project?.description && (
+      {project.description && (
         <Card>
           <CardContent className="pt-6">
             <p>{project.description}</p>
@@ -188,7 +166,7 @@ const ProjectDetailsView = () => {
       <Card>
         <CardHeader>
           <CardTitle>Project Timeline</CardTitle>
-          <CardDescription>Project created on {formatDate(project?.created_at)}</CardDescription>
+          <CardDescription>Project created on {formatDate(project.created_at)}</CardDescription>
         </CardHeader>
       </Card>
 

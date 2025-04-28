@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -13,8 +12,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 interface DashboardHeaderProps {
   onNewTasksClick?: () => void;
@@ -27,15 +26,6 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
   const { data: userProfile } = useUserProfile(user?.id);
   const queryClient = useQueryClient();
   
-  // Add real-time subscription for tasks with custom event
-  useRealtimeSubscription({
-    table: 'project_tasks',
-    event: 'INSERT',
-    onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
-    }
-  });
-  
   const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
     queryFn: async () => {
@@ -44,13 +34,29 @@ export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: Das
       
       const { count, error } = await supabase
         .from("project_tasks")
-        .select("id", { count: "exact", head: true })
+        .select("id", { count: "exact" })
         .gte("created_at", yesterday.toISOString());
       
       if (error) throw error;
       return count || 0;
     },
   });
+
+  useEffect(() => {
+    const channel = supabase.channel('tasks_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_tasks'
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const handleCreateProject = () => {
     navigate("/projects");

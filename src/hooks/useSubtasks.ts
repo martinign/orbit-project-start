@@ -2,8 +2,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Subtask {
   id: string;
@@ -20,17 +18,6 @@ export const useSubtasks = (taskId: string) => {
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Add real-time subscription for subtasks
-  useRealtimeSubscription({
-    table: 'project_subtasks',
-    filter: 'parent_task_id',
-    filterValue: taskId,
-    onRecordChange: () => {
-      fetchSubtasks();
-    }
-  });
 
   const fetchSubtasks = async () => {
     setIsLoading(true);
