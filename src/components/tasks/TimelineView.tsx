@@ -112,86 +112,91 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
         {/* Right: Timeline */}
         <ResizablePanel defaultSize={85} className="min-w-0 overflow-hidden">
-          <div className="flex flex-col h-full">
-
-            {/* Scroll container for header + bars */}
-            <div className="flex-1 overflow-x-auto">
-              {/* Chart always 100% wide */}
-              <div className="relative w-full">
-                {/* Sticky header: months */}
-                <div className="sticky top-0 bg-background z-10">
-                  <div className="flex h-8 border-b">
-                    {months.map((m, i) => (
+          
+          <ScrollArea orientation="horizontal" className="flex-1">
+            <div className="flex flex-col h-full">    
+                {/* Scroll container for header + bars */}
+                <div className="flex-1 overflow-x-auto">
+                  {/* Chart always 100% wide */}
+                  <div className="relative w-full">
+                    {/* Sticky header: months */}
+                    <div className="sticky top-0 bg-background z-10">
+                      <div className="flex h-8 border-b">
+                        {months.map((m, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-center border-r text-xs font-medium"
+                            style={{ width: `${m.days * dayPct}%` }}
+                          >
+                            {m.month}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex h-8 border-b">
+                        {days.map((d, i) => (
+                          <div
+                            key={i}
+                            className={`flex-none flex items-center justify-center text-[10px] border-r ${
+                              isToday(d) ? 'bg-blue-100 font-bold' : ''
+                            }`}
+                            style={{ width: `${dayPct}%` }}
+                          >
+                            {format(d, 'd')}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+    
+                    {/* Task bars */}
+                    <div className="relative divide-y">
+                      {tasks.map((task) => {
+                        const start = task.created_at
+                          ? new Date(task.created_at)
+                          : today;
+                        const end = task.updated_at
+                          ? new Date(task.updated_at)
+                          : today;
+                        const completed = task.status === 'completed';
+    
+                        const offsetDays = Math.max(
+                          0,
+                          Math.floor((start.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
+                        );
+                        const rawDur = Math.ceil(
+                          ((completed ? end : today).getTime() - start.getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                        const duration = Math.max(1, rawDur);
+    
+                        return (
+                          <div key={task.id} className="h-[33px] relative">
+                            <TimelineTaskBar
+                              task={task}
+                              style={{
+                                left: `${offsetDays * dayPct}%`,
+                                width: `${duration * dayPct}%`,
+                              }}
+                              onClick={() => setSelectedTask(task)}
+                              durationDays={duration}
+                              isCompleted={completed}
+                            />
+                          </div>
+                        );
+                      })}
+    
+                      {/* Today indicator */}
                       <div
-                        key={i}
-                        className="flex items-center justify-center border-r text-xs font-medium"
-                        style={{ width: `${m.days * dayPct}%` }}
-                      >
-                        {m.month}
-                      </div>
-                    ))}
+                        className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
+                        style={{ left: `${days.findIndex((d) => isToday(d)) * dayPct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="flex h-8 border-b">
-                    {days.map((d, i) => (
-                      <div
-                        key={i}
-                        className={`flex-none flex items-center justify-center text-[10px] border-r ${
-                          isToday(d) ? 'bg-blue-100 font-bold' : ''
-                        }`}
-                        style={{ width: `${dayPct}%` }}
-                      >
-                        {format(d, 'd')}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Task bars */}
-                <div className="relative divide-y">
-                  {tasks.map((task) => {
-                    const start = task.created_at
-                      ? new Date(task.created_at)
-                      : today;
-                    const end = task.updated_at
-                      ? new Date(task.updated_at)
-                      : today;
-                    const completed = task.status === 'completed';
-
-                    const offsetDays = Math.max(
-                      0,
-                      Math.floor((start.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
-                    );
-                    const rawDur = Math.ceil(
-                      ((completed ? end : today).getTime() - start.getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    );
-                    const duration = Math.max(1, rawDur);
-
-                    return (
-                      <div key={task.id} className="h-[33px] relative">
-                        <TimelineTaskBar
-                          task={task}
-                          style={{
-                            left: `${offsetDays * dayPct}%`,
-                            width: `${duration * dayPct}%`,
-                          }}
-                          onClick={() => setSelectedTask(task)}
-                          durationDays={duration}
-                          isCompleted={completed}
-                        />
-                      </div>
-                    );
-                  })}
-
-                  {/* Today indicator */}
-                  <div
-                    className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-                    style={{ left: `${days.findIndex((d) => isToday(d)) * dayPct}%` }}
-                  />
                 </div>
               </div>
-            </div>
-          </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+
+          
         </ResizablePanel>
 
       </ResizablePanelGroup>
