@@ -1,78 +1,115 @@
-// src/components/tasks/timeline/TaskTimelineContent.tsx
-import React from 'react'
-import { isToday } from 'date-fns'
-import { TimelineTaskBar } from './TimelineTaskBar'
+
+import React from 'react';
+import { isToday } from 'date-fns';
+import { TimelineTaskBar } from './TimelineTaskBar';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Task {
-  id: string
-  title: string
-  status: string
-  created_at: string | null
-  updated_at: string | null
+  id: string;
+  title: string;
+  status: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface TaskTimelineContentProps {
-  tasks: Task[]
-  days: Date[]
-  dayWidth: number
-  onTaskClick: (task: Task) => void
+  tasks: Task[];
+  days: Date[];
+  onTaskClick: (task: Task) => void;
 }
 
 export const TaskTimelineContent: React.FC<TaskTimelineContentProps> = ({
   tasks,
   days,
-  dayWidth,
   onTaskClick,
 }) => {
-  // Don’t render until days[] is populated
-  if (!days || days.length === 0) {
-    return null
-  }
+  const today = new Date();
+  const startOfTimeline = days[0];
+  const todayColumnIndex = days.findIndex(day => isToday(day));
 
-  const today = new Date()
-  const start = days[0]
-  const todayIndex = days.findIndex(d => isToday(d))
+  // Fetch the latest status change data for all tasks with duration information
+  const { data: statusChangeData } = useQuery({
+    queryKey: ['task-status-history', tasks.map(t => t.id)],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('task_status_history')
+        .select('task_id, completion_date, total_duration_days, new_status')
+        .in('task_id', tasks.map(t => t.id))
+        .order('changed_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Get the most recent status change for each task
+      const latestStatusChanges = data?.reduce((acc, change) => {
+        if (!acc[change.task_id]) {
+          acc[change.task_id] = change;
+        }
+        return acc;
+      }, {} as Record<string, any>) || {};
+
+      console.log('Latest status changes:', latestStatusChanges);
+      return latestStatusChanges;
+    }
+  });
 
   return (
     <div className="relative divide-y">
-      {tasks.map(task => {
-        const created = task.created_at ? new Date(task.created_at) : today
-        const isCompleted = task.status === 'completed'
-        const updated = task.updated_at ? new Date(task.updated_at) : today
+      {tasks.map((task) => {
+        const createdDate = task.created_at ? new Date(task.created_at) : new Date();
+        const isCompleted = task.status === 'completed';
+        const statusChange = statusChangeData?.[task.id];
+        
+        console.log(`Task ${task.id} (${task.title}):`, {
+          status: task.status,
+          statusChange,
+          createdDate: createdDate.toISOString(),
+          isCompleted
+        });
 
-        // Safe to call getTime() on start now
-        const daysFromStart = Math.max(
-          0,
-          Math.floor((created.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-        )
+        const daysFromStart = startOfTimeline ? Math.max(
+          0, 
+          Math.floor((createdDate.getTime() - startOfTimeline.getTime()) / (1000 * 60 * 60 * 24))
+        ) : 0;
 
-        const rawDuration = isCompleted
-          ? Math.ceil((updated.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
-          : Math.ceil((today.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+        let durationDays;
+        if (isCompleted && statusChange) {
+          // For completed tasks, use the total_duration_days from status history
+          durationDays = statusChange.total_duration_days || 1; // Fallback to 1 if NULL
+          console.log(`Task ${task.id} completed duration from history:`, durationDays);
+        } else {
+          // For in-progress tasks, calculate current duration
+          durationDays = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+          console.log(`Task ${task.id} calculated duration:`, durationDays);
+        }
 
-        const duration = Math.max(1, rawDuration)
+        // Always ensure a minimum width of 1 day
+        const finalDuration = Math.max(1, durationDays);
 
         return (
           <div key={task.id} className="h-[33px] relative">
             <TimelineTaskBar
-              task={task as any}
-              style={{
-                left: `${daysFromStart * dayWidth}px`,
-                width: `${duration * dayWidth}px`,
+              task={task}
+              style={{ 
+                left: `${daysFromStart * 30}px`,
+                width: `${finalDuration * 30}px`
               }}
               onClick={() => onTaskClick(task)}
-              durationDays={duration}
+              durationDays={finalDuration}
               isCompleted={isCompleted}
+              completionDate={statusChange?.completion_date}
             />
           </div>
-        )
+        );
       })}
 
-      {/* Today Indicator */}
-      <div
+      {/* Today's Line */}
+      <div 
         className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-        style={{ left: `${todayIndex * dayWidth}px` }}
+        style={{
+          left: `${todayColumnIndex * 30}px`
+        }}
       />
     </div>
-  )
-}
+  );
+};

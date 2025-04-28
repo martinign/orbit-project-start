@@ -1,186 +1,159 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/integrations/supabase/client'
-import { useToast } from '@/hooks/use-toast'
-import { useAuth } from '@/contexts/AuthContext'
 
-export interface Subtask {
-  id: string
-  title: string
-  description?: string
-  status: string
-  due_date?: string | null
-  parent_task_id: string
-  notes?: string
-  assigned_to?: string | null
-  user_id: string
+import { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface Subtask {
+  id?: string;
+  title: string;
+  description?: string;
+  status: string;
+  due_date?: string;
+  parent_task_id: string;
+  notes?: string;
+  assigned_to?: string;
 }
 
-export interface Task {
-  id: string
-  title: string
+interface Task {
+  id: string;
+  title: string;
 }
 
-type Mode = 'create' | 'edit'
-
-export function useSubtaskForm(
+export const useSubtaskForm = (
   parentTask: Task | null,
   subtask?: Subtask,
-  mode: Mode = 'create',
+  mode: 'create' | 'edit' = 'create',
   onSuccess?: () => void
-) {
-  const { user } = useAuth()
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const parentTaskId = parentTask?.id
+) => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [status, setStatus] = useState('not started');
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [notes, setNotes] = useState('');
+  const [assignedTo, setAssignedTo] = useState('none');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [status, setStatus] = useState('not started')
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined)
-  const [notes, setNotes] = useState('')
-  const [assignedTo, setAssignedTo] = useState<string | null>(null)
-
-  // Initialize when editing
   useEffect(() => {
     if (mode === 'edit' && subtask) {
-      setTitle(subtask.title)
-      setDescription(subtask.description ?? '')
-      setStatus(subtask.status)
-      setNotes(subtask.notes ?? '')
-      setAssignedTo(subtask.assigned_to ?? null)
-      setDueDate(subtask.due_date ? new Date(subtask.due_date) : undefined)
-    } else {
-      setTitle('')
-      setDescription('')
-      setStatus('not started')
-      setNotes('')
-      setAssignedTo(null)
-      setDueDate(undefined)
-    }
-    // We only want to reset when mode or subtask changes:
-  }, [mode, subtask])
-
-  // Common subtask payload builder
-  const buildPayload = useCallback(() => {
-    if (!parentTaskId) {
-      throw new Error('Parent task is required')
-    }
-    if (!user) {
-      throw new Error('User must be authenticated')
-    }
-    if (!title.trim()) {
-      throw new Error('Title is required')
-    }
-
-    return {
-      title: title.trim(),
-      description: description.trim() || null,
-      status,
-      parent_task_id: parentTaskId,
-      notes: notes.trim() || null,
-      due_date: dueDate ? dueDate.toISOString() : null,
-      assigned_to: assignedTo,
-      user_id: user.id,
-    }
-  }, [parentTaskId, user, title, description, status, notes, dueDate, assignedTo])
-
-  // CREATE mutation
-  const createMutation = useMutation<Subtask, Error>(async () => {
-    const payload = buildPayload()
-    const { data, error } = await supabase
-      .from<Subtask>('project_subtasks')
-      .insert(payload)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  }, {
-    onMutate: async (newSubtask) => {
-      await queryClient.cancelQueries(['project_subtasks', parentTaskId])
-      const previous = queryClient.getQueryData<Subtask[]>(['project_subtasks', parentTaskId])
-      const optimistic: Subtask = {
-        id: `temp-${Date.now()}`,
-        ...newSubtask,
-      } as Subtask
-      queryClient.setQueryData(['project_subtasks', parentTaskId], old => old ? [...old, optimistic] : [optimistic])
-      return { previous }
-    },
-    onError: (err, _, context) => {
-      queryClient.setQueryData(['project_subtasks', parentTaskId], context?.previous)
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['project_subtasks', parentTaskId])
-      toast({ title: 'Success', description: 'Subtask created.' })
-      onSuccess?.()
-    }
-  })
-
-  // UPDATE mutation
-  const updateMutation = useMutation<Subtask, Error>(async () => {
-    if (!subtask?.id) throw new Error('Subtask ID is missing')
-    const payload = buildPayload()
-    const { data, error } = await supabase
-      .from<Subtask>('project_subtasks')
-      .update(payload)
-      .eq('id', subtask.id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  }, {
-    onMutate: async () => {
-      await queryClient.cancelQueries(['project_subtasks', parentTaskId])
-      const previous = queryClient.getQueryData<Subtask[]>(['project_subtasks', parentTaskId])
-      queryClient.setQueryData(['project_subtasks', parentTaskId], old =>
-        old?.map(s => s.id === subtask?.id ? { ...s, ...buildPayload() } : s) ?? []
-      )
-      return { previous }
-    },
-    onError: (err, _, context) => {
-      queryClient.setQueryData(['project_subtasks', parentTaskId], context?.previous)
-      toast({ title: 'Error', description: err.message, variant: 'destructive' })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['project_subtasks', parentTaskId])
-      toast({ title: 'Success', description: 'Subtask updated.' })
-      onSuccess?.()
-    }
-  })
-
-  // Combined submit handler
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      if (mode === 'edit') {
-        await updateMutation.mutateAsync()
+      setTitle(subtask.title || '');
+      setDescription(subtask.description || '');
+      setStatus(subtask.status || 'not started');
+      setNotes(subtask.notes || '');
+      
+      if (subtask.assigned_to) {
+        setAssignedTo(subtask.assigned_to);
       } else {
-        await createMutation.mutateAsync()
+        setAssignedTo('none');
       }
-    } catch {
-      // Errors are handled in onError
+      
+      if (subtask.due_date) {
+        setDueDate(new Date(subtask.due_date));
+      } else {
+        setDueDate(undefined);
+      }
+    } else {
+      // Reset form for create mode
+      setTitle('');
+      setDescription('');
+      setStatus('not started');
+      setDueDate(undefined);
+      setNotes('');
+      setAssignedTo('none');
     }
-  }, [mode, createMutation, updateMutation])
+  }, [mode, subtask, parentTask]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!parentTask) {
+      toast({
+        title: "Error",
+        description: "Parent task information is missing",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save subtasks",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const subtaskData = {
+        title,
+        description,
+        status,
+        parent_task_id: parentTask.id,
+        notes,
+        due_date: dueDate ? dueDate.toISOString() : null,
+        user_id: user.id,
+        assigned_to: assignedTo === 'none' ? null : assignedTo
+      };
+      
+      if (mode === 'edit' && subtask?.id) {
+        const { error } = await supabase
+          .from('project_subtasks')
+          .update(subtaskData)
+          .eq('id', subtask.id);
+            
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Subtask updated successfully",
+        });
+      } else {
+        const { error } = await supabase
+          .from('project_subtasks')
+          .insert(subtaskData);
+            
+        if (error) throw error;
+        
+        toast({
+          title: "Success",
+          description: "Subtask created successfully",
+        });
+      }
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Error saving subtask:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save subtask. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
-    // form state + setters
-    title, setTitle,
-    description, setDescription,
-    status, setStatus,
-    dueDate, setDueDate,
-    notes, setNotes,
-    assignedTo, setAssignedTo,
-
-    // submit state + handler
-    isSubmitting: createMutation.isLoading || updateMutation.isLoading,
+    title,
+    setTitle,
+    description,
+    setDescription,
+    status,
+    setStatus,
+    dueDate,
+    setDueDate,
+    notes,
+    setNotes,
+    assignedTo,
+    setAssignedTo,
+    isSubmitting,
     handleSubmit,
-
-    // mutation objects in case you need more
-    createMutation,
-    updateMutation,
-  }
-}
+  };
+};

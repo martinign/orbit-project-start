@@ -1,57 +1,39 @@
-// src/components/tasks/timeline/TimelineHeader.tsx
-import React from 'react'
-import { format, isToday } from 'date-fns'
-import { Button } from '@/components/ui/button' // or your own
+
+import React from 'react';
+import { format, isToday } from 'date-fns';
 
 interface TimelineHeaderProps {
-  months: { month: string; days: number }[]
-  days: Date[]
-  dayWidth: number
-  onZoomIn: () => void
-  onZoomOut: () => void
+  months: { month: string; days: number }[];
+  days: Date[];
 }
 
-export const TimelineHeader: React.FC<TimelineHeaderProps> = ({
-  months,
-  days,
-  dayWidth,
-  onZoomIn,
-  onZoomOut,
-}) => {
+export const TimelineHeader: React.FC<TimelineHeaderProps> = ({ months, days }) => {
   return (
     <div className="sticky top-0 bg-background z-10">
-      <div className="flex items-center justify-between px-4 border-b h-10">
-        <div className="font-medium">Timeline</div>
-        <div className="space-x-2">
-          <Button size="sm" onClick={onZoomOut}>–</Button>
-          <span className="text-sm">{dayWidth}px/day</span>
-          <Button size="sm" onClick={onZoomIn}>＋</Button>
-        </div>
-      </div>
-      <div className="flex h-8 border-b">
-        {months.map((m, i) => (
-          <div
+      {/* Months row */}
+      <div className="flex h-10 border-b">
+        {months.map((monthInfo, i) => (
+          <div 
             key={i}
-            className="flex items-center justify-center border-r font-medium text-xs"
-            style={{ width: `${m.days * dayWidth}px` }}
+            className="text-center font-medium border-r flex items-center justify-center"
+            style={{ width: `${monthInfo.days * 30}px` }}
           >
-            {m.month}
+            {monthInfo.month}
           </div>
         ))}
       </div>
-      <div className="flex h-10 border-b">
-        {days.map((d, i) => (
-          <div
+      {/* Days row */}
+      <div className="flex h-[42px] border-b">
+        {days.map((day, i) => (
+          <div 
             key={i}
-            className={`flex-none flex items-center justify-center text-[10px] border-r ${
-              isToday(d) ? 'bg-blue-100 font-bold' : ''
-            }`}
-            style={{ width: `${dayWidth}px` }}
+            className={`w-[30px] flex-none flex justify-center items-center text-xs border-r
+              ${isToday(day) ? 'bg-blue-100 font-bold' : ''}`}
           >
-            {format(d, 'd')}
+            {format(day, 'd')}
           </div>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};

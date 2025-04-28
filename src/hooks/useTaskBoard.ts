@@ -1,142 +1,157 @@
-import { useState, useCallback } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export interface Task {
+interface Task {
   id: string;
   title: string;
   description?: string;
   status: string;
   priority: string;
-  due_date?: string | null;
+  due_date?: string;
   project_id: string;
 }
 
-type Dialog = 'edit' | 'delete' | 'update' | 'subtask' | 'create' | null;
-
-export function useTaskBoard(onRefetch: () => Promise<void>) {
+export const useTaskBoard = (onRefetch: () => void) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [openDialog, setOpenDialog] = useState<Dialog>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [isRefetching, setIsRefetching] = useState(false);
 
-  // Open any of the modals
-  const handleOpen = useCallback(
-    (dialog: Dialog, task?: Task, status?: string) => {
-      setSelectedTask(task ?? null);
-      setSelectedStatus(status ?? '');
-      setOpenDialog(dialog);
-    },
-    []
-  );
-
-  // Close all modals & clear selection
-  const handleClose = useCallback(() => {
+  const handleCloseDialogs = () => {
     setSelectedTask(null);
-    setSelectedStatus('');
-    setOpenDialog(null);
-  }, []);
+    setIsDialogOpen(false);
+    setIsDeleteConfirmOpen(false);
+    setIsUpdateDialogOpen(false);
+    setIsSubtaskDialogOpen(false);
+    setIsCreateTaskDialogOpen(false);
+  };
 
-  // Delete mutation (single-object API)
-  const deleteMutation = useMutation({
-    // 1) mutationFn deletes gantt_tasks, subtasks, updates, then the task itself
-    mutationFn: async (taskId: string) => {
-      // remove any Gantt row first
-      const { data: gantt, error: ganttErr } = await supabase
+  const safeRefetch = async () => {
+    if (!isRefetching) {
+      setIsRefetching(true);
+      try {
+        await onRefetch();
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      } finally {
+        setIsRefetching(false);
+      }
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = (task: Task) => {
+    setSelectedTask(task);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleTaskUpdates = (task: Task) => {
+    setSelectedTask(task);
+    setIsUpdateDialogOpen(true);
+  };
+
+  const handleAddSubtask = (task: Task) => {
+    setSelectedTask(task);
+    setIsSubtaskDialogOpen(true);
+  };
+
+  const handleCreateTask = (status: string) => {
+    setSelectedStatus(status);
+    setIsCreateTaskDialogOpen(true);
+  };
+
+  const deleteTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      // Check if this is a Gantt task
+      const { data: ganttTask } = await supabase
         .from('gantt_tasks')
         .select('task_id')
-        .eq('task_id', taskId)
+        .eq('task_id', selectedTask.id)
         .maybeSingle();
-      if (ganttErr) throw ganttErr;
-
-      if (gantt) {
-        const { error } = await supabase
+      
+      if (ganttTask) {
+        // Delete from gantt_tasks first (due to foreign key constraint)
+        const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .delete()
-          .eq('task_id', taskId);
-        if (error) throw error;
+          .eq('task_id', selectedTask.id);
+          
+        if (ganttError) throw ganttError;
       }
 
-      // remove subtasks
-      const { error: subErr } = await supabase
+      // Delete any subtasks
+      const { error: subtasksError } = await supabase
         .from('project_subtasks')
         .delete()
-        .eq('parent_task_id', taskId);
-      if (subErr) throw subErr;
+        .eq('parent_task_id', selectedTask.id);
 
-      // remove task updates
-      const { error: updErr } = await supabase
+      if (subtasksError) throw subtasksError;
+
+      // Delete task updates
+      const { error: updatesError } = await supabase
         .from('project_task_updates')
         .delete()
-        .eq('task_id', taskId);
-      if (updErr) throw updErr;
+        .eq('task_id', selectedTask.id);
+        
+      if (updatesError) throw updatesError;
 
-      // finally remove the task
+      // Delete the main task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
-        .eq('id', taskId);
+        .eq('id', selectedTask.id);
+
       if (error) throw error;
 
-      return taskId;
-    },
-
-    // 2) optimistic update: remove from cache immediately
-    onMutate: async (taskId: string) => {
-      await queryClient.cancelQueries(['project_tasks']);
-      const previous = queryClient.getQueryData<Task[]>(['project_tasks']);
-      queryClient.setQueryData<Task[]>(['project_tasks'], old =>
-        old ? old.filter(t => t.id !== taskId) : []
-      );
-      return { previous };
-    },
-
-    // 3) rollback on error
-    onError: (err, taskId, context) => {
-      queryClient.setQueryData(['project_tasks'], context?.previous);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete task. Please try again.',
-        variant: 'destructive',
-      });
-    },
-
-    // 4) on success: re-fetch & close dialogs
-    onSuccess: async () => {
-      await queryClient.invalidateQueries(['project_tasks']);
-      await onRefetch();
-      handleClose();
+      await safeRefetch();
+      handleCloseDialogs();
+      
       toast({
         title: 'Task Deleted',
-        description: 'The task and all related data have been removed.',
+        description: 'The task and its related data have been successfully deleted.',
       });
-    },
-  });
-
-  // Public API
-  return {
-    // state
-    selectedTask,
-    openDialog,
-    selectedStatus,
-    isDeleting: deleteMutation.isLoading,
-
-    // dialog controls
-    editTask: (task: Task) => handleOpen('edit', task),
-    confirmDelete: (task: Task) => handleOpen('delete', task),
-    updateTask: (task: Task) => handleOpen('update', task),
-    addSubtask: (task: Task) => handleOpen('subtask', task),
-    createTask: (status: string) => handleOpen('create', undefined, status),
-    closeAllDialogs: handleClose,
-
-    // action: kicks off the mutation
-    deleteTask: () => {
-      if (selectedTask) {
-        deleteMutation.mutate(selectedTask.id);
-      }
-    },
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the task. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
-}
+
+  return {
+    selectedTask,
+    isDialogOpen,
+    isDeleteConfirmOpen,
+    isUpdateDialogOpen,
+    isSubtaskDialogOpen,
+    isCreateTaskDialogOpen,
+    selectedStatus,
+    setIsDialogOpen,
+    setIsDeleteConfirmOpen,
+    setIsUpdateDialogOpen,
+    setIsSubtaskDialogOpen,
+    setIsCreateTaskDialogOpen,
+    handleEditTask,
+    handleDeleteConfirm,
+    handleTaskUpdates,
+    handleAddSubtask,
+    handleCreateTask,
+    deleteTask,
+    handleCloseDialogs,
+  };
+};
