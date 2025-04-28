@@ -9,7 +9,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from 'date-fns';
-import { ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { TaskDetailsDialog } from './timeline/TaskDetailsDialog';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
@@ -45,41 +45,38 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // measure longest title for list panel sizing
-  const taskTitles = tasks.map((t) => t.title);
-  const maxTitleWidth = useTextWidth(taskTitles);
+  // measure for list width
+  const titles = tasks.map((t) => t.title);
+  const maxTitleW = useTextWidth(titles);
 
   useEffect(() => {
     if (!tasks.length) return;
     try {
       const today = new Date();
-      const createdDates = tasks
+      const created = tasks
         .map((t) => (t.created_at ? new Date(t.created_at) : null))
-        .filter((d): d is Date => Boolean(d));
-      const earliest = createdDates.length
-        ? new Date(Math.min(...createdDates.map((d) => d.getTime())))
+        .filter((d): d is Date => !!d);
+      const earliest = created.length
+        ? new Date(Math.min(...created.map((d) => d.getTime())))
         : today;
       const start = startOfMonth(addMonths(earliest, -1));
       const end = endOfMonth(addMonths(today, 2));
-      const allDays = eachDayOfInterval({ start, end });
-      setDays(allDays);
+      const all = eachDayOfInterval({ start, end });
+      setDays(all);
 
-      const counts: Record<string, number> = {};
-      allDays.forEach((d) => {
+      const cnts: Record<string, number> = {};
+      all.forEach((d) => {
         const key = format(d, 'MMM yyyy');
-        counts[key] = (counts[key] || 0) + 1;
+        cnts[key] = (cnts[key] || 0) + 1;
       });
       setMonths(
-        Object.entries(counts).map<[string, number]>(([month, cnt]) => ({
-          month,
-          days: cnt,
-        }))
+        Object.entries(cnts).map(([month, c]) => ({ month, days: c }))
       );
     } catch (err) {
       console.error(err);
       toast({
         title: 'Timeline Error',
-        description: 'There was an error generating the timeline view.',
+        description: 'Failed to build the timeline.',
         variant: 'destructive',
       });
     }
@@ -90,46 +87,44 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   if (!tasks.length)
     return <div className="text-center py-6">No tasks found.</div>;
   if (!days.length)
-    return (
-      <div className="text-center py-6">Building timeline…</div>
-    );
+    return <div className="text-center py-6">Building timeline…</div>;
 
   const today = new Date();
-  const dayWidth = 30; // or make this stateful if you want zoom
+  const dayWidth = 30; // px per day
 
   return (
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* ---- Left: Task list ---- */}
+        {/* Left: Pinned task list */}
         <ResizablePanel
           defaultSize={15}
           minSize={10}
           maxSize={25}
           className="min-w-0"
         >
-          <TimelineTaskList
-            tasks={tasks}
-            width={maxTitleWidth + 48}
-          />
+          <TimelineTaskList tasks={tasks} width={maxTitleW + 48} />
         </ResizablePanel>
 
         <ResizableHandle withHandle>
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        {/* ---- Right: Timeline ---- */}
+        {/* Right: Scrollable timeline */}
         <ResizablePanel
           defaultSize={85}
           className="min-w-0 overflow-hidden"
         >
           <div className="flex flex-col h-full">
-            {/* Only this inner div scrolls horizontally */}
-            <div className="flex-1 overflow-x-auto">
+            {/* Only this ScrollArea scrolls horizontally */}
+            <ScrollArea
+              orientation="horizontal"
+              className="flex-1"
+            >
               <div
                 className="relative"
                 style={{ width: days.length * dayWidth }}
               >
-                {/* Sticky Header */}
+                {/* Sticky months & days header */}
                 <div className="sticky top-0 bg-background z-10">
                   <div className="flex h-8 border-b">
                     {months.map((m, i) => (
@@ -160,28 +155,27 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 {/* Task Bars */}
                 <div className="relative divide-y">
                   {tasks.map((task) => {
-                    const created = task.created_at
+                    const start = task.created_at
                       ? new Date(task.created_at)
                       : today;
-                    const updated = task.updated_at
+                    const end = task.updated_at
                       ? new Date(task.updated_at)
                       : today;
-                    const isCompleted =
-                      task.status === 'completed';
-                    const offsetDays = Math.max(
+                    const completed = task.status === 'completed';
+
+                    const offset = Math.max(
                       0,
                       Math.floor(
-                        (created.getTime() -
-                          days[0].getTime()) /
+                        (start.getTime() - days[0].getTime()) /
                           (1000 * 60 * 60 * 24)
                       )
                     );
-                    const rawDur = Math.ceil(
-                      ((isCompleted ? updated : today).getTime() -
-                        created.getTime()) /
+                    const raw = Math.ceil(
+                      ((completed ? end : today).getTime() -
+                        start.getTime()) /
                         (1000 * 60 * 60 * 24)
                     );
-                    const durationDays = Math.max(1, rawDur);
+                    const dur = Math.max(1, raw);
 
                     return (
                       <div
@@ -191,14 +185,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                         <TimelineTaskBar
                           task={task}
                           style={{
-                            left: offsetDays * dayWidth,
-                            width: durationDays * dayWidth,
+                            left: offset * dayWidth,
+                            width: dur * dayWidth,
                           }}
-                          onClick={() =>
-                            setSelectedTask(task)
-                          }
-                          durationDays={durationDays}
-                          isCompleted={isCompleted}
+                          onClick={() => setSelectedTask(task)}
+                          durationDays={dur}
+                          isCompleted={completed}
                         />
                       </div>
                     );
@@ -216,9 +208,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                   />
                 </div>
               </div>
-            </div>
-            {/* You can still mount a ScrollBar here if you want, */}
-            {/* but the browser’s default scrollbar will appear at the bottom */}
+              {/* Internal horizontal scrollbar */}
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
