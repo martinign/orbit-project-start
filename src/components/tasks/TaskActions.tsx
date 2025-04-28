@@ -72,10 +72,7 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 relative"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdate(task);
-                }}
+                onClick={() => onUpdate(task)}
               >
                 <FilePen className="h-4 w-4" />
                 {updateCount > 0 && (

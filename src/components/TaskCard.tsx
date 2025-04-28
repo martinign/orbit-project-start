@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +9,8 @@ import { SubtaskItem } from './tasks/SubtaskItem';
 import { TaskActions } from './tasks/TaskActions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import SubtaskDialog from './SubtaskDialog';
+import TaskUpdateDialog from './TaskUpdateDialog';
+import TaskUpdatesDisplay from './TaskUpdatesDisplay';
 import { TaskCardHeader } from './tasks/TaskCardHeader';
 import { TaskMetadata } from './tasks/TaskMetadata';
 import { TaskHoverContent } from './tasks/TaskHoverContent';
@@ -33,7 +34,6 @@ interface TaskCardProps {
   handleDeleteConfirm: (task: Task) => void;
   handleTaskUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
-  handleShowUpdates?: (task: Task) => void; // Add the missing handler
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -43,11 +43,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
   handleDeleteConfirm,
   handleTaskUpdates,
   handleAddSubtask,
-  handleShowUpdates, // Add the new prop
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editSubtask, setEditSubtask] = useState<any | null>(null);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
   const [deleteSubtask, setDeleteSubtask] = useState<any | null>(null);
   const [isDeleteSubtaskDialogOpen, setIsDeleteSubtaskDialogOpen] = useState(false);
 
@@ -77,14 +78,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setDeleteSubtask(null);
   };
 
-  // Create a proper handler for showing updates
-  const onShowUpdates = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (handleShowUpdates) {
-      handleShowUpdates(task);
-    }
-  };
-
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided) => (
@@ -111,11 +104,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <TaskActions
                       task={task}
                       updateCount={updateCount}
-                      onEdit={() => handleEditTask(task)}
-                      onDelete={() => handleDeleteConfirm(task)}
-                      onUpdate={() => handleTaskUpdates(task)}
-                      onAddSubtask={() => handleAddSubtask(task)}
-                      onShowUpdates={onShowUpdates} // Use the proper handler here
+                      onEdit={handleEditTask}
+                      onDelete={handleDeleteConfirm}
+                      onUpdate={handleTaskUpdates}
+                      onAddSubtask={handleAddSubtask}
+                      onShowUpdates={() => setIsUpdatesDisplayOpen(true)}
                     />
                   </div>
 
@@ -164,6 +157,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
               subtask={editSubtask || undefined}
               mode={editSubtask ? 'edit' : 'create'}
               onSuccess={fetchSubtasks}
+            />
+          )}
+          
+          {isUpdateDialogOpen && (
+            <TaskUpdateDialog
+              open={isUpdateDialogOpen}
+              onClose={() => setIsUpdateDialogOpen(false)}
+              taskId={task.id}
+              onSuccess={() => setIsUpdateDialogOpen(false)}
+            />
+          )}
+          
+          {isUpdatesDisplayOpen && (
+            <TaskUpdatesDisplay
+              open={isUpdatesDisplayOpen}
+              onClose={() => setIsUpdatesDisplayOpen(false)}
+              taskId={task.id}
+              taskTitle={task.title}
             />
           )}
 

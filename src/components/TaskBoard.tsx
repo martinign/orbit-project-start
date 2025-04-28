@@ -36,19 +36,16 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
-    isUpdatesDisplayOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
-    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
     handleAddSubtask,
-    handleShowUpdates, // Ensure we expose this function
     handleCreateTask,
     deleteTask,
   } = useTaskBoard(onRefetch);
@@ -64,7 +61,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
-        queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
         if (onRefetch) onRefetch();
       })
       .subscribe();
@@ -72,7 +68,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, onRefetch, projectId]);
+  }, [queryClient, onRefetch]);
 
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 
@@ -95,7 +91,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                 handleTaskUpdates={handleTaskUpdates}
                 handleAddSubtask={handleAddSubtask}
                 handleCreateTask={handleCreateTask}
-                handleShowUpdates={handleShowUpdates} // Pass the show updates handler
               />
             ))}
           </div>
@@ -110,13 +105,11 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         isUpdateDialogOpen={isUpdateDialogOpen}
         isSubtaskDialogOpen={isSubtaskDialogOpen}
         isCreateTaskDialogOpen={isCreateTaskDialogOpen}
-        isUpdatesDisplayOpen={isUpdatesDisplayOpen}
         setIsDialogOpen={setIsDialogOpen}
         setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
         setIsUpdateDialogOpen={setIsUpdateDialogOpen}
         setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
         setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
-        setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen}
         onRefetch={onRefetch}
         deleteTask={deleteTask}
         selectedStatus={selectedStatus}

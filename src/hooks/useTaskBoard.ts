@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +22,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
-  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); 
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isRefetching, setIsRefetching] = useState(false);
 
@@ -34,7 +32,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
     setIsUpdateDialogOpen(false);
     setIsSubtaskDialogOpen(false);
     setIsCreateTaskDialogOpen(false);
-    setIsUpdatesDisplayOpen(false);
   };
 
   const safeRefetch = async () => {
@@ -62,11 +59,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const handleTaskUpdates = (task: Task) => {
     setSelectedTask(task);
     setIsUpdateDialogOpen(true);
-  };
-
-  const handleShowUpdates = (task: Task) => {
-    setSelectedTask(task);
-    setIsUpdatesDisplayOpen(true);
   };
 
   const handleAddSubtask = (task: Task) => {
@@ -141,6 +133,8 @@ export const useTaskBoard = (onRefetch: () => void) => {
     }
   };
 
+  
+
   return {
     selectedTask,
     isDialogOpen,
@@ -148,18 +142,15 @@ export const useTaskBoard = (onRefetch: () => void) => {
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
-    isUpdatesDisplayOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
-    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
-    handleShowUpdates, // Make sure this is exposed
     handleAddSubtask,
     handleCreateTask,
     deleteTask,
