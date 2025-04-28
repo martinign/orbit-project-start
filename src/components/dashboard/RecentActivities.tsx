@@ -6,33 +6,6 @@ import { CircleDashed, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 
-interface DashboardHeaderProps {
-  onNewTasksClick?: () => void;
-  isNewTasksFilterActive?: boolean;
-}
-
-export function DashboardHeader({ onNewTasksClick, isNewTasksFilterActive }: DashboardHeaderProps) {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: userProfile } = useUserProfile(user?.id);
-  const queryClient = useQueryClient();
-  
-  const { data: newTasksCount } = useQuery({
-    queryKey: ["new_tasks_count"],
-    queryFn: async () => {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      const { count, error } = await supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .gte("created_at", yesterday.toISOString());
-      
-      if (error) throw error;
-      return count || 0;
-    },
-  });
-
 export function RecentActivities({ filters }: { filters: any }) {
   const navigate = useNavigate();
 
@@ -74,26 +47,6 @@ export function RecentActivities({ filters }: { filters: any }) {
     <Card className="min-h-[300px]">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
-         {newTasksCount > 0 && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger onClick={onNewTasksClick} asChild>
-                <Badge 
-                  className={`cursor-pointer ${
-                    isNewTasksFilterActive 
-                      ? "bg-purple-700 hover:bg-purple-800" 
-                      : "bg-purple-500 hover:bg-purple-600"
-                  }`}
-                >
-                  {newTasksCount} new
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Click to {isNewTasksFilterActive ? 'hide' : 'show'} new tasks in the last 24 hours</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
         <CardDescription>Latest actions across all projects</CardDescription>
       </CardHeader>
       <CardContent>
