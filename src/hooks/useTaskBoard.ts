@@ -12,7 +12,6 @@ interface Task {
   status: string;
   priority: string;
   due_date?: string;
-  project_id: string;
 }
 
 export const useTaskBoard = (onRefetch: () => void) => {
