@@ -34,7 +34,7 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         activeQuery = activeQuery.gte("updated_at", filters.startDate.toISOString());
         pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
         completedQuery = completedQuery.gte("updated_at", filters.startDate.toISOString());
-        cancelledQuery = cancelledQuery.gte("updated_at", filters.startDate.toISOString());
+        cancelledQuery = cancelledQuery.gte("updated_at", filters.endDate.toISOString());
       }
       
       if (filters.endDate) {
@@ -93,32 +93,28 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         ) : (
           <div className="space-y-4">
             <ProjectsBarChart data={projects || []} />
-            <div className="grid grid-cols-2 gap-3">
+            
+            {/* Two-row layout for status legend */}
+            <div className="grid grid-rows-2 gap-2">
               <div className="grid grid-cols-2 gap-2">
-                {projects?.slice(0, Math.ceil(projects.length / 2)).map((item) => (
-                  <div key={item.name} className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="h-2 w-2 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-xs text-muted-foreground">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold">{item.value}</span>
+                {projects?.slice(0, 2).map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div 
+                      className="h-2 w-2 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{item.name}</span>
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {projects?.slice(Math.ceil(projects.length / 2)).map((item) => (
-                  <div key={item.name} className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="h-2 w-2 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      />
-                      <span className="text-xs text-muted-foreground">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-semibold">{item.value}</span>
+                {projects?.slice(2).map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div 
+                      className="h-2 w-2 rounded-full" 
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">{item.name}</span>
                   </div>
                 ))}
               </div>

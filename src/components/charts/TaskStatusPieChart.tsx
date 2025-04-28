@@ -13,11 +13,14 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
   // Map colors to CSS variables or direct values
   const getCellFill = (color: string) => {
     if (color.startsWith('var(--')) {
-      // Extract the CSS variable name and use it
-      const varName = color.substring(6, color.length - 1);
-      return `var(--${varName})`;
+      // Already a CSS variable, use it directly
+      return color;
+    } else if (color.startsWith('#')) {
+      // Direct hex color, use it directly
+      return color;
     }
-    return color;
+    // Default fallback
+    return '#888888';
   };
   
   const calculatePercentage = (value: number): number => {
@@ -26,49 +29,51 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
   };
 
   return (
-    <div className="flex justify-center w-full">
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
-            paddingAngle={2}
-            dataKey="value"
-            animationDuration={800}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={getCellFill(entry.color)} />
-            ))}
-          </Pie>
-          <Tooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const value = Number(payload[0].value);
-                return (
-                  <div className="rounded-lg border bg-background p-2 shadow-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="h-2 w-2 rounded"
-                          style={{ background: getCellFill(payload[0].payload.color) }}
-                        />
-                        <span className="font-medium">{payload[0].payload.name}</span>
-                      </div>
-                      <div className="text-right font-medium">
-                        {value} ({calculatePercentage(value)}%)
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full h-[200px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={2}
+              dataKey="value"
+              animationDuration={800}
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getCellFill(entry.color)} />
+              ))}
+            </Pie>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const value = Number(payload[0].value);
+                  return (
+                    <div className="rounded-lg border bg-background p-2 shadow-sm">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-2 w-2 rounded"
+                            style={{ background: getCellFill(payload[0].payload.color) }}
+                          />
+                          <span className="font-medium">{payload[0].payload.name}</span>
+                        </div>
+                        <div className="text-right font-medium">
+                          {value} ({calculatePercentage(value)}%)
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+                  );
+                }
+                return null;
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

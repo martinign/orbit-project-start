@@ -11,8 +11,8 @@ interface ProjectsBarChartProps {
 
 export function ProjectsBarChart({ data }: ProjectsBarChartProps) {
   return (
-    <div className="flex justify-center w-full">
-      <ResponsiveContainer width="100%" height={200}>
+    <div className="w-full h-[200px]">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data}>
           <XAxis 
             dataKey="name" 

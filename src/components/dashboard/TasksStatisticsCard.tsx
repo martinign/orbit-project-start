@@ -52,20 +52,13 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         throw new Error("Failed to fetch task statistics");
       }
 
-      // Get colors from columnsConfig
-      const statusColorsMap = columnsConfig.reduce((acc, column) => {
-        const colorKey = column.badgeColor.replace('bg-', '');
-        acc[column.status] = `var(--${colorKey})`;
-        return acc;
-      }, {} as Record<string, string>);
-      
+      // Map status to colors based on columnsConfig
       return statuses.map((status, index) => {
         const column = columnsConfig.find(col => col.status === status);
-        const colorKey = column?.badgeColor.replace('bg-', '') || '';
         return {
           name: status.charAt(0).toUpperCase() + status.slice(1),
           value: results[index].data?.length || 0,
-          color: colorKey ? `var(--${colorKey})` : '#888888'
+          color: column ? `var(--${column.badgeColor.replace('bg-', '')})` : '#888888'
         };
       });
     },
@@ -92,9 +85,11 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         ) : (
           <div className="space-y-4">
             <TaskStatusPieChart data={data || []} />
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid grid-cols-2 gap-2">
-                {data?.slice(0, Math.ceil(data.length / 2)).map((item) => (
+            
+            {/* Two-row layout for status legend */}
+            <div className="grid grid-rows-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                {data?.slice(0, 3).map((item) => (
                   <div key={item.name} className="flex items-center gap-2">
                     <div 
                       className="h-2 w-2 rounded-full"
@@ -107,7 +102,7 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {data?.slice(Math.ceil(data.length / 2)).map((item) => (
+                {data?.slice(3).map((item) => (
                   <div key={item.name} className="flex items-center gap-2">
                     <div 
                       className="h-2 w-2 rounded-full"
