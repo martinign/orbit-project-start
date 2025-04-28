@@ -28,6 +28,7 @@ import TaskTemplateDialog from "./TaskTemplateDialog";
 import TaskTemplatesListDialog from "./TaskTemplatesListDialog";
 import InviteMembersDialog from "./team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
@@ -39,6 +40,15 @@ export function AppSidebar() {
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
+
+  // Subscribe to real-time task changes to update the new tasks badge
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    event: '*',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+    }
+  });
 
   const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
