@@ -6,8 +6,16 @@ import { CircleDashed, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 
+interface DashboardHeaderProps {
+  onNewTasksClick?: () => void;
+  isNewTasksFilterActive?: boolean;
+}
+
 export function RecentActivities({ filters }: { filters: any }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: userProfile } = useUserProfile(user?.id);
+  const queryClient = useQueryClient();
 
   const { data: recentActivities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["recent_activities", filters],
@@ -41,6 +49,42 @@ export function RecentActivities({ filters }: { filters: any }) {
 
   const navigateToTask = (taskId: string, projectId: string) => {
     navigate(`/projects/${projectId}`);
+  };
+
+  const { data: newTasksCount } = useQuery({
+    queryKey: ["new_tasks_count"],
+    queryFn: async () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const { count, error } = await supabase
+        .from("project_tasks")
+        .select("id", { count: "exact" })
+        .gte("created_at", yesterday.toISOString());
+      
+      if (error) throw error;
+      return count || 0;
+    },
+  });
+
+  useEffect(() => {
+    const channel = supabase.channel('tasks_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_tasks'
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  const handleCreateProject = () => {
+    navigate("/projects");
   };
 
   return (
