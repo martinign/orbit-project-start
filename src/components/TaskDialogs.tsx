@@ -1,10 +1,10 @@
 
 import React from 'react';
-import TaskDialog from '../TaskDialog';
-import DeleteTaskDialog from '../DeleteTaskDialog';
-import SubtaskDialog from '../SubtaskDialog';
-import TaskUpdateDialog from '../TaskUpdateDialog';
-import TaskUpdatesDisplay from '../TaskUpdatesDisplay';
+import TaskDialog from './TaskDialog';
+import DeleteTaskDialog from './DeleteTaskDialog';
+import SubtaskDialog from './SubtaskDialog';
+import TaskUpdateDialog from './TaskUpdateDialog';
+import TaskUpdatesDisplay from './TaskUpdatesDisplay';
 
 interface Task {
   id: string;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
@@ -35,11 +36,13 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
+    setSelectedTask,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
     handleAddSubtask,
     deleteTask,
+    handleShowTaskUpdates,
   } = useTaskManagement(projectId, searchTerm);
 
   const { data: uniqueUsers = [] } = useQuery({
@@ -124,7 +127,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   });
 
-  const handleShowTaskUpdates = (task: any) => {
+  const handleShowUpdates = (task: any) => {
     setSelectedTask(task);
     setIsUpdatesDisplayOpen(true);
   };

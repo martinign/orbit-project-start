@@ -101,6 +101,7 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
 
   return {
     selectedTask,
+    setSelectedTask, // Expose this function
     isDialogOpen,
     isDeleteConfirmOpen,
     isUpdateDialogOpen,

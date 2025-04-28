@@ -24,11 +24,13 @@ interface TaskDialogsProps {
   isUpdateDialogOpen: boolean;
   isSubtaskDialogOpen: boolean;
   isCreateTaskDialogOpen: boolean;
+  isUpdatesDisplayOpen: boolean;  // Add separate state for updates display
   setIsDialogOpen: (open: boolean) => void;
   setIsDeleteConfirmOpen: (open: boolean) => void;
   setIsUpdateDialogOpen: (open: boolean) => void;
   setIsSubtaskDialogOpen: (open: boolean) => void;
   setIsCreateTaskDialogOpen: (open: boolean) => void;
+  setIsUpdatesDisplayOpen: (open: boolean) => void;  // Add handler for updates display
   onRefetch: () => void;
   deleteTask: () => void;
   selectedStatus: string;
@@ -42,11 +44,13 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
   isUpdateDialogOpen,
   isSubtaskDialogOpen,
   isCreateTaskDialogOpen,
+  isUpdatesDisplayOpen,
   setIsDialogOpen,
   setIsDeleteConfirmOpen,
   setIsUpdateDialogOpen,
   setIsSubtaskDialogOpen,
   setIsCreateTaskDialogOpen,
+  setIsUpdatesDisplayOpen,
   onRefetch,
   deleteTask,
   selectedStatus
@@ -104,8 +108,8 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
           />
 
           <TaskUpdatesDisplay
-            open={isUpdateDialogOpen}
-            onClose={() => setIsUpdateDialogOpen(false)}
+            open={isUpdatesDisplayOpen}
+            onClose={() => setIsUpdatesDisplayOpen(false)}
             taskId={selectedTask.id}
             taskTitle={selectedTask.title}
           />

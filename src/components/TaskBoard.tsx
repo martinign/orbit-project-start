@@ -63,6 +63,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
       }, () => {
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
         if (onRefetch) onRefetch();
       })
       .subscribe();
@@ -70,7 +71,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient, onRefetch]);
+  }, [queryClient, onRefetch, projectId]);
 
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 
