@@ -14,19 +14,8 @@ interface Task {
   due_date?: string;
 }
 
-type Dialog = 
-  | 'edit'
-  | 'delete'
-  | 'update'
-  | 'subtask'
-  | 'create'
-  | null;
+type Dialog = 'edit' | 'delete' | 'update' | 'subtask' | 'create' | null;
 
-/**
- * Manages selection, dialogs, delete + real-time for your task board.
- * @param projectId  The project to scope subscriptions & invalidations to.
- * @param onRefetch  A callback you already use to re-fetch your tasks list.
- */
 export function useTaskBoard(
   projectId: string,
   onRefetch: () => Promise<void>
@@ -35,10 +24,17 @@ export function useTaskBoard(
   const queryClient = useQueryClient();
   const queryKey = ['project_tasks', projectId];
 
-  // --- Dialog + selection state ---
+  // Internal single-dialog state
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [openDialog, setOpenDialog] = useState<Dialog>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+
+  // Computed booleans for each dialog
+  const isDialogOpen            = openDialog === 'edit';
+  const isDeleteConfirmOpen     = openDialog === 'delete';
+  const isUpdateDialogOpen      = openDialog === 'update';
+  const isSubtaskDialogOpen     = openDialog === 'subtask';
+  const isCreateTaskDialogOpen  = openDialog === 'create';
 
   const handleOpen = useCallback(
     (dialog: Dialog, task?: Task, status?: string) => {
@@ -49,35 +45,33 @@ export function useTaskBoard(
     []
   );
 
-  const handleClose = useCallback(() => {
+  const handleCloseDialogs = useCallback(() => {
     setSelectedTask(null);
     setSelectedStatus('');
     setOpenDialog(null);
   }, []);
 
-  // --- Safe refetch + invalidate ---
   const safeRefetch = useCallback(async () => {
     try {
       await onRefetch();
       await queryClient.invalidateQueries(queryKey);
     } catch (err) {
-      console.error('Error re-fetching tasks:', err);
+      console.error('Error refetching tasks:', err);
     }
   }, [onRefetch, queryClient, queryKey]);
 
-  // --- Delete logic (unchanged) ---
   const deleteTask = useCallback(async () => {
     if (!selectedTask) return;
 
     try {
-      // (1) Cascade delete in gantt_tasks if exists
-      const { data: ganttTask, error: ganttError } = await supabase
+      // 1) Cascade delete gantt_tasks if present
+      const { data: gantt, error: ganttErr } = await supabase
         .from('gantt_tasks')
         .select('task_id')
         .eq('task_id', selectedTask.id)
         .maybeSingle();
-      if (ganttError) throw ganttError;
-      if (ganttTask) {
+      if (ganttErr) throw ganttErr;
+      if (gantt) {
         const { error } = await supabase
           .from('gantt_tasks')
           .delete()
@@ -85,31 +79,30 @@ export function useTaskBoard(
         if (error) throw error;
       }
 
-      // (2) Delete subtasks
-      const { error: subtasksError } = await supabase
+      // 2) Delete subtasks
+      const { error: subErr } = await supabase
         .from('project_subtasks')
         .delete()
         .eq('parent_task_id', selectedTask.id);
-      if (subtasksError) throw subtasksError;
+      if (subErr) throw subErr;
 
-      // (3) Delete task updates
-      const { error: updatesError } = await supabase
+      // 3) Delete task updates
+      const { error: updErr } = await supabase
         .from('project_task_updates')
         .delete()
         .eq('task_id', selectedTask.id);
-      if (updatesError) throw updatesError;
+      if (updErr) throw updErr;
 
-      // (4) Delete the main task
+      // 4) Delete main task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
         .eq('id', selectedTask.id);
       if (error) throw error;
 
-      // Refresh + close dialogs + notify
+      // then refresh + close + toast
       await safeRefetch();
-      handleClose();
-
+      handleCloseDialogs();
       toast({
         title: 'Task Deleted',
         description: 'The task and its related data were deleted.',
@@ -122,35 +115,42 @@ export function useTaskBoard(
         variant: 'destructive',
       });
     }
-  }, [selectedTask, safeRefetch, toast, handleClose]);
+  }, [selectedTask, safeRefetch, handleCloseDialogs, toast]);
 
-  // --- Realtime subscription to keep the board in sync ---
+  // realtime subscription scoped to this project
   useRealtimeSubscription({
-    table: 'project_tasks',            // match your table name
+    table: 'project_tasks',
     filter: 'project_id',
     filterValue: projectId,
     onRecordChange: () => {
       queryClient.invalidateQueries(queryKey);
-    },
+    }
   });
 
-  // --- Public API ---
   return {
-    // state
+    // selection + dialog flags
     selectedTask,
-    openDialog,
+    isDialogOpen,
+    isDeleteConfirmOpen,
+    isUpdateDialogOpen,
+    isSubtaskDialogOpen,
+    isCreateTaskDialogOpen,
     selectedStatus,
 
-    // flags
-    isDeleting: false,      // you could wire this up if needed
+    // dialog setters (if you still need them directly)
+    setIsDialogOpen:          (v: boolean) => setOpenDialog(v ? 'edit' : null),
+    setIsDeleteConfirmOpen:   (v: boolean) => setOpenDialog(v ? 'delete' : null),
+    setIsUpdateDialogOpen:    (v: boolean) => setOpenDialog(v ? 'update' : null),
+    setIsSubtaskDialogOpen:   (v: boolean) => setOpenDialog(v ? 'subtask' : null),
+    setIsCreateTaskDialogOpen:(v: boolean) => setOpenDialog(v ? 'create' : null),
 
-    // dialog controls
-    editTask:    (task: Task) => handleOpen('edit', task),
-    confirmDelete:(task: Task)=> handleOpen('delete', task),
-    updateTask:  (task: Task) => handleOpen('update', task),
-    addSubtask:  (task: Task) => handleOpen('subtask', task),
-    createTask:  (status: string) => handleOpen('create', undefined, status),
-    closeAllDialogs: handleClose,
+    // handlers
+    handleEditTask:    (task: Task) => handleOpen('edit', task),
+    handleDeleteConfirm:(task: Task)=> handleOpen('delete', task),
+    handleTaskUpdates: (task: Task) => handleOpen('update', task),
+    handleAddSubtask:  (task: Task) => handleOpen('subtask', task),
+    handleCreateTask:  (status: string) => handleOpen('create', undefined, status),
+    handleCloseDialogs,
 
     // actions
     deleteTask,
