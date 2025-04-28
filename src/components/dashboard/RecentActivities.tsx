@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 
 interface DashboardHeaderProps {
   onNewTasksClick?: () => void;
