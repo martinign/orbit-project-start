@@ -1,134 +1,141 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Task {
   id: string;
-  project_id: string;
   title: string;
   description?: string;
   status: string;
   priority: string;
   due_date?: string;
+  project_id: string;
 }
 
-type Dialog = 'edit' | 'delete' | 'update' | 'subtask' | 'create' | null;
-
-export function useTaskBoard(
-  projectId: string,
-  onRefetch: () => Promise<void>
-) {
+export const useTaskBoard = (onRefetch: () => void) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const queryKey = ['project_tasks', projectId];
-
-  // Internal single-dialog state
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [openDialog, setOpenDialog] = useState<Dialog>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [isRefetching, setIsRefetching] = useState(false);
 
-  // Computed booleans for each dialog
-  const isDialogOpen            = openDialog === 'edit';
-  const isDeleteConfirmOpen     = openDialog === 'delete';
-  const isUpdateDialogOpen      = openDialog === 'update';
-  const isSubtaskDialogOpen     = openDialog === 'subtask';
-  const isCreateTaskDialogOpen  = openDialog === 'create';
-
-  const handleOpen = useCallback(
-    (dialog: Dialog, task?: Task, status?: string) => {
-      setSelectedTask(task ?? null);
-      setSelectedStatus(status ?? '');
-      setOpenDialog(dialog);
-    },
-    []
-  );
-
-  const handleCloseDialogs = useCallback(() => {
+  const handleCloseDialogs = () => {
     setSelectedTask(null);
-    setSelectedStatus('');
-    setOpenDialog(null);
-  }, []);
+    setIsDialogOpen(false);
+    setIsDeleteConfirmOpen(false);
+    setIsUpdateDialogOpen(false);
+    setIsSubtaskDialogOpen(false);
+    setIsCreateTaskDialogOpen(false);
+  };
 
-  const safeRefetch = useCallback(async () => {
-    try {
-      await onRefetch();
-      await queryClient.invalidateQueries(queryKey);
-    } catch (err) {
-      console.error('Error refetching tasks:', err);
+  const safeRefetch = async () => {
+    if (!isRefetching) {
+      setIsRefetching(true);
+      try {
+        await onRefetch();
+        await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      } finally {
+        setIsRefetching(false);
+      }
     }
-  }, [onRefetch, queryClient, queryKey]);
+  };
 
-  const deleteTask = useCallback(async () => {
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = (task: Task) => {
+    setSelectedTask(task);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleTaskUpdates = (task: Task) => {
+    setSelectedTask(task);
+    setIsUpdateDialogOpen(true);
+  };
+
+  const handleAddSubtask = (task: Task) => {
+    setSelectedTask(task);
+    setIsSubtaskDialogOpen(true);
+  };
+
+  const handleCreateTask = (status: string) => {
+    setSelectedStatus(status);
+    setIsCreateTaskDialogOpen(true);
+  };
+
+  const deleteTask = async () => {
     if (!selectedTask) return;
 
     try {
-      // 1) Cascade delete gantt_tasks if present
-      const { data: gantt, error: ganttErr } = await supabase
+      // Check if this is a Gantt task
+      const { data: ganttTask } = await supabase
         .from('gantt_tasks')
         .select('task_id')
         .eq('task_id', selectedTask.id)
         .maybeSingle();
-      if (ganttErr) throw ganttErr;
-      if (gantt) {
-        const { error } = await supabase
+      
+      if (ganttTask) {
+        // Delete from gantt_tasks first (due to foreign key constraint)
+        const { error: ganttError } = await supabase
           .from('gantt_tasks')
           .delete()
           .eq('task_id', selectedTask.id);
-        if (error) throw error;
+          
+        if (ganttError) throw ganttError;
       }
 
-      // 2) Delete subtasks
-      const { error: subErr } = await supabase
+      // Delete any subtasks
+      const { error: subtasksError } = await supabase
         .from('project_subtasks')
         .delete()
         .eq('parent_task_id', selectedTask.id);
-      if (subErr) throw subErr;
 
-      // 3) Delete task updates
-      const { error: updErr } = await supabase
+      if (subtasksError) throw subtasksError;
+
+      // Delete task updates
+      const { error: updatesError } = await supabase
         .from('project_task_updates')
         .delete()
         .eq('task_id', selectedTask.id);
-      if (updErr) throw updErr;
+        
+      if (updatesError) throw updatesError;
 
-      // 4) Delete main task
+      // Delete the main task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
         .eq('id', selectedTask.id);
+
       if (error) throw error;
 
-      // then refresh + close + toast
       await safeRefetch();
       handleCloseDialogs();
+      
       toast({
         title: 'Task Deleted',
-        description: 'The task and its related data were deleted.',
+        description: 'The task and its related data have been successfully deleted.',
       });
-    } catch (err) {
-      console.error('Error deleting task:', err);
+    } catch (error) {
+      console.error('Error deleting task:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete the task. Please try again.',
         variant: 'destructive',
       });
     }
-  }, [selectedTask, safeRefetch, handleCloseDialogs, toast]);
+  };
 
-  // realtime subscription scoped to this project
-  useRealtimeSubscription({
-    table: 'project_tasks',
-    filter: 'project_id',
-    filterValue: projectId,
-    onRecordChange: () => {
-      queryClient.invalidateQueries(queryKey);
-    }
-  });
+  
 
   return {
-    // selection + dialog flags
     selectedTask,
     isDialogOpen,
     isDeleteConfirmOpen,
@@ -136,24 +143,17 @@ export function useTaskBoard(
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
     selectedStatus,
-
-    // dialog setters (if you still need them directly)
-    setIsDialogOpen:          (v: boolean) => setOpenDialog(v ? 'edit' : null),
-    setIsDeleteConfirmOpen:   (v: boolean) => setOpenDialog(v ? 'delete' : null),
-    setIsUpdateDialogOpen:    (v: boolean) => setOpenDialog(v ? 'update' : null),
-    setIsSubtaskDialogOpen:   (v: boolean) => setOpenDialog(v ? 'subtask' : null),
-    setIsCreateTaskDialogOpen:(v: boolean) => setOpenDialog(v ? 'create' : null),
-
-    // handlers
-    handleEditTask:    (task: Task) => handleOpen('edit', task),
-    handleDeleteConfirm:(task: Task)=> handleOpen('delete', task),
-    handleTaskUpdates: (task: Task) => handleOpen('update', task),
-    handleAddSubtask:  (task: Task) => handleOpen('subtask', task),
-    handleCreateTask:  (status: string) => handleOpen('create', undefined, status),
-    handleCloseDialogs,
-
-    // actions
+    setIsDialogOpen,
+    setIsDeleteConfirmOpen,
+    setIsUpdateDialogOpen,
+    setIsSubtaskDialogOpen,
+    setIsCreateTaskDialogOpen,
+    handleEditTask,
+    handleDeleteConfirm,
+    handleTaskUpdates,
+    handleAddSubtask,
+    handleCreateTask,
     deleteTask,
-    safeRefetch,
+    handleCloseDialogs,
   };
-}
+};
