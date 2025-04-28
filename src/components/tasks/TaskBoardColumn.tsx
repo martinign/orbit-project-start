@@ -4,7 +4,17 @@ import { Droppable } from '@hello-pangea/dnd';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TaskCard from '../TaskCard';
-import { ColumnConfig } from './columns-config';
+import { columnsConfig } from './columns-config';
+
+// Define our own ColumnConfig interface based on what's in columnsConfig
+interface ColumnConfig {
+  id: string;
+  title: string;
+  status: string;
+  color: string;
+  badgeColor: string;
+  headerBgClass?: string;
+}
 
 interface Task {
   id: string;
@@ -25,7 +35,7 @@ interface TaskBoardColumnProps {
   handleTaskUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
-  handleShowUpdates?: (task: Task) => void; // Add this prop
+  handleShowUpdates?: (task: Task) => void;
 }
 
 const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
@@ -36,7 +46,7 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   handleTaskUpdates,
   handleAddSubtask,
   handleCreateTask,
-  handleShowUpdates, // Add this prop
+  handleShowUpdates,
 }) => {
   return (
     <div className="flex flex-col">
