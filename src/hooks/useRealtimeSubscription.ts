@@ -35,6 +35,7 @@ export function useRealtimeSubscription({
   onRecordChange
 }: SubscriptionOptions) {
   useEffect(() => {
+    // Use a unique channel name to avoid conflicts
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
@@ -53,6 +54,8 @@ export function useRealtimeSubscription({
       config.filter = `project_id=eq.${projectId}`;
     }
 
+    console.log(`Setting up realtime subscription for ${table} with config:`, config);
+
     channel
       .on('postgres_changes', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
@@ -61,10 +64,13 @@ export function useRealtimeSubscription({
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
+        } else {
+          console.log(`Subscription status for ${table}: ${status}`);
         }
       });
 
     return () => {
+      console.log(`Removing channel for ${table}`);
       supabase.removeChannel(channel);
     };
   }, [table, event, filter, filterValue, projectId, onRecordChange]);

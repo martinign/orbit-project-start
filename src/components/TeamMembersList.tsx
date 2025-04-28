@@ -62,10 +62,16 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
   useRealtimeSubscription({
     table: 'project_team_members',
     projectId: projectId || undefined,
-    onRecordChange: () => {
+    event: '*', // Listen for all events
+    onRecordChange: (payload) => {
+      console.log('Team member changed:', payload);
       // Add debouncing to prevent UI freezes
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['team_members', projectId] });
+        if (projectId) {
+          queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+          queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
+        }
       }, 100);
     }
   });
@@ -84,6 +90,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
     if (!selectedMember) return;
     
     try {
+      console.log('Deleting team member:', selectedMember.id);
       const { error } = await supabase
         .from("project_team_members")
         .delete()
@@ -93,8 +100,12 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
         throw error;
       }
 
+      // Explicitly invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["team_members", projectId] });
-      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
+      }
 
       toast({
         title: "Success",

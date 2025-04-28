@@ -39,40 +39,55 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   useRealtimeSubscription({
     table: 'project_tasks',
     projectId,
-    onRecordChange: () => {
+    event: '*',
+    onRecordChange: (payload) => {
+      console.log('Tasks changed:', payload);
       queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 
   useRealtimeSubscription({
     table: 'project_notes',
     projectId,
-    onRecordChange: () => {
+    event: '*',
+    onRecordChange: (payload) => {
+      console.log('Notes changed:', payload);
       queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 
   useRealtimeSubscription({
     table: 'project_contacts',
     projectId,
-    onRecordChange: () => {
+    event: '*',
+    onRecordChange: (payload) => {
+      console.log('Contacts changed:', payload);
       queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 
   useRealtimeSubscription({
     table: 'project_team_members',
     projectId,
-    onRecordChange: () => {
+    event: '*',
+    onRecordChange: (payload) => {
+      console.log('Team members changed:', payload);
       queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 
   useRealtimeSubscription({
     table: 'project_events',
     projectId,
-    onRecordChange: () => {
+    event: '*',
+    onRecordChange: (payload) => {
+      console.log('Events changed:', payload);
       queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 

@@ -111,7 +111,8 @@ export function useNewItems(projectId: string) {
             table,
             filter: `project_id=eq.${projectId}`
           },
-          async () => {
+          (payload) => {
+            console.log(`Realtime event for ${table}:`, payload);
             // Invalidate the query to trigger a refresh
             queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
           }
