@@ -47,6 +47,25 @@ export function RecentActivities({ filters }: { filters: any }) {
     <Card className="min-h-[300px]">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
+          {newTasksCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger onClick={onNewTasksClick} asChild>
+                <Badge 
+                  className={`cursor-pointer ${
+                    isNewTasksFilterActive 
+                      ? "bg-purple-700 hover:bg-purple-800" 
+                      : "bg-purple-500 hover:bg-purple-600"
+                  }`}
+                >
+                  {newTasksCount} new
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to {isNewTasksFilterActive ? 'hide' : 'show'} new tasks in the last 24 hours</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         <CardDescription>Latest actions across all projects</CardDescription>
       </CardHeader>
       <CardContent>
