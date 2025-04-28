@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +6,8 @@ import { useNewItems } from '@/hooks/useNewItems';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -35,63 +35,36 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   const { newItemsCount } = useNewItems(projectId);
   const queryClient = useQueryClient();
 
-  // Set up real-time subscriptions for all tables
-  useRealtimeSubscription({
-    table: 'project_tasks',
-    projectId,
-    event: '*',
-    onRecordChange: (payload) => {
-      console.log('Tasks changed:', payload);
-      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-    }
-  });
+  useEffect(() => {
+    const channels = ['project_tasks', 'project_notes'].map(table => {
+      const channel = supabase.channel(`stats_${table}_${projectId}`);
+      
+      channel
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table,
+            filter: `project_id=eq.${projectId}`
+          },
+          () => {
+            queryClient.invalidateQueries({ queryKey: ['project_tasks', projectId] });
+            queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+          }
+        )
+        .subscribe();
 
-  useRealtimeSubscription({
-    table: 'project_notes',
-    projectId,
-    event: '*',
-    onRecordChange: (payload) => {
-      console.log('Notes changed:', payload);
-      queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-    }
-  });
+      return channel;
+    });
 
-  useRealtimeSubscription({
-    table: 'project_contacts',
-    projectId,
-    event: '*',
-    onRecordChange: (payload) => {
-      console.log('Contacts changed:', payload);
-      queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-    }
-  });
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [projectId, queryClient]);
 
-  useRealtimeSubscription({
-    table: 'project_team_members',
-    projectId,
-    event: '*',
-    onRecordChange: (payload) => {
-      console.log('Team members changed:', payload);
-      queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-    }
-  });
-
-  useRealtimeSubscription({
-    table: 'project_events',
-    projectId,
-    event: '*',
-    onRecordChange: (payload) => {
-      console.log('Events changed:', payload);
-      queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-    }
-  });
-
-  const renderBadge = (type: 'task' | 'note' | 'contact' | 'teamMember' | 'event') => {
+  const renderBadge = (type: 'task' | 'note') => {
     const count = newItemsCount[type];
     if (!count) return null;
     
@@ -118,10 +91,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('contacts')}
       >
-        {renderBadge('contact')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -134,10 +106,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('team')}
       >
-        {renderBadge('teamMember')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -174,10 +145,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('calendar')}
       >
-        {renderBadge('event')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>

@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export type ItemType = 'task' | 'note' | 'contact' | 'teamMember' | 'event';
+export type ItemType = 'task' | 'note';
 
 interface NewItemsCount {
   [key: string]: number;
@@ -17,62 +17,22 @@ export function useNewItems(projectId: string) {
   const { data: counts } = useQuery({
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
-      const types: ItemType[] = ['task', 'note', 'contact', 'teamMember', 'event'];
+      const types: ItemType[] = ['task', 'note'];
       
       const counts = await Promise.all(
         types.map(async (type) => {
-          let count = 0;
-          let error = null;
-          
-          // Use specific table queries instead of dynamic table names
-          if (type === 'task') {
-            const result = await supabase
-              .from('project_tasks')
-              .select('id', { count: 'exact', head: true })
-              .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-            count = result.count || 0;
-            error = result.error;
-          } else if (type === 'note') {
-            const result = await supabase
-              .from('project_notes')
-              .select('id', { count: 'exact', head: true })
-              .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-            count = result.count || 0;
-            error = result.error;
-          } else if (type === 'contact') {
-            const result = await supabase
-              .from('project_contacts')
-              .select('id', { count: 'exact', head: true })
-              .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-            count = result.count || 0;
-            error = result.error;
-          } else if (type === 'teamMember') {
-            const result = await supabase
-              .from('project_team_members')
-              .select('id', { count: 'exact', head: true })
-              .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-            count = result.count || 0;
-            error = result.error;
-          } else if (type === 'event') {
-            const result = await supabase
-              .from('project_events')
-              .select('id', { count: 'exact', head: true })
-              .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-            count = result.count || 0;
-            error = result.error;
-          }
+          const { count, error } = await supabase
+            .from(`project_${type}s`)
+            .select('id', { count: 'exact', head: true })
+            .eq('project_id', projectId)
+            .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
             
           if (error) {
             console.error(`Error fetching new ${type}s count:`, error);
             return { type, count: 0 };
           }
           
-          return { type, count };
+          return { type, count: count || 0 };
         })
       );
       
@@ -87,32 +47,22 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
-  // Add real-time subscription for all types
+  // Add real-time subscription for both tasks and notes
   useEffect(() => {
     if (!projectId) return;
 
-    const tables = [
-      'project_tasks', 
-      'project_notes', 
-      'project_contacts', 
-      'project_team_members', 
-      'project_events'
-    ];
-
-    const channels = tables.map(table => {
+    const channels = ['project_tasks', 'project_notes'].map(table => {
       const channel = supabase.channel(`${table}_changes_${projectId}`);
       
-      // Subscribe to both INSERT and DELETE events
       channel
         .on('postgres_changes',
           {
-            event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+            event: 'INSERT',
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`
           },
-          (payload) => {
-            console.log(`Realtime event for ${table}:`, payload);
+          async () => {
             // Invalidate the query to trigger a refresh
             queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
           }

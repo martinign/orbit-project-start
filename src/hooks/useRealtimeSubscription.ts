@@ -22,7 +22,6 @@ interface SubscriptionOptions {
   event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
   filter?: string;
   filterValue?: string;
-  projectId?: string;
   onRecordChange: (payload: RealtimePostgresChangesPayload<any>) => void;
 }
 
@@ -31,47 +30,32 @@ export function useRealtimeSubscription({
   event = '*',
   filter,
   filterValue,
-  projectId,
   onRecordChange
 }: SubscriptionOptions) {
   useEffect(() => {
-    // Use a unique channel name to avoid conflicts
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
-    let config: any = {
+    const config: any = {
       event: event,
       schema: 'public',
-      table: table
+      table: table,
+      ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
     };
 
-    // Add filter if provided
-    if (filter && filterValue) {
-      config.filter = `${filter}=eq.${filterValue}`;
-    }
-    // Add project filter if provided
-    else if (projectId) {
-      config.filter = `project_id=eq.${projectId}`;
-    }
-
-    console.log(`Setting up realtime subscription for ${table} with config:`, config);
-
     channel
-      .on('postgres_changes', config, (payload) => {
+      .on('postgres_changes' as 'system', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
         onRecordChange(payload);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
-        } else {
-          console.log(`Subscription status for ${table}: ${status}`);
         }
       });
 
     return () => {
-      console.log(`Removing channel for ${table}`);
       supabase.removeChannel(channel);
     };
-  }, [table, event, filter, filterValue, projectId, onRecordChange]);
+  }, [table, event, filter, filterValue, onRecordChange]);
 }
