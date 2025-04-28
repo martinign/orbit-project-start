@@ -15,10 +15,6 @@ export interface Task {
 
 type Dialog = 'edit' | 'delete' | 'update' | 'subtask' | 'create' | null;
 
-/**
- * Manages task selection, dialog state, and deletion for a task board.
- * @param onRefetch Called after successful deletions to refresh the outer task list.
- */
 export function useTaskBoard(onRefetch: () => Promise<void>) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -27,30 +23,35 @@ export function useTaskBoard(onRefetch: () => Promise<void>) {
   const [openDialog, setOpenDialog] = useState<Dialog>(null);
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
-  // Open any dialog, optionally with a task and/or status
-  const handleOpen = useCallback((dialog: Dialog, task?: Task, status?: string) => {
-    setSelectedTask(task ?? null);
-    setSelectedStatus(status ?? '');
-    setOpenDialog(dialog);
-  }, []);
+  // Open any of the modals
+  const handleOpen = useCallback(
+    (dialog: Dialog, task?: Task, status?: string) => {
+      setSelectedTask(task ?? null);
+      setSelectedStatus(status ?? '');
+      setOpenDialog(dialog);
+    },
+    []
+  );
 
-  // Close all dialogs & clear selection
+  // Close all modals & clear selection
   const handleClose = useCallback(() => {
     setSelectedTask(null);
     setSelectedStatus('');
     setOpenDialog(null);
   }, []);
 
-  // Mutation to delete a task and its related rows in cascade
-  const deleteMutation = useMutation<string, Error, string>(
-    async (taskId) => {
-      // 1) If a Gantt entry exists, delete it first
+  // Delete mutation (single-object API)
+  const deleteMutation = useMutation({
+    // 1) mutationFn deletes gantt_tasks, subtasks, updates, then the task itself
+    mutationFn: async (taskId: string) => {
+      // remove any Gantt row first
       const { data: gantt, error: ganttErr } = await supabase
         .from('gantt_tasks')
         .select('task_id')
         .eq('task_id', taskId)
         .maybeSingle();
       if (ganttErr) throw ganttErr;
+
       if (gantt) {
         const { error } = await supabase
           .from('gantt_tasks')
@@ -59,21 +60,21 @@ export function useTaskBoard(onRefetch: () => Promise<void>) {
         if (error) throw error;
       }
 
-      // 2) Delete subtasks
+      // remove subtasks
       const { error: subErr } = await supabase
         .from('project_subtasks')
         .delete()
         .eq('parent_task_id', taskId);
       if (subErr) throw subErr;
 
-      // 3) Delete task updates
+      // remove task updates
       const { error: updErr } = await supabase
         .from('project_task_updates')
         .delete()
         .eq('task_id', taskId);
       if (updErr) throw updErr;
 
-      // 4) Delete the main task
+      // finally remove the task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
@@ -82,37 +83,38 @@ export function useTaskBoard(onRefetch: () => Promise<void>) {
 
       return taskId;
     },
-    {
-      // Optimistically remove the task from cache
-      onMutate: async (taskId) => {
-        await queryClient.cancelQueries(['project_tasks']);
-        const previous = queryClient.getQueryData<Task[]>(['project_tasks']);
-        queryClient.setQueryData<Task[]>(['project_tasks'], old =>
-          old ? old.filter(t => t.id !== taskId) : []
-        );
-        return { previous };
-      },
-      onError: (error, taskId, context) => {
-        // Roll back on error
-        queryClient.setQueryData(['project_tasks'], context?.previous);
-        toast({
-          title: 'Error',
-          description: 'Failed to delete task. Please try again.',
-          variant: 'destructive',
-        });
-      },
-      onSuccess: async () => {
-        // Invalidate & re-fetch
-        await queryClient.invalidateQueries(['project_tasks']);
-        await onRefetch();
-        handleClose();
-        toast({
-          title: 'Task Deleted',
-          description: 'The task and all related data have been removed.',
-        });
-      },
-    }
-  );
+
+    // 2) optimistic update: remove from cache immediately
+    onMutate: async (taskId: string) => {
+      await queryClient.cancelQueries(['project_tasks']);
+      const previous = queryClient.getQueryData<Task[]>(['project_tasks']);
+      queryClient.setQueryData<Task[]>(['project_tasks'], old =>
+        old ? old.filter(t => t.id !== taskId) : []
+      );
+      return { previous };
+    },
+
+    // 3) rollback on error
+    onError: (err, taskId, context) => {
+      queryClient.setQueryData(['project_tasks'], context?.previous);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete task. Please try again.',
+        variant: 'destructive',
+      });
+    },
+
+    // 4) on success: re-fetch & close dialogs
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['project_tasks']);
+      await onRefetch();
+      handleClose();
+      toast({
+        title: 'Task Deleted',
+        description: 'The task and all related data have been removed.',
+      });
+    },
+  });
 
   // Public API
   return {
@@ -130,9 +132,11 @@ export function useTaskBoard(onRefetch: () => Promise<void>) {
     createTask: (status: string) => handleOpen('create', undefined, status),
     closeAllDialogs: handleClose,
 
-    // actions
+    // action: kicks off the mutation
     deleteTask: () => {
-      if (selectedTask) deleteMutation.mutate(selectedTask.id);
+      if (selectedTask) {
+        deleteMutation.mutate(selectedTask.id);
+      }
     },
   };
 }
