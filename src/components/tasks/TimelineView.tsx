@@ -97,7 +97,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         </ResizableHandle>
 
         {/* Right: Timeline (overflow-x) */}
-        <ResizablePanel defaultSize={85} className="min-w-0 overflow-hidden">
+        <ResizablePanel defaultSize={50} className="min-w-0 overflow-hidden">
           <div className="flex flex-col h-full">
             {/* horizontal scroll container */}
             <div className="flex-1 overflow-x-auto">
