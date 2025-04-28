@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TaskStatusPieChart } from "../charts/TaskStatusPieChart";
+import { columnsConfig } from "../tasks/columns-config";
 
 interface TaskFilters {
   projectId?: string;
@@ -50,21 +51,23 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
       if (errors.length > 0) {
         throw new Error("Failed to fetch task statistics");
       }
+
+      // Get colors from columnsConfig
+      const statusColorsMap = columnsConfig.reduce((acc, column) => {
+        const colorKey = column.badgeColor.replace('bg-', '');
+        acc[column.status] = `var(--${colorKey})`;
+        return acc;
+      }, {} as Record<string, string>);
       
-      // Map status colors
-      const statusColors = {
-        "not started": "#f87171",
-        "in progress": "#60a5fa",
-        "pending": "#fbbf24",
-        "completed": "#4ade80",
-        "stucked": "#fb923c"
-      };
-      
-      return statuses.map((status, index) => ({
-        name: status.charAt(0).toUpperCase() + status.slice(1),
-        value: results[index].data?.length || 0,
-        color: statusColors[status as keyof typeof statusColors]
-      }));
+      return statuses.map((status, index) => {
+        const column = columnsConfig.find(col => col.status === status);
+        const colorKey = column?.badgeColor.replace('bg-', '') || '';
+        return {
+          name: status.charAt(0).toUpperCase() + status.slice(1),
+          value: results[index].data?.length || 0,
+          color: colorKey ? `var(--${colorKey})` : '#888888'
+        };
+      });
     },
     refetchOnWindowFocus: false,
   });
@@ -93,7 +96,7 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
               {data?.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div 
-                    className="h-2 w-2 rounded-full" 
+                    className={`h-2 w-2 rounded-full ${item.color.startsWith('var') ? '' : ''}`}
                     style={{ backgroundColor: item.color }}
                   />
                   <span className="text-xs text-muted-foreground">

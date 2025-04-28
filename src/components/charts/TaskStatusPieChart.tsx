@@ -10,6 +10,16 @@ interface TaskStatusPieChartProps {
 }
 
 export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
+  // Map colors to CSS variables or direct values
+  const getCellFill = (color: string) => {
+    if (color.startsWith('var(--')) {
+      // Extract the CSS variable name and use it
+      const varName = color.substring(6, color.length - 1);
+      return `var(--${varName})`;
+    }
+    return color;
+  };
+  
   const calculatePercentage = (value: number): number => {
     const total = data.reduce((sum, item) => sum + item.value, 0);
     return total > 0 ? Math.round((value / total) * 100) : 0;
@@ -29,7 +39,7 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
           animationDuration={800}
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
+            <Cell key={`cell-${index}`} fill={getCellFill(entry.color)} />
           ))}
         </Pie>
         <Tooltip
@@ -42,7 +52,7 @@ export function TaskStatusPieChart({ data }: TaskStatusPieChartProps) {
                     <div className="flex items-center gap-2">
                       <div
                         className="h-2 w-2 rounded"
-                        style={{ background: payload[0].payload.color }}
+                        style={{ background: getCellFill(payload[0].payload.color) }}
                       />
                       <span className="font-medium">{payload[0].payload.name}</span>
                     </div>

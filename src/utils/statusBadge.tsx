@@ -1,6 +1,17 @@
 
 import { Badge } from "@/components/ui/badge";
 
+// CSS Variables for status colors
+export const statusColors = {
+  "completed": "var(--green-500)",
+  "in progress": "var(--blue-500)",
+  "pending": "var(--yellow-500)",
+  "not started": "var(--red-500)",
+  "active": "var(--emerald-500)",
+  "cancelled": "var(--red-500)",
+  "stucked": "var(--red-500)"
+};
+
 export const getStatusBadge = (status: string) => {
   switch (status?.toLowerCase()) {
     case 'completed':

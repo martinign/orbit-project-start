@@ -70,7 +70,6 @@ const DashboardHome = () => {
     [queryClient]
   );
 
-  // Add new debounced function for events
   const debouncedInvalidateEvents = useCallback(
     debounce(() => {
       queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
@@ -95,13 +94,11 @@ const DashboardHome = () => {
     onRecordChange: debouncedInvalidateInvitations
   });
 
-  // Add new subscription for project events
   useRealtimeSubscription({
     table: 'project_events',
     onRecordChange: debouncedInvalidateEvents
   });
 
-  // Invalidate queries when filters change
   useEffect(() => {
     const invalidateAll = debounce(() => {
       queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
@@ -138,7 +135,6 @@ const DashboardHome = () => {
     }));
   };
 
-  // Create filter objects that include the toggle callbacks
   const activitiesFilters = {
     ...filters,
     showNewTasks,

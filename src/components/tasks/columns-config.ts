@@ -5,7 +5,7 @@ export const columnsConfig = [
     title: 'Not Started',
     status: 'not started',
     color: 'bg-gray-100 border-gray-300',
-    badgeColor: 'bg-gray-500',
+    badgeColor: 'bg-red-500',
   },
   {
     id: 'pending',
@@ -36,3 +36,12 @@ export const columnsConfig = [
     badgeColor: 'bg-red-500',
   },
 ];
+
+// Add interface for TypeScript type checking
+export interface ColumnConfig {
+  id: string;
+  title: string;
+  status: string;
+  color: string;
+  badgeColor: string;
+}

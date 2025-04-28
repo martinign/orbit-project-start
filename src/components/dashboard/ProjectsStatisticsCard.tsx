@@ -23,18 +23,25 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         .from("projects")
         .select("status")
         .eq("status", "completed");
+        
+      let cancelledQuery = supabase
+        .from("projects")
+        .select("status")
+        .eq("status", "cancelled");
       
       // Apply date filters if provided
       if (filters.startDate) {
         activeQuery = activeQuery.gte("updated_at", filters.startDate.toISOString());
         pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
         completedQuery = completedQuery.gte("updated_at", filters.startDate.toISOString());
+        cancelledQuery = cancelledQuery.gte("updated_at", filters.startDate.toISOString());
       }
       
       if (filters.endDate) {
         activeQuery = activeQuery.lte("updated_at", filters.endDate.toISOString());
         pendingQuery = pendingQuery.lte("updated_at", filters.endDate.toISOString());
         completedQuery = completedQuery.lte("updated_at", filters.endDate.toISOString());
+        cancelledQuery = cancelledQuery.lte("updated_at", filters.endDate.toISOString());
       }
       
       // Filter by specific project if provided
@@ -42,22 +49,25 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         activeQuery = activeQuery.eq("id", filters.projectId);
         pendingQuery = pendingQuery.eq("id", filters.projectId);
         completedQuery = completedQuery.eq("id", filters.projectId);
+        cancelledQuery = cancelledQuery.eq("id", filters.projectId);
       }
       
-      const [activeResult, pendingResult, completedResult] = await Promise.all([
+      const [activeResult, pendingResult, completedResult, cancelledResult] = await Promise.all([
         activeQuery,
         pendingQuery,
-        completedQuery
+        completedQuery,
+        cancelledQuery
       ]);
       
-      if (activeResult.error || pendingResult.error || completedResult.error) {
+      if (activeResult.error || pendingResult.error || completedResult.error || cancelledResult.error) {
         throw new Error("Failed to fetch project statistics");
       }
       
       return [
         { name: "Active", value: activeResult.data?.length || 0, color: "#4ade80" },
         { name: "Pending", value: pendingResult.data?.length || 0, color: "#fbbf24" },
-        { name: "Completed", value: completedResult.data?.length || 0, color: "#60a5fa" }
+        { name: "Completed", value: completedResult.data?.length || 0, color: "#60a5fa" },
+        { name: "Cancelled", value: cancelledResult.data?.length || 0, color: "#f87171" }
       ];
     },
     refetchOnWindowFocus: false,
@@ -83,7 +93,7 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         ) : (
           <div className="space-y-4">
             <ProjectsBarChart data={projects || []} />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {projects?.map((item) => (
                 <div key={item.name} className="flex flex-col">
                   <div className="flex items-center gap-2">
