@@ -88,8 +88,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
         {/* Left: Task list (pinned) */}
-          <ResizablePanel defaultSize={15} minSize={5} className="min-w-0">
-          <TimelineTaskList tasks={tasks} width={maxTitleW+48} />
+        <ResizablePanel defaultSize={15} minSize={5} maxSize={15} className="min-w-0">
+          <TimelineTaskList tasks={tasks} width={maxTitleW + 48} />
         </ResizablePanel>
 
         <ResizableHandle withHandle>
