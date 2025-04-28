@@ -12,7 +12,7 @@ import Contacts from "./pages/Contacts";
 import TeamMembers from "./pages/TeamMembers";
 import TaskTemplates from "./pages/TaskTemplates";
 import NotFound from "./pages/NotFound";
-import ProtectedRoute from "./components/ProtectedRoute";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Create a client
 const queryClient = new QueryClient({
