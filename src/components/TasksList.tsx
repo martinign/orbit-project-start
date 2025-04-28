@@ -124,6 +124,11 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     }
   });
 
+  const handleShowTaskUpdates = (task: any) => {
+    setSelectedTask(task);
+    setIsUpdatesDisplayOpen(true);
+  };
+
   if (isLoading) {
     return <div className="text-center py-6">Loading tasks...</div>;
   }

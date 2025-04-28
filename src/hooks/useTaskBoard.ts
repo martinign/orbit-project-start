@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); // Add new state for updates display
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isRefetching, setIsRefetching] = useState(false);
 
@@ -32,6 +34,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
     setIsUpdateDialogOpen(false);
     setIsSubtaskDialogOpen(false);
     setIsCreateTaskDialogOpen(false);
+    setIsUpdatesDisplayOpen(false); // Close updates display too
   };
 
   const safeRefetch = async () => {
@@ -59,6 +62,11 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const handleTaskUpdates = (task: Task) => {
     setSelectedTask(task);
     setIsUpdateDialogOpen(true);
+  };
+
+  const handleShowUpdates = (task: Task) => {
+    setSelectedTask(task);
+    setIsUpdatesDisplayOpen(true);
   };
 
   const handleAddSubtask = (task: Task) => {
@@ -133,8 +141,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
     }
   };
 
-  
-
   return {
     selectedTask,
     isDialogOpen,
@@ -142,15 +148,18 @@ export const useTaskBoard = (onRefetch: () => void) => {
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
+    isUpdatesDisplayOpen, // Add new state for updates display
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
+    setIsUpdatesDisplayOpen, // Add new setter
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
+    handleShowUpdates, // Add new handler
     handleAddSubtask,
     handleCreateTask,
     deleteTask,

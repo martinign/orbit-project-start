@@ -27,6 +27,7 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); // Add separate state for displaying updates
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -43,6 +44,11 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
     setIsUpdateDialogOpen(true);
   };
 
+  const handleShowTaskUpdates = (task: Task) => {
+    setSelectedTask(task);
+    setIsUpdatesDisplayOpen(true);
+  };
+
   const handleAddSubtask = (task: Task) => {
     setSelectedTask(task);
     setIsSubtaskDialogOpen(true);
@@ -52,6 +58,7 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
     if (!selectedTask) return;
 
     try {
+      // Check if task has subtasks and delete them
       const { error: subtasksError } = await supabase
         .from('project_subtasks')
         .delete()
@@ -59,6 +66,15 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
 
       if (subtasksError) throw subtasksError;
 
+      // Delete any task updates
+      const { error: updatesError } = await supabase
+        .from('project_task_updates')
+        .delete()
+        .eq('task_id', selectedTask.id);
+        
+      if (updatesError) throw updatesError;
+
+      // Delete the task
       const { error } = await supabase
         .from('project_tasks')
         .delete()
@@ -89,13 +105,16 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
     isDeleteConfirmOpen,
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
+    isUpdatesDisplayOpen, // Add the new state
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
+    setIsUpdatesDisplayOpen, // Add the new setter
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
+    handleShowTaskUpdates, // Add the new handler
     handleAddSubtask,
     deleteTask,
   };
