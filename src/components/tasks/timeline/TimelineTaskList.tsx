@@ -13,10 +13,12 @@ interface TimelineTaskListProps {
     title: string;
     status?: string;
   }>;
+  width?: number;  // Added width property as optional
 }
 
 export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
-  tasks
+  tasks,
+  width
 }) => {
   const getStatusIndicator = (status?: string) => {
     switch (status) {
@@ -29,7 +31,10 @@ export const TimelineTaskList: React.FC<TimelineTaskListProps> = ({
   };
   
   return (
-    <div className="min-w-[120px] bg-background border-r h-full overflow-auto">
+    <div 
+      className="min-w-[120px] bg-background border-r h-full overflow-auto"
+      style={width ? { width: `${width}px` } : undefined}
+    >
       <div className="sticky top-0 z-20 bg-background">
         {/* Match the double-header height of timeline */}
         <div className="h-8 border-b flex items-center px-4 font-medium">Tasks</div>

@@ -1,3 +1,4 @@
+
 // src/components/tasks/timeline/TimelineView.tsx
 
 import React, { useState, useEffect } from 'react';
@@ -103,7 +104,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           maxSize={30}
           className="min-w-0"
         >
-          <TimelineTaskList tasks={tasks} width={maxTitleW + 32} />
+          <TimelineTaskList 
+            tasks={tasks} 
+            width={maxTitleW + 32} 
+          />
         </ResizablePanel>
 
         <ResizableHandle withHandle>
