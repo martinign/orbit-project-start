@@ -6,6 +6,7 @@ import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Task {
   id: string;
+  project_id: string;
   title: string;
   description?: string;
   status: string;
