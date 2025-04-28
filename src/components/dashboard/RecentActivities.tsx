@@ -6,6 +6,7 @@ import { CircleDashed, CheckCircle2, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface DashboardHeaderProps {
   onNewTasksClick?: () => void;
