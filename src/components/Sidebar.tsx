@@ -1,4 +1,3 @@
-
 import { Folder, LayoutDashboard, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,12 +29,14 @@ import InviteMembersDialog from "./team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
+import { useLocation } from "react-router-dom";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
   const pendingInvitationsCount = useInvitationsCount();
-  const { totalCount } = useTotalNewItemsCount();
+  const { totalCount, hideBadge, showBadgeIfNewItems } = useTotalNewItemsCount();
+  const location = useLocation();
   
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
@@ -49,6 +50,7 @@ export function AppSidebar() {
     event: '*',
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      showBadgeIfNewItems();
     }
   });
 
@@ -58,8 +60,15 @@ export function AppSidebar() {
     event: '*',
     onRecordChange: () => {
       queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+      showBadgeIfNewItems();
     }
   });
+
+  const handleDashboardClick = () => {
+    if (location.pathname === "/dashboard") {
+      hideBadge();
+    }
+  };
 
   const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
@@ -130,6 +139,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     tooltip="Dashboard" 
                     className="hover:bg-indigo-500/10 transition-colors duration-200"
+                    onClick={handleDashboardClick}
                   >
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
@@ -187,7 +197,7 @@ export function AppSidebar() {
       </SidebarContent>     
       
       <SidebarFooter className="border-t border-sidebar-border text-align: justify">
-        <div className="text-sm text-red-500 p-2">Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.</div>     
+        <div className="text-sm text-red-500 p-2">Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.</div>     
         <Button 
           variant="ghost" 
           className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" 

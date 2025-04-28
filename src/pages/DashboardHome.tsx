@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,12 @@ const DashboardHome = () => {
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showNewTasks, setShowNewTasks] = useState(false);
   const [showNewEvents, setShowNewEvents] = useState(false);
-  const { newTasksCount, newEventsCount } = useTotalNewItemsCount();
+  const { newTasksCount, newEventsCount, hideBadge } = useTotalNewItemsCount();
+
+  // Hide badge when we first load the dashboard
+  useEffect(() => {
+    hideBadge();
+  }, [hideBadge]);
 
   // Create debounced invalidation functions to prevent UI freezes
   const debouncedInvalidateProjects = useCallback(
