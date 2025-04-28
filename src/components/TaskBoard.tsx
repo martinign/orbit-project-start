@@ -7,6 +7,8 @@ import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { columnsConfig } from './tasks/columns-config';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Task {
   id: string;
@@ -25,6 +27,26 @@ interface TaskBoardProps {
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
+  const queryClient = useQueryClient();
+  
+  // Add real-time subscription for project tasks
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    filter: 'project_id',
+    filterValue: projectId,
+    onRecordChange: () => {
+      onRefetch();
+    }
+  });
+  
+  // Add real-time subscription for subtasks
+  useRealtimeSubscription({
+    table: 'project_subtasks',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['subtasks'] });
+    }
+  });
+
   const {
     selectedTask,
     isDialogOpen,

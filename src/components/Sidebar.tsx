@@ -2,7 +2,7 @@
 import { Folder, LayoutDashboard, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useInvitationsCount } from "@/hooks/useInvitationsCount";
@@ -28,6 +28,7 @@ import TaskTemplateDialog from "./TaskTemplateDialog";
 import TaskTemplatesListDialog from "./TaskTemplatesListDialog";
 import InviteMembersDialog from "./team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
@@ -40,6 +41,15 @@ export function AppSidebar() {
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
 
+  // Add real-time subscription for tasks to update badge
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    event: 'INSERT',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+    }
+  });
+
   const { data: newTasksCount } = useQuery({
     queryKey: ["new_tasks_count"],
     queryFn: async () => {
@@ -48,7 +58,7 @@ export function AppSidebar() {
       
       const { count, error } = await supabase
         .from("project_tasks")
-        .select("id", { count: "exact" })
+        .select("id", { count: "exact", head: true })
         .gte("created_at", yesterday.toISOString());
       
       if (error) throw error;

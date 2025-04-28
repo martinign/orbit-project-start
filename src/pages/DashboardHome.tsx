@@ -1,6 +1,6 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProjectsStatisticsCard } from "@/components/dashboard/ProjectsStatisticsCard";
 import { TasksStatisticsCard } from "@/components/dashboard/TasksStatisticsCard";
@@ -48,6 +48,7 @@ const DashboardHome = () => {
       queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
       queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
       queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
     }, 300),
     [queryClient]
   );
@@ -60,7 +61,7 @@ const DashboardHome = () => {
     [queryClient]
   );
 
-  // Use our custom realtime subscription hook instead of creating channels directly
+  // Use our improved realtime subscription hook
   useRealtimeSubscription({
     table: 'projects',
     onRecordChange: debouncedInvalidateProjects
