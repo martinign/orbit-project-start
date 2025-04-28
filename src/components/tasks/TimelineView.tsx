@@ -9,9 +9,9 @@ import {
   startOfMonth,
   endOfMonth,
 } from 'date-fns';
-import { TaskDetailsDialog } from './TaskDetailsDialog';
-import { TimelineTaskList } from './TimelineTaskList';
-import { TimelineTaskBar } from './TimelineTaskBar';
+import { TaskDetailsDialog } from './timeline/TaskDetailsDialog';
+import { TimelineTaskList } from './timeline/TimelineTaskList';
+import { TimelineTaskBar } from './timeline/TimelineTaskBar';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -39,7 +39,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   isLoading,
 }) => {
   const [days, setDays] = useState<Date[]>([]);
-  const [months, setMonths] = useState<{ month: string; days: number }[]>([]);
+  const [months, setMonths] = useState<{ month: string; days: number }[]>(
+    []
+  );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // measure longest title so we can size the list panel
@@ -64,7 +66,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
       const cnts: Record<string, number> = {};
       all.forEach((d) => {
-        const key = format(d, 'MMM');
+        const key = format(d, 'MMM yyyy');
         cnts[key] = (cnts[key] || 0) + 1;
       });
       setMonths(
@@ -147,15 +149,26 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 {/* Task bars */}
                 <div className="relative divide-y">
                   {tasks.map((task) => {
-                    const start = task.created_at ? new Date(task.created_at) : today;
-                    let end: Date = today; // Default to today for ongoing tasks
+                    const start = task.created_at
+                      ? new Date(task.created_at)
+                      : today;
+                    const end = task.updated_at
+                      ? new Date(task.updated_at)
+                      : today;
                     const completed = task.status === 'completed';
 
                     const offsetDays = Math.max(
                       0,
-                      Math.floor((start.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
+                      Math.floor(
+                        (start.getTime() - days[0].getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
                     );
-                    const rawDur = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                    const rawDur = Math.ceil(
+                      ((completed ? end : today).getTime() -
+                        start.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    );
                     const duration = Math.max(1, rawDur);
 
                     return (
