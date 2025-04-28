@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +61,15 @@ const DashboardHome = () => {
     [queryClient]
   );
 
+  // Add new debounced function for events
+  const debouncedInvalidateEvents = useCallback(
+    debounce(() => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
+    }, 300),
+    [queryClient]
+  );
+
   // Use our custom realtime subscription hook instead of creating channels directly
   useRealtimeSubscription({
     table: 'projects',
@@ -76,6 +86,12 @@ const DashboardHome = () => {
     onRecordChange: debouncedInvalidateInvitations
   });
 
+  // Add new subscription for project events
+  useRealtimeSubscription({
+    table: 'project_events',
+    onRecordChange: debouncedInvalidateEvents
+  });
+
   // Invalidate queries when filters change
   useEffect(() => {
     const invalidateAll = debounce(() => {
@@ -83,6 +99,7 @@ const DashboardHome = () => {
       queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
       queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
       queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
     }, 300);
     
     invalidateAll();
