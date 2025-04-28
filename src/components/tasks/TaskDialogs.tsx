@@ -1,10 +1,10 @@
 
 import React from 'react';
-import TaskDialog from '../TaskDialog';
-import DeleteTaskDialog from '../DeleteTaskDialog';
-import SubtaskDialog from '../SubtaskDialog';
-import TaskUpdateDialog from '../TaskUpdateDialog';
-import TaskUpdatesDisplay from '../TaskUpdatesDisplay';
+import TaskDialog from '@/components/TaskDialog';
+import DeleteTaskDialog from '@/components/DeleteTaskDialog';
+import SubtaskDialog from '@/components/SubtaskDialog';
+import TaskUpdateDialog from '@/components/TaskUpdateDialog';
+import TaskUpdatesDisplay from '@/components/TaskUpdatesDisplay';
 
 interface Task {
   id: string;
@@ -24,13 +24,13 @@ interface TaskDialogsProps {
   isUpdateDialogOpen: boolean;
   isSubtaskDialogOpen: boolean;
   isCreateTaskDialogOpen: boolean;
-  isUpdatesDisplayOpen: boolean;  // Add separate state for updates display
+  isUpdatesDisplayOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
   setIsDeleteConfirmOpen: (open: boolean) => void;
   setIsUpdateDialogOpen: (open: boolean) => void;
   setIsSubtaskDialogOpen: (open: boolean) => void;
   setIsCreateTaskDialogOpen: (open: boolean) => void;
-  setIsUpdatesDisplayOpen: (open: boolean) => void;  // Add handler for updates display
+  setIsUpdatesDisplayOpen: (open: boolean) => void;
   onRefetch: () => void;
   deleteTask: () => void;
   selectedStatus: string;

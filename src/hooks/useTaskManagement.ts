@@ -27,7 +27,7 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
-  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); // Add separate state for displaying updates
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -101,21 +101,21 @@ export const useTaskManagement = (projectId?: string, searchTerm: string = '') =
 
   return {
     selectedTask,
-    setSelectedTask, // Expose this function
+    setSelectedTask, // Explicitly expose this function
     isDialogOpen,
     isDeleteConfirmOpen,
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
-    isUpdatesDisplayOpen, // Add the new state
+    isUpdatesDisplayOpen,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
-    setIsUpdatesDisplayOpen, // Add the new setter
+    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
-    handleShowTaskUpdates, // Add the new handler
+    handleShowTaskUpdates,
     handleAddSubtask,
     deleteTask,
   };

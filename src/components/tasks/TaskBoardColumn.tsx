@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
-import { Card } from '@/components/ui/card';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TaskCard from '../TaskCard';
+import { ColumnConfig } from './columns-config';
+
 interface Task {
   id: string;
   title: string;
@@ -13,14 +14,9 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  assigned_to?: string;
 }
-interface ColumnConfig {
-  id: string;
-  title: string;
-  status: string;
-  color: string;
-  badgeColor: string;
-}
+
 interface TaskBoardColumnProps {
   column: ColumnConfig;
   tasks: Task[];
@@ -29,7 +25,9 @@ interface TaskBoardColumnProps {
   handleTaskUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
+  handleShowUpdates?: (task: Task) => void; // Add this prop
 }
+
 const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   column,
   tasks,
@@ -37,60 +35,57 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   handleDeleteConfirm,
   handleTaskUpdates,
   handleAddSubtask,
-  handleCreateTask
+  handleCreateTask,
+  handleShowUpdates, // Add this prop
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const visibleTasks = isCollapsed ? tasks.slice(0, 2) : tasks;
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-  return <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
-      <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
+  return (
+    <div className="flex flex-col">
+      <div className={`mb-2 p-2 rounded-t-md ${column.headerBgClass}`}>
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium truncate">{column.title}</h3>
-            <span className="font-bold text-base text-black">
-              ({tasks.length})
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={() => handleCreateTask(column.status)} title={`Add task to ${column.title}`}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Add task</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {tasks.length > 2 && <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={toggleCollapse} title={isCollapsed ? 'Show all tasks' : 'Show less tasks'}>
-                      {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isCollapsed ? 'Show all tasks' : 'Show less tasks'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>}
-          </div>
+          <span className="font-medium text-sm">{column.title}</span>
+          <span className="text-xs font-medium bg-white/20 px-2 py-0.5 rounded-full">
+            {tasks.length}
+          </span>
         </div>
       </div>
-      
-      <Droppable droppableId={column.id}>
-        {provided => <div ref={provided.innerRef} {...provided.droppableProps} className="p-2 min-h-[200px] h-full overflow-y-auto">
-            <div className="space-y-2">
-              {visibleTasks.map((task, index) => <TaskCard key={task.id} task={task} index={index} handleEditTask={handleEditTask} handleDeleteConfirm={handleDeleteConfirm} handleTaskUpdates={handleTaskUpdates} handleAddSubtask={handleAddSubtask} />)}
-            </div>
+
+      <Droppable droppableId={column.status}>
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex-1 bg-gray-50 p-2 min-h-[300px] rounded-b-md overflow-y-auto"
+          >
+            {tasks.map((task, index) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                index={index}
+                handleEditTask={handleEditTask}
+                handleDeleteConfirm={handleDeleteConfirm}
+                handleTaskUpdates={handleTaskUpdates}
+                handleAddSubtask={handleAddSubtask}
+                handleShowUpdates={handleShowUpdates} // Pass the show updates handler
+              />
+            ))}
             {provided.placeholder}
-          </div>}
+            {tasks.length === 0 && (
+              <div className="flex justify-center items-center h-full min-h-[100px]">
+                <Button
+                  variant="ghost" 
+                  className="border border-dashed border-gray-300 w-full py-6 text-gray-500 hover:bg-gray-100"
+                  onClick={() => handleCreateTask(column.status)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Task
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </Droppable>
-    </div>;
+    </div>
+  );
 };
+
 export default TaskBoardColumn;

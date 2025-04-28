@@ -33,6 +33,7 @@ interface TaskCardProps {
   handleDeleteConfirm: (task: Task) => void;
   handleTaskUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
+  handleShowUpdates?: (task: Task) => void; // Add the missing handler
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -42,6 +43,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   handleDeleteConfirm,
   handleTaskUpdates,
   handleAddSubtask,
+  handleShowUpdates, // Add the new prop
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [editSubtask, setEditSubtask] = useState<any | null>(null);
@@ -75,6 +77,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
     setDeleteSubtask(null);
   };
 
+  // Create a proper handler for showing updates
+  const onShowUpdates = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (handleShowUpdates) {
+      handleShowUpdates(task);
+    }
+  };
+
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided) => (
@@ -105,7 +115,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onDelete={() => handleDeleteConfirm(task)}
                       onUpdate={() => handleTaskUpdates(task)}
                       onAddSubtask={() => handleAddSubtask(task)}
-                      onShowUpdates={() => handleShowUpdates(task)} 
+                      onShowUpdates={onShowUpdates} // Use the proper handler here
                     />
                   </div>
 

@@ -23,7 +23,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
-  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); // Add new state for updates display
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false); 
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isRefetching, setIsRefetching] = useState(false);
 
@@ -34,7 +34,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
     setIsUpdateDialogOpen(false);
     setIsSubtaskDialogOpen(false);
     setIsCreateTaskDialogOpen(false);
-    setIsUpdatesDisplayOpen(false); // Close updates display too
+    setIsUpdatesDisplayOpen(false);
   };
 
   const safeRefetch = async () => {
@@ -148,18 +148,18 @@ export const useTaskBoard = (onRefetch: () => void) => {
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
-    isUpdatesDisplayOpen, // Add new state for updates display
+    isUpdatesDisplayOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
-    setIsUpdatesDisplayOpen, // Add new setter
+    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
-    handleShowUpdates, // Add new handler
+    handleShowUpdates, // Make sure this is exposed
     handleAddSubtask,
     handleCreateTask,
     deleteTask,

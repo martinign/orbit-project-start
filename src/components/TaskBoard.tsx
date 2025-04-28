@@ -36,18 +36,19 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
-    isUpdatesDisplayOpen, // Add new state
+    isUpdatesDisplayOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
-    setIsUpdatesDisplayOpen, // Add new setter
+    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
     handleAddSubtask,
+    handleShowUpdates, // Ensure we expose this function
     handleCreateTask,
     deleteTask,
   } = useTaskBoard(onRefetch);
@@ -94,6 +95,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                 handleTaskUpdates={handleTaskUpdates}
                 handleAddSubtask={handleAddSubtask}
                 handleCreateTask={handleCreateTask}
+                handleShowUpdates={handleShowUpdates} // Pass the show updates handler
               />
             ))}
           </div>
@@ -108,13 +110,13 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         isUpdateDialogOpen={isUpdateDialogOpen}
         isSubtaskDialogOpen={isSubtaskDialogOpen}
         isCreateTaskDialogOpen={isCreateTaskDialogOpen}
-        isUpdatesDisplayOpen={isUpdatesDisplayOpen} // Add new state
+        isUpdatesDisplayOpen={isUpdatesDisplayOpen}
         setIsDialogOpen={setIsDialogOpen}
         setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
         setIsUpdateDialogOpen={setIsUpdateDialogOpen}
         setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
         setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
-        setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen} // Add new setter
+        setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen}
         onRefetch={onRefetch}
         deleteTask={deleteTask}
         selectedStatus={selectedStatus}
