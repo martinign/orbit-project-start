@@ -92,18 +92,33 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         ) : (
           <div className="space-y-4">
             <TaskStatusPieChart data={data || []} />
-            <div className="grid grid-cols-2 gap-2">
-              {data?.map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
-                  <div 
-                    className={`h-2 w-2 rounded-full ${item.color.startsWith('var') ? '' : ''}`}
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {item.name} ({Math.round((item.value / total) * 100)}%)
-                  </span>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
+                {data?.slice(0, Math.ceil(data.length / 2)).map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div 
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {item.name} ({Math.round((item.value / total) * 100)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {data?.slice(Math.ceil(data.length / 2)).map((item) => (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <div 
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {item.name} ({Math.round((item.value / total) * 100)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
