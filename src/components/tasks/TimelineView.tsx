@@ -1,5 +1,6 @@
 // src/components/tasks/timeline/TimelineView.tsx
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import {
   format,
   isToday,
@@ -20,32 +21,34 @@ import { GripVertical } from 'lucide-react';
 import { useTextWidth } from '@/hooks/useTextWidth';
 import { toast } from '@/hooks/use-toast';
 
-interface Task { /* ... */ }
-interface TimelineViewProps { tasks: Task[]; isLoading: boolean; }
+interface Task {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+interface TimelineViewProps {
+  tasks: Task[];
+  isLoading: boolean;
+}
 
 export const TimelineView: React.FC<TimelineViewProps> = ({
   tasks,
   isLoading,
 }) => {
   const [days, setDays] = useState<Date[]>([]);
-  const [months, setMonths] = useState<{ month: string; days: number }[]>([]);
+  const [months, setMonths] = useState<{ month: string; days: number }[]>(
+    []
+  );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  // Measure container width
-  const chartWrapperRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  useEffect(() => {
-    if (!chartWrapperRef.current) return;
-    const ro = new ResizeObserver((entries) => {
-      for (let ent of entries) {
-        setContainerWidth(ent.contentRect.width);
-      }
-    });
-    ro.observe(chartWrapperRef.current);
-    return () => ro.disconnect();
-  }, []);
+  // measure longest title so we can size the list panel
+  const titles = tasks.map((t) => t.title);
+  const maxTitleW = useTextWidth(titles);
 
-  // Build days & months as before...
+  // build out the days & month buckets
   useEffect(() => {
     if (!tasks.length) return;
     try {
@@ -79,46 +82,43 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
   }, [tasks]);
 
-  if (isLoading) return <div className="text-center py-6">Loading…</div>;
-  if (!tasks.length) return <div className="text-center py-6">No tasks.</div>;
-  if (!days.length || containerWidth === 0)
-    return <div className="text-center py-6">Preparing timeline…</div>;
-
-  // Compute a responsive pixel-per-day, clamped between 10 and 60px/day:
-  const rawDayWidth = containerWidth / days.length;
-  const dayWidth = Math.max(10, Math.min(60, rawDayWidth));
+  if (isLoading) return <div className="text-center py-6">Loading tasks…</div>;
+  if (!tasks.length) return <div className="text-center py-6">No tasks found.</div>;
+  if (!days.length) return <div className="text-center py-6">Building timeline…</div>;
 
   const today = new Date();
-
-  // measure max title width for list...
-  const titles = tasks.map((t) => t.title);
-  const maxTitleW = useTextWidth(titles);
+  const dayWidth = 30; // px per day
 
   return (
     <div className="border rounded-md h-full overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        {/* Left: task list */}
-        <ResizablePanel defaultSize={20} minSize={10} maxSize={30} className="min-w-0">
+        {/* Left panel: task list (pinned) */}
+        <ResizablePanel
+          defaultSize={15}
+          minSize={10}
+          maxSize={25}
+          className="min-w-0"
+        >
           <TimelineTaskList tasks={tasks} width={maxTitleW + 32} />
         </ResizablePanel>
+
         <ResizableHandle withHandle>
           <GripVertical className="h-4 w-4 text-gray-400" />
         </ResizableHandle>
 
-        {/* Right: timeline */}
-        <ResizablePanel defaultSize={80} className="min-w-0 overflow-hidden">
+        {/* Right panel: timeline (always scrollable) */}
+        <ResizablePanel
+          defaultSize={85}     // reserve most of the space
+          className="min-w-0 overflow-hidden"
+        >
           <div className="flex flex-col h-full">
-
-            {/* Scrollable wrapper (always shows its own scrollbar) */}
-            <div
-              ref={chartWrapperRef}
-              className="flex-1 overflow-x-auto"
-            >
+            {/* This div will ALWAYS show its horizontal scrollbar */}
+            <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
               <div
                 className="relative"
                 style={{ width: days.length * dayWidth }}
               >
-                {/* Sticky header */}
+                {/* Sticky header: months */}
                 <div className="sticky top-0 bg-background z-10">
                   <div className="flex h-8 border-b">
                     {months.map((m, i) => (
@@ -149,9 +149,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 {/* Task bars */}
                 <div className="relative divide-y">
                   {tasks.map((task) => {
-                    const start = task.created_at ? new Date(task.created_at) : today;
-                    const end = task.updated_at ? new Date(task.updated_at) : today;
+                    const start = task.created_at
+                      ? new Date(task.created_at)
+                      : today;
+                    const end = task.updated_at
+                      ? new Date(task.updated_at)
+                      : today;
                     const completed = task.status === 'completed';
+
                     const offsetDays = Math.max(
                       0,
                       Math.floor(
@@ -182,10 +187,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     );
                   })}
 
-                  {/* Today line */}
+                  {/* Today indicator */}
                   <div
                     className="absolute top-0 bottom-0 w-[2px] bg-blue-500 z-20"
-                    style={{ left: days.findIndex((d) => isToday(d)) * dayWidth }}
+                    style={{
+                      left: days.findIndex((d) => isToday(d)) * dayWidth,
+                    }}
                   />
                 </div>
               </div>
@@ -194,6 +201,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         </ResizablePanel>
       </ResizablePanelGroup>
 
+      {/* Task details modal */}
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}
