@@ -47,7 +47,7 @@ export function RecentActivities({ filters }: { filters: any }) {
     <Card className="min-h-[300px]">
       <CardHeader>
         <CardTitle>Recent Activity</CardTitle>
-          {newTasksCount > 0 && (
+         {newTasksCount > 0 && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger onClick={onNewTasksClick} asChild>
@@ -66,6 +66,7 @@ export function RecentActivities({ filters }: { filters: any }) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        )}
         <CardDescription>Latest actions across all projects</CardDescription>
       </CardHeader>
       <CardContent>
