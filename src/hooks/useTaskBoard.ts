@@ -133,6 +133,18 @@ export const useTaskBoard = (onRefetch: () => void) => {
     }
   };
 
+    // Add real-time subscription
+  useRealtimeSubscription({
+    table: 'project_task',
+    filter: 'project_id',
+    filterValue: projectId,
+    onRecordChange: () => {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['project_task', projectId] });
+      }, 100);
+    }
+  });
+
   return {
     selectedTask,
     isDialogOpen,
