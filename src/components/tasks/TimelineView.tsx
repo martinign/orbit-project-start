@@ -12,6 +12,7 @@ import {
 import { TaskDetailsDialog } from './timeline/TaskDetailsDialog';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -113,8 +114,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         {/* Right: Timeline */}
         <ResizablePanel defaultSize={85} className="min-w-0 overflow-hidden">
           
-          <ScrollArea orientation="horizontal" className="flex-1">
-            <div className="flex flex-col h-full">    
+          
+            <div className="flex flex-col h-full"> 
+              <ScrollArea orientation="horizontal" className="flex-1">
                 {/* Scroll container for header + bars */}
                 <div className="flex-1 overflow-x-auto">
                   {/* Chart always 100% wide */}
@@ -192,11 +194,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
-
-          
+          </div>
         </ResizablePanel>
 
       </ResizablePanelGroup>
