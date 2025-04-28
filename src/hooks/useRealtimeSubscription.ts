@@ -22,8 +22,8 @@ interface SubscriptionOptions {
   event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
   filter?: string;
   filterValue?: string;
-  onRecordChange: (payload: RealtimePostgresChangesPayload<any>) => void;
   projectId?: string;
+  onRecordChange: (payload: RealtimePostgresChangesPayload<any>) => void;
 }
 
 export function useRealtimeSubscription({
@@ -54,7 +54,7 @@ export function useRealtimeSubscription({
     }
 
     channel
-      .on('postgres_changes' as 'system', config, (payload) => {
+      .on('postgres_changes', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
         onRecordChange(payload);
       })

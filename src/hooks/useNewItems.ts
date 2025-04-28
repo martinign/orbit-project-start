@@ -21,21 +21,58 @@ export function useNewItems(projectId: string) {
       
       const counts = await Promise.all(
         types.map(async (type) => {
-          // For teamMember, use project_team_members table
-          const tableName = type === 'teamMember' ? 'project_team_members' : `project_${type}s`;
+          let count = 0;
+          let error = null;
           
-          const { count, error } = await supabase
-            .from(tableName)
-            .select('id', { count: 'exact', head: true })
-            .eq('project_id', projectId)
-            .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          // Use specific table queries instead of dynamic table names
+          if (type === 'task') {
+            const result = await supabase
+              .from('project_tasks')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            count = result.count || 0;
+            error = result.error;
+          } else if (type === 'note') {
+            const result = await supabase
+              .from('project_notes')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            count = result.count || 0;
+            error = result.error;
+          } else if (type === 'contact') {
+            const result = await supabase
+              .from('project_contacts')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            count = result.count || 0;
+            error = result.error;
+          } else if (type === 'teamMember') {
+            const result = await supabase
+              .from('project_team_members')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            count = result.count || 0;
+            error = result.error;
+          } else if (type === 'event') {
+            const result = await supabase
+              .from('project_events')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            count = result.count || 0;
+            error = result.error;
+          }
             
           if (error) {
             console.error(`Error fetching new ${type}s count:`, error);
             return { type, count: 0 };
           }
           
-          return { type, count: count || 0 };
+          return { type, count };
         })
       );
       
