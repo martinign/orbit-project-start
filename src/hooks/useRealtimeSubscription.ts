@@ -23,6 +23,7 @@ interface SubscriptionOptions {
   filter?: string;
   filterValue?: string;
   onRecordChange: (payload: RealtimePostgresChangesPayload<any>) => void;
+  projectId?: string;
 }
 
 export function useRealtimeSubscription({
@@ -30,18 +31,27 @@ export function useRealtimeSubscription({
   event = '*',
   filter,
   filterValue,
+  projectId,
   onRecordChange
 }: SubscriptionOptions) {
   useEffect(() => {
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
-    const config: any = {
+    let config: any = {
       event: event,
       schema: 'public',
-      table: table,
-      ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
+      table: table
     };
+
+    // Add filter if provided
+    if (filter && filterValue) {
+      config.filter = `${filter}=eq.${filterValue}`;
+    }
+    // Add project filter if provided
+    else if (projectId) {
+      config.filter = `project_id=eq.${projectId}`;
+    }
 
     channel
       .on('postgres_changes' as 'system', config, (payload) => {
@@ -57,5 +67,5 @@ export function useRealtimeSubscription({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [table, event, filter, filterValue, onRecordChange]);
+  }, [table, event, filter, filterValue, projectId, onRecordChange]);
 }

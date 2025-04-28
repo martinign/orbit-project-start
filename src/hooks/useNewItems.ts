@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from '@tanstack/react-query';
 
-export type ItemType = 'task' | 'note';
+export type ItemType = 'task' | 'note' | 'contact' | 'teamMember' | 'event';
 
 interface NewItemsCount {
   [key: string]: number;
@@ -17,12 +17,15 @@ export function useNewItems(projectId: string) {
   const { data: counts } = useQuery({
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
-      const types: ItemType[] = ['task', 'note'];
+      const types: ItemType[] = ['task', 'note', 'contact', 'teamMember', 'event'];
       
       const counts = await Promise.all(
         types.map(async (type) => {
+          // For teamMember, use project_team_members table
+          const tableName = type === 'teamMember' ? 'project_team_members' : `project_${type}s`;
+          
           const { count, error } = await supabase
-            .from(`project_${type}s`)
+            .from(tableName)
             .select('id', { count: 'exact', head: true })
             .eq('project_id', projectId)
             .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
@@ -47,11 +50,19 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
-  // Add real-time subscription for both tasks and notes
+  // Add real-time subscription for all types
   useEffect(() => {
     if (!projectId) return;
 
-    const channels = ['project_tasks', 'project_notes'].map(table => {
+    const tables = [
+      'project_tasks', 
+      'project_notes', 
+      'project_contacts', 
+      'project_team_members', 
+      'project_events'
+    ];
+
+    const channels = tables.map(table => {
       const channel = supabase.channel(`${table}_changes_${projectId}`);
       
       channel

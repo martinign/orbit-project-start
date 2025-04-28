@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -35,36 +37,43 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   const { newItemsCount } = useNewItems(projectId);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const channels = ['project_tasks', 'project_notes'].map(table => {
-      const channel = supabase.channel(`stats_${table}_${projectId}`);
-      
-      channel
-        .on('postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table,
-            filter: `project_id=eq.${projectId}`
-          },
-          () => {
-            queryClient.invalidateQueries({ queryKey: ['project_tasks', projectId] });
-            queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-          }
-        )
-        .subscribe();
+  // Set up real-time subscriptions
+  useRealtimeSubscription({
+    table: 'project_tasks',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+    }
+  });
 
-      return channel;
-    });
+  useRealtimeSubscription({
+    table: 'project_notes',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
+    }
+  });
 
-    return () => {
-      channels.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-    };
-  }, [projectId, queryClient]);
+  useRealtimeSubscription({
+    table: 'project_contacts',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+    }
+  });
 
-  const renderBadge = (type: 'task' | 'note') => {
+  useRealtimeSubscription({
+    table: 'project_team_members',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_team_members_count', projectId] });
+    }
+  });
+
+  useRealtimeSubscription({
+    table: 'project_events',
+    onRecordChange: () => {
+      queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+    }
+  });
+
+  const renderBadge = (type: 'task' | 'note' | 'contact' | 'teamMember' | 'event') => {
     const count = newItemsCount[type];
     if (!count) return null;
     
@@ -91,9 +100,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent"
+        className="cursor-pointer transition-colors hover:bg-accent relative"
         onClick={() => onTabChange('contacts')}
       >
+        {renderBadge('contact')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -106,9 +116,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent"
+        className="cursor-pointer transition-colors hover:bg-accent relative"
         onClick={() => onTabChange('team')}
       >
+        {renderBadge('teamMember')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -145,9 +156,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent"
+        className="cursor-pointer transition-colors hover:bg-accent relative"
         onClick={() => onTabChange('calendar')}
       >
+        {renderBadge('event')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
