@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { ProjectsStatisticsCard } from "@/components/dashboard/ProjectsStatisticsCard";
 import { TasksStatisticsCard } from "@/components/dashboard/TasksStatisticsCard";
@@ -10,7 +10,7 @@ import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { DashboardEvents } from "@/components/dashboard/DashboardEvents";
 import { UpcomingTasks } from "@/components/dashboard/UpcomingTasks";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useRealtime } from "@/contexts/RealtimeContext";
 
 interface DashboardFilters {
   projectId?: string;
@@ -19,73 +19,45 @@ interface DashboardFilters {
   showNewTasks?: boolean;
 }
 
-// Helper for debounced query invalidation
-const debounce = (func: Function, wait: number) => {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  return (...args: any[]) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
-
 const DashboardHome = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showNewTasks, setShowNewTasks] = useState(false);
+  const { addSubscription } = useRealtime();
 
-  // Create debounced invalidation functions to prevent UI freezes
-  const debouncedInvalidateProjects = useCallback(
-    debounce(() => {
-      queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
-      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-    }, 300),
-    [queryClient]
-  );
-
-  const debouncedInvalidateTasks = useCallback(
-    debounce(() => {
-      queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
-      queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
-      queryClient.invalidateQueries({ queryKey: ["upcoming_tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-    }, 300),
-    [queryClient]
-  );
-
-  const debouncedInvalidateInvitations = useCallback(
-    debounce(() => {
-      queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
-      queryClient.invalidateQueries({ queryKey: ["recent_activities"] });
-    }, 300),
-    [queryClient]
-  );
-
-  // Use our custom realtime subscription hook instead of creating channels directly
-  useRealtimeSubscription({
-    table: 'projects',
-    onRecordChange: debouncedInvalidateProjects
-  });
-
-  useRealtimeSubscription({
-    table: 'project_tasks',
-    onRecordChange: debouncedInvalidateTasks
-  });
-
-  useRealtimeSubscription({
-    table: 'project_invitations',
-    onRecordChange: debouncedInvalidateInvitations
-  });
+  // Setup dashboard-specific realtime subscriptions
+  useEffect(() => {
+    // Dashboard statistics need to be updated based on these tables
+    const dashboardSubscriptions = [
+      { table: 'projects', queryKey: ['projects_statistics'] },
+      { table: 'project_tasks', queryKey: ['tasks_statistics'] },
+      { table: 'project_tasks', queryKey: ['task_priorities'] },
+      { table: 'project_tasks', queryKey: ['upcoming_tasks'] },
+      { table: 'project_invitations', queryKey: ['invitations_statistics'] },
+      { table: 'project_events', queryKey: ['dashboard_events'] },
+      { table: 'project_notes', queryKey: ['recent_activities'] },
+      { table: 'project_task_updates', queryKey: ['recent_activities'] }
+    ];
+    
+    // Add all dashboard subscriptions
+    dashboardSubscriptions.forEach(subscription => {
+      addSubscription({
+        table: subscription.table as any,
+        queryKey: subscription.queryKey
+      });
+    });
+  }, [addSubscription]);
 
   // Invalidate queries when filters change
   useEffect(() => {
-    const invalidateAll = debounce(() => {
+    const invalidateQueries = () => {
       queryClient.invalidateQueries({ queryKey: ["projects_statistics"] });
       queryClient.invalidateQueries({ queryKey: ["tasks_statistics"] });
       queryClient.invalidateQueries({ queryKey: ["task_priorities"] });
       queryClient.invalidateQueries({ queryKey: ["invitations_statistics"] });
-    }, 300);
+    };
     
-    invalidateAll();
+    invalidateQueries();
   }, [filters, queryClient]);
 
   const handleFiltersChange = (newFilters: Omit<DashboardFilters, 'showNewTasks'>) => {

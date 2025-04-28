@@ -1,7 +1,10 @@
+
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useRealtime } from '@/contexts/RealtimeContext';
+import { useEffect } from 'react';
 
 interface Task {
   id: string;
@@ -13,7 +16,7 @@ interface Task {
   project_id: string;
 }
 
-export const useTaskBoard = (onRefetch: () => void) => {
+export const useTaskBoard = (onRefetch: () => void, projectId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -24,6 +27,37 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isRefetching, setIsRefetching] = useState(false);
+  
+  // Get the realtime context to add project-specific subscriptions
+  const { addSubscription } = useRealtime();
+
+  // Set up project-specific real-time subscriptions
+  useEffect(() => {
+    if (projectId) {
+      // Subscribe to tasks for this specific project
+      addSubscription({
+        table: 'project_tasks',
+        event: '*',
+        filter: 'project_id',
+        filterValue: projectId,
+        queryKey: ['tasks', projectId]
+      });
+      
+      // Subscribe to subtasks for this project's tasks
+      addSubscription({
+        table: 'project_subtasks',
+        event: '*',
+        queryKey: ['subtasks', projectId]
+      });
+      
+      // Subscribe to task updates
+      addSubscription({
+        table: 'project_task_updates',
+        event: '*',
+        queryKey: ['task_updates', projectId]
+      });
+    }
+  }, [projectId, addSubscription]);
 
   const handleCloseDialogs = () => {
     setSelectedTask(null);
@@ -116,7 +150,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
 
       if (error) throw error;
 
-      await safeRefetch();
       handleCloseDialogs();
       
       toast({
@@ -132,8 +165,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
       });
     }
   };
-
-  
 
   return {
     selectedTask,

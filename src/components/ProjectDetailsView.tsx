@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -9,12 +9,60 @@ import { ProjectHeader } from './project-details/ProjectHeader';
 import { ProjectStatisticsCards } from './project-details/ProjectStatisticsCards';
 import { ProjectContentTabs } from './project-details/ProjectContentTabs';
 import { ProjectTabsContent } from './project-details/ProjectTabsContent';
+import { useRealtime } from '@/contexts/RealtimeContext';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tasks');
   const [contactSearchQuery, setContactSearchQuery] = useState('');
+  const { addSubscription } = useRealtime();
+
+  useEffect(() => {
+    if (id) {
+      addSubscription({
+        table: 'projects',
+        filter: 'id',
+        filterValue: id,
+        queryKey: ['project', id]
+      });
+
+      addSubscription({
+        table: 'project_contacts',
+        filter: 'project_id',
+        filterValue: id,
+        queryKey: ['project_contacts_count', id]
+      });
+
+      addSubscription({
+        table: 'project_team_members',
+        filter: 'project_id',
+        filterValue: id,
+        queryKey: ['project_team_members_count', id]
+      });
+
+      addSubscription({
+        table: 'project_tasks',
+        filter: 'project_id',
+        filterValue: id,
+        queryKey: ['tasks', id]
+      });
+
+      addSubscription({
+        table: 'project_events',
+        filter: 'project_id',
+        filterValue: id,
+        queryKey: ['project_events_count', id]
+      });
+
+      addSubscription({
+        table: 'project_notes',
+        filter: 'project_id',
+        filterValue: id,
+        queryKey: ['project_notes_count', id]
+      });
+    }
+  }, [id, addSubscription]);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
