@@ -1,41 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-// Import the smaller component files
 import NotesList from './project-notes/NotesList';
-import NoteItem from './project-notes/NoteItem';
 import CreateNoteDialog from './project-notes/CreateNoteDialog';
 import EditNoteDialog from './project-notes/EditNoteDialog';
 import DeleteNoteDialog from './project-notes/DeleteNoteDialog';
 import NotesEmptyState from './project-notes/NotesEmptyState';
-
-type ProjectNote = {
-  id: string;
-  project_id: string;
-  title: string;
-  content: string | null;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-};
+import { useProjectNotes } from '@/hooks/useProjectNotes';
+import { useNoteOperations } from '@/hooks/useNoteOperations';
 
 export default function ProjectNotes({ projectId }: { projectId: string }) {
-  const queryClient = useQueryClient();
-  const [notes, setNotes] = useState<ProjectNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<ProjectNote | null>(null);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = React.useState<string | null>(null);
+  const { notes, isLoading } = useProjectNotes(projectId);
+  const {
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    selectedNote,
+    setSelectedNote,
+    title,
+    setTitle,
+    content,
+    setContent,
+    saveNewNote,
+    updateNote,
+    deleteNote,
+  } = useNoteOperations(projectId);
 
   // Fetch user ID on component mount
   useEffect(() => {
@@ -51,200 +46,22 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     fetchUserId();
   }, []);
 
-  // Add real-time subscription - Use only the hook approach, not duplicate subscriptions
-  useRealtimeSubscription({
-    table: 'project_notes',
-    filter: 'project_id',
-    filterValue: projectId,
-    onRecordChange: (payload) => {
-      // Debounce query invalidation to prevent UI freezing
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-      }, 100);
-    }
-  });
-
-  const { toast } = useToast();
-
-  const { data: notesData, isLoading: notesLoading } = useQuery({
-    queryKey: ['project_notes', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('project_notes')
-          .select('*')
-          .eq('project_id', projectId)
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching project notes:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load project notes',
-          variant: 'destructive',
-        });
-        return [];
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    enabled: !!projectId,
-  });
-
-  useEffect(() => {
-    if (notesData) {
-      setNotes(notesData);
-    }
-  }, [notesData]);
-
-  // Remove the duplicate realtime subscription that was causing UI freezes
-
-  // Handle opening the create note dialog
   const handleCreateNote = () => {
     setTitle('');
     setContent('');
     setIsCreateDialogOpen(true);
   };
 
-  // Handle opening the edit note dialog
-  const handleEditNote = (note: ProjectNote) => {
+  const handleEditNote = (note: any) => {
     setSelectedNote(note);
     setTitle(note.title);
     setContent(note.content || '');
     setIsEditDialogOpen(true);
   };
 
-  // Handle opening the delete note dialog
-  const handleDeleteConfirmation = (note: ProjectNote) => {
+  const handleDeleteConfirmation = (note: any) => {
     setSelectedNote(note);
     setIsDeleteDialogOpen(true);
-  };
-
-  // Optimistically add a new note with debouncing to prevent UI freeze
-  const handleAddNote = async (note: any) => {
-    try {
-      const { error } = await supabase
-        .from('project_notes')
-        .insert([note]);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Success',
-        description: 'Note added successfully',
-      });
-    } catch (error) {
-      console.error('Error adding note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add note',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Save a new note
-  const saveNewNote = async () => {
-    if (!projectId || !userId) {
-      toast({
-        title: 'Error',
-        description: 'User ID or Project ID not available',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('project_notes')
-        .insert({
-          project_id: projectId,
-          title,
-          content,
-          user_id: userId,
-        });
-        
-      if (error) throw error;
-      
-      setIsCreateDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: 'Note created successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-    } catch (error) {
-      console.error('Error creating note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to create note',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Update an existing note
-  const updateNote = async () => {
-    if (!selectedNote) return;
-    
-    try {
-      const { error } = await supabase
-        .from('project_notes')
-        .update({
-          title,
-          content,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', selectedNote.id);
-        
-      if (error) throw error;
-      
-      setIsEditDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: 'Note updated successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-    } catch (error) {
-      console.error('Error updating note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update note',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Delete a note
-  const deleteNote = async () => {
-    if (!selectedNote) return;
-    
-    try {
-      const { error } = await supabase
-        .from('project_notes')
-        .delete()
-        .eq('id', selectedNote.id);
-        
-      if (error) throw error;
-      
-      setIsDeleteDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: 'Note deleted successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-    } catch (error) {
-      console.error('Error deleting note:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete note',
-        variant: 'destructive',
-      });
-    }
   };
 
   return (
@@ -269,19 +86,18 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         <NotesEmptyState onCreateNote={handleCreateNote} />
       )}
 
-      {/* Create Note Dialog */}
+      {/* Dialog components */}
       <CreateNoteDialog 
         open={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSave={saveNewNote}
+        onSave={() => userId && saveNewNote(userId)}
         title={title}
         setTitle={setTitle}
         content={content}
         setContent={setContent}
         isUserIdAvailable={!!userId}
       />
-
-      {/* Edit Note Dialog */}
+      
       <EditNoteDialog 
         open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
@@ -292,7 +108,6 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         setContent={setContent}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteNoteDialog 
         open={isDeleteDialogOpen}
         onClose={setIsDeleteDialogOpen}
