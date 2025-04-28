@@ -105,7 +105,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onDelete={() => handleDeleteConfirm(task)}
                       onUpdate={() => handleTaskUpdates(task)}
                       onAddSubtask={() => handleAddSubtask(task)}
-
+                      onShowUpdates={() => handleShowUpdates(task)} 
                     />
                   </div>
 
