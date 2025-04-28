@@ -166,7 +166,7 @@ export function AppSidebar() {
       </SidebarContent>     
       
       <SidebarFooter className="border-t border-sidebar-border text-align: justify">
-        <div className="text-sm text-red-500 p-2">Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.</div>     
+        <div className="text-sm text-red-700 p-2">Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.</div>     
         <Button 
           variant="ghost" 
           className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" 
