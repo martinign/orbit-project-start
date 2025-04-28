@@ -165,7 +165,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>     
       
-      <SidebarFooter className="border-t border-sidebar-border">
+      <SidebarFooter className="border-t border-sidebar-border text-center">
         <div className="text-sm text-red-500 p-2">
           Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.
         </div>
