@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,8 @@ import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -15,18 +17,25 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-
-interface DashboardHeaderProps {
-  onNewTasksClick?: () => void;
-  isNewTasksFilterActive?: boolean;
+interface RecentActivitiesProps {
+  filters: {
+    projectId?: string;
+    status?: string;
+    showNewTasks?: boolean;
+    onToggleNewTasks?: () => void;
+  };
 }
 
-export function RecentActivities({ filters }: { filters: any }) {
+export function RecentActivities({ filters }: RecentActivitiesProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile(user?.id);
-  const queryClient = useQueryClient();
+  const [isNewTasksFilterActive, setIsNewTasksFilterActive] = useState(filters.showNewTasks || false);
 
+  useEffect(() => {
+    setIsNewTasksFilterActive(filters.showNewTasks || false);
+  }, [filters.showNewTasks]);
+  
   const { data: recentActivities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["recent_activities", filters],
     queryFn: async () => {
@@ -77,51 +86,38 @@ export function RecentActivities({ filters }: { filters: any }) {
     },
   });
 
-  useEffect(() => {
-    const channel = supabase.channel('tasks_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'project_tasks'
-      }, () => {
-        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-
-  const handleCreateProject = () => {
-    navigate("/projects");
+  const handleNewTasksClick = () => {
+    if (filters.onToggleNewTasks) {
+      filters.onToggleNewTasks();
+    }
   };
 
   return (
     <Card className="min-h-[300px]">
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
-        {newTasksCount > 0 && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger onClick={onNewTasksClick} asChild>
-                <Badge 
-                  className={`cursor-pointer ${
-                    isNewTasksFilterActive 
-                      ? "bg-purple-700 hover:bg-purple-800" 
-                      : "bg-purple-500 hover:bg-purple-600"
-                  }`}
-                >
-                  {newTasksCount} new
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Click to {isNewTasksFilterActive ? 'hide' : 'show'} new tasks in the last 24 hours</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        
+        <div className="flex items-center justify-between">
+          <CardTitle>Recent Activity</CardTitle>
+          {newTasksCount > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger onClick={handleNewTasksClick} asChild>
+                  <Badge 
+                    className={`cursor-pointer ${
+                      isNewTasksFilterActive 
+                        ? "bg-purple-700 hover:bg-purple-800" 
+                        : "bg-purple-500 hover:bg-purple-600"
+                    }`}
+                  >
+                    {newTasksCount} new
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Click to {isNewTasksFilterActive ? 'hide' : 'show'} new tasks in the last 24 hours</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <CardDescription>Latest actions across all projects</CardDescription>
       </CardHeader>
       <CardContent>

@@ -18,7 +18,6 @@ interface DashboardFilters {
   status?: string;
   category?: string;
   showNewTasks?: boolean;
-  onToggleNewTasks?: () => void;
 }
 
 // Helper for debounced query invalidation
@@ -125,15 +124,13 @@ const DashboardHome = () => {
   // Create a filter object that includes the toggle callback
   const activitiesFilters = {
     ...filters,
+    showNewTasks,
     onToggleNewTasks: toggleNewTasksFilter
   };
 
   return (
     <div className="w-full space-y-6">
-      <DashboardHeader 
-        onNewTasksClick={toggleNewTasksFilter}
-        isNewTasksFilterActive={showNewTasks}
-      />
+      <DashboardHeader />
       <DashboardFilters 
         onFilterChange={handleFiltersChange}
         showNewTasks={showNewTasks}
