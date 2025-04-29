@@ -7,7 +7,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
-import { useTaskForm } from './useTaskForm';
+import { useTaskForm } from '@/hooks/task-form/useTaskForm';
 import { TaskForm } from './TaskForm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import TaskTemplatesListDialog from '../TaskTemplatesListDialog';
