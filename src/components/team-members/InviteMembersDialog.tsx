@@ -27,7 +27,7 @@ interface Profile {
 
 interface SelectedProfile {
   id: string;
-  permission: "read_only" | "edit";
+  permission: "owner" | "admin" | "edit" | "read_only";
 }
 
 const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
@@ -84,7 +84,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
     });
   };
 
-  const handlePermissionChange = (profileId: string, permission: "read_only" | "edit") => {
+  const handlePermissionChange = (profileId: string, permission: "owner" | "admin" | "edit" | "read_only") => {
     setSelectedProfiles(prev => ({
       ...prev,
       [profileId]: { ...prev[profileId], permission }
@@ -228,7 +228,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                     {selectedProfiles[profile.id] && (
                       <Select
                         value={selectedProfiles[profile.id].permission}
-                        onValueChange={(value: "read_only" | "edit") => 
+                        onValueChange={(value: "owner" | "admin" | "edit" | "read_only") => 
                           handlePermissionChange(profile.id, value)
                         }
                       >
@@ -236,8 +236,10 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="read_only">Read Only</SelectItem>
+                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
                           <SelectItem value="edit">Can Edit</SelectItem>
+                          <SelectItem value="read_only">Read Only</SelectItem>
                         </SelectContent>
                       </Select>
                     )}

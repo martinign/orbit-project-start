@@ -721,6 +721,10 @@ export type Database = {
         Args: { project_id: string }
         Returns: boolean
       }
+      has_project_admin_access: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
       has_project_edit_access: {
         Args: { project_id: string }
         Returns: boolean
@@ -735,7 +739,7 @@ export type Database = {
       }
     }
     Enums: {
-      project_member_permission: "read_only" | "edit"
+      project_member_permission: "owner" | "admin" | "edit" | "read_only"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -851,7 +855,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      project_member_permission: ["read_only", "edit"],
+      project_member_permission: ["owner", "admin", "edit", "read_only"],
     },
   },
 } as const
