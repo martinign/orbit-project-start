@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +41,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
       if (!projectId) return [];
 
       try {
+        // No need to specify table for project_id since we're not joining with tables that have the same column name
         const { data, error } = await supabase
           .from("project_invitations")
           .select(`
