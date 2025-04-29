@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TaskCard from './TaskCard';
+import { useCollapsibleTaskColumns } from '@/hooks/useCollapsibleTaskColumns';
 
 interface Task {
   id: string;
@@ -35,6 +36,7 @@ interface TaskColumnProps {
   handleShowUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
+  projectId: string;
 }
 
 const TaskColumn: React.FC<TaskColumnProps> = ({
@@ -46,14 +48,16 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   handleShowUpdates,
   handleAddSubtask,
   handleCreateTask,
+  projectId
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
+  const isExpanded = !isColumnCollapsed(column.id);
 
   return (
     <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <Collapsible
         open={isExpanded}
-        onOpenChange={setIsExpanded}
+        onOpenChange={() => toggleColumnCollapsed(column.id)}
         className="h-full flex flex-col"
       >
         <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
@@ -69,7 +73,10 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                onClick={() => handleCreateTask(column.status)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCreateTask(column.status);
+                }}
                 title={`Add task to ${column.title}`}
               >
                 <Plus className="h-4 w-4" />

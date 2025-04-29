@@ -10,6 +10,7 @@ import { columnsConfig } from './tasks/columns-config';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCollapsibleTaskColumns } from '@/hooks/useCollapsibleTaskColumns';
 
 interface Task {
   id: string;
@@ -29,6 +30,7 @@ interface TaskBoardProps {
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
   const queryClient = useQueryClient();
+  const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
   const {
     selectedTask,
     isDialogOpen,
@@ -88,6 +90,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
               <TaskBoardColumn
                 key={column.id}
                 column={column}
+                projectId={projectId}
                 tasks={getTasksForColumn(column.status)}
                 handleEditTask={handleEditTask}
                 handleDeleteConfirm={handleDeleteConfirm}
@@ -95,6 +98,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                 handleShowUpdates={handleShowUpdates}
                 handleAddSubtask={handleAddSubtask}
                 handleCreateTask={handleCreateTask}
+                isColumnCollapsed={isColumnCollapsed}
+                toggleColumnCollapsed={toggleColumnCollapsed}
               />
             ))}
           </div>
