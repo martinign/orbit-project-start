@@ -152,41 +152,43 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[900px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Workday Code' : 'Create New Workday Code'}</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="task"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Task</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter task name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="activity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Activity</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter activity name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="task"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Task</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter task name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="activity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Activity</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter activity name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={onClose}>
