@@ -43,7 +43,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) return [];
 
-        // Explicitly referencing the project_id from project_invitations table
+        // FIX: Explicitly specify the project_invitations table for project_id
         const { data, error } = await supabase
           .from("project_invitations")
           .select(`

@@ -12,7 +12,7 @@ export const useInvitationsCount = () => {
         if (!user.user) return 0;
 
         // Explicitly requesting count only and using head:true to optimize query
-        // Explicitly reference project_invitations table for all columns
+        // No need to specify the table for project_id since we're not joining with other tables
         const { count, error } = await supabase
           .from("project_invitations")
           .select("*", { count: "exact", head: true })
