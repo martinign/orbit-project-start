@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { 
@@ -8,7 +9,7 @@ import {
 } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SurveyResponseData } from './survey/SurveyTypes';
+import { SurveyResponseData } from './SurveyResultsCharts';
 
 interface FeedbackTableProps {
   data: SurveyResponseData[];
