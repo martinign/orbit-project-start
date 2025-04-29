@@ -14,6 +14,7 @@ interface InvitationsStatisticsCardProps {
     startDate?: Date;
     endDate?: Date;
     status?: string;
+    projectType?: string;
   };
 }
 
@@ -26,27 +27,27 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
       // Query for team members
       let teamMembersQuery = supabase
         .from("project_team_members")
-        .select("id", { count: "exact" });
+        .select("id, project:project_id(project_type)");
       
       // Query for contacts
       let contactsQuery = supabase
         .from("project_contacts")
-        .select("id", { count: "exact" });
+        .select("id, project:project_id(project_type)");
 
       // Base queries for invitations
       let pendingQuery = supabase
         .from("project_invitations")
-        .select("id")
+        .select("id, project:project_id(project_type)")
         .eq("status", "pending");
       
       let acceptedQuery = supabase
         .from("project_invitations")
-        .select("id")
+        .select("id, project:project_id(project_type)")
         .eq("status", "accepted");
       
       let rejectedQuery = supabase
         .from("project_invitations")
-        .select("id")
+        .select("id, project:project_id(project_type)")
         .eq("status", "rejected");
         
       // Apply project filter if provided
@@ -89,14 +90,29 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
           teamMembersResult.error || contactsResult.error) {
         throw new Error("Failed to fetch statistics");
       }
+
+      // Filter by project type if specified
+      let pendingData = pendingResult.data;
+      let acceptedData = acceptedResult.data;
+      let rejectedData = rejectedResult.data;
+      let teamMembersData = teamMembersResult.data;
+      let contactsData = contactsResult.data;
+
+      if (filters.projectType && filters.projectType !== "all") {
+        pendingData = pendingData.filter(item => item.project?.project_type === filters.projectType);
+        acceptedData = acceptedData.filter(item => item.project?.project_type === filters.projectType);
+        rejectedData = rejectedData.filter(item => item.project?.project_type === filters.projectType);
+        teamMembersData = teamMembersData.filter(item => item.project?.project_type === filters.projectType);
+        contactsData = contactsData.filter(item => item.project?.project_type === filters.projectType);
+      }
       
       return {
-        pending: pendingResult.data.length,
-        accepted: acceptedResult.data.length,
-        rejected: rejectedResult.data.length,
-        total: pendingResult.data.length + acceptedResult.data.length + rejectedResult.data.length,
-        teamMembers: teamMembersResult.data.length,
-        contacts: contactsResult.data.length
+        pending: pendingData.length,
+        accepted: acceptedData.length,
+        rejected: rejectedData.length,
+        total: pendingData.length + acceptedData.length + rejectedData.length,
+        teamMembers: teamMembersData.length,
+        contacts: contactsData.length
       };
     },
     refetchOnWindowFocus: false,

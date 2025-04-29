@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,7 @@ interface TaskPrioritiesFilters {
   projectId?: string;
   status?: string;
   priority?: string;
+  projectType?: string;
   showNewTasks?: boolean;
 }
 
@@ -26,7 +28,7 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
       const queries = priorities.map(priority => {
         let query = supabase
           .from("project_tasks")
-          .select("id", { count: "exact" })
+          .select("id, project:project_id(project_type)")
           .eq("priority", priority);
           
         if (filters.projectId && filters.projectId !== "all") {
@@ -52,6 +54,19 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         throw new Error("Failed to fetch task priority statistics");
       }
 
+      // Filter by project type if specified
+      let filteredResults = results;
+      if (filters.projectType && filters.projectType !== "all") {
+        filteredResults = results.map(result => {
+          return {
+            ...result,
+            data: result.data?.filter(task => 
+              task.project?.project_type === filters.projectType
+            ) || []
+          };
+        });
+      }
+
       // Map priorities to their display configuration
       const priorityConfig = {
         high: { 
@@ -73,7 +88,9 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
       
       return priorities.map((priority, index) => ({
         name: priorityConfig[priority as keyof typeof priorityConfig].name,
-        value: results[index].data?.length || 0,
+        value: filters.projectType && filters.projectType !== "all" 
+          ? filteredResults[index].data?.length || 0
+          : results[index].data?.length || 0,
         color: priorityConfig[priority as keyof typeof priorityConfig].color,
         icon: priorityConfig[priority as keyof typeof priorityConfig].icon
       }));

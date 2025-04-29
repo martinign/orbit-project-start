@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -21,6 +20,7 @@ interface RecentActivitiesProps {
   filters: {
     projectId?: string;
     status?: string;
+    projectType?: string;
     showNewTasks?: boolean;
     onToggleNewTasks?: () => void;
   };
@@ -41,7 +41,7 @@ export function RecentActivities({ filters }: RecentActivitiesProps) {
     queryFn: async () => {
       let tasksQuery = supabase
         .from("project_tasks")
-        .select("id, title, status, updated_at, project_id, projects:project_id(project_number, Sponsor)")
+        .select("id, title, status, updated_at, project_id, projects:project_id(project_number, Sponsor, project_type)")
         .order("updated_at", { ascending: false })
         .limit(5);
       
@@ -62,7 +62,16 @@ export function RecentActivities({ filters }: RecentActivitiesProps) {
       const { data, error } = await tasksQuery;
       
       if (error) throw error;
-      return data || [];
+      
+      // Filter by project type if specified
+      let filteredData = data || [];
+      if (filters.projectType && filters.projectType !== "all") {
+        filteredData = filteredData.filter(task => 
+          task.projects?.project_type === filters.projectType
+        );
+      }
+      
+      return filteredData;
     },
   });
 

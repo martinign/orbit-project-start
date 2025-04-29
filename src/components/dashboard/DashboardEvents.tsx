@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -10,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CircleDashed, CalendarClock } from "lucide-react";
+import { CircleDashed, CalendarClock, CalendarDays, Clock } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -21,7 +20,9 @@ import {
 interface DashboardEventsProps {
   filters: {
     projectId?: string;
-    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+    projectType?: string;
     showNewEvents?: boolean;
     onToggleNewEvents?: () => void;
   };
@@ -35,17 +36,29 @@ export function DashboardEvents({ filters, newEventsCount = 0 }: DashboardEvents
   const { data: events, isLoading } = useQuery({
     queryKey: ["dashboard_events", filters],
     queryFn: async () => {
+      const now = new Date();
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      
       let query = supabase
         .from("project_events")
-        .select("id, title, description, event_date, project_id, projects:project_id(project_number, Sponsor)")
+        .select(`
+          id, 
+          title, 
+          event_date, 
+          description,
+          project_id,
+          projects:project_id(project_number, Sponsor, project_type)
+        `)
+        .gte("event_date", now.toISOString())
+        .lte("event_date", nextMonth.toISOString())
         .order("event_date", { ascending: true })
-        .gte("event_date", new Date().toISOString())
         .limit(5);
-
+      
       if (filters.projectId) {
         query = query.eq("project_id", filters.projectId);
       }
-
+      
       if (filters.showNewEvents) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -55,8 +68,18 @@ export function DashboardEvents({ filters, newEventsCount = 0 }: DashboardEvents
       const { data, error } = await query;
       
       if (error) throw error;
-      return data || [];
+      
+      // Filter by project type if specified
+      let filteredData = data || [];
+      if (filters.projectType && filters.projectType !== "all") {
+        filteredData = filteredData.filter(event => 
+          event.projects?.project_type === filters.projectType
+        );
+      }
+      
+      return filteredData;
     },
+    refetchOnWindowFocus: false,
   });
 
   const handleNewEventsClick = () => {

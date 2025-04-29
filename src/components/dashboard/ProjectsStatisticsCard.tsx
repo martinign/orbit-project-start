@@ -52,6 +52,14 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
         cancelledQuery = cancelledQuery.eq("id", filters.projectId);
       }
       
+      // Apply project type filter
+      if (filters.projectType && filters.projectType !== "all") {
+        activeQuery = activeQuery.eq("project_type", filters.projectType);
+        pendingQuery = pendingQuery.eq("project_type", filters.projectType);
+        completedQuery = completedQuery.eq("project_type", filters.projectType);
+        cancelledQuery = cancelledQuery.eq("project_type", filters.projectType);
+      }
+      
       const [activeResult, pendingResult, completedResult, cancelledResult] = await Promise.all([
         activeQuery,
         pendingQuery,

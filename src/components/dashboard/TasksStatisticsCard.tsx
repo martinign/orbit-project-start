@@ -10,6 +10,7 @@ interface TaskFilters {
   projectId?: string;
   status?: string;
   priority?: string;
+  projectType?: string;
   showNewTasks?: boolean;
 }
 
@@ -22,9 +23,10 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         : ["not started", "in progress", "pending", "completed", "stucked"];
       
       const queries = statuses.map(status => {
+        // Start with a base query for each status
         let query = supabase
           .from("project_tasks")
-          .select("id", { count: "exact" })
+          .select("id, project:project_id(project_type)")
           .eq("status", status);
         
         if (filters.projectId && filters.projectId !== "all") {
@@ -52,6 +54,19 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         throw new Error("Failed to fetch task statistics");
       }
 
+      // Filter by project type if specified
+      let filteredResults = results;
+      if (filters.projectType && filters.projectType !== "all") {
+        filteredResults = results.map(result => {
+          return {
+            ...result,
+            data: result.data?.filter(task => 
+              task.project?.project_type === filters.projectType
+            ) || []
+          };
+        });
+      }
+
       // Direct color mapping based on columnsConfig
       const colorMap = {
         "not started": "#ef4444", // red-500
@@ -64,7 +79,9 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
       return statuses.map((status, index) => {
         return {
           name: status.charAt(0).toUpperCase() + status.slice(1),
-          value: results[index].data?.length || 0,
+          value: filters.projectType && filters.projectType !== "all" 
+            ? filteredResults[index].data?.length || 0
+            : results[index].data?.length || 0,
           color: colorMap[status] || '#888888'
         };
       });
