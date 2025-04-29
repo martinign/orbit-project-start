@@ -119,6 +119,11 @@ const ProjectDialog = ({
       // Set project_type based on minimalMode toggle
       values.project_type = minimalMode ? "non-billable" : "billable";
       
+      // When creating a new project, always set role to "owner"
+      if (!isEditing) {
+        values.role = "owner";
+      }
+      
       if (isEditing && project) {
         const {
           error
@@ -158,7 +163,7 @@ const ProjectDialog = ({
           description: values.description,
           status: values.status,
           project_type: values.project_type,
-          role: values.role,
+          role: "owner", // Always set to owner for new projects
           user_id: user.id
         };
 
@@ -287,29 +292,32 @@ const ProjectDialog = ({
                 </FormItem>} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField control={form.control} name="role" render={({
-              field
-            }) => <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <FormControl>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="owner">Owner</SelectItem>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="contributor">Contributor</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>} />
+              {/* Only show role select when editing an existing project */}
+              {isEditing && (
+                <FormField control={form.control} name="role" render={({
+                field
+              }) => <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="owner">Owner</SelectItem>
+                            <SelectItem value="manager">Manager</SelectItem>
+                            <SelectItem value="contributor">Contributor</SelectItem>
+                            <SelectItem value="viewer">Viewer</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>} />
+              )}
             
               <FormField control={form.control} name="status" render={({
               field
-            }) => <FormItem>
+            }) => <FormItem className={isEditing ? "" : "md:col-span-2"}>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
                       <ToggleGroup type="single" value={field.value} onValueChange={value => {
