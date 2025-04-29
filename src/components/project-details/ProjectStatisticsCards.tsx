@@ -37,7 +37,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const tables = ['project_tasks', 'project_notes', 'project_events'];
+    const tables = ['project_tasks', 'project_notes', 'project_events', 'project_contacts'];
     const channels = tables.map(table => {
       const channel = supabase.channel(`stats_${table}_${projectId}`);
       
@@ -62,8 +62,12 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
             } else if (table === 'project_events') {
               queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
               queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
-              queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
               queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
+              queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['dashboard_events'] });
+            } else if (table === 'project_contacts') {
+              queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
             }
           }
         )
@@ -128,7 +132,6 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
           </div>
         </CardContent>
       </Card>
-
 
       <Card 
         className="cursor-pointer transition-colors hover:bg-accent relative"

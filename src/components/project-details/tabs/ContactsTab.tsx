@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import ContactsList from '@/components/ContactsList';
 import ContactForm from '@/components/ContactForm';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ContactsTabProps {
   projectId: string;
@@ -18,6 +20,31 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
   contactSearchQuery,
 }) => {
   const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Set up real-time listener for contacts count
+  useEffect(() => {
+    const channel = supabase.channel(`contacts_count_${projectId}`)
+      .on('postgres_changes',
+        {
+          event: '*',  // Listen for all events: INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'project_contacts',
+          filter: `project_id=eq.${projectId}`
+        },
+        (payload) => {
+          console.log('Contact change detected:', payload);
+          // Invalidate the contacts count query to refresh the statistics
+          queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+          queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
 
   return (
     <Card>
@@ -45,7 +72,7 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
           </div>
           <Button 
             onClick={() => setIsCreateContactOpen(true)} 
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-blue-500 hover:bg-blue-600 text-white"
             size="sm"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -71,6 +98,9 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
             projectId={projectId}
             onSuccess={() => {
               setIsCreateContactOpen(false);
+              // Invalidate queries to refresh contact list and statistics
+              queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
             }} 
           />
         </DialogContent>

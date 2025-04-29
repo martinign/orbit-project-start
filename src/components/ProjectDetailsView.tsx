@@ -117,6 +117,23 @@ const ProjectDetailsView = () => {
   React.useEffect(() => {
     if (!id) return;
 
+    // Set up real-time subscription for contacts count
+    const contactsChannel = supabase.channel(`contacts_count_${id}`)
+      .on('postgres_changes',
+        {
+          event: '*',  // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'project_contacts',
+          filter: `project_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Contacts count change detected:', payload);
+          // Invalidate the query to update the contacts count
+          queryClient.invalidateQueries({ queryKey: ['project_contacts_count', id] });
+        }
+      )
+      .subscribe();
+
     // Set up real-time subscription for notes count
     const notesChannel = supabase.channel(`notes_count_${id}`)
       .on('postgres_changes',
@@ -166,6 +183,7 @@ const ProjectDetailsView = () => {
 
     // Cleanup function
     return () => {
+      supabase.removeChannel(contactsChannel);
       supabase.removeChannel(notesChannel);
       supabase.removeChannel(eventsChannel);
       supabase.removeChannel(tasksChannel);

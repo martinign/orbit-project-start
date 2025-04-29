@@ -45,7 +45,7 @@ export function useRealtimeSubscription({
     };
 
     channel
-      .on('postgres_changes' as 'system', config, (payload) => {
+      .on('postgres_changes', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
         onRecordChange(payload);
       })

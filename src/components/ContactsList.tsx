@@ -76,12 +76,19 @@ const ContactsList: React.FC<ContactsListProps> = ({
   // Use the improved realtime subscription hook with debouncing to prevent UI freezes
   useRealtimeSubscription({
     table: 'project_contacts',
+    event: '*', // Listen for all events: INSERT, UPDATE, DELETE
     filter: projectId ? 'project_id' : undefined,
     filterValue: projectId || undefined,
-    onRecordChange: () => {
+    onRecordChange: (payload) => {
+      console.log("Contact change detected:", payload);
       // Debounce query invalidation
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
+        
+        // Also invalidate the contact count for the project stats
+        if (projectId) {
+          queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+        }
       }, 100);
     }
   });
