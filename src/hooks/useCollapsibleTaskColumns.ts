@@ -30,15 +30,20 @@ export const useCollapsibleTaskColumns = (projectId: string) => {
   }, [collapsedState, storageKey]);
   
   const isColumnCollapsed = (columnId: string): boolean => {
-    // Default to collapsed (true) if state doesn't exist for this column
+    // If there's no state for this column yet, default to collapsed (true)
     return columnId in collapsedState ? collapsedState[columnId] : true;
   };
   
   const toggleColumnCollapsed = (columnId: string) => {
-    setCollapsedState(prevState => ({
-      ...prevState,
-      [columnId]: !(prevState[columnId] ?? true)
-    }));
+    console.log(`Toggling column ${columnId}, current state:`, collapsedState[columnId]);
+    setCollapsedState(prevState => {
+      const newState = {
+        ...prevState,
+        [columnId]: !(prevState[columnId] ?? true)
+      };
+      console.log(`New state for column ${columnId}:`, newState[columnId]);
+      return newState;
+    });
   };
   
   return {

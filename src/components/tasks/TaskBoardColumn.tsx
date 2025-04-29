@@ -59,7 +59,7 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
     <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <Collapsible
         open={!isCollapsed}
-        onOpenChange={(open) => toggleColumnCollapsed(column.id)}
+        onOpenChange={() => toggleColumnCollapsed(column.id)}
         className="h-full flex flex-col"
       >
         <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
@@ -113,20 +113,26 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
                 {...provided.droppableProps} 
                 className="p-2 min-h-[200px] h-full overflow-y-auto"
               >
-                <div className="space-y-2">
-                  {tasks.map((task, index) => (
-                    <TaskCard 
-                      key={task.id} 
-                      task={task} 
-                      index={index} 
-                      handleEditTask={handleEditTask} 
-                      handleDeleteConfirm={handleDeleteConfirm} 
-                      handleTaskUpdates={handleTaskUpdates}
-                      handleShowUpdates={handleShowUpdates}
-                      handleAddSubtask={handleAddSubtask} 
-                    />
-                  ))}
-                </div>
+                {tasks.length > 0 ? (
+                  <div className="space-y-2">
+                    {tasks.map((task, index) => (
+                      <TaskCard 
+                        key={task.id} 
+                        task={task} 
+                        index={index} 
+                        handleEditTask={handleEditTask} 
+                        handleDeleteConfirm={handleDeleteConfirm} 
+                        handleTaskUpdates={handleTaskUpdates}
+                        handleShowUpdates={handleShowUpdates}
+                        handleAddSubtask={handleAddSubtask} 
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    No tasks in this column
+                  </div>
+                )}
                 {provided.placeholder}
               </div>
             )}
