@@ -51,12 +51,12 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
           <FormField
             control={form.control}
             name="task"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormLabel>Task</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter task name" {...field} />
@@ -70,7 +70,7 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
             control={form.control}
             name="activity"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormLabel>Activity</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter activity name" {...field} />
@@ -84,7 +84,7 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
             control={form.control}
             name="projectId"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex-1">
                 <FormLabel>Associated Project (Optional)</FormLabel>
                 <Select 
                   onValueChange={field.onChange}
@@ -115,7 +115,7 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
             {isEditing ? 'Update Code' : 'Create Code'}
           </Button>
         </div>

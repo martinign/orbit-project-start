@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -235,7 +236,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[900px]">
+      <DialogContent className="sm:max-w-[1000px] w-full">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Workday Code' : 'Create New Workday Code'}</DialogTitle>
         </DialogHeader>
