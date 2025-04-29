@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,6 +34,7 @@ interface TaskCardProps {
   handleEditTask: (task: Task) => void;
   handleDeleteConfirm: (task: Task) => void;
   handleTaskUpdates: (task: Task) => void;
+  handleShowUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
 }
 
@@ -42,6 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   handleEditTask,
   handleDeleteConfirm,
   handleTaskUpdates,
+  handleShowUpdates,
   handleAddSubtask,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -108,7 +111,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                       onDelete={handleDeleteConfirm}
                       onUpdate={handleTaskUpdates}
                       onAddSubtask={handleAddSubtask}
-                      onShowUpdates={() => setIsUpdatesDisplayOpen(true)}
+                      onShowUpdates={handleShowUpdates}
                     />
                   </div>
 
