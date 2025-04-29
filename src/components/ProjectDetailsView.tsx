@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -108,6 +107,7 @@ const ProjectDetailsView = () => {
         .select('id', { count: 'exact', head: true })
         .eq('project_id', id);
       if (error) throw error;
+      console.log('Notes count from query:', count);
       return count || 0;
     },
     enabled: !!id,
@@ -121,14 +121,17 @@ const ProjectDetailsView = () => {
     const notesChannel = supabase.channel(`notes_count_${id}`)
       .on('postgres_changes',
         {
-          event: '*',  // Changed from 'INSERT' to '*' to listen for all events
+          event: '*',  // Listen for all events (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'project_notes',
           filter: `project_id=eq.${id}`
         },
-        () => {
+        (payload) => {
+          console.log('Notes count change detected:', payload);
           // Invalidate the query to update the notes count
           queryClient.invalidateQueries({ queryKey: ['project_notes_count', id] });
+          queryClient.invalidateQueries({ queryKey: ['project_notes', id] });
+          queryClient.invalidateQueries({ queryKey: ['new_items_count', id] });
         }
       )
       .subscribe();

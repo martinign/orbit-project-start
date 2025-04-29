@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 type ProjectNote = {
   id: string;
@@ -69,7 +68,8 @@ export function useProjectNotes(projectId: string) {
           table: 'project_notes',
           filter: `project_id=eq.${projectId}`
         },
-        () => {
+        (payload) => {
+          console.log('Project notes change detected:', payload);
           // Invalidate the queries to trigger a refresh of both notes and notes count
           queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
           queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });

@@ -38,36 +38,45 @@ export function useNewItems(projectId: string) {
               tableName = `project_${type}s`;
           }
           
-          // Use type casting to handle the dynamic table name
-          let query;
+          // Use explicit query for each table type to avoid TypeScript errors
+          let count = 0;
+          let error = null;
+          
           if (tableName === 'project_tasks') {
-            query = supabase
+            const result = await supabase
               .from('project_tasks')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
               .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            
+            count = result.count || 0;
+            error = result.error;
           } else if (tableName === 'project_notes') {
-            query = supabase
+            const result = await supabase
               .from('project_notes')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
               .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+            
+            count = result.count || 0;
+            error = result.error;
           } else if (tableName === 'project_events') {
-            query = supabase
+            const result = await supabase
               .from('project_events')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
               .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-          }
             
-          const { count, error } = await query;
+            count = result.count || 0;
+            error = result.error;
+          }
             
           if (error) {
             console.error(`Error fetching new ${type}s count:`, error);
             return { type, count: 0 };
           }
           
-          return { type, count: count || 0 };
+          return { type, count };
         })
       );
       
@@ -98,9 +107,19 @@ export function useNewItems(projectId: string) {
             table,
             filter: `project_id=eq.${projectId}`
           },
-          async () => {
+          async (payload) => {
+            console.log(`New items change detected for ${table}:`, payload);
             // Invalidate the query to trigger a refresh
             queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+            
+            // Also invalidate the specific count queries
+            if (table === 'project_notes') {
+              queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
+            } else if (table === 'project_events') {
+              queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+            } else if (table === 'project_tasks') {
+              queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+            }
           }
         )
         .subscribe((status) => {
