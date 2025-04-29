@@ -32,6 +32,7 @@ interface TaskColumnProps {
   handleEditTask: (task: Task) => void;
   handleDeleteConfirm: (task: Task) => void;
   handleTaskUpdates: (task: Task) => void;
+  handleShowUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
 }
@@ -42,6 +43,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   handleEditTask,
   handleDeleteConfirm,
   handleTaskUpdates,
+  handleShowUpdates,
   handleAddSubtask,
   handleCreateTask,
 }) => {
@@ -108,6 +110,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                       handleEditTask={handleEditTask}
                       handleDeleteConfirm={handleDeleteConfirm}
                       handleTaskUpdates={handleTaskUpdates}
+                      handleShowUpdates={handleShowUpdates}
                       handleAddSubtask={handleAddSubtask}
                     />
                   ))}
