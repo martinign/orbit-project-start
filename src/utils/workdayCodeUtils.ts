@@ -16,6 +16,8 @@ export interface Project {
   id: string;
   project_number: string;
   protocol_title: string | null;
+  project_type: string;
+  Sponsor: string | null;
 }
 
 export type ProjectAssociations = {[key: string]: Project[]};

@@ -110,7 +110,11 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
   const handleSubmit = async (data: CodeFormData) => {
     if (!user?.id) return;
 
-    const result = await saveWorkdayCode(data, user.id, isEditing ? code.id : undefined);
+    const result = await saveWorkdayCode({
+      task: data.task,
+      activity: data.activity,
+      projectId: data.projectId
+    }, user.id, isEditing ? code.id : undefined);
     
     if (result.success) {
       toast({
