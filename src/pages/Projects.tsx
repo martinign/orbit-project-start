@@ -218,7 +218,7 @@ const Projects = () => {
                           <TableHead>Type</TableHead>
                           <TableHead>Sponsor</TableHead>
                           <TableHead>Protocol Number</TableHead>
-                          <TableHead>Title</TableHead>
+                          <TableHead>Protocol Title</TableHead>
                           <TableHead>Description</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
