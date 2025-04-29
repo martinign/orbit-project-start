@@ -1,8 +1,7 @@
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface TaskStatusPieChartProps {
   data: {
@@ -13,33 +12,50 @@ interface TaskStatusPieChartProps {
   onSliceClick?: (status: string) => void;
 }
 
-// Custom label renderer for the pie slices
+// Custom label renderer for the pie slices with arrows pointing outward
 const renderCustomLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name } = props;
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name, index } = props;
   
   // Calculate position for the label
   const RADIAN = Math.PI / 180;
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
+  const radius = outerRadius * 1.2; // Position labels slightly outside the pie
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
-  // Only show labels if the value is significant enough (at least 5% of total)
-  if (percent < 0.05) return null;
+  // Calculate arrow points
+  const arrowStartX = cx + (outerRadius * 0.95) * Math.cos(-midAngle * RADIAN);
+  const arrowStartY = cy + (outerRadius * 0.95) * Math.sin(-midAngle * RADIAN);
+  
+  // Only show labels for slices with reasonable size (at least 3% of total)
+  if (percent < 0.03) return null;
   
   return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="#fff" 
-      fontWeight="bold"
-      fontSize={12}
-      textAnchor="middle" 
-      dominantBaseline="central"
-      aria-label={`${name}: ${value} tasks (${(percent * 100).toFixed(1)}%)`}
-      role="img"
-    >
-      {value}
-    </text>
+    <g>
+      {/* Arrow line */}
+      <line 
+        x1={arrowStartX} 
+        y1={arrowStartY} 
+        x2={x} 
+        y2={y} 
+        stroke="#666" 
+        strokeWidth={1}
+      />
+      
+      {/* Label text with value */}
+      <text 
+        x={x} 
+        y={y} 
+        fill="#333" 
+        fontSize={12}
+        fontWeight="500"
+        textAnchor={x > cx ? "start" : "end"} 
+        dominantBaseline="central"
+        aria-label={`${name}: ${value} tasks (${(percent * 100).toFixed(1)}%)`}
+        role="img"
+      >
+        {name}: {value}
+      </text>
+    </g>
   );
 };
 
@@ -98,8 +114,8 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             data={enhancedData}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            innerRadius={50} // Decreased from 60
+            outerRadius={70} // Decreased from 80
             paddingAngle={2}
             dataKey="value"
             animationDuration={800}
@@ -107,6 +123,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             className="cursor-pointer"
             isAnimationActive={true}
             label={renderCustomLabel}
+            labelLine={false} // Remove default label lines
             // For screen readers
             role="graphics-document"
             aria-label="Task status distribution pie chart"
@@ -158,35 +175,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
               return null;
             }}
           />
-          <Legend 
-            layout="horizontal"
-            align="center"
-            verticalAlign="bottom"
-            iconSize={8}
-            iconType="circle"
-            formatter={(value, entry, index) => {
-              // TypeScript fix: Use type assertion to access color property
-              const { payload } = entry as any;
-              const item = payload;
-              const percentage = ((item.value / total) * 100).toFixed(1);
-              
-              return (
-                <HoverCard>
-                  <HoverCardTrigger>
-                    <span className="text-xs text-muted-foreground cursor-default flex items-center gap-1.5">
-                      <span style={{ color: item.color }}>{value}</span>
-                      <span className="opacity-75">({percentage}%)</span>
-                    </span>
-                  </HoverCardTrigger>
-                  <HoverCardContent className="w-auto p-2">
-                    <div className="text-xs">
-                      {value}: {item.value} tasks
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              );
-            }}
-          />
+          {/* Legend has been removed as requested */}
         </PieChart>
       </ResponsiveContainer>
     </div>
