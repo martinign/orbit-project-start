@@ -19,6 +19,7 @@ import {
 export interface ComboboxOption {
   value: string
   label: string
+  project_type?: string
 }
 
 interface ComboboxProps {

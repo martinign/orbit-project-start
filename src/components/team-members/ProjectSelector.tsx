@@ -33,7 +33,7 @@ const ProjectSelector = ({
       try {
         const { data, error } = await supabase
           .from("projects")
-          .select("id, project_number, Sponsor")
+          .select("id, project_number, Sponsor, project_type")
           .order("project_number", { ascending: true });
         
         if (error) throw error;
@@ -70,7 +70,9 @@ const ProjectSelector = ({
         ) : projects.length > 0 ? (
           projects.map((project) => (
             <SelectItem key={project.id} value={project.id}>
-              {project.project_number} - {project.Sponsor}
+              {project.project_type === 'non-billable' 
+                ? project.project_number 
+                : `${project.project_number} - ${project.Sponsor}`}
             </SelectItem>
           ))
         ) : (

@@ -233,7 +233,6 @@ const Projects = () => {
                           <TableHead>Protocol Number</TableHead>
                           <TableHead>Title</TableHead>
                           <TableHead>Description</TableHead>
-                          
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -250,7 +249,6 @@ const Projects = () => {
                             <TableCell>{project.protocol_number || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.protocol_title || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
-                            
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 project.status === 'active' ? 'bg-green-100 text-green-800' : 

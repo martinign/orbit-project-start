@@ -37,7 +37,7 @@ export function DashboardFilters({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projects")
-        .select("id, project_number, Sponsor")
+        .select("id, project_number, Sponsor, project_type")
         .order("updated_at", { ascending: false });
       
       if (error) throw error;
@@ -117,7 +117,9 @@ export function DashboardFilters({
               <SelectItem value="all">All Projects</SelectItem>
               {(projects || []).map(project => (
                 <SelectItem key={project.id} value={project.id}>
-                  {project.project_number} - {project.Sponsor}
+                  {project.project_type === 'non-billable' 
+                    ? project.project_number
+                    : `${project.project_number} - ${project.Sponsor}`}
                 </SelectItem>
               ))}
             </SelectContent>

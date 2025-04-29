@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
@@ -95,7 +96,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     queryFn: async () => {
       let query = supabase
         .from('project_tasks')
-        .select('*, projects:project_id(id, project_number, Sponsor)');
+        .select('*, projects:project_id(id, project_number, Sponsor, project_type)');
 
       if (projectId) {
         query = query.eq('project_id', projectId);
