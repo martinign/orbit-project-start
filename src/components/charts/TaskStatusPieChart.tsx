@@ -12,13 +12,43 @@ interface TaskStatusPieChartProps {
   onSliceClick?: (status: string) => void;
 }
 
+// Custom label renderer for inside the pie slices
+const renderCustomizedLabel = (props: any) => {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name, fill } = props;
+  
+  // Skip rendering labels for very small slices (less than 5% of total)
+  if (percent < 0.05) return null;
+  
+  const RADIAN = Math.PI / 180;
+  // Position label in the middle of the slice
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+  return (
+    <text 
+      x={x} 
+      y={y} 
+      fill="#fff" 
+      fontWeight="bold"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      aria-label={`${value} ${name} tasks`}
+      role="img"
+    >
+      {value}
+    </text>
+  );
+};
+
 // Custom label renderer for the pie slices with arrows pointing outward
-const renderCustomLabel = (props: any) => {
+const renderExternalLabel = (props: any) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name, index } = props;
   
   // Calculate position for the label
   const RADIAN = Math.PI / 180;
-  const radius = outerRadius * 1.4; // Increased from 1.2 to position labels further outside
+  const radius = outerRadius * 1.4; // Position labels further outside
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
@@ -77,7 +107,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
     }
   };
 
-  // Corrected center label to show total tasks count
+  // Center label to show total tasks count
   const renderCenterLabel = () => {
     return (
       <>
@@ -114,16 +144,14 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             data={enhancedData}
             cx="50%"
             cy="50%"
-            innerRadius={50} // Decreased from 60
-            outerRadius={70} // Decreased from 80
-            paddingAngle={2}
+            labelLine={false}
+            outerRadius={isMobile ? 60 : 70} 
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
             className="cursor-pointer"
             isAnimationActive={true}
-            label={renderCustomLabel}
-            labelLine={false} // Remove default label lines
+            label={renderCustomizedLabel} // Labels inside the pie slices
             // For screen readers
             role="graphics-document"
             aria-label="Task status distribution pie chart"
@@ -145,6 +173,17 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
               )}
             />
           </Pie>
+          <Pie
+            data={enhancedData}
+            cx="50%"
+            cy="50%"
+            outerRadius={isMobile ? 60 : 70}
+            labelLine={false}
+            label={renderExternalLabel} // External labels with arrows
+            dataKey="value"
+            isAnimationActive={false}
+            fill="none" // Make this invisible, we only use it for the external labels
+          />
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
@@ -175,7 +214,6 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
               return null;
             }}
           />
-          {/* Legend has been removed as requested */}
         </PieChart>
       </ResponsiveContainer>
     </div>
