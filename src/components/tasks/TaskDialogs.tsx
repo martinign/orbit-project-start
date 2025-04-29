@@ -24,11 +24,13 @@ interface TaskDialogsProps {
   isUpdateDialogOpen: boolean;
   isSubtaskDialogOpen: boolean;
   isCreateTaskDialogOpen: boolean;
+  isUpdatesDisplayOpen: boolean;
   setIsDialogOpen: (open: boolean) => void;
   setIsDeleteConfirmOpen: (open: boolean) => void;
   setIsUpdateDialogOpen: (open: boolean) => void;
   setIsSubtaskDialogOpen: (open: boolean) => void;
   setIsCreateTaskDialogOpen: (open: boolean) => void;
+  setIsUpdatesDisplayOpen: (open: boolean) => void;
   onRefetch: () => void;
   deleteTask: () => void;
   selectedStatus: string;
@@ -42,11 +44,13 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
   isUpdateDialogOpen,
   isSubtaskDialogOpen,
   isCreateTaskDialogOpen,
+  isUpdatesDisplayOpen,
   setIsDialogOpen,
   setIsDeleteConfirmOpen,
   setIsUpdateDialogOpen,
   setIsSubtaskDialogOpen,
   setIsCreateTaskDialogOpen,
+  setIsUpdatesDisplayOpen,
   onRefetch,
   deleteTask,
   selectedStatus
@@ -100,12 +104,15 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
             open={isUpdateDialogOpen}
             onClose={() => setIsUpdateDialogOpen(false)}
             taskId={selectedTask.id}
-            onSuccess={() => setIsUpdateDialogOpen(false)}
+            onSuccess={() => {
+              setIsUpdateDialogOpen(false);
+              onRefetch();
+            }}
           />
 
           <TaskUpdatesDisplay
-            open={isUpdateDialogOpen}
-            onClose={() => setIsUpdateDialogOpen(false)}
+            open={isUpdatesDisplayOpen}
+            onClose={() => setIsUpdatesDisplayOpen(false)}
             taskId={selectedTask.id}
             taskTitle={selectedTask.title}
           />

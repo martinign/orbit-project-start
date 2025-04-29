@@ -72,7 +72,10 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 relative"
-                onClick={() => onUpdate(task)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdate(task);
+                }}
               >
                 <FilePen className="h-4 w-4" />
                 {updateCount > 0 && (
@@ -96,7 +99,10 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-8 w-8"
-                  onClick={onShowUpdates}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShowUpdates(e);
+                  }}
                 >
                   <MessageCircle className="h-4 w-4" />
                 </Button>
