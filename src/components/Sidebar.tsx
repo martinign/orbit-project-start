@@ -1,4 +1,3 @@
-
 import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,7 +49,7 @@ export function AppSidebar() {
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
-  const { canSubmitSurvey, nextAvailableDate, loading: loadingSurveyAvailability } = useSurveyAvailability();
+  const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
@@ -231,9 +230,9 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                     </div>
                   </TooltipTrigger>
-                  {!canSubmitSurvey && nextAvailableDate && (
+                  {!canSubmitSurvey && (
                     <TooltipContent>
-                      <p>You can submit another survey after {format(nextAvailableDate, 'MMMM dd, yyyy')}</p>
+                      <p>You've already submitted a survey. Thank you for your feedback!</p>
                     </TooltipContent>
                   )}
                 </Tooltip>
