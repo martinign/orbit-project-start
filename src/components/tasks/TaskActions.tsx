@@ -28,7 +28,7 @@ interface TaskActionsProps {
   onDelete: (task: Task) => void;
   onUpdate: (task: Task) => void;
   onAddSubtask: (task: Task) => void;
-  onShowUpdates: (e: React.MouseEvent) => void;
+  onShowUpdates: (task: Task) => void;
 }
 
 export const TaskActions: React.FC<TaskActionsProps> = ({
@@ -101,7 +101,7 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                   className="h-8 w-8"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onShowUpdates(e);
+                    onShowUpdates(task);
                   }}
                 >
                   <MessageCircle className="h-4 w-4" />
