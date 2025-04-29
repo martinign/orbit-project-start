@@ -22,7 +22,9 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
         ? [filters.status] 
         : ["not started", "in progress", "pending", "completed", "stucked"];
       
-      const queries = statuses.map(status => {
+      const queryResults = [];
+      
+      for (const status of statuses) {
         // Start with a base query for each status
         let query = supabase
           .from("project_tasks")
@@ -43,28 +45,23 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
           query = query.gte("created_at", yesterday.toISOString());
         }
         
-        return query;
-      });
-      
-      const results = await Promise.all(queries);
+        const result = await query;
+        queryResults.push(result);
+      }
       
       // Check for errors in any query
-      const errors = results.filter(result => result.error);
+      const errors = queryResults.filter(result => result.error);
       if (errors.length > 0) {
         throw new Error("Failed to fetch task statistics");
       }
 
       // Filter by project type if specified
-      let filteredResults = results;
+      let filteredResults = queryResults.map(result => result.data || []);
+      
       if (filters.projectType && filters.projectType !== "all") {
-        filteredResults = results.map(result => {
-          return {
-            ...result,
-            data: result.data?.filter(task => 
-              task.project?.project_type === filters.projectType
-            ) || []
-          };
-        });
+        filteredResults = filteredResults.map(resultData => 
+          resultData.filter(task => task.project?.project_type === filters.projectType)
+        );
       }
 
       // Direct color mapping based on columnsConfig
@@ -79,9 +76,7 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
       return statuses.map((status, index) => {
         return {
           name: status.charAt(0).toUpperCase() + status.slice(1),
-          value: filters.projectType && filters.projectType !== "all" 
-            ? filteredResults[index].data?.length || 0
-            : results[index].data?.length || 0,
+          value: filteredResults[index]?.length || 0,
           color: colorMap[status] || '#888888'
         };
       });
@@ -112,7 +107,7 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
             
             {/* Two-row layout for status legend */}
             <div className="grid grid-cols-3 grid-rows-2 gap-2">
-              {data?.map((item, index) => (
+              {data?.map((item) => (
                 <div key={item.name} className="flex items-center gap-2">
                   <div 
                     className="h-2 w-2 rounded-full"

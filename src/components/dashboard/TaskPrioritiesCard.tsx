@@ -25,7 +25,9 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
         ? [filters.priority] 
         : ["high", "medium", "low"];
       
-      const queries = priorities.map(priority => {
+      const queryResults = [];
+      
+      for (const priority of priorities) {
         let query = supabase
           .from("project_tasks")
           .select("id, project:project_id(project_type)")
@@ -45,26 +47,21 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
           query = query.gte("created_at", yesterday.toISOString());
         }
         
-        return query;
-      });
+        const result = await query;
+        queryResults.push(result);
+      }
       
-      const results = await Promise.all(queries);
-      
-      if (results.some(result => result.error)) {
+      if (queryResults.some(result => result.error)) {
         throw new Error("Failed to fetch task priority statistics");
       }
 
       // Filter by project type if specified
-      let filteredResults = results;
+      let filteredResults = queryResults.map(result => result.data || []);
+      
       if (filters.projectType && filters.projectType !== "all") {
-        filteredResults = results.map(result => {
-          return {
-            ...result,
-            data: result.data?.filter(task => 
-              task.project?.project_type === filters.projectType
-            ) || []
-          };
-        });
+        filteredResults = filteredResults.map(resultData => 
+          resultData.filter(task => task.project?.project_type === filters.projectType)
+        );
       }
 
       // Map priorities to their display configuration
@@ -88,9 +85,7 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
       
       return priorities.map((priority, index) => ({
         name: priorityConfig[priority as keyof typeof priorityConfig].name,
-        value: filters.projectType && filters.projectType !== "all" 
-          ? filteredResults[index].data?.length || 0
-          : results[index].data?.length || 0,
+        value: filteredResults[index]?.length || 0,
         color: priorityConfig[priority as keyof typeof priorityConfig].color,
         icon: priorityConfig[priority as keyof typeof priorityConfig].icon
       }));
@@ -121,7 +116,7 @@ export function TaskPrioritiesCard({ filters = {} }: TaskPrioritiesCardProps) {
               </div>
             ) : (
               <>
-                {priorityStats?.map((stat, index) => (
+                {priorityStats?.map((stat) => (
                   <div key={stat.name} className="space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">

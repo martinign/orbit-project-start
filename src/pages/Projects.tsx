@@ -176,7 +176,6 @@ const Projects = () => {
                 Manage your clinical trial projects
               </CardDescription>
             </CardHeader>
-            {/* Render table or cards content */}
             <CardContent>
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
                 filteredProjects && filteredProjects.length > 0 ? 
@@ -190,6 +189,7 @@ const Projects = () => {
                           <TableHead>Protocol Number</TableHead>
                           <TableHead>Title</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Role</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -206,6 +206,7 @@ const Projects = () => {
                             <TableCell>{project.protocol_number || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.protocol_title || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
+                            <TableCell>{project.role || 'owner'}</TableCell>
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}
@@ -250,12 +251,10 @@ const Projects = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Same rendering logic as "all" tab */}
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
                 filteredProjects && filteredProjects.length > 0 ? 
                   viewMode === "table" ? 
                     <Table>
-                      {/* Table contents - same as above */}
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project ID</TableHead>
@@ -263,6 +262,7 @@ const Projects = () => {
                           <TableHead>Protocol Number</TableHead>
                           <TableHead>Title</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Role</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -274,6 +274,7 @@ const Projects = () => {
                             <TableCell>{project.protocol_number || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.protocol_title || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
+                            <TableCell>{project.role || 'owner'}</TableCell>
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}
@@ -318,16 +319,15 @@ const Projects = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Same rendering logic as "all" tab */}
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
                 filteredProjects && filteredProjects.length > 0 ? 
                   viewMode === "table" ? 
                     <Table>
-                      {/* Table contents - same as above */}
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project ID</TableHead>
                           <TableHead>Description</TableHead>
+                          <TableHead>Role</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -336,6 +336,7 @@ const Projects = () => {
                         {filteredProjects.map(project => <TableRow key={project.id} className="cursor-pointer" onClick={() => handleProjectClick(project)}>
                             <TableCell>{project.project_number}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
+                            <TableCell>{project.role || 'owner'}</TableCell>
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}

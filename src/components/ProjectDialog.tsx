@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleLeft, ToggleRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +30,7 @@ interface ProjectDialogProps {
     description?: string | null;
     status: string;
     project_type?: string;
+    role?: string;
   };
 }
 
@@ -39,7 +41,8 @@ const formSchema = z.object({
   Sponsor: z.string().optional(),
   description: z.string().optional(),
   status: z.string().min(1, "Status is required"),
-  project_type: z.string().default("billable")
+  project_type: z.string().default("billable"),
+  role: z.string().default("owner")
 });
 
 const ProjectDialog = ({
@@ -68,7 +71,8 @@ const ProjectDialog = ({
       Sponsor: "",
       description: "",
       status: "active",
-      project_type: "billable"
+      project_type: "billable",
+      role: "owner"
     }
   });
 
@@ -81,7 +85,8 @@ const ProjectDialog = ({
         Sponsor: project.Sponsor || "",
         description: project.description || "",
         status: project.status,
-        project_type: project.project_type || "billable"
+        project_type: project.project_type || "billable",
+        role: project.role || "owner"
       });
       setMinimalMode(project.project_type === "non-billable");
     } else if (!project && open) {
@@ -92,7 +97,8 @@ const ProjectDialog = ({
         Sponsor: "",
         description: "",
         status: "active",
-        project_type: "billable"
+        project_type: "billable",
+        role: "owner"
       });
       setMinimalMode(false);
     }
@@ -124,6 +130,7 @@ const ProjectDialog = ({
           description: values.description,
           status: values.status,
           project_type: values.project_type,
+          role: values.role,
           updated_at: new Date().toISOString()
         }).eq("id", project.id);
         
@@ -151,6 +158,7 @@ const ProjectDialog = ({
           description: values.description,
           status: values.status,
           project_type: values.project_type,
+          role: values.role,
           user_id: user.id
         };
 
@@ -216,7 +224,6 @@ const ProjectDialog = ({
                       <ToggleLeft className="h-4 w-4" />
                     </span>}
                 </Switch>
-
               </div>}
           </DialogTitle>
         </DialogHeader>
@@ -278,31 +285,53 @@ const ProjectDialog = ({
                   </FormControl>
                   <FormMessage />
                 </FormItem>} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="role" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Role</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="contributor">Contributor</SelectItem>
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
             
-            <FormField control={form.control} name="status" render={({
-            field
-          }) => <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <ToggleGroup type="single" value={field.value} onValueChange={value => {
-                if (value) field.onChange(value);
-              }} className="justify-start w-full flex">
-                      <ToggleGroupItem value="active" className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}>
-                        Active
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="pending" className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}>
-                        Pending
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="completed" className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}>
-                        Completed
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="cancelled" className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}>
-                        Cancelled
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>} />
+              <FormField control={form.control} name="status" render={({
+              field
+            }) => <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <ToggleGroup type="single" value={field.value} onValueChange={value => {
+                  if (value) field.onChange(value);
+                }} className="justify-start w-full flex">
+                        <ToggleGroupItem value="active" className={`flex-1 ${field.value === 'active' ? 'bg-green-100 text-green-800' : ''}`}>
+                          Active
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="pending" className={`flex-1 ${field.value === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}`}>
+                          Pending
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="completed" className={`flex-1 ${field.value === 'completed' ? 'bg-blue-100 text-blue-800' : ''}`}>
+                          Completed
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="cancelled" className={`flex-1 ${field.value === 'cancelled' ? 'bg-gray-100 text-gray-800' : ''}`}>
+                          Cancelled
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>} />
+            </div>
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>

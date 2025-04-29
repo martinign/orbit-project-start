@@ -508,6 +508,7 @@ export type Database = {
           project_type: string
           protocol_number: string | null
           protocol_title: string | null
+          role: string
           Sponsor: string | null
           status: string
           updated_at: string
@@ -521,6 +522,7 @@ export type Database = {
           project_type?: string
           protocol_number?: string | null
           protocol_title?: string | null
+          role?: string
           Sponsor?: string | null
           status?: string
           updated_at?: string
@@ -534,6 +536,7 @@ export type Database = {
           project_type?: string
           protocol_number?: string | null
           protocol_title?: string | null
+          role?: string
           Sponsor?: string | null
           status?: string
           updated_at?: string
