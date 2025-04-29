@@ -43,7 +43,7 @@ export const fetchProjects = async () => {
   try {
     const { data, error } = await supabase
       .from('projects')
-      .select('id, project_number, protocol_title')
+      .select('id, project_number, protocol_title, project_type, Sponsor')
       .order('project_number', { ascending: true });
 
     if (error) throw error;
@@ -59,7 +59,7 @@ export const fetchProjectAssociations = async () => {
   try {
     const { data, error } = await supabase
       .from('project_workday_codes')
-      .select('workday_code_id, project_id, projects:project_id(id, project_number)');
+      .select('workday_code_id, project_id, projects:project_id(id, project_number, project_type, Sponsor)');
 
     if (error) throw error;
 

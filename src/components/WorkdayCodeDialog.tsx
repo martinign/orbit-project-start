@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -86,7 +85,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
     try {
       const { data, error } = await fetchProjects();
       if (error) throw error;
-      setProjects(data);
+      setProjects(data as Project[]);
     } catch (error) {
       console.error("Error loading projects:", error);
       toast({
