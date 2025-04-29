@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SurveyFormValues } from '@/components/SurveyForm';
-import { SurveyResponseData } from '@/components/SurveyResultsCharts';
+import { SurveyResponseData } from '@/components/survey/SurveyTypes';
 
 export function useSurvey() {
   const { user } = useAuth();
