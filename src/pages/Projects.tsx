@@ -14,18 +14,26 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 const Projects = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { id } = useParams<{ id: string; }>();
+  const {
+    user
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Extract filterStatus from location state if available
-  const locationState = location.state as { filterStatus?: string } | null;
+  const locationState = location.state as {
+    filterStatus?: string;
+  } | null;
   const initialStatusFilter = locationState?.filterStatus || "";
-  
   const [searchQuery, setSearchQuery] = useState("");
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -34,28 +42,34 @@ const Projects = () => {
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"all" | "billable" | "non-billable">("all");
   const [statusFilter, setStatusFilter] = useState<string>(initialStatusFilter);
-  
+
   // Clear location state after reading the filterStatus
   useEffect(() => {
     if (locationState?.filterStatus) {
       // Replace the current history entry to clear the state
-      navigate(location.pathname, { replace: true });
+      navigate(location.pathname, {
+        replace: true
+      });
     }
   }, [locationState, navigate, location.pathname]);
-  
-  const { data: projects, isLoading, refetch } = useQuery({
+  const {
+    data: projects,
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
+      const {
+        data,
+        error
+      } = await supabase.from("projects").select("*").order("created_at", {
+        ascending: false
+      });
       if (error) throw error;
       return data;
     }
   });
-  
+
   // Filter projects based on search query, tab selection, and status filter
   useEffect(() => {
     if (projects && projects.length > 0) {
@@ -74,21 +88,14 @@ const Projects = () => {
       // Filter by search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(project => 
-          project.project_number.toLowerCase().includes(query) || 
-          (project.protocol_number && project.protocol_number.toLowerCase().includes(query)) || 
-          (project.protocol_title && project.protocol_title.toLowerCase().includes(query)) || 
-          (project.Sponsor && project.Sponsor.toLowerCase().includes(query)) || 
-          project.status.toLowerCase().includes(query)
-        );
+        filtered = filtered.filter(project => project.project_number.toLowerCase().includes(query) || project.protocol_number && project.protocol_number.toLowerCase().includes(query) || project.protocol_title && project.protocol_title.toLowerCase().includes(query) || project.Sponsor && project.Sponsor.toLowerCase().includes(query) || project.status.toLowerCase().includes(query));
       }
-      
       setFilteredProjects(filtered);
     } else {
       setFilteredProjects([]);
     }
   }, [searchQuery, projects, activeTab, statusFilter]);
-  
+
   // Reset status filter when changing tabs
   useEffect(() => {
     setStatusFilter("");
@@ -97,34 +104,21 @@ const Projects = () => {
   // Display visual indicator of active status filter
   const renderStatusFilterIndicator = () => {
     if (!statusFilter) return null;
-    
-    return (
-      <div className="flex items-center gap-2 mb-2">
+    return <div className="flex items-center gap-2 mb-2">
         <span className="text-sm">Filtered by status:</span>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          statusFilter === 'active' ? 'bg-green-100 text-green-800' : 
-          statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-          statusFilter === 'completed' ? 'bg-blue-100 text-blue-800' : 
-          statusFilter === 'cancelled' ? 'bg-red-100 text-red-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusFilter === 'active' ? 'bg-green-100 text-green-800' : statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-800' : statusFilter === 'completed' ? 'bg-blue-100 text-blue-800' : statusFilter === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
           {statusFilter}
         </span>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setStatusFilter("")} 
-          className="h-6 px-2 text-xs"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setStatusFilter("")} className="h-6 px-2 text-xs">
           Clear
         </Button>
-      </div>
-    );
+      </div>;
   };
-  
   const handleDeleteProject = async (projectId: string) => {
     try {
-      const { error } = await supabase.from("projects").delete().eq("id", projectId);
+      const {
+        error
+      } = await supabase.from("projects").delete().eq("id", projectId);
       if (error) {
         toast({
           title: "Error",
@@ -148,28 +142,23 @@ const Projects = () => {
       });
     }
   };
-
   const openEditDialog = (project: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsProjectDialogOpen(true);
   };
-
   const openDeleteDialog = (project: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
   };
-
   const closeProjectDialog = () => {
     setSelectedProject(null);
     setIsProjectDialogOpen(false);
   };
-
   const handleProjectClick = (project: any) => {
     navigate(`/projects/${project.id}`);
   };
-
   if (id) {
     return <ProjectDetailsView />;
   }
@@ -179,9 +168,7 @@ const Projects = () => {
   console.log("Location state:", locationState);
   console.log("Projects count:", projects?.length);
   console.log("Filtered projects count:", filteredProjects.length);
-
-  return (
-    <div className="w-full">
+  return <div className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Projects</h1>
         <div className="flex flex-wrap gap-3">
@@ -250,13 +237,7 @@ const Projects = () => {
                             <TableCell className="max-w-xs truncate">{project.protocol_title || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
                             <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                project.status === 'active' ? 'bg-green-100 text-green-800' : 
-                                project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
-                                project.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : project.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}
                               </span>
                             </TableCell>
@@ -365,7 +346,7 @@ const Projects = () => {
                         <TableRow>
                           <TableHead>Project ID</TableHead>
                           <TableHead>Description</TableHead>
-                          <TableHead>Role</TableHead>
+                          
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -374,7 +355,7 @@ const Projects = () => {
                         {filteredProjects.map(project => <TableRow key={project.id} className="cursor-pointer" onClick={() => handleProjectClick(project)}>
                             <TableCell>{project.project_number}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
-                            <TableCell>{project.role || 'owner'}</TableCell>
+                            
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}
@@ -431,8 +412,6 @@ const Projects = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>;
 };
-
 export default Projects;
