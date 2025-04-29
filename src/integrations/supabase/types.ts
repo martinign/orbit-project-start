@@ -457,6 +457,48 @@ export type Database = {
           },
         ]
       }
+      project_workday_codes: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          updated_at: string
+          user_id: string
+          workday_code_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          updated_at?: string
+          user_id: string
+          workday_code_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+          user_id?: string
+          workday_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_workday_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_workday_codes_workday_code_id_fkey"
+            columns: ["workday_code_id"]
+            isOneToOne: false
+            referencedRelation: "workday_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string

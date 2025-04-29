@@ -9,7 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Edit, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { RefreshCw, Edit, Trash2, Plus, X } from 'lucide-react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -17,7 +19,8 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 
 const codeSchema = z.object({
   task: z.string().min(1, { message: "Task is required" }),
-  activity: z.string().min(1, { message: "Activity is required" })
+  activity: z.string().min(1, { message: "Activity is required" }),
+  projectId: z.string().optional()
 });
 
 type CodeFormData = z.infer<typeof codeSchema>;
@@ -29,6 +32,13 @@ interface WorkdayCode {
   user_id: string;
   created_at: string;
   updated_at: string;
+  projects?: { id: string; project_number: string }[];
+}
+
+interface Project {
+  id: string;
+  project_number: string;
+  protocol_title: string | null;
 }
 
 interface WorkdayCodeDialogProps {
@@ -47,21 +57,27 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const [workdayCodes, setWorkdayCodes] = useState<WorkdayCode[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [codeToDelete, setCodeToDelete] = useState<WorkdayCode | null>(null);
+  const [projectAssociations, setProjectAssociations] = useState<{[key: string]: Project[]}>({});
+  const [selectedCodeId, setSelectedCodeId] = useState<string | null>(null);
+  const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
   
   const form = useForm<CodeFormData>({
     resolver: zodResolver(codeSchema),
     defaultValues: code ? {
       task: code.task,
-      activity: code.activity
-    } : { task: '', activity: '' }
+      activity: code.activity,
+      projectId: ""
+    } : { task: '', activity: '', projectId: "" }
   });
 
   const isEditing = !!code;
 
-  // Subscribe to real-time changes in workday_codes table
+  // Subscribe to real-time changes in workday_codes and project_workday_codes tables
   useRealtimeSubscription({
     table: 'workday_codes' as any,
     event: '*',
@@ -69,6 +85,63 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
       fetchWorkdayCodes();
     }
   });
+  
+  useRealtimeSubscription({
+    table: 'project_workday_codes' as any,
+    event: '*',
+    onRecordChange: () => {
+      fetchWorkdayCodes();
+    }
+  });
+
+  // Fetch projects
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, project_number, protocol_title')
+        .order('project_number', { ascending: true });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects",
+        variant: "destructive",
+      });
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
+
+  // Fetch project associations for workday codes
+  const fetchProjectAssociations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('project_workday_codes')
+        .select('workday_code_id, project_id, projects:project_id(id, project_number)');
+
+      if (error) throw error;
+
+      // Group projects by workday code ID
+      const associations: {[key: string]: Project[]} = {};
+      data?.forEach((item: any) => {
+        if (!associations[item.workday_code_id]) {
+          associations[item.workday_code_id] = [];
+        }
+        if (item.projects) {
+          associations[item.workday_code_id].push(item.projects);
+        }
+      });
+
+      setProjectAssociations(associations);
+    } catch (error) {
+      console.error("Error fetching project associations:", error);
+    }
+  };
 
   // Fetch all workday codes
   const fetchWorkdayCodes = async () => {
@@ -81,6 +154,9 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
       if (error) throw error;
       setWorkdayCodes(data || []);
+      
+      // Fetch project associations
+      await fetchProjectAssociations();
     } catch (error) {
       console.error("Error fetching workday codes:", error);
       toast({
@@ -97,6 +173,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
   useEffect(() => {
     if (open) {
       fetchWorkdayCodes();
+      fetchProjects();
     }
   }, [open]);
 
@@ -118,14 +195,20 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
           title: "Success",
           description: "Workday code updated successfully",
         });
+        
+        // If a project is selected, associate it with the workday code
+        if (data.projectId) {
+          await associateProjectWithCode(code.id, data.projectId);
+        }
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('workday_codes')
           .insert({
             task: data.task,
             activity: data.activity,
             user_id: user?.id,
-          });
+          })
+          .select();
 
         if (error) throw error;
 
@@ -133,13 +216,22 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
           title: "Success",
           description: "Workday code created successfully",
         });
+        
+        // If a project is selected, associate it with the new workday code
+        if (insertedData && insertedData[0] && data.projectId) {
+          await associateProjectWithCode(insertedData[0].id, data.projectId);
+        }
       }
+      
       // Reset form but don't close dialog
-      form.reset({ task: '', activity: '' });
-      fetchWorkdayCodes();
+      form.reset({ task: '', activity: '', projectId: "" });
+      
       if (isEditing) {
         onSuccess(); // Only close on editing, not on create
       }
+      
+      // Refresh the data
+      fetchWorkdayCodes();
     } catch (error: any) {
       console.error("Error:", error);
       toast({
@@ -152,15 +244,87 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
     }
   };
 
+  const associateProjectWithCode = async (codeId: string, projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_workday_codes')
+        .insert({
+          project_id: projectId,
+          workday_code_id: codeId,
+          user_id: user?.id,
+        });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Info",
+            description: "This project is already associated with this code",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "Success",
+          description: "Project associated with workday code",
+        });
+      }
+    } catch (error) {
+      console.error("Error associating project with code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to associate project with workday code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeProjectAssociation = async (codeId: string, projectId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_workday_codes')
+        .delete()
+        .match({
+          workday_code_id: codeId,
+          project_id: projectId
+        });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Project association removed",
+      });
+      
+      // Update the local state
+      const newAssociations = { ...projectAssociations };
+      if (newAssociations[codeId]) {
+        newAssociations[codeId] = newAssociations[codeId].filter(
+          project => project.id !== projectId
+        );
+        setProjectAssociations(newAssociations);
+      }
+    } catch (error) {
+      console.error("Error removing project association:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove project association",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRefresh = () => {
     fetchWorkdayCodes();
+    fetchProjects();
   };
   
   const handleEdit = (codeToEdit: WorkdayCode) => {
     // Set form values and trigger edit mode
     form.reset({
       task: codeToEdit.task,
-      activity: codeToEdit.activity
+      activity: codeToEdit.activity,
+      projectId: ""
     });
     onSuccess(); // Close this dialog
     // Re-open with the code to edit
@@ -179,6 +343,15 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
     if (!codeToDelete) return;
     
     try {
+      // First delete all project associations
+      const { error: associationError } = await supabase
+        .from('project_workday_codes')
+        .delete()
+        .eq('workday_code_id', codeToDelete.id);
+        
+      if (associationError) throw associationError;
+      
+      // Then delete the code itself
       const { error } = await supabase
         .from('workday_codes')
         .delete()
@@ -210,6 +383,20 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
     return user && user.id === code.user_id;
   };
 
+  const openAddProjectDialog = (codeId: string) => {
+    setSelectedCodeId(codeId);
+    setAddProjectDialogOpen(true);
+  };
+
+  const handleAddProject = async () => {
+    if (!selectedCodeId || !form.getValues().projectId) return;
+    
+    await associateProjectWithCode(selectedCodeId, form.getValues().projectId);
+    form.setValue('projectId', '');
+    setAddProjectDialogOpen(false);
+    fetchWorkdayCodes();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[900px]">
@@ -220,7 +407,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
         <div className="grid gap-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="task"
@@ -244,6 +431,35 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
                       <FormControl>
                         <Input placeholder="Enter activity name" {...field} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="projectId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Associated Project (Optional)</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a project" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {projects.map((project) => (
+                            <SelectItem key={project.id} value={project.id}>
+                              {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -274,13 +490,14 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
             ) : workdayCodes.length === 0 ? (
               <div className="text-center py-4 text-muted-foreground">No codes found</div>
             ) : (
-              <div className="max-h-[300px] overflow-auto">
+              <div className="max-h-[400px] overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Task</TableHead>
                       <TableHead>Activity</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
+                      <TableHead>Associated Projects</TableHead>
+                      <TableHead className="w-[150px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -288,6 +505,31 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
                       <TableRow key={code.id}>
                         <TableCell className="font-medium">{code.task}</TableCell>
                         <TableCell>{code.activity}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {projectAssociations[code.id]?.map(project => (
+                              <Badge key={project.id} variant="secondary" className="flex items-center gap-1">
+                                {project.project_number}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-4 w-4 p-0 ml-1" 
+                                  onClick={() => removeProjectAssociation(code.id, project.id)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </Badge>
+                            ))}
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-6 px-2"
+                              onClick={() => openAddProjectDialog(code.id)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" /> Add
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell>
                           {isUserOwner(code) && (
                             <div className="flex space-x-1">
@@ -310,17 +552,65 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
         </div>
       </DialogContent>
       
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this workday code. This action cannot be undone.
+              This will permanently delete this workday code and all project associations. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Add Project Dialog */}
+      <AlertDialog open={addProjectDialogOpen} onOpenChange={setAddProjectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Associate with Project</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select a project to associate with this workday code.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <FormField
+              control={form.control}
+              name="projectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a project" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => form.setValue('projectId', '')}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAddProject} disabled={!form.getValues().projectId}>
+              Associate
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
