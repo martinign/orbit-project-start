@@ -9,6 +9,7 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TeamMember } from "@/hooks/useTeamMembers";
 
 interface TeamMembersCardViewProps {
@@ -36,6 +37,19 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
     onDelete(member);
   };
 
+  const getRoleBadgeVariant = (role?: string) => {
+    if (!role) return "secondary";
+    
+    switch (role.toLowerCase()) {
+      case 'owner': return "success";
+      case 'admin': return "warning";
+      case 'edit': return "secondary";
+      case 'read': 
+      case 'read_only': return "outline";
+      default: return "secondary";
+    }
+  };
+
   const renderMemberDetail = (
     icon: React.ReactNode,
     content: string | undefined,
@@ -59,13 +73,14 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
           className="overflow-hidden h-[280px] flex flex-col hover:shadow-md transition-shadow"
         >
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg truncate">{`${member.full_name} ${member.last_name}`}</CardTitle>
-            {member.role && (
-              <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <User className="h-3 w-3" />
-                {member.role}
-              </p>
-            )}
+            <CardTitle className="text-lg truncate">{`${member.full_name} ${member.last_name || ""}`}</CardTitle>
+            <div className="flex items-center justify-between">
+              {member.role && (
+                <Badge variant={getRoleBadgeVariant(member.role)}>
+                  {member.role}
+                </Badge>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="pb-2 flex-grow">
             <div className="space-y-2 text-sm">
