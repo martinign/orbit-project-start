@@ -107,13 +107,16 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold truncate">{isBillable ? (project.Sponsor || project.project_number) : project.project_number}</h3>
+                  <h3 className="text-xl font-bold truncate">{project.project_number}</h3>
                 </div>
                 {isBillable && (
                   <>
                     <p className="text-sm text-gray-600 truncate">Project #: {project.project_number}</p>
                     {project.protocol_number && (
                       <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+                    )}
+                    {project.Sponsor && (
+                      <p className="text-sm text-gray-600 truncate">Sponsor: {project.Sponsor}</p>
                     )}
                   </>
                 )}
@@ -143,34 +146,34 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4">
           <div className="space-y-2">
-            {!isBillable && (
+            <h4 className="font-semibold">Project ID:</h4>
+            <p className="text-sm">{project.project_number}</p>
+            
+            {project.Sponsor && (
               <>
-                <h4 className="font-semibold">Project #:</h4>
-                <p className="text-sm">{project.project_number}</p>
+                <h4 className="font-semibold">Sponsor:</h4>
+                <p className="text-sm">{project.Sponsor}</p>
               </>
             )}
+            
+            {project.protocol_number && (
+              <>
+                <h4 className="font-semibold">Protocol Number:</h4>
+                <p className="text-sm">{project.protocol_number}</p>
+              </>
+            )}
+            
             {project.protocol_title && (
               <>
                 <h4 className="font-semibold">Protocol Title:</h4>
                 <p className="text-sm">{project.protocol_title}</p>
               </>
             )}
+            
             {project.description && (
               <>
                 <h4 className="font-semibold">Description:</h4>
                 <p className="text-sm">{project.description}</p>
-              </>
-            )}
-            {(project.Sponsor && !isBillable) && (
-              <>
-                <h4 className="font-semibold">Sponsor:</h4>
-                <p className="text-sm">{project.Sponsor}</p>
-              </>
-            )}
-            {(project.protocol_number && !isBillable) && (
-              <>
-                <h4 className="font-semibold">Protocol Number:</h4>
-                <p className="text-sm">{project.protocol_number}</p>
               </>
             )}
           </div>
