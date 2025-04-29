@@ -76,7 +76,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
   }));
 
   return (
-    <div className="w-full h-[380px] flex flex-col items-center justify-center">
+    <div className="w-full h-[350px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
