@@ -1,5 +1,5 @@
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 
@@ -14,14 +14,14 @@ interface TaskStatusPieChartProps {
 
 // Custom label renderer for inside the pie slices
 const renderCustomizedLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name, fill } = props;
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name } = props;
   
-  // Skip rendering labels for very small slices (less than 5% of total)
-  if (percent < 0.05) return null;
+  // Skip rendering labels for very small slices (less than 2% of total)
+  if (percent < 0.02) return null;
   
   const RADIAN = Math.PI / 180;
   // Position label in the middle of the slice
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const radius = outerRadius * 0.6;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
@@ -34,66 +34,19 @@ const renderCustomizedLabel = (props: any) => {
       textAnchor="middle"
       dominantBaseline="central"
       fontSize={12}
-      aria-label={`${value} ${name} tasks`}
+      aria-label={`${(percent * 100).toFixed(0)}% ${name} tasks`}
       role="img"
     >
-      {value}
+      {(percent * 100).toFixed(0)}%
     </text>
-  );
-};
-
-// Custom label renderer for the pie slices with arrows pointing outward
-const renderExternalLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name, index } = props;
-  
-  // Calculate position for the label
-  const RADIAN = Math.PI / 180;
-  const radius = outerRadius * 1.4; // Position labels further outside
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  
-  // Calculate arrow points
-  const arrowStartX = cx + (outerRadius * 0.95) * Math.cos(-midAngle * RADIAN);
-  const arrowStartY = cy + (outerRadius * 0.95) * Math.sin(-midAngle * RADIAN);
-  
-  // Only show labels for slices with reasonable size (at least 3% of total)
-  if (percent < 0.03) return null;
-  
-  return (
-    <g>
-      {/* Arrow line */}
-      <line 
-        x1={arrowStartX} 
-        y1={arrowStartY} 
-        x2={x} 
-        y2={y} 
-        stroke="#666" 
-        strokeWidth={1}
-      />
-      
-      {/* Label text with value */}
-      <text 
-        x={x} 
-        y={y} 
-        fill="#333" 
-        fontSize={12}
-        fontWeight="500"
-        textAnchor={x > cx ? "start" : "end"} 
-        dominantBaseline="central"
-        aria-label={`${name}: ${value} tasks (${(percent * 100).toFixed(1)}%)`}
-        role="img"
-      >
-        {name}: {value}
-      </text>
-    </g>
   );
 };
 
 export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
+  const total = data.reduce((sum, item) => sum + item.value, this);
+  
   // Sort data by value in descending order for better visualization
   const sortedData = [...data].sort((a, b) => b.value - a.value);
   
@@ -105,20 +58,6 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
       const status = data.name.toLowerCase();
       navigate('/projects', { state: { filterStatus: status } });
     }
-  };
-
-  // Center label to show total tasks count
-  const renderCenterLabel = () => {
-    return (
-      <>
-        <tspan x="0" dy="0" fontSize={isMobile ? 16 : 20} fontWeight="600">
-          {total}
-        </tspan>
-        <tspan x="0" dy="1.2em" fontSize={isMobile ? 12 : 14} fontWeight="normal">
-          Tasks
-        </tspan>
-      </>
-    );
   };
 
   // Enhanced colorblind-friendly palette
@@ -137,7 +76,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
   }));
 
   return (
-    <div className="w-full h-[240px] flex flex-col items-center justify-center">
+    <div className="w-full h-[320px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -145,7 +84,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             cx="50%"
             cy="50%"
             labelLine={false}
-            outerRadius={isMobile ? 60 : 70} 
+            outerRadius={isMobile ? 100 : 120}
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
@@ -161,29 +100,10 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
                 key={`cell-${index}`} 
                 fill={entry.color} 
                 stroke="white"
-                strokeWidth={1}
+                strokeWidth={2}
               />
             ))}
-            <Label
-              position="center"
-              content={() => (
-                <g>
-                  {renderCenterLabel()}
-                </g>
-              )}
-            />
           </Pie>
-          <Pie
-            data={enhancedData}
-            cx="50%"
-            cy="50%"
-            outerRadius={isMobile ? 60 : 70}
-            labelLine={false}
-            label={renderExternalLabel} // External labels with arrows
-            dataKey="value"
-            isAnimationActive={false}
-            fill="none" // Make this invisible, we only use it for the external labels
-          />
           <Tooltip
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
