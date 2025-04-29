@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 type AuthContextType = {
@@ -21,7 +21,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const isInitialAuthCheckRef = useRef(true);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -30,10 +32,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        if (event === 'SIGNED_IN') {
-          navigate('/dashboard');
-        } else if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+        // Only navigate if it's not the initial auth check
+        if (!isInitialAuthCheckRef.current) {
+          if (event === 'SIGNED_IN') {
+            navigate('/dashboard');
+          } else if (event === 'SIGNED_OUT') {
+            navigate('/auth');
+          }
+        } else {
+          // This is the initial auth check, don't redirect
+          console.log('Initial auth check, skipping navigation');
+          isInitialAuthCheckRef.current = false;
         }
       }
     );
