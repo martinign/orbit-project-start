@@ -107,17 +107,18 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold truncate">{project.Sponsor || project.project_number}</h3>
-                  <Badge variant={isBillable ? "default" : "secondary"} className={isBillable ? "bg-blue-500" : "bg-gray-500"}>
-                    {isBillable ? "Billable" : "Non-billable"}
-                  </Badge>
+                  <h3 className="text-xl font-bold truncate">{isBillable ? (project.Sponsor || project.project_number) : project.project_number}</h3>
                 </div>
-                <p className="text-sm text-gray-600 truncate">Project #: {project.project_number}</p>
-                {isBillable && project.protocol_number && (
-                  <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+                {isBillable && (
+                  <>
+                    <p className="text-sm text-gray-600 truncate">Project #: {project.project_number}</p>
+                    {project.protocol_number && (
+                      <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+                    )}
+                  </>
                 )}
               </div>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   project.status === 'active' 
                     ? 'bg-green-100 text-green-800' 
@@ -129,12 +130,25 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
                 }`}>
                   {project.status}
                 </span>
+                
+                <Badge 
+                  variant={isBillable ? "default" : "secondary"} 
+                  className={isBillable ? "bg-blue-500" : "bg-gray-500"}
+                >
+                  {isBillable ? "Billable" : "Non-billable"}
+                </Badge>
               </div>
             </CardContent>
           </Card>
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4">
           <div className="space-y-2">
+            {!isBillable && (
+              <>
+                <h4 className="font-semibold">Project #:</h4>
+                <p className="text-sm">{project.project_number}</p>
+              </>
+            )}
             {project.protocol_title && (
               <>
                 <h4 className="font-semibold">Protocol Title:</h4>
@@ -145,6 +159,18 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
               <>
                 <h4 className="font-semibold">Description:</h4>
                 <p className="text-sm">{project.description}</p>
+              </>
+            )}
+            {(project.Sponsor && !isBillable) && (
+              <>
+                <h4 className="font-semibold">Sponsor:</h4>
+                <p className="text-sm">{project.Sponsor}</p>
+              </>
+            )}
+            {(project.protocol_number && !isBillable) && (
+              <>
+                <h4 className="font-semibold">Protocol Number:</h4>
+                <p className="text-sm">{project.protocol_number}</p>
               </>
             )}
           </div>
