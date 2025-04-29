@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types/contact";
-import { format, isWithinLastDay } from "date-fns";
+import { format, isAfter, subDays } from "date-fns";
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -22,9 +22,11 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  // Check if the contact was created within the last day
   const isNew = (createdAt: string): boolean => {
     try {
-      return isWithinLastDay(new Date(createdAt));
+      const yesterday = subDays(new Date(), 1);
+      return isAfter(new Date(createdAt), yesterday);
     } catch (e) {
       return false;
     }

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Edit, Trash2, Mail, Phone, Building, MapPin, User } from "lucide-react";
 import { Contact } from "@/types/contact";
-import { format, isWithinLastDay } from "date-fns";
+import { format, isAfter, subDays } from "date-fns";
 
 interface ContactsCardViewProps {
   contacts: Contact[];
@@ -27,9 +27,11 @@ const ContactsCardView: React.FC<ContactsCardViewProps> = ({
   onEdit,
   onDelete
 }) => {
+  // Check if the contact was created within the last day
   const isNew = (createdAt: string): boolean => {
     try {
-      return isWithinLastDay(new Date(createdAt));
+      const yesterday = subDays(new Date(), 1);
+      return isAfter(new Date(createdAt), yesterday);
     } catch (e) {
       return false;
     }
