@@ -1,6 +1,6 @@
 
 import React from 'react';
-import TaskDialog from '../TaskDialog';
+import TaskDialog from '../task-dialog/TaskDialog';
 import DeleteTaskDialog from '../DeleteTaskDialog';
 import SubtaskDialog from '../SubtaskDialog';
 import TaskUpdateDialog from '../TaskUpdateDialog';

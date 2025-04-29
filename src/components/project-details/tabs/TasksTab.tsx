@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import TaskBoard from '@/components/TaskBoard';
 import { TimelineView } from '@/components/tasks/TimelineView';
-import TaskDialog from '@/components/TaskDialog';
+import TaskDialog from '@/components/task-dialog/TaskDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
