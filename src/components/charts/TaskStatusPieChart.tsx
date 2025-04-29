@@ -12,7 +12,7 @@ interface TaskStatusPieChartProps {
   onSliceClick?: (status: string) => void;
 }
 
-// Custom label renderer for inside the pie slices
+// Custom label renderer for outside the pie slices
 const renderCustomizedLabel = (props: any) => {
   const { cx, cy, midAngle, innerRadius, outerRadius, percent, value, name } = props;
   
@@ -20,8 +20,8 @@ const renderCustomizedLabel = (props: any) => {
   if (percent < 0.02) return null;
   
   const RADIAN = Math.PI / 180;
-  // Position label closer to the outer edge of the slice (80% of radius)
-  const radius = outerRadius * 0.6;
+  // Position label outside the slice (120% of radius)
+  const radius = outerRadius * 1.2;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
@@ -29,9 +29,9 @@ const renderCustomizedLabel = (props: any) => {
     <text 
       x={x} 
       y={y} 
-      fill="#fff" 
+      fill="#000000e6" 
       fontWeight="bold"
-      textAnchor="middle"
+      textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
       fontSize={12}
       aria-label={`${(percent * 100).toFixed(0)}% ${name} tasks`}
@@ -76,21 +76,21 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
   }));
 
   return (
-    <div className="w-full h-[350px] flex flex-col items-center justify-center">
+    <div className="w-full h-[300px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={enhancedData}
             cx="50%"
             cy="50%"
-            labelLine={false}
-            outerRadius={isMobile ? 120 : 150}
+            labelLine={true}
+            outerRadius={isMobile ? 80 : 100}
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
             className="cursor-pointer"
             isAnimationActive={true}
-            label={renderCustomizedLabel} // Labels inside the pie slices
+            label={renderCustomizedLabel} // Labels outside the pie slices
             // For screen readers
             role="graphics-document"
             aria-label="Task status distribution pie chart"
