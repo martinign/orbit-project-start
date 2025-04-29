@@ -139,15 +139,17 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             iconSize={8}
             iconType="circle"
             formatter={(value, entry, index) => {
-              const { color } = entry.payload;
-              const item = entry.payload;
+              // TypeScript fix: Use type assertion to access color property
+              // as we know the payload has the TaskStatusPieChartProps data structure
+              const { payload } = entry as any;
+              const item = payload;
               const percentage = ((item.value / total) * 100).toFixed(1);
               
               return (
                 <HoverCard>
                   <HoverCardTrigger>
                     <span className="text-xs text-muted-foreground cursor-default flex items-center gap-1.5">
-                      <span style={{ color }}>{value}</span>
+                      <span style={{ color: payload.color }}>{value}</span>
                       <span className="opacity-75">({percentage}%)</span>
                     </span>
                   </HoverCardTrigger>
