@@ -37,7 +37,6 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
               <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">First Name</TableHead>
               <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Last Name</TableHead>
               <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Role</TableHead>
-              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Location</TableHead>
               {!projectId && <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Project</TableHead>}
               <TableHead className="h-11 px-4 text-right align-middle font-medium text-muted-foreground">Actions</TableHead>
             </TableRow>
@@ -48,7 +47,6 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
                 <TableCell className="font-medium">{member.full_name}</TableCell>
                 <TableCell className="font-medium">{member.last_name}</TableCell>
                 <TableCell>{member.role || '-'}</TableCell>
-                <TableCell>{member.location || '-'}</TableCell>
                 {!projectId && <TableCell>{member.projects ? `${member.projects.project_number} - ${member.projects.Sponsor}` : '-'}</TableCell>}
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

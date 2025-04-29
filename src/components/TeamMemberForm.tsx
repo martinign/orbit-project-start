@@ -21,7 +21,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
     project_id: teamMember?.project_id || initialProjectId || "",
     full_name: teamMember?.full_name || "",
     role: teamMember?.role || "",
-    location: teamMember?.location || "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +73,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
         project_id: formData.project_id,
         full_name: formData.full_name,
         role: formData.role || null,
-        location: formData.location || null,
         user_id: user.data.user.id,
       };
 
@@ -86,7 +84,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
             project_id: formData.project_id,
             full_name: formData.full_name,
             role: formData.role || null,
-            location: formData.location || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", teamMember.id);
@@ -155,15 +152,6 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
         placeholder="E.g., Project Manager, Developer"
         hint="Enter the team member's role in the project"
         icon={UserCog}
-      />
-      
-      <FormField
-        id="location"
-        name="location"
-        label="Location"
-        value={formData.location}
-        onChange={handleChange}
-        placeholder="E.g., New York"
       />
       
       <FormActions 

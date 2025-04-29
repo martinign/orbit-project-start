@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, Trash2, MapPin, User } from 'lucide-react';
+import { Edit, Trash2, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -69,11 +69,6 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
           </CardHeader>
           <CardContent className="pb-2 flex-grow">
             <div className="space-y-2 text-sm">
-              {renderMemberDetail(
-                <MapPin className="h-4 w-4 text-muted-foreground" />,
-                member.location
-              )}
-              
               {/* Only show project badge if not filtered by project */}
               {!projectId && member.projects && (
                 <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">
