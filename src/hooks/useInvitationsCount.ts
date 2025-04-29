@@ -10,9 +10,10 @@ export const useInvitationsCount = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return 0;
 
+      // Count pending invitations for the current user
       const { count, error } = await supabase
         .from("project_invitations")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("invitee_id", user.user.id)
         .eq("status", "pending");
 
@@ -25,6 +26,7 @@ export const useInvitationsCount = () => {
     },
   });
 
+  // Set up realtime subscription to refresh count when invitations change
   useEffect(() => {
     const channel = supabase
       .channel("invitations_changes")
