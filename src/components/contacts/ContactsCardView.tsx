@@ -8,11 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Edit, Trash2, Mail, Phone, Building, MapPin, User } from "lucide-react";
 import { Contact } from "@/types/contact";
-import { format, isAfter, subDays } from "date-fns";
 
 interface ContactsCardViewProps {
   contacts: Contact[];
@@ -27,37 +25,10 @@ const ContactsCardView: React.FC<ContactsCardViewProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Check if the contact was created within the last day
-  const isNew = (createdAt: string): boolean => {
-    try {
-      const yesterday = subDays(new Date(), 1);
-      return isAfter(new Date(createdAt), yesterday);
-    } catch (e) {
-      return false;
-    }
-  };
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {contacts.map((contact) => (
         <Card key={contact.id} className="overflow-hidden h-[320px] flex flex-col relative">
-          {isNew(contact.created_at) && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge 
-                    variant="success" 
-                    className="absolute top-2 right-2 animate-in fade-in"
-                  >
-                    New
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Added {format(new Date(contact.created_at), 'MMM dd, pp')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
           <CardHeader className="pb-2">
             <CardTitle className="text-lg truncate">
               {`${contact.full_name}${contact.last_name ? ' ' + contact.last_name : ''}`}

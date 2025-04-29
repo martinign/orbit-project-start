@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export type ItemType = 'task' | 'note' | 'event';
+export type ItemType = 'task' | 'note' | 'event' | 'contact';
 
 interface NewItemsCount {
   [key: string]: number;
@@ -17,7 +17,7 @@ export function useNewItems(projectId: string) {
   const { data: counts } = useQuery({
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
-      const types: ItemType[] = ['task', 'note', 'event'];
+      const types: ItemType[] = ['task', 'note', 'event', 'contact'];
       
       const counts = await Promise.all(
         types.map(async (type) => {
@@ -37,6 +37,9 @@ export function useNewItems(projectId: string) {
               break;
             case 'event':
               tableName = 'project_events';
+              break;
+            case 'contact':
+              tableName = 'project_contacts';
               break;
             default:
               tableName = `project_${type}s`;
@@ -70,6 +73,15 @@ export function useNewItems(projectId: string) {
             
             count = result.count || 0;
             error = result.error;
+          } else if (tableName === 'project_contacts') {
+            const result = await supabase
+              .from('project_contacts')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', yesterday.toISOString());
+            
+            count = result.count || 0;
+            error = result.error;
           }
             
           if (error) {
@@ -92,11 +104,11 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
-  // Add real-time subscription for tasks, notes, and events
+  // Add real-time subscription for tasks, notes, events, and contacts
   useEffect(() => {
     if (!projectId) return;
 
-    const tables = ['project_tasks', 'project_notes', 'project_events'];
+    const tables = ['project_tasks', 'project_notes', 'project_events', 'project_contacts'];
     const channels = tables.map(table => {
       const channel = supabase.channel(`${table}_changes_${projectId}`);
       
@@ -122,6 +134,9 @@ export function useNewItems(projectId: string) {
               queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
             } else if (table === 'project_tasks') {
               queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+            } else if (table === 'project_contacts') {
+              queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
             }
           }
         )

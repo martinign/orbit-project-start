@@ -33,6 +33,8 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
       // Invalidate the contacts queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+      // Also invalidate new items count
+      queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
     }
   });
 
@@ -91,6 +93,7 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
               // Invalidate queries to refresh contact list and statistics
               queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
               queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
             }} 
           />
         </DialogContent>

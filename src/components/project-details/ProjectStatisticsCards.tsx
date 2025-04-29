@@ -68,6 +68,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
             } else if (table === 'project_contacts') {
               queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
               queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
             }
           }
         )
@@ -83,7 +84,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
     };
   }, [projectId, queryClient]);
 
-  const renderBadge = (type: 'task' | 'note' | 'event') => {
+  const renderBadge = (type: 'task' | 'note' | 'event' | 'contact') => {
     const count = newItemsCount[type];
     if (!count) return null;
     
@@ -165,9 +166,10 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
         </CardContent>
       </Card>      
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent"
+        className="cursor-pointer transition-colors hover:bg-accent relative"
         onClick={() => onTabChange('contacts')}
       >
+        {renderBadge('contact')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
