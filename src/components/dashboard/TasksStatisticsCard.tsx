@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TaskStatusPieChart } from "../charts/TaskStatusPieChart";
 import { columnsConfig } from "../tasks/columns-config";
+import { useNavigate } from "react-router-dom";
 
 interface TaskFilters {
   projectId?: string;
@@ -15,6 +16,8 @@ interface TaskFilters {
 }
 
 export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters }) {
+  const navigate = useNavigate();
+  
   const { data, isLoading } = useQuery({
     queryKey: ["tasks_statistics", filters],
     queryFn: async () => {
@@ -85,6 +88,12 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
   });
 
   const total = data?.reduce((acc, item) => acc + item.value, 0) || 0;
+  
+  const handleSliceClick = (status: string) => {
+    // Convert status name back to lowercase for filtering
+    const statusFilter = status.toLowerCase();
+    navigate('/projects', { state: { filterStatus: statusFilter } });
+  };
 
   return (
     <Card>
@@ -102,23 +111,11 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
             No tasks data available
           </div>
         ) : (
-          <div className="space-y-4">
-            <TaskStatusPieChart data={data || []} />
-            
-            {/* Two-row layout for status legend */}
-            <div className="grid grid-cols-3 grid-rows-2 gap-2">
-              {data?.map((item) => (
-                <div key={item.name} className="flex items-center gap-2">
-                  <div 
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    {item.name} ({item.value})
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="space-y-2">
+            <TaskStatusPieChart 
+              data={data || []} 
+              onSliceClick={handleSliceClick}
+            />
           </div>
         )}
       </CardContent>
