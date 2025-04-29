@@ -1,6 +1,7 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
-import { PlusCircle, LayoutGrid, LayoutList, Edit, Trash2, Search } from "lucide-react";
+import { PlusCircle, LayoutGrid, LayoutList, Edit, Trash2, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Combobox } from "@/components/ui/combobox";
 
 const Projects = () => {
   const { user } = useAuth();
@@ -94,6 +96,25 @@ const Projects = () => {
     setStatusFilter("");
   }, [activeTab]);
 
+  // Get unique status options from projects
+  const getStatusOptions = () => {
+    if (!projects) return [];
+    
+    // Get unique status values
+    const statusSet = new Set<string>();
+    projects.forEach(project => {
+      if (activeTab === "all" || project.project_type === activeTab) {
+        statusSet.add(project.status);
+      }
+    });
+    
+    // Convert to options array
+    return Array.from(statusSet).map(status => ({
+      value: status,
+      label: status.charAt(0).toUpperCase() + status.slice(1)
+    }));
+  };
+
   // Display visual indicator of active status filter
   const renderStatusFilterIndicator = () => {
     if (!statusFilter) return null;
@@ -170,15 +191,28 @@ const Projects = () => {
     navigate(`/projects/${project.id}`);
   };
 
+  // Render the status filter dropdown
+  const renderStatusFilter = () => {
+    const statusOptions = getStatusOptions();
+    return (
+      <div className="w-44">
+        <Combobox
+          options={[
+            { value: "", label: "All Statuses" },
+            ...statusOptions
+          ]}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          placeholder="Filter by status"
+          className="h-9"
+        />
+      </div>
+    );
+  };
+
   if (id) {
     return <ProjectDetailsView />;
   }
-
-  // Log to help debug the filtering
-  console.log("Status filter:", statusFilter);
-  console.log("Location state:", locationState);
-  console.log("Projects count:", projects?.length);
-  console.log("Filtered projects count:", filteredProjects.length);
 
   return (
     <div className="w-full">
@@ -217,11 +251,14 @@ const Projects = () => {
 
         <TabsContent value="all">
           <Card>
-            <CardHeader>
-              <CardTitle>All Projects</CardTitle>
-              <CardDescription>
-                Manage your clinical trial projects
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>All Projects</CardTitle>
+                <CardDescription>
+                  Manage your clinical trial projects
+                </CardDescription>
+              </div>
+              {renderStatusFilter()}
             </CardHeader>
             <CardContent>
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
@@ -290,11 +327,14 @@ const Projects = () => {
 
         <TabsContent value="billable">
           <Card>
-            <CardHeader>
-              <CardTitle>Billable Projects</CardTitle>
-              <CardDescription>
-                Manage your billable clinical trial projects
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Billable Projects</CardTitle>
+                <CardDescription>
+                  Manage your billable clinical trial projects
+                </CardDescription>
+              </div>
+              {renderStatusFilter()}
             </CardHeader>
             <CardContent>
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
@@ -344,7 +384,7 @@ const Projects = () => {
                         </div>)}
                     </div> : <div className="text-center p-4">
                   <p className="text-muted-foreground">
-                    No billable projects found
+                    {statusFilter ? `No ${statusFilter} billable projects found` : "No billable projects found"}
                   </p>
                 </div>}
             </CardContent>
@@ -353,11 +393,14 @@ const Projects = () => {
 
         <TabsContent value="non-billable">
           <Card>
-            <CardHeader>
-              <CardTitle>Non-billable Projects</CardTitle>
-              <CardDescription>
-                Manage your non-billable projects
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Non-billable Projects</CardTitle>
+                <CardDescription>
+                  Manage your non-billable projects
+                </CardDescription>
+              </div>
+              {renderStatusFilter()}
             </CardHeader>
             <CardContent>
               {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
@@ -401,7 +444,7 @@ const Projects = () => {
                         </div>)}
                     </div> : <div className="text-center p-4">
                   <p className="text-muted-foreground">
-                    No non-billable projects found
+                    {statusFilter ? `No ${statusFilter} non-billable projects found` : "No non-billable projects found"}
                   </p>
                 </div>}
             </CardContent>
