@@ -55,7 +55,8 @@ export const useProjectTeamMembers = (projectId?: string) => {
 };
 
 export const useTeamMemberName = (memberId?: string | null) => {
-  const { data: teamMembers, isLoading } = useTeamMembers();
+  // Fix: Using the useProjectTeamMembers hook instead of useTeamMembers
+  const { data: teamMembers, isLoading } = useProjectTeamMembers();
 
   if (!memberId) return { memberName: null, isLoading };
 

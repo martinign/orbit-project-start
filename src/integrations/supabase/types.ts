@@ -436,8 +436,6 @@ export type Database = {
           full_name: string
           id: string
           last_name: string | null
-          location: string | null
-          permission_level: Database["public"]["Enums"]["project_member_permission"]
           project_id: string
           role: string | null
           updated_at: string
@@ -448,8 +446,6 @@ export type Database = {
           full_name: string
           id?: string
           last_name?: string | null
-          location?: string | null
-          permission_level?: Database["public"]["Enums"]["project_member_permission"]
           project_id: string
           role?: string | null
           updated_at?: string
@@ -460,8 +456,6 @@ export type Database = {
           full_name?: string
           id?: string
           last_name?: string | null
-          location?: string | null
-          permission_level?: Database["public"]["Enums"]["project_member_permission"]
           project_id?: string
           role?: string | null
           updated_at?: string
