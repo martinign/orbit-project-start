@@ -72,7 +72,7 @@ const ProjectSelector = ({
             <SelectItem key={project.id} value={project.id}>
               {project.project_type === 'non-billable' 
                 ? project.project_number 
-                : `${project.project_number} - ${project.Sponsor || ''}`}
+                : `${project.project_number} - ${project.Sponsor}`}
             </SelectItem>
           ))
         ) : (
