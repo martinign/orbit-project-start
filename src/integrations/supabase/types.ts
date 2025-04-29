@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      contacts: {
-        Row: {
-          company: string | null
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          location: string | null
-          role: string | null
-          telephone: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          company?: string | null
-          created_at?: string
-          email: string
-          full_name: string
-          id?: string
-          location?: string | null
-          role?: string | null
-          telephone?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          company?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          id?: string
-          location?: string | null
-          role?: string | null
-          telephone?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       gantt_tasks: {
         Row: {
           created_at: string

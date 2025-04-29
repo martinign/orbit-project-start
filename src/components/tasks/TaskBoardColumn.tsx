@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Droppable } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import TaskCard from '../TaskCard';
+
 interface Task {
   id: string;
   title: string;
@@ -14,6 +16,7 @@ interface Task {
   due_date?: string;
   project_id: string;
 }
+
 interface ColumnConfig {
   id: string;
   title: string;
@@ -21,30 +24,37 @@ interface ColumnConfig {
   color: string;
   badgeColor: string;
 }
+
 interface TaskBoardColumnProps {
   column: ColumnConfig;
   tasks: Task[];
   handleEditTask: (task: Task) => void;
   handleDeleteConfirm: (task: Task) => void;
   handleTaskUpdates: (task: Task) => void;
+  handleShowUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
   handleCreateTask: (status: string) => void;
 }
+
 const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   column,
   tasks,
   handleEditTask,
   handleDeleteConfirm,
   handleTaskUpdates,
+  handleShowUpdates,
   handleAddSubtask,
   handleCreateTask
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const visibleTasks = isCollapsed ? tasks.slice(0, 2) : tasks;
+  
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
-  return <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
+  
+  return (
+    <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
       <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -84,13 +94,32 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
       </div>
       
       <Droppable droppableId={column.id}>
-        {provided => <div ref={provided.innerRef} {...provided.droppableProps} className="p-2 min-h-[200px] h-full overflow-y-auto">
+        {provided => (
+          <div 
+            ref={provided.innerRef} 
+            {...provided.droppableProps} 
+            className="p-2 min-h-[200px] h-full overflow-y-auto"
+          >
             <div className="space-y-2">
-              {visibleTasks.map((task, index) => <TaskCard key={task.id} task={task} index={index} handleEditTask={handleEditTask} handleDeleteConfirm={handleDeleteConfirm} handleTaskUpdates={handleTaskUpdates} handleAddSubtask={handleAddSubtask} />)}
+              {visibleTasks.map((task, index) => (
+                <TaskCard 
+                  key={task.id} 
+                  task={task} 
+                  index={index} 
+                  handleEditTask={handleEditTask} 
+                  handleDeleteConfirm={handleDeleteConfirm} 
+                  handleTaskUpdates={handleTaskUpdates}
+                  handleShowUpdates={handleShowUpdates}
+                  handleAddSubtask={handleAddSubtask} 
+                />
+              ))}
             </div>
             {provided.placeholder}
-          </div>}
+          </div>
+        )}
       </Droppable>
-    </div>;
+    </div>
+  );
 };
+
 export default TaskBoardColumn;
