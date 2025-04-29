@@ -34,7 +34,9 @@ export const useTeamMembers = (projectId?: string) => {
             project_number,
             Sponsor
           )
-        `);
+        `)
+        // Only select team members with a user_id (authenticated users)
+        .not('user_id', 'is', null);
 
       // Add project filtering if project ID is provided
       if (projectId) {

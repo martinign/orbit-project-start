@@ -32,6 +32,7 @@ import { CalendarIcon, BookTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TaskTemplatesListDialog from './TaskTemplatesListDialog';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 interface TeamMember {
   id: string;
@@ -78,24 +79,9 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
   const queryClient = useQueryClient();
-
-  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useQuery({
-    queryKey: ['team_members'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_team_members')
-        .select('id, full_name, last_name');
   
-      if (error) throw error;
-  
-      const sortedTeamMembers = (data || []).map(member => ({
-        ...member,
-        full_name: member.full_name,
-      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
-  
-      return sortedTeamMembers;
-    },
-  });
+  // Use the updated useTeamMembers hook that only returns authenticated users
+  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
 
   useEffect(() => {
     if (open && !didInitialFormSet) {

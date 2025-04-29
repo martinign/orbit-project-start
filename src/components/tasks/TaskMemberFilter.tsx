@@ -15,6 +15,7 @@ interface User {
   full_name: string;
   last_name: string;
   role: string;
+  user_id?: string; // Add user_id to filter authenticated users
 }
 
 interface TaskMemberFilterProps {
@@ -28,7 +29,10 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
   selectedMemberId,
   onMemberSelect,
 }) => {
-  const selectedUser = users.find(u => u.id === selectedMemberId);
+  // Filter to only show authenticated users (those with a user_id)
+  const authenticatedUsers = users.filter(user => user.user_id);
+  
+  const selectedUser = authenticatedUsers.find(u => u.id === selectedMemberId);
   
   return (
     <DropdownMenu>
@@ -45,7 +49,7 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
           All Members
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        {users.map((user) => (
+        {authenticatedUsers.map((user) => (
           <DropdownMenuItem
             key={user.id}
             onClick={() => onMemberSelect(user.id)}

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SubtaskForm } from './subtasks/SubtaskForm';
 import { useSubtaskForm } from '@/hooks/useSubtaskForm';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 interface Task {
   id: string;
@@ -40,23 +41,17 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   onSuccess
 }) => {
   const formProps = useSubtaskForm(parentTask, subtask, mode, onSuccess);
-
-  const { data: teamMembers } = useQuery({
-    queryKey: ['team_members'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_team_members')
-        .select('id, full_name, last_name');
   
-      if (error) throw error;
+  // Use the updated useTeamMembers hook that only returns authenticated users
+  const { data: teamMembers, isLoading } = useTeamMembers();
   
-      return data.map(member => ({
-        ...member,
-        // Don't concatenate full_name with last_name again
-        display_name: member.full_name,
-      })).sort((a, b) => a.display_name.localeCompare(b.display_name));
-    },
-  });
+  // Process team members to include display_name property
+  const processedTeamMembers = React.useMemo(() => {
+    return teamMembers?.map(member => ({
+      ...member,
+      display_name: member.full_name
+    })) || [];
+  }, [teamMembers]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -72,7 +67,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
 
         <SubtaskForm
           {...formProps}
-          teamMembers={teamMembers}
+          teamMembers={processedTeamMembers}
           onSubmit={formProps.handleSubmit}
           onClose={onClose}
         />
