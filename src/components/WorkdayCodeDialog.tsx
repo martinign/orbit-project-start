@@ -452,7 +452,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {projects.map((project) => (
                             <SelectItem key={project.id} value={project.id}>
                               {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
