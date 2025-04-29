@@ -55,9 +55,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
             if (table === 'project_tasks') {
               queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
               queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-            } else if (table === 'project_notes') {
-              queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
-              queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['notes', projectId] });
               queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
             } else if (table === 'project_events') {
               queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
