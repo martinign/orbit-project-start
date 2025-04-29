@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,8 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
+        // FIXED: Using 'role' instead of 'permission_level' in project_team_members
+        // permission_level from project_invitations is stored as role in project_team_members
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
@@ -131,7 +134,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             full_name: profile?.full_name || "Unnamed User",
             last_name: profile?.last_name || "Unnamed User",
             location: profile?.location,
-            permission_level: invitationToHandle.permission_level
+            role: invitationToHandle.permission_level // Use permission_level from invitation as role
           });
 
         if (teamMemberError) throw teamMemberError;
@@ -215,6 +218,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                     <Button
                       onClick={() => handleInvitation(invitation.id, true)}
                       disabled={!!loading}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
                     >
                       {loading === invitation.id ? (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />

@@ -97,9 +97,9 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "secondary"; // Changed from "warning" to "secondary"
+        return "warning"; // Changed from "secondary" to "warning"
       case "accepted":
-        return "default"; // Changed from "success" to "default"
+        return "success"; // Using success variant now that we've added it
       case "rejected":
         return "destructive";
       default:
