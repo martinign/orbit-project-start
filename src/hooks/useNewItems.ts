@@ -38,11 +38,29 @@ export function useNewItems(projectId: string) {
               tableName = `project_${type}s`;
           }
           
-          const { count, error } = await supabase
-            .from(tableName)
-            .select('id', { count: 'exact', head: true })
-            .eq('project_id', projectId)
-            .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          // Use type casting to handle the dynamic table name
+          let query;
+          if (tableName === 'project_tasks') {
+            query = supabase
+              .from('project_tasks')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          } else if (tableName === 'project_notes') {
+            query = supabase
+              .from('project_notes')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          } else if (tableName === 'project_events') {
+            query = supabase
+              .from('project_events')
+              .select('id', { count: 'exact', head: true })
+              .eq('project_id', projectId)
+              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+          }
+            
+          const { count, error } = await query;
             
           if (error) {
             console.error(`Error fetching new ${type}s count:`, error);
