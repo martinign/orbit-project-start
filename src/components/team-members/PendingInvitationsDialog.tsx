@@ -39,32 +39,39 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
     queryKey: ["pending_invitations"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return [];
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return [];
 
-      // Use clear aliases for all columns to avoid ambiguity
-      const { data, error } = await supabase
-        .from("project_invitations")
-        .select(`
-          id,
-          project_invitations.project_id,
-          permission_level,
-          created_at,
-          inviter_id,
-          projects:project_id (
-            project_number,
-            Sponsor
-          )
-        `)
-        .eq("invitee_id", user.user.id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
+        // Use clear aliases for all columns to avoid ambiguity
+        const { data, error } = await supabase
+          .from("project_invitations")
+          .select(`
+            id,
+            project_id,
+            permission_level,
+            created_at,
+            inviter_id,
+            projects:project_invitations.project_id (
+              project_number,
+              Sponsor
+            )
+          `)
+          .eq("invitee_id", user.user.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching invitations:", error);
-        throw error;
+        if (error) {
+          console.error("Error fetching invitations:", error);
+          throw error;
+        }
+        
+        // Ensure we return the expected type
+        return (data || []) as InvitationWithInviterId[];
+      } catch (err) {
+        console.error("Error in invitation query:", err);
+        return [] as InvitationWithInviterId[];
       }
-      return data as InvitationWithInviterId[];
     },
     enabled: open,
   });
@@ -85,23 +92,28 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: senderProfiles } = useQuery({
     queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)],
     queryFn: async () => {
-      if (!uniqueInvitationsByProject.length) return {};
-      const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
-      if (inviterIds.length === 0) return {};
+      try {
+        if (!uniqueInvitationsByProject.length) return {};
+        const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
+        if (inviterIds.length === 0) return {};
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, last_name")
-        .in("id", inviterIds);
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, full_name, last_name")
+          .in("id", inviterIds);
 
-      if (error) {
-        console.error("Error fetching sender profiles:", error);
+        if (error) {
+          console.error("Error fetching sender profiles:", error);
+          return {};
+        }
+        return data.reduce((acc, profile) => {
+          const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.trim();
+          return { ...acc, [profile.id]: fullName || "Unknown User" };
+        }, {});
+      } catch (err) {
+        console.error("Error in profiles query:", err);
         return {};
       }
-      return data.reduce((acc, profile) => {
-        const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.trim();
-        return { ...acc, [profile.id]: fullName || "Unknown User" };
-      }, {});
     },
     enabled: open && !!uniqueInvitationsByProject.length,
   });

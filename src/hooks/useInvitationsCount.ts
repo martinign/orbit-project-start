@@ -7,22 +7,27 @@ export const useInvitationsCount = () => {
   const { data: count = 0, refetch } = useQuery({
     queryKey: ["pending_invitations_count"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return 0;
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return 0;
 
-      // Count pending invitations for the current user
-      const { count, error } = await supabase
-        .from("project_invitations")
-        .select("id", { count: "exact", head: true })
-        .eq("invitee_id", user.user.id)
-        .eq("status", "pending");
+        // Count pending invitations for the current user
+        const { count, error } = await supabase
+          .from("project_invitations")
+          .select("id", { count: "exact", head: true })
+          .eq("invitee_id", user.user.id)
+          .eq("status", "pending");
 
-      if (error) {
-        console.error("Error fetching invitations count:", error);
+        if (error) {
+          console.error("Error fetching invitations count:", error);
+          return 0;
+        }
+
+        return count || 0;
+      } catch (err) {
+        console.error("Error in invitations count query:", err);
         return 0;
       }
-
-      return count || 0;
     },
   });
 
