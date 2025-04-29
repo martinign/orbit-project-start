@@ -1,3 +1,4 @@
+
 import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -208,39 +209,39 @@ export function AppSidebar() {
             <SidebarMenuItems recentProjects={recentProjects} getStatusColor={getStatusColor} />
           </SidebarGroupContent>
         </SidebarGroup>
-        
-        {/* Survey section */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <SidebarMenuButton 
-                          tooltip="Survey" 
-                          className={`hover:bg-blue-500/10 transition-colors duration-200 ${!canSubmitSurvey ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          onClick={() => canSubmitSurvey && setIsSurveyDialogOpen(true)}
-                          disabled={!canSubmitSurvey || loadingSurveyAvailability}
-                        >
-                          <ClipboardCheck className={`${canSubmitSurvey ? 'text-blue-500' : 'text-gray-400'}`} />
-                          <span>SURVEY</span>
-                        </SidebarMenuButton>
-                      </div>
-                    </TooltipTrigger>
-                    {!canSubmitSurvey && nextAvailableDate && (
-                      <TooltipContent>
-                        <p>You can submit another survey after {format(nextAvailableDate, 'MMMM dd, yyyy')}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>     
+      </SidebarContent>
+      
+      {/* Survey section - Moved to bottom, just before footer */}
+      <SidebarGroup className="mt-auto">
+        <SidebarGroupContent>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <SidebarMenuButton 
+                        tooltip="Survey" 
+                        className={`hover:bg-blue-500/10 transition-colors duration-200 ${!canSubmitSurvey ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => canSubmitSurvey && setIsSurveyDialogOpen(true)}
+                        disabled={!canSubmitSurvey || loadingSurveyAvailability}
+                      >
+                        <ClipboardCheck className={`${canSubmitSurvey ? 'text-blue-500' : 'text-gray-400'}`} />
+                        <span>SURVEY</span>
+                      </SidebarMenuButton>
+                    </div>
+                  </TooltipTrigger>
+                  {!canSubmitSurvey && nextAvailableDate && (
+                    <TooltipContent>
+                      <p>You can submit another survey after {format(nextAvailableDate, 'MMMM dd, yyyy')}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
       
       <SidebarFooter className="border-t border-sidebar-border text-align: justify">
         <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" onClick={signOut}>
