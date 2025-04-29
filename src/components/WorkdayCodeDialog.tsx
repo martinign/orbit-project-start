@@ -9,10 +9,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Edit, Trash2 } from 'lucide-react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 const codeSchema = z.object({
   task: z.string().min(1, { message: "Task is required" }),
@@ -47,6 +48,8 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
   const { toast } = useToast();
   const [workdayCodes, setWorkdayCodes] = useState<WorkdayCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [codeToDelete, setCodeToDelete] = useState<WorkdayCode | null>(null);
   
   const form = useForm<CodeFormData>({
     resolver: zodResolver(codeSchema),
@@ -131,9 +134,12 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
           description: "Workday code created successfully",
         });
       }
+      // Reset form but don't close dialog
       form.reset({ task: '', activity: '' });
       fetchWorkdayCodes();
-      onSuccess();
+      if (isEditing) {
+        onSuccess(); // Only close on editing, not on create
+      }
     } catch (error: any) {
       console.error("Error:", error);
       toast({
@@ -148,6 +154,60 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
   const handleRefresh = () => {
     fetchWorkdayCodes();
+  };
+  
+  const handleEdit = (codeToEdit: WorkdayCode) => {
+    // Set form values and trigger edit mode
+    form.reset({
+      task: codeToEdit.task,
+      activity: codeToEdit.activity
+    });
+    onSuccess(); // Close this dialog
+    // Re-open with the code to edit
+    setTimeout(() => {
+      onClose();
+      onSuccess();
+    }, 100);
+  };
+  
+  const confirmDelete = (codeToDelete: WorkdayCode) => {
+    setCodeToDelete(codeToDelete);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleDelete = async () => {
+    if (!codeToDelete) return;
+    
+    try {
+      const { error } = await supabase
+        .from('workday_codes')
+        .delete()
+        .eq('id', codeToDelete.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Workday code deleted successfully",
+      });
+      
+      fetchWorkdayCodes();
+    } catch (error: any) {
+      console.error("Error deleting code:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the code",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setCodeToDelete(null);
+    }
+  };
+
+  // Check if user is the creator of the code
+  const isUserOwner = (code: WorkdayCode) => {
+    return user && user.id === code.user_id;
   };
 
   return (
@@ -220,6 +280,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
                     <TableRow>
                       <TableHead>Task</TableHead>
                       <TableHead>Activity</TableHead>
+                      <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -227,6 +288,18 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
                       <TableRow key={code.id}>
                         <TableCell className="font-medium">{code.task}</TableCell>
                         <TableCell>{code.activity}</TableCell>
+                        <TableCell>
+                          {isUserOwner(code) && (
+                            <div className="flex space-x-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(code)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => confirmDelete(code)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -236,6 +309,21 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
           </div>
         </div>
       </DialogContent>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this workday code. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
