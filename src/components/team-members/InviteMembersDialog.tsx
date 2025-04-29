@@ -36,6 +36,7 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, SelectedProfile>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isProjectOwner, setIsProjectOwner] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -44,6 +45,37 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       fetchProfiles();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (projectId) {
+      checkProjectOwnership();
+    } else {
+      setIsProjectOwner(false);
+    }
+  }, [projectId]);
+
+  const checkProjectOwnership = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('role')
+        .eq('id', projectId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error("Error checking project ownership:", error);
+        setIsProjectOwner(false);
+        return;
+      }
+
+      // User is considered project owner if they created the project (role will be 'owner')
+      setIsProjectOwner(!!data && data.role === 'owner');
+    } catch (error) {
+      console.error("Error checking project ownership:", error);
+      setIsProjectOwner(false);
+    }
+  };
 
   const fetchProfiles = async () => {
     setIsLoading(true);
@@ -236,8 +268,8 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="owner">Owner</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
+                          {isProjectOwner && <SelectItem value="owner">Owner</SelectItem>}
+                          {isProjectOwner && <SelectItem value="admin">Admin</SelectItem>}
                           <SelectItem value="edit">Can Edit</SelectItem>
                           <SelectItem value="read_only">Read Only</SelectItem>
                         </SelectContent>
