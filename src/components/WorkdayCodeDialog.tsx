@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
@@ -73,6 +72,13 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
       activity: code.activity,
       projectId: ""
     } : { task: '', activity: '', projectId: "" }
+  });
+  
+  // Create a separate form for the add project dialog
+  const addProjectForm = useForm<{ projectId: string }>({
+    defaultValues: {
+      projectId: ""
+    }
   });
 
   const isEditing = !!code;
@@ -385,14 +391,27 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
   const openAddProjectDialog = (codeId: string) => {
     setSelectedCodeId(codeId);
+    // Reset the form value when opening the dialog
+    addProjectForm.reset({ projectId: "" });
     setAddProjectDialogOpen(true);
   };
 
   const handleAddProject = async () => {
-    if (!selectedCodeId || !form.getValues().projectId) return;
+    if (!selectedCodeId) return;
     
-    await associateProjectWithCode(selectedCodeId, form.getValues().projectId);
-    form.setValue('projectId', '');
+    const projectId = addProjectForm.getValues().projectId;
+    
+    if (!projectId || projectId === "none") {
+      toast({
+        title: "Error",
+        description: "Please select a project",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await associateProjectWithCode(selectedCodeId, projectId);
+    addProjectForm.reset({ projectId: "" });
     setAddProjectDialogOpen(false);
     fetchWorkdayCodes();
   };
@@ -577,38 +596,40 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
               Select a project to associate with this workday code.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <FormField
-              control={form.control}
-              name="projectId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {projects.map((project) => (
-                        <SelectItem key={project.id} value={project.id}>
-                          {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <Form {...addProjectForm}>
+            <form className="py-4">
+              <FormField
+                control={addProjectForm.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a project" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => form.setValue('projectId', '')}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAddProject} disabled={!form.getValues().projectId}>
+            <AlertDialogCancel onClick={() => addProjectForm.reset({ projectId: "" })}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAddProject}>
               Associate
             </AlertDialogAction>
           </AlertDialogFooter>
