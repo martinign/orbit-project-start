@@ -52,8 +52,9 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   
       return data.map(member => ({
         ...member,
-        full_name: `${member.full_name} ${member.last_name}`,
-      })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+        // Don't concatenate full_name with last_name again
+        display_name: member.full_name,
+      })).sort((a, b) => a.display_name.localeCompare(b.display_name));
     },
   });
 

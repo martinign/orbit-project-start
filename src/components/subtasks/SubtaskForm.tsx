@@ -35,7 +35,7 @@ interface SubtaskFormProps {
   setDueDate: (date: Date | undefined) => void;
   setNotes: (value: string) => void;
   setAssignedTo: (value: string) => void;
-  teamMembers?: { id: string; full_name: string; last_name: string; }[];
+  teamMembers?: { id: string; full_name: string; last_name: string; display_name?: string; }[];
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
@@ -108,7 +108,7 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
             <SelectItem value="none">Not assigned</SelectItem>
             {teamMembers?.map((member) => (
               <SelectItem key={member.id} value={member.id}>
-                {`${member.full_name} ${member.last_name}`}
+                {member.display_name || member.full_name}
               </SelectItem>
             ))}
           </SelectContent>
