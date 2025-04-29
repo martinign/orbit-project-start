@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +33,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
     queryFn: async () => {
       let query = supabase
         .from("project_contacts")
-        .select("*, projects(project_number, Sponsor)")
+        .select("*, projects(project_number, Sponsor), created_at")
         .order("created_at", { ascending: false });
       
       if (projectId) {
@@ -73,7 +72,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
-  // Use the improved realtime subscription hook with debouncing to prevent UI freezes
+  // Use the improved realtime subscription hook
   useRealtimeSubscription({
     table: 'project_contacts',
     event: '*', // Listen for all events: INSERT, UPDATE, DELETE
@@ -81,15 +80,12 @@ const ContactsList: React.FC<ContactsListProps> = ({
     filterValue: projectId || undefined,
     onRecordChange: (payload) => {
       console.log("Contact change detected:", payload);
-      // Debounce query invalidation
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
-        
-        // Also invalidate the contact count for the project stats
-        if (projectId) {
-          queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
-        }
-      }, 100);
+      queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
+      
+      // Also invalidate the contact count for the project stats
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+      }
     }
   });
 

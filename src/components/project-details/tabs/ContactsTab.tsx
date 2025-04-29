@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import ContactsList from '@/components/ContactsList';
 import ContactForm from '@/components/ContactForm';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ContactsTabProps {
   projectId: string;
@@ -22,29 +22,19 @@ export const ContactsTab: React.FC<ContactsTabProps> = ({
   const [isCreateContactOpen, setIsCreateContactOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Set up real-time listener for contacts count
-  useEffect(() => {
-    const channel = supabase.channel(`contacts_count_${projectId}`)
-      .on('postgres_changes',
-        {
-          event: '*',  // Listen for all events: INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'project_contacts',
-          filter: `project_id=eq.${projectId}`
-        },
-        (payload) => {
-          console.log('Contact change detected:', payload);
-          // Invalidate the contacts count query to refresh the statistics
-          queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
-          queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [projectId, queryClient]);
+  // Use the reusable realtime subscription hook
+  useRealtimeSubscription({
+    table: 'project_contacts',
+    event: '*', // Listen for all events: INSERT, UPDATE, DELETE
+    filter: 'project_id',
+    filterValue: projectId,
+    onRecordChange: (payload) => {
+      console.log('Contact change detected:', payload);
+      // Invalidate the contacts queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project_contacts', projectId] });
+    }
+  });
 
   return (
     <Card>

@@ -1,10 +1,13 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Edit, Trash2 } from "lucide-react";
 import { Contact } from "@/types/contact";
+import { format, isWithinLastDay } from "date-fns";
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -19,6 +22,14 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  const isNew = (createdAt: string): boolean => {
+    try {
+      return isWithinLastDay(new Date(createdAt));
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
     <div className="rounded-md border">
       <ScrollArea className="h-[400px]">
@@ -38,7 +49,23 @@ const ContactsTable: React.FC<ContactsTableProps> = ({
           <TableBody>
             {contacts.map(contact => (
               <TableRow key={contact.id}>
-                <TableCell className="font-medium">{contact.full_name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {contact.full_name}
+                    {isNew(contact.created_at) && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="success" className="animate-in fade-in text-xs">New</Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Added {format(new Date(contact.created_at), 'MMM dd, pp')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-medium">{contact.last_name || "-"}</TableCell>            
                 <TableCell>{contact.email}</TableCell>
                 <TableCell>{contact.telephone || "-"}</TableCell>

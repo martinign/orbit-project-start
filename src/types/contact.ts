@@ -15,4 +15,6 @@ export interface Contact {
   };
   phone?: string;
   organization?: string;
+  created_at: string;
+  updated_at?: string;
 }
