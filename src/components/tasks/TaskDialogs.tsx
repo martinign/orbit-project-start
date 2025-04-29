@@ -13,7 +13,7 @@ interface Task {
   status: string;
   priority: string;
   due_date?: string;
-  project_id: string;
+  project_id: string; // Ensure project_id is included in the interface
 }
 
 interface TaskDialogsProps {

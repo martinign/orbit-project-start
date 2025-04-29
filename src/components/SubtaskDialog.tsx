@@ -10,6 +10,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 interface Task {
   id: string;
   title: string;
+  project_id: string; // Added project_id property to match the interface in useSubtaskForm
 }
 
 interface Subtask {

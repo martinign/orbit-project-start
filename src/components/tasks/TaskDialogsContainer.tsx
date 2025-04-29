@@ -10,7 +10,7 @@ import { TaskDialogs } from '../tasks/TaskDialogs';
 
 interface TaskDialogsContainerProps {
   projectId?: string;
-  selectedTask: any | null;
+  selectedTask: any | null; // We'll keep this as 'any' since it's already typed that way, but ensure parentTask always has project_id
   isDialogOpen: boolean;
   isCreateTaskDialogOpen: boolean;
   isDeleteConfirmOpen: boolean;
@@ -86,7 +86,7 @@ export const TaskDialogsContainer: React.FC<TaskDialogsContainerProps> = ({
           <SubtaskDialog
             open={isSubtaskDialogOpen}
             onClose={() => setIsSubtaskDialogOpen(false)}
-            parentTask={selectedTask}
+            parentTask={selectedTask} 
             onSuccess={() => {
               onRefetch();
               setIsSubtaskDialogOpen(false);
