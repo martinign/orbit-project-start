@@ -135,7 +135,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Notes</p>
-              <p className="text-2xl font-bold">{notesCount.total}</p>
+              <p className="text-2xl font-bold">{notesCount}</p>
             </div>
             <FileText className="h-8 w-8 text-orange-500" />
           </div>
