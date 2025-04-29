@@ -83,7 +83,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             data={enhancedData}
             cx="50%"
             cy="50%"
-            labelLine={true}
+            labelLine={false}
             outerRadius={isMobile ? 80 : 100}
             dataKey="value"
             animationDuration={800}
