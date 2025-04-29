@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, Trash2, User, Calendar } from 'lucide-react';
+import { Edit, Trash2, User, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/tooltip';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface Subtask {
   id: string;
@@ -21,6 +22,8 @@ interface Subtask {
   status: string;
   due_date?: string;
   assigned_to?: string;
+  user_id?: string;
+  created_at?: string;
 }
 
 interface SubtaskItemProps {
@@ -35,6 +38,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
   onDelete,
 }) => {
   const { memberName: subtaskAssignedToName } = useTeamMemberName(subtask.assigned_to);
+  const { data: userProfile } = useUserProfile(subtask.user_id);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
@@ -175,6 +179,28 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
                 <div className="flex items-center">
                   <User className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
                   <span className="text-sm">{subtaskAssignedToName}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Created by information */}
+            {userProfile && (
+              <div>
+                <h5 className="text-xs font-medium text-gray-500 mb-1">Created By</h5>
+                <div className="flex items-center">
+                  <User className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+                  <span className="text-sm">{userProfile.displayName}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Creation date */}
+            {subtask.created_at && formatDate(subtask.created_at) && (
+              <div>
+                <h5 className="text-xs font-medium text-gray-500 mb-1">Created On</h5>
+                <div className="flex items-center">
+                  <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+                  <span className="text-sm">{formatDate(subtask.created_at)}</span>
                 </div>
               </div>
             )}

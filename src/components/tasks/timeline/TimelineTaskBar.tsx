@@ -8,6 +8,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { User, Clock } from 'lucide-react';
 
 interface TimelineTaskBarProps {
   task: {
@@ -16,6 +18,7 @@ interface TimelineTaskBarProps {
     status: string;
     created_at: string;
     updated_at: string;
+    user_id?: string;
   };
   style: React.CSSProperties;
   onClick: () => void;
@@ -32,6 +35,7 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   isCompleted,
   completionDate,
 }) => {
+  const { data: userProfile } = useUserProfile(task.user_id);
   const startDate = new Date(task.created_at);
   const endDate = completionDate ? new Date(completionDate) : 
                   isCompleted && task.updated_at ? new Date(task.updated_at) : new Date();
@@ -99,6 +103,15 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
               {isCompleted && (
                 <p className="col-span-2">
                   <span className="text-muted-foreground">Completed:</span> {format(endDate, 'MMM d, yyyy')}
+                </p>
+              )}
+              
+              {/* Created by information */}
+              {userProfile && (
+                <p className="col-span-2 flex items-center">
+                  <User className="inline h-3 w-3 mr-1" />
+                  <span className="text-muted-foreground">Created by:</span>{' '}
+                  <span className="ml-1">{userProfile.displayName}</span>
                 </p>
               )}
             </div>

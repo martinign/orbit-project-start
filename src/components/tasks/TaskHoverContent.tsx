@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface TaskHoverContentProps {
   title: string;
@@ -10,6 +11,8 @@ interface TaskHoverContentProps {
   priority?: string;
   dueDate?: string;
   assignedToName?: string;
+  createdAt?: string;
+  userId?: string;
 }
 
 export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
@@ -18,7 +21,11 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
   priority,
   dueDate,
   assignedToName,
+  createdAt,
+  userId,
 }) => {
+  const { data: userProfile } = useUserProfile(userId);
+  
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
       case 'high':
@@ -73,6 +80,28 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
           <p className="text-sm flex items-center">
             <User className="h-3 w-3 mr-1 flex-shrink-0" />
             {assignedToName}
+          </p>
+        </div>
+      )}
+      
+      {/* Creator information */}
+      {userProfile && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-500">Created By</h5>
+          <p className="text-sm flex items-center">
+            <User className="h-3 w-3 mr-1 flex-shrink-0" />
+            {userProfile.displayName}
+          </p>
+        </div>
+      )}
+      
+      {/* Creation date */}
+      {createdAt && formatDate(createdAt) && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-500">Created On</h5>
+          <p className="text-sm flex items-center">
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            {formatDate(createdAt)}
           </p>
         </div>
       )}

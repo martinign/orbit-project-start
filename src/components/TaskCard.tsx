@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +25,8 @@ interface Task {
   project_id: string;
   assigned_to?: string;
   is_gantt_task?: boolean;
+  user_id?: string;
+  created_at?: string;
 }
 
 interface TaskCardProps {
@@ -130,6 +131,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 priority={task.priority}
                 dueDate={task.due_date}
                 assignedToName={assignedToName}
+                createdAt={task.created_at}
+                userId={task.user_id}
               />
             </HoverCardContent>
           </HoverCard>
