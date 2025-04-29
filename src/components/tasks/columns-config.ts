@@ -5,7 +5,7 @@ export const columnsConfig = [
     title: 'Not Started',
     status: 'not started',
     color: 'bg-gray-100 border-gray-300',
-    badgeColor: 'bg-red-500',
+    badgeColor: 'bg-gray-500', // Changed from bg-red-500 to bg-gray-500
   },
   {
     id: 'pending',

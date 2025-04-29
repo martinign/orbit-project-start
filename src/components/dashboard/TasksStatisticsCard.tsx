@@ -66,7 +66,7 @@ export function TasksStatisticsCard({ filters = {} }: { filters?: TaskFilters })
 
       // Direct color mapping based on columnsConfig
       const colorMap = {
-        "not started": "#ef4444", // red-500
+        "not started": "#888888", // Changed from red to gray
         "in progress": "#3b82f6", // blue-500
         "pending": "#eab308", // yellow-500
         "completed": "#22c55e", // green-500
