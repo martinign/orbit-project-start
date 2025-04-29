@@ -1,4 +1,4 @@
-import { Folder, LayoutDashboard, LogOut } from "lucide-react";
+import { Folder, LayoutDashboard, LogOut, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -153,6 +153,14 @@ export function AppSidebar() {
                   <SidebarMenuButton tooltip="Projects" className="hover:bg-blue-500/10 transition-colors duration-200">
                     <Folder className="text-blue-500" />
                     <span>Projects</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link to="/workday-codes">
+                  <SidebarMenuButton tooltip="Workday Codes" className="hover:bg-blue-500/10 transition-colors duration-200">
+                    <Clock className="text-blue-500" />
+                    <span>Workday Codes</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
