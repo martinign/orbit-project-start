@@ -78,9 +78,16 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
     setIsSubmitting(true);
 
     try {
+      // Ensure all required fields are explicitly included in the insert
       const { error } = await supabase.from('survey_responses').insert({
-        ...values,
         user_id: user.id,
+        usage_frequency: values.usage_frequency,
+        most_useful_feature: values.most_useful_feature,
+        ease_of_use: values.ease_of_use,
+        improvement_area: values.improvement_area,
+        task_management_satisfaction: values.task_management_satisfaction,
+        workday_codes_usage: values.workday_codes_usage,
+        additional_feedback: values.additional_feedback,
       });
 
       if (error) {
@@ -375,7 +382,7 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600 text-white">
                 {isSubmitting ? 'Submitting...' : 'Submit Survey'}
               </Button>
             </DialogFooter>
