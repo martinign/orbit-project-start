@@ -19,6 +19,7 @@ import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
+
 export function AppSidebar() {
   const {
     signOut
@@ -91,7 +92,7 @@ export function AppSidebar() {
       const {
         data,
         error
-      } = await supabase.from("projects").select("id, project_number, protocol_number, protocol_title, Sponsor, description, status, updated_at").order("updated_at", {
+      } = await supabase.from("projects").select("id, project_number, protocol_number, protocol_title, Sponsor, description, status, project_type, updated_at").order("updated_at", {
         ascending: false
       }).limit(5);
       if (error) throw error;

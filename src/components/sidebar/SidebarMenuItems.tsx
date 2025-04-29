@@ -8,6 +8,7 @@ interface RecentProject {
   project_number: string;
   Sponsor: string;
   status: string;
+  project_type?: string;
 }
 
 interface SidebarMenuItemsProps {
@@ -22,10 +23,17 @@ export const SidebarMenuItems = ({ recentProjects, getStatusColor }: SidebarMenu
         recentProjects.map(project => (
           <SidebarMenuItem key={project.id}>
             <Link to={`/projects/${project.id}`}>
-              <SidebarMenuButton tooltip={`${project.project_number} - ${project.Sponsor}`} className="hover:bg-blue-500/10 transition-colors duration-200">
+              <SidebarMenuButton 
+                tooltip={project.project_type === 'non-billable' 
+                  ? project.project_number 
+                  : `${project.project_number} - ${project.Sponsor}`} 
+                className="hover:bg-blue-500/10 transition-colors duration-200"
+              >
                 <Circle className={`h-3 w-3 ${getStatusColor(project.status)}`} />
                 <span className="truncate max-w-[150px]">
-                  {project.project_number} - {project.Sponsor}
+                  {project.project_type === 'non-billable' 
+                    ? project.project_number
+                    : `${project.project_number} - ${project.Sponsor}`}
                 </span>
               </SidebarMenuButton>
             </Link>
