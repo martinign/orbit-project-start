@@ -9,6 +9,8 @@ import { ProjectHeader } from './project-details/ProjectHeader';
 import { ProjectStatisticsCards } from './project-details/ProjectStatisticsCards';
 import { ProjectContentTabs } from './project-details/ProjectContentTabs';
 import { ProjectTabsContent } from './project-details/ProjectTabsContent';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { User } from 'lucide-react';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +42,9 @@ const ProjectDetailsView = () => {
     },
     enabled: !!id,
   });
+
+  // Get the creator's profile information
+  const { data: creatorProfile } = useUserProfile(project?.user_id);
 
   const { data: contactsCount } = useQuery({
     queryKey: ['project_contacts_count', id],
@@ -246,7 +251,15 @@ const ProjectDetailsView = () => {
       <Card>
         <CardHeader>
           <CardTitle>Project Timeline</CardTitle>
-          <CardDescription>Project created on {formatDate(project.created_at)}</CardDescription>
+          <CardDescription className="space-y-1">
+            <div>Project created on {formatDate(project.created_at)}</div>
+            {creatorProfile && (
+              <div className="flex items-center text-sm gap-1 text-muted-foreground">
+                <User className="h-3.5 w-3.5" />
+                <span>Created by {creatorProfile.displayName}</span>
+              </div>
+            )}
+          </CardDescription>
         </CardHeader>
       </Card>
 
