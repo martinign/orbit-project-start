@@ -180,14 +180,14 @@ const ProjectDialog = ({
             {isEditing ? "Edit Project" : minimalMode ? "Create New Project" : "Create New Project"}
             {!isEditing && <div className="flex items-center gap-3 px-[25px]">
                 <span className="text-xs font-normal text-muted-foreground mr-1">
-                  {minimalMode ? "Minimal" : "Full"} view
+                  {minimalMode ? "Non-Billable" : "Billable"} view
                 </span>
                 <Switch checked={minimalMode} onCheckedChange={setMinimalMode} className="data-[state=checked]:bg-blue-500" id="toggle-mode">
                   {minimalMode ? <span className="inline-flex items-center ml-1">
-                      <span className="sr-only">Switch to full form</span>
+                      <span className="sr-only">Switch to Billable</span>
                       <ToggleRight className="h-4 w-4" />
                     </span> : <span className="inline-flex items-center ml-1">
-                      <span className="sr-only">Switch to minimal form</span>
+                      <span className="sr-only">Switch to Non-Billable</span>
                       <ToggleLeft className="h-4 w-4" />
                     </span>}
                 </Switch>
