@@ -6,9 +6,11 @@ import ProjectSelector from "@/components/team-members/ProjectSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserRound } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface InviteMembersDialogProps {
   open: boolean;
@@ -33,7 +35,9 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfiles, setSelectedProfiles] = useState<Record<string, SelectedProfile>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (open) {
@@ -50,7 +54,10 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       
       if (error) throw error;
       
-      setProfiles(data || []);
+      // Filter out the current user
+      const filteredProfiles = data?.filter(profile => profile.id !== user?.id) || [];
+      
+      setProfiles(filteredProfiles);
     } catch (error: any) {
       console.error("Error fetching profiles:", error);
       toast({
@@ -149,6 +156,12 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
       .substring(0, 2);
   };
 
+  // Filter profiles based on search query
+  const filteredProfiles = profiles.filter(profile => {
+    const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.toLowerCase();
+    return fullName.includes(searchQuery.toLowerCase());
+  });
+
   return (
   <Dialog open={open} onOpenChange={onClose}>
     <DialogContent className="sm:max-w-md">
@@ -166,11 +179,21 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Select Users</label>
+          <div className="relative mb-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search users..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
           {isLoading ? (
             <div className="py-4 text-center text-sm text-gray-500">Loading users...</div>
-          ) : profiles.length > 0 ? (
+          ) : filteredProfiles.length > 0 ? (
             <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
-              {profiles
+              {filteredProfiles
                 .sort((a, b) => {
                   const nameA = `${a.full_name} ${a.last_name}`.toLowerCase();
                   const nameB = `${b.full_name} ${b.last_name}`.toLowerCase();
@@ -223,18 +246,22 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
             </div>
           ) : (
             <div className="py-4 text-center text-sm text-gray-500">
-              No users found in the profiles table.
+              {searchQuery ? "No users found matching your search." : "No users found in the profiles table."}
             </div>
           )}
         </div>
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose} className="mt-2 sm:mt-0">Cancel</Button>
-        <Button onClick={handleInvite}>Invite</Button>
+        <Button 
+          onClick={handleInvite}
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+        >
+          Invite
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
-
   );
 };
 
