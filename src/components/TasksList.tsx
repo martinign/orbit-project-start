@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { TasksTable } from './tasks/TasksTable';
 import { TaskMemberFilter } from './tasks/TaskMemberFilter';
 import { useTaskManagement } from '@/hooks/useTaskManagement';
-import TaskDialog from './TaskDialog';
+import TaskDialog from './task-dialog/TaskDialog';
 import DeleteTaskDialog from './DeleteTaskDialog';
 import SubtaskDialog from './SubtaskDialog';
 import TaskUpdateDialog from './TaskUpdateDialog';
