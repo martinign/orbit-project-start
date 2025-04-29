@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +73,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
     }
   }, [searchQuery, contacts]);
 
-  // Use the improved realtime subscription hook
+  // Use the improved realtime subscription hook with explicit handling for all event types
   useRealtimeSubscription({
     table: 'project_contacts',
     event: '*', // Listen for all events: INSERT, UPDATE, DELETE
@@ -80,11 +81,15 @@ const ContactsList: React.FC<ContactsListProps> = ({
     filterValue: projectId || undefined,
     onRecordChange: (payload) => {
       console.log("Contact change detected:", payload);
+      
+      // Invalidate all relevant queries regardless of event type
       queryClient.invalidateQueries({ queryKey: ['project_contacts'] });
       
       // Also invalidate the contact count for the project stats
       if (projectId) {
         queryClient.invalidateQueries({ queryKey: ['project_contacts_count', projectId] });
+        // Ensure new_items_count is refreshed for badge counts
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
       }
     }
   });
@@ -120,6 +125,11 @@ const ContactsList: React.FC<ContactsListProps> = ({
       }
 
       queryClient.invalidateQueries({ queryKey: ["project_contacts"] });
+      
+      // Also invalidate the new_items_count to update badges
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+      }
 
       toast({
         title: "Success",

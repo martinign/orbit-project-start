@@ -122,7 +122,7 @@ export function useNewItems(projectId: string) {
           },
           async (payload) => {
             console.log(`New items change detected for ${table}:`, payload);
-            // Invalidate the query to trigger a refresh
+            // Invalidate the query to trigger a refresh for any change type
             queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
             
             // Also invalidate the specific count queries
