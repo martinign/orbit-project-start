@@ -7,18 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useInvitationsCount } from "@/hooks/useInvitationsCount";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
 import { ProjectInvitationsSection } from "./sidebar/ProjectInvitationsSection";
 import { TaskManagementSection } from "./sidebar/TaskManagementSection";
@@ -30,14 +19,18 @@ import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
-
 export function AppSidebar() {
-  const { signOut } = useAuth();
+  const {
+    signOut
+  } = useAuth();
   const queryClient = useQueryClient();
   const pendingInvitationsCount = useInvitationsCount();
-  const { totalCount, hideBadge, showBadgeIfNewItems } = useTotalNewItemsCount();
+  const {
+    totalCount,
+    hideBadge,
+    showBadgeIfNewItems
+  } = useTotalNewItemsCount();
   const location = useLocation();
-  
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
@@ -49,7 +42,9 @@ export function AppSidebar() {
     table: 'project_tasks',
     event: '*',
     onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      queryClient.invalidateQueries({
+        queryKey: ["new_tasks_count"]
+      });
       showBadgeIfNewItems();
     }
   });
@@ -59,44 +54,46 @@ export function AppSidebar() {
     table: 'project_events',
     event: '*',
     onRecordChange: () => {
-      queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+      queryClient.invalidateQueries({
+        queryKey: ["new_events_count"]
+      });
       showBadgeIfNewItems();
     }
   });
-
   const handleDashboardClick = () => {
     if (location.pathname === "/dashboard") {
       hideBadge();
     }
   };
-
-  const { data: newTasksCount } = useQuery({
+  const {
+    data: newTasksCount
+  } = useQuery({
     queryKey: ["new_tasks_count"],
     queryFn: async () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      
-      const { count, error } = await supabase
-        .from("project_tasks")
-        .select("id", { count: "exact" })
-        .gte("created_at", yesterday.toISOString());
-      
+      const {
+        count,
+        error
+      } = await supabase.from("project_tasks").select("id", {
+        count: "exact"
+      }).gte("created_at", yesterday.toISOString());
       if (error) throw error;
       return count || 0;
-    },
+    }
   });
-
   const {
     data: recentProjects,
     refetch: refetchRecentProjects
   } = useQuery({
     queryKey: ["recent_projects"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id, project_number, protocol_number, protocol_title, Sponsor, description, status, updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(5);
+      const {
+        data,
+        error
+      } = await supabase.from("projects").select("id, project_number, protocol_number, protocol_title, Sponsor, description, status, updated_at").order("updated_at", {
+        ascending: false
+      }).limit(5);
       if (error) throw error;
       return data || [];
     },
@@ -104,7 +101,6 @@ export function AppSidebar() {
     refetchOnWindowFocus: true,
     refetchOnMount: true
   });
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -119,9 +115,7 @@ export function AppSidebar() {
         return "text-gray-400";
     }
   };
-
-  return (
-    <Sidebar>
+  return <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center p-2">
           <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-blue-300">
@@ -136,18 +130,12 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/dashboard">
-                  <SidebarMenuButton 
-                    tooltip="Dashboard" 
-                    className="hover:bg-indigo-500/10 transition-colors duration-200"
-                    onClick={handleDashboardClick}
-                  >
+                  <SidebarMenuButton tooltip="Dashboard" className="hover:bg-indigo-500/10 transition-colors duration-200" onClick={handleDashboardClick}>
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
-                    {totalCount > 0 && (
-                      <Badge className="ml-auto bg-purple-500">
+                    {totalCount > 0 && <Badge className="ml-auto bg-purple-500">
                         {totalCount} new
-                      </Badge>
-                    )}
+                      </Badge>}
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
@@ -161,10 +149,7 @@ export function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <Link to="/projects">
-                  <SidebarMenuButton 
-                    tooltip="Projects" 
-                    className="hover:bg-blue-500/10 transition-colors duration-200"
-                  >
+                  <SidebarMenuButton tooltip="Projects" className="hover:bg-blue-500/10 transition-colors duration-200">
                     <Folder className="text-blue-500" />
                     <span>Projects</span>
                   </SidebarMenuButton>
@@ -174,73 +159,45 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <ProjectInvitationsSection 
-          pendingInvitationsCount={pendingInvitationsCount}
-          onInviteMembersClick={() => setIsInviteMembersDialogOpen(true)}
-          onPendingInvitationsClick={() => setIsPendingInvitationsOpen(true)}
-        />
+        <ProjectInvitationsSection pendingInvitationsCount={pendingInvitationsCount} onInviteMembersClick={() => setIsInviteMembersDialogOpen(true)} onPendingInvitationsClick={() => setIsPendingInvitationsOpen(true)} />
 
-        <TaskManagementSection 
-          onTaskTemplateClick={() => setIsTaskTemplateDialogOpen(true)}
-          onViewTemplatesClick={() => setIsViewTemplatesDialogOpen(true)}
-        />
+        <TaskManagementSection onTaskTemplateClick={() => setIsTaskTemplateDialogOpen(true)} onViewTemplatesClick={() => setIsViewTemplatesDialogOpen(true)} />
 
         <SidebarGroup>
           <SidebarGroupLabel>RECENT PROJECTS</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenuItems 
-              recentProjects={recentProjects} 
-              getStatusColor={getStatusColor}
-            />
+            <SidebarMenuItems recentProjects={recentProjects} getStatusColor={getStatusColor} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>     
       
       <SidebarFooter className="border-t border-sidebar-border text-align: justify">
-        <div className="text-sm text-red-500 p-2">Please be careful with the data you add. I am not responsible for any content included. This is not an official app and is in the development phase.</div>     
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" 
-          onClick={signOut}
-        >
+             
+        <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" onClick={signOut}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </Button>
       </SidebarFooter>
 
-      <TaskTemplateDialog 
-        open={isTaskTemplateDialogOpen} 
-        onClose={() => setIsTaskTemplateDialogOpen(false)} 
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["task_templates"] });
-          setIsTaskTemplateDialogOpen(false);
-        }} 
-      />
+      <TaskTemplateDialog open={isTaskTemplateDialogOpen} onClose={() => setIsTaskTemplateDialogOpen(false)} onSuccess={() => {
+      queryClient.invalidateQueries({
+        queryKey: ["task_templates"]
+      });
+      setIsTaskTemplateDialogOpen(false);
+    }} />
 
-      <TaskTemplatesListDialog 
-        open={isViewTemplatesDialogOpen} 
-        onClose={() => setIsViewTemplatesDialogOpen(false)} 
-      />
+      <TaskTemplatesListDialog open={isViewTemplatesDialogOpen} onClose={() => setIsViewTemplatesDialogOpen(false)} />
 
-      <ProjectDialog 
-        open={isProjectDialogOpen} 
-        onClose={() => setIsProjectDialogOpen(false)} 
-        onSuccess={() => {
-          refetchRecentProjects();
-          queryClient.invalidateQueries({ queryKey: ["projects"] });
-          setIsProjectDialogOpen(false);
-        }} 
-      />
+      <ProjectDialog open={isProjectDialogOpen} onClose={() => setIsProjectDialogOpen(false)} onSuccess={() => {
+      refetchRecentProjects();
+      queryClient.invalidateQueries({
+        queryKey: ["projects"]
+      });
+      setIsProjectDialogOpen(false);
+    }} />
 
-      <InviteMembersDialog 
-        open={isInviteMembersDialogOpen} 
-        onClose={() => setIsInviteMembersDialogOpen(false)} 
-      />
+      <InviteMembersDialog open={isInviteMembersDialogOpen} onClose={() => setIsInviteMembersDialogOpen(false)} />
 
-      <PendingInvitationsDialog 
-        open={isPendingInvitationsOpen} 
-        onClose={() => setIsPendingInvitationsOpen(false)} 
-      />
-    </Sidebar>
-  );
+      <PendingInvitationsDialog open={isPendingInvitationsOpen} onClose={() => setIsPendingInvitationsOpen(false)} />
+    </Sidebar>;
 }
