@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,7 +29,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+// Import our new components
+import { SurveyResultsCharts, SurveyResponseData } from './SurveyResultsCharts';
+import { SurveyResultsSummary } from './SurveyResultsSummary';
+import { FeedbackTable } from './FeedbackTable';
 
 interface SurveyDialogProps {
   open: boolean;
@@ -48,17 +53,11 @@ const surveySchema = z.object({
 
 type SurveyFormValues = z.infer<typeof surveySchema>;
 
-type SurveyResponse = SurveyFormValues & {
-  id: string;
-  user_id: string;
-  created_at: string;
-};
-
 export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDialogProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [surveyResponses, setSurveyResponses] = useState<SurveyResponse[]>([]);
+  const [surveyResponses, setSurveyResponses] = useState<SurveyResponseData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("survey");
   const [isMartin, setIsMartin] = useState(false);
@@ -89,7 +88,8 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
       
       if (error) throw error;
       
-      setSurveyResponses(data || []);
+      // Cast the data to the correct type
+      setSurveyResponses(data as SurveyResponseData[]);
     } catch (error) {
       console.error('Error fetching survey results:', error);
       toast({
@@ -137,7 +137,7 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
         improvement_area: values.improvement_area,
         task_management_satisfaction: values.task_management_satisfaction,
         workday_codes_usage: values.workday_codes_usage,
-        additional_feedback: values.additional_feedback,
+        additional_feedback: values.additional_feedback || '',
       });
 
       if (error) {
@@ -166,7 +166,7 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>PXL Management Tool Survey</DialogTitle>
           <DialogDescription>
@@ -450,40 +450,23 @@ export default function SurveyDialog({ open, onOpenChange, onSuccess }: SurveyDi
           </TabsContent>
           
           {isMartin && (
-            <TabsContent value="results">
+            <TabsContent value="results" className="space-y-4">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Survey Results</h3>
+                <h3 className="text-lg font-medium">Survey Results Analysis</h3>
                 {isLoading ? (
                   <p>Loading survey responses...</p>
                 ) : surveyResponses.length > 0 ? (
-                  <div className="rounded-md border overflow-hidden">
-                    <div className="overflow-x-auto max-h-[60vh]">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Usage Frequency</TableHead>
-                            <TableHead>Most Useful Feature</TableHead>
-                            <TableHead>Ease of Use (1-5)</TableHead>
-                            <TableHead>Improvement Area</TableHead>
-                            <TableHead>Task Management (1-5)</TableHead>
-                            <TableHead>Workday Codes Usage</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {surveyResponses.map((response) => (
-                            <TableRow key={response.id}>
-                              <TableCell>{format(new Date(response.created_at), 'yyyy-MM-dd')}</TableCell>
-                              <TableCell>{response.usage_frequency}</TableCell>
-                              <TableCell>{response.most_useful_feature}</TableCell>
-                              <TableCell>{response.ease_of_use}</TableCell>
-                              <TableCell>{response.improvement_area}</TableCell>
-                              <TableCell>{response.task_management_satisfaction}</TableCell>
-                              <TableCell>{response.workday_codes_usage}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                  <div className="space-y-6">
+                    {/* Summary statistics */}
+                    <SurveyResultsSummary data={surveyResponses} />
+                    
+                    {/* Charts for data visualization */}
+                    <SurveyResultsCharts data={surveyResponses} />
+                    
+                    {/* Additional feedback table */}
+                    <div className="mt-8">
+                      <h3 className="text-lg font-medium mb-4">Additional Feedback</h3>
+                      <FeedbackTable data={surveyResponses} />
                     </div>
                   </div>
                 ) : (
