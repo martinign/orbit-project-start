@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,10 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Only navigate if it's not the initial auth check
+        // Only navigate if it's not the initial auth check and it's a real auth event
         if (!isInitialAuthCheckRef.current) {
           if (event === 'SIGNED_IN') {
-            navigate('/dashboard');
+            // Only navigate to dashboard if we're not already on a protected route
+            if (location.pathname === '/' || location.pathname === '/auth') {
+              navigate('/dashboard');
+            }
           } else if (event === 'SIGNED_OUT') {
             navigate('/auth');
           }
@@ -52,10 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
+      
+      // If the user is not authenticated and is trying to access a protected route,
+      // redirect them to the auth page
+      if (!currentSession && location.pathname !== '/' && location.pathname !== '/auth') {
+        navigate('/auth');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   const signIn = async (email: string, password: string) => {
     try {
