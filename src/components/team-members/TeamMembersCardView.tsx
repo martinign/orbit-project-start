@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, Trash2, User, Shield } from 'lucide-react';
+import { Edit, Trash2, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,29 +51,6 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
     );
   };
 
-  const getPermissionBadgeColor = (permission: string | undefined) => {
-    switch (permission) {
-      case 'owner':
-        return 'bg-purple-50 text-purple-700';
-      case 'admin':
-        return 'bg-blue-50 text-blue-700';
-      case 'edit':
-        return 'bg-green-50 text-green-700';
-      case 'read_only':
-      default:
-        return 'bg-gray-50 text-gray-700';
-    }
-  };
-
-  const getPermissionLabel = (permission: string | undefined) => {
-    switch (permission) {
-      case 'owner': return 'Owner';
-      case 'admin': return 'Admin';
-      case 'edit': return 'Can Edit';
-      case 'read_only': default: return 'Read Only';
-    }
-  };
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {teamMembers.map((member) => (
@@ -92,16 +69,6 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
           </CardHeader>
           <CardContent className="pb-2 flex-grow">
             <div className="space-y-2 text-sm">
-              {/* Show permission level badge */}
-              {member.permission_level && (
-                <div className="flex items-center gap-1 mb-2">
-                  <Shield className="h-3 w-3 text-muted-foreground" />
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${getPermissionBadgeColor(member.permission_level)}`}>
-                    {getPermissionLabel(member.permission_level)}
-                  </span>
-                </div>
-              )}
-              
               {/* Only show project badge if not filtered by project */}
               {!projectId && member.projects && (
                 <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">

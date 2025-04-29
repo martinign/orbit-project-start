@@ -9,7 +9,6 @@ export interface TeamMember {
   last_name: string;
   role?: string;
   project_id: string;
-  permission_level?: string;
   projects?: {
     project_number: string;
     Sponsor: string;
@@ -29,7 +28,6 @@ export const useTeamMembers = (projectId?: string) => {
           last_name,
           role, 
           project_id,
-          permission_level,
           projects:project_id(
             project_number,
             Sponsor
