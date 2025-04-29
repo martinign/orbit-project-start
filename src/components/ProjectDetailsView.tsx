@@ -121,7 +121,7 @@ const ProjectDetailsView = () => {
     const notesChannel = supabase.channel(`notes_count_${id}`)
       .on('postgres_changes',
         {
-          event: '*',
+          event: '*',  // Changed from 'INSERT' to '*' to listen for all events
           schema: 'public',
           table: 'project_notes',
           filter: `project_id=eq.${id}`
@@ -137,7 +137,7 @@ const ProjectDetailsView = () => {
     const eventsChannel = supabase.channel(`events_count_${id}`)
       .on('postgres_changes',
         {
-          event: '*',
+          event: '*',  // Changed from 'INSERT' to '*' to listen for all events
           schema: 'public',
           table: 'project_events',
           filter: `project_id=eq.${id}`
@@ -152,7 +152,7 @@ const ProjectDetailsView = () => {
     const tasksChannel = supabase.channel(`tasks_count_${id}`)
       .on('postgres_changes',
         {
-          event: '*',
+          event: '*',  // Changed from 'INSERT' to '*' to listen for all events
           schema: 'public',
           table: 'project_tasks',
           filter: `project_id=eq.${id}`

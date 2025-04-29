@@ -57,17 +57,32 @@ export function useProjectNotes(projectId: string) {
     }
   }, [notesData]);
 
-  // Add real-time subscription
-  useRealtimeSubscription({
-    table: 'project_notes',
-    filter: 'project_id',
-    filterValue: projectId,
-    onRecordChange: () => {
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-      }, 100);
-    }
-  });
+  // Add real-time subscription for all events (INSERT, UPDATE, DELETE)
+  useEffect(() => {
+    if (!projectId) return;
+    
+    const channel = supabase.channel(`notes_changes_${projectId}`)
+      .on('postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'project_notes',
+          filter: `project_id=eq.${projectId}`
+        },
+        () => {
+          // Invalidate the queries to trigger a refresh of both notes and notes count
+          queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
+          queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
+          queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup function
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
 
   return {
     notes,
@@ -75,4 +90,3 @@ export function useProjectNotes(projectId: string) {
     setNotes,
   };
 }
-
