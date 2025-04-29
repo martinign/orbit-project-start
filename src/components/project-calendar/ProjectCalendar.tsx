@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -39,6 +40,30 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
+  const queryClient = useQueryClient();
+  
+  // Add a useEffect for real-time subscriptions
+  useEffect(() => {
+    // Create a channel for project events changes
+    const channel = supabase.channel(`project_events_${projectId}`)
+      .on('postgres_changes', {
+        event: '*', // Listen for all events: INSERT, UPDATE, DELETE
+        schema: 'public',
+        table: 'project_events',
+        filter: `project_id=eq.${projectId}`
+      }, () => {
+        // Invalidate and refetch when any change happens
+        queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+        console.log('Project events changed, refreshing data');
+      })
+      .subscribe();
+
+    // Cleanup function
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['project_events', projectId],

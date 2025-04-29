@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 interface ProjectEvent {
   id: string;
@@ -30,6 +31,27 @@ export function useProjectEvents(projectId: string) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  // Add real-time subscription for project events
+  useEffect(() => {
+    const channel = supabase.channel(`events_hook_${projectId}`)
+      .on('postgres_changes', {
+        event: '*', // Listen for all events: INSERT, UPDATE, DELETE
+        schema: 'public',
+        table: 'project_events',
+        filter: `project_id=eq.${projectId}`
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
+        queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
+        queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
+
   const { data: hasEditAccess } = useQuery({
     queryKey: ["project_edit_access", projectId],
     queryFn: async () => {
@@ -55,7 +77,10 @@ export function useProjectEvents(projectId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project_events"] });
+      queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
       toast({
         title: "Event created",
         description: "The event has been created successfully.",
@@ -80,7 +105,9 @@ export function useProjectEvents(projectId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project_events"] });
+      queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
       toast({
         title: "Event updated",
         description: "The event has been updated successfully.",
@@ -105,7 +132,10 @@ export function useProjectEvents(projectId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["project_events"] });
+      queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
       toast({
         title: "Event deleted",
         description: "The event has been deleted successfully.",
