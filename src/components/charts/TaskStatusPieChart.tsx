@@ -20,8 +20,8 @@ const renderCustomizedLabel = (props: any) => {
   if (percent < 0.02) return null;
   
   const RADIAN = Math.PI / 180;
-  // Position label in the middle of the slice
-  const radius = outerRadius * 0.4;
+  // Position label closer to the outer edge of the slice (80% of radius)
+  const radius = outerRadius * 0.8;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
@@ -45,7 +45,7 @@ const renderCustomizedLabel = (props: any) => {
 export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const total = data.reduce((sum, item) => sum + item.value, this);
+  const total = data.reduce((sum, item) => sum + item.value, 0);
   
   // Sort data by value in descending order for better visualization
   const sortedData = [...data].sort((a, b) => b.value - a.value);
@@ -76,7 +76,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
   }));
 
   return (
-    <div className="w-full h-[320px] flex flex-col items-center justify-center">
+    <div className="w-full h-[380px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -84,7 +84,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             cx="50%"
             cy="50%"
             labelLine={false}
-            outerRadius={isMobile ? 100 : 120}
+            outerRadius={isMobile ? 130 : 160}
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
