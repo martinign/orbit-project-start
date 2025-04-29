@@ -14,7 +14,7 @@ export const useInvitationsCount = () => {
         // Count pending invitations for the current user
         const { count, error } = await supabase
           .from("project_invitations")
-          .select("id", { count: "exact", head: true })
+          .select("*", { count: "exact", head: true })
           .eq("invitee_id", user.user.id)
           .eq("status", "pending");
 

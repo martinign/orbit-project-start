@@ -17,18 +17,16 @@ interface Invitation {
   project_id: string;
   permission_level: "owner" | "admin" | "edit" | "read_only";
   created_at: string;
-  projects: {
-    project_number: string;
-    Sponsor: string;
-  } | null;
+}
+
+interface ProjectDetails {
+  project_number: string;
+  Sponsor: string | null;
 }
 
 interface InvitationWithInviterId extends Invitation {
   inviter_id: string;
-}
-
-interface InvitationWithSenderName extends InvitationWithInviterId {
-  inviterName?: string;
+  projects?: ProjectDetails;
 }
 
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
@@ -43,7 +41,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) return [];
 
-        // Use clear aliases for all columns to avoid ambiguity
+        // Use separate query for projects to avoid ambiguous column reference
         const { data, error } = await supabase
           .from("project_invitations")
           .select(`
@@ -51,11 +49,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             project_id,
             permission_level,
             created_at,
-            inviter_id,
-            projects:project_invitations.project_id (
-              project_number,
-              Sponsor
-            )
+            inviter_id
           `)
           .eq("invitee_id", user.user.id)
           .eq("status", "pending")
@@ -66,8 +60,29 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           throw error;
         }
         
-        // Ensure we return the expected type
-        return (data || []) as InvitationWithInviterId[];
+        if (!data || data.length === 0) {
+          return [] as InvitationWithInviterId[];
+        }
+
+        // Now fetch project details for each invitation
+        const invitationsWithProjects: InvitationWithInviterId[] = await Promise.all(
+          data.map(async (invitation: InvitationWithInviterId) => {
+            const { data: projectData, error: projectError } = await supabase
+              .from("projects")
+              .select("project_number, Sponsor")
+              .eq("id", invitation.project_id)
+              .single();
+
+            if (projectError) {
+              console.error("Error fetching project details:", projectError);
+              return { ...invitation, projects: undefined };
+            }
+
+            return { ...invitation, projects: projectData as ProjectDetails };
+          })
+        );
+        
+        return invitationsWithProjects;
       } catch (err) {
         console.error("Error in invitation query:", err);
         return [] as InvitationWithInviterId[];
@@ -218,7 +233,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                 >
                   <div className="font-medium">
                     {invitation.projects ?
-                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
+                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor || ''}` :
                       "Unknown Project"}
                   </div>
                   <div className="text-sm text-muted-foreground">
