@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { PlusCircle, LayoutGrid, LayoutList, Edit, Trash2, Search } from "lucide-react";
@@ -15,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 const Projects = () => {
   const {
     user
@@ -36,7 +34,6 @@ const Projects = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"all" | "billable" | "non-billable">("all");
-
   const {
     data: projects,
     isLoading,
@@ -54,11 +51,10 @@ const Projects = () => {
       return data;
     }
   });
-
   useEffect(() => {
     if (projects && projects.length > 0) {
       let filtered = projects;
-      
+
       // Filter by tab selection
       if (activeTab !== "all") {
         filtered = filtered.filter(project => project.project_type === activeTab);
@@ -67,21 +63,13 @@ const Projects = () => {
       // Filter by search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(project => 
-          project.project_number.toLowerCase().includes(query) || 
-          (project.protocol_number && project.protocol_number.toLowerCase().includes(query)) || 
-          (project.protocol_title && project.protocol_title.toLowerCase().includes(query)) || 
-          (project.Sponsor && project.Sponsor.toLowerCase().includes(query)) || 
-          project.status.toLowerCase().includes(query)
-        );
+        filtered = filtered.filter(project => project.project_number.toLowerCase().includes(query) || project.protocol_number && project.protocol_number.toLowerCase().includes(query) || project.protocol_title && project.protocol_title.toLowerCase().includes(query) || project.Sponsor && project.Sponsor.toLowerCase().includes(query) || project.status.toLowerCase().includes(query));
       }
-      
       setFilteredProjects(filtered);
     } else {
       setFilteredProjects([]);
     }
   }, [searchQuery, projects, activeTab]);
-
   const handleDeleteProject = async (projectId: string) => {
     try {
       const {
@@ -110,32 +98,26 @@ const Projects = () => {
       });
     }
   };
-
   const openEditDialog = (project: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsProjectDialogOpen(true);
   };
-
   const openDeleteDialog = (project: any, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setSelectedProject(project);
     setIsDeleteDialogOpen(true);
   };
-
   const closeProjectDialog = () => {
     setSelectedProject(null);
     setIsProjectDialogOpen(false);
   };
-
   const handleProjectClick = (project: any) => {
     navigate(`/projects/${project.id}`);
   };
-
   if (id) {
     return <ProjectDetailsView />;
   }
-
   return <div className="w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Projects</h1>
@@ -161,7 +143,7 @@ const Projects = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={(value) => setActiveTab(value as "all" | "billable" | "non-billable")}>
+      <Tabs defaultValue="all" value={activeTab} onValueChange={value => setActiveTab(value as "all" | "billable" | "non-billable")}>
         <TabsList className="mb-4">
           <TabsTrigger value="all">All Projects</TabsTrigger>
           <TabsTrigger value="billable">Billable</TabsTrigger>
@@ -177,10 +159,7 @@ const Projects = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
-                filteredProjects && filteredProjects.length > 0 ? 
-                  viewMode === "table" ? 
-                    <Table>
+              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project ID</TableHead>
@@ -189,7 +168,7 @@ const Projects = () => {
                           <TableHead>Protocol Number</TableHead>
                           <TableHead>Title</TableHead>
                           <TableHead>Description</TableHead>
-                          <TableHead>Role</TableHead>
+                          
                           <TableHead>Status</TableHead>
                           <TableHead className="w-[120px] text-right">Actions</TableHead>
                         </TableRow>
@@ -206,7 +185,7 @@ const Projects = () => {
                             <TableCell>{project.protocol_number || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.protocol_title || '-'}</TableCell>
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
-                            <TableCell>{project.role || 'owner'}</TableCell>
+                            
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {project.status}
@@ -224,16 +203,14 @@ const Projects = () => {
                             </TableCell>
                           </TableRow>)}
                       </TableBody>
-                    </Table> : 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                    </Table> : <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                       {filteredProjects.map(project => <div key={project.id} onClick={() => handleProjectClick(project)} className="cursor-pointer">
                           <ProjectCard project={project} onDelete={id => {
-                    openDeleteDialog(project);
-                    return false;
-                  }} onUpdate={() => refetch()} />
+                  openDeleteDialog(project);
+                  return false;
+                }} onUpdate={() => refetch()} />
                         </div>)}
-                    </div> : 
-                <div className="text-center p-4">
+                    </div> : <div className="text-center p-4">
                   <p className="text-muted-foreground">
                     {searchQuery ? "No projects match your search criteria" : "No projects found"}
                   </p>
@@ -251,10 +228,7 @@ const Projects = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
-                filteredProjects && filteredProjects.length > 0 ? 
-                  viewMode === "table" ? 
-                    <Table>
+              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project ID</TableHead>
@@ -292,16 +266,14 @@ const Projects = () => {
                             </TableCell>
                           </TableRow>)}
                       </TableBody>
-                    </Table> : 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                    </Table> : <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                       {filteredProjects.map(project => <div key={project.id} onClick={() => handleProjectClick(project)} className="cursor-pointer">
                           <ProjectCard project={project} onDelete={id => {
-                    openDeleteDialog(project);
-                    return false;
-                  }} onUpdate={() => refetch()} />
+                  openDeleteDialog(project);
+                  return false;
+                }} onUpdate={() => refetch()} />
                         </div>)}
-                    </div> : 
-                <div className="text-center p-4">
+                    </div> : <div className="text-center p-4">
                   <p className="text-muted-foreground">
                     No billable projects found
                   </p>
@@ -319,10 +291,7 @@ const Projects = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : 
-                filteredProjects && filteredProjects.length > 0 ? 
-                  viewMode === "table" ? 
-                    <Table>
+              {isLoading ? <div className="flex justify-center p-4">Loading projects...</div> : filteredProjects && filteredProjects.length > 0 ? viewMode === "table" ? <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead>Project ID</TableHead>
@@ -354,16 +323,14 @@ const Projects = () => {
                             </TableCell>
                           </TableRow>)}
                       </TableBody>
-                    </Table> : 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                    </Table> : <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
                       {filteredProjects.map(project => <div key={project.id} onClick={() => handleProjectClick(project)} className="cursor-pointer">
                           <ProjectCard project={project} onDelete={id => {
-                    openDeleteDialog(project);
-                    return false;
-                  }} onUpdate={() => refetch()} />
+                  openDeleteDialog(project);
+                  return false;
+                }} onUpdate={() => refetch()} />
                         </div>)}
-                    </div> : 
-                <div className="text-center p-4">
+                    </div> : <div className="text-center p-4">
                   <p className="text-muted-foreground">
                     No non-billable projects found
                   </p>
@@ -397,5 +364,4 @@ const Projects = () => {
       </AlertDialog>
     </div>;
 };
-
 export default Projects;
