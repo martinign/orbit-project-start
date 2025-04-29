@@ -143,7 +143,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
             last_name: profile?.last_name || "Unnamed User",
-            location: profile?.location,
             role: invitationToHandle.permission_level // Use permission_level from invitation as role
           });
 
@@ -201,11 +200,15 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                   key={invitation.id}
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
+
+                  
                   <div className="font-medium">
                     {invitation.projects ?
                       `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
                       "Unknown Project"}
                   </div>
+
+                  
                   <div className="text-sm text-muted-foreground">
                     Permission Level: {invitation.permission_level}
                   </div>
