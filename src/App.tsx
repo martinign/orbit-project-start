@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import WorkdayCodes from "./pages/WorkdayCodes";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/projects/:id" element={<Dashboard />} />
               <Route path="/contacts" element={<Dashboard />} />
               <Route path="/team-members" element={<Dashboard />} />
+              <Route path="/workday-codes" element={<WorkdayCodes />} />
               {/* Add more protected routes here as needed */}
             </Route>
             

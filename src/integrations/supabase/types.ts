@@ -573,6 +573,33 @@ export type Database = {
         }
         Relationships: []
       }
+      workday_codes: {
+        Row: {
+          activity: string
+          created_at: string
+          id: string
+          task: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          id?: string
+          task: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          id?: string
+          task?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
