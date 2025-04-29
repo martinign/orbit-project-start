@@ -18,7 +18,7 @@ const renderCustomLabel = (props: any) => {
   
   // Calculate position for the label
   const RADIAN = Math.PI / 180;
-  const radius = outerRadius * 1.2; // Position labels slightly outside the pie
+  const radius = outerRadius * 1.4; // Increased from 1.2 to position labels further outside
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
