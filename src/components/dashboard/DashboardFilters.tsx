@@ -110,6 +110,20 @@ export function DashboardFilters({
         </div>
 
         <div className="grid gap-1.5 w-full md:w-1/5">
+          <Label htmlFor="project-type-filter">Project Type</Label>
+          <Select value={projectType} onValueChange={value => setProjectType(value)}>
+            <SelectTrigger id="project-type-filter">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="billable">Billable</SelectItem>
+              <SelectItem value="non-billable">Non-billable</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="grid gap-1.5 w-full md:w-1/5">
           <Label htmlFor="status-filter">Task Status</Label>
           <Select value={status} onValueChange={value => setStatus(value)}>
             <SelectTrigger id="status-filter">
@@ -141,19 +155,7 @@ export function DashboardFilters({
           </Select>
         </div>
 
-        <div className="grid gap-1.5 w-full md:w-1/5">
-          <Label htmlFor="project-type-filter">Project Type</Label>
-          <Select value={projectType} onValueChange={value => setProjectType(value)}>
-            <SelectTrigger id="project-type-filter">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="billable">Billable</SelectItem>
-              <SelectItem value="non-billable">Non-billable</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+
 
         <div className="flex gap-2 w-full md:w-1/5">
           <Button onClick={applyFilters} className="w-full" variant="secondary">
