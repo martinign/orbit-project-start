@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,7 @@ interface DashboardFiltersProps {
     projectId?: string;
     status?: string;
     priority?: string;
+    projectType?: string;
   }) => void;
   showNewTasks?: boolean;
   onClearNewTasks?: () => void;
@@ -26,6 +28,7 @@ export function DashboardFilters({
   const [projectId, setProjectId] = useState<string>("all");
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
+  const [projectType, setProjectType] = useState<string>("all");
   
   const { toast } = useToast();
   
@@ -46,6 +49,7 @@ export function DashboardFilters({
     setProjectId("all");
     setStatus("all");
     setPriority("all");
+    setProjectType("all");
     onFilterChange({});
     if (showNewTasks && onClearNewTasks) {
       onClearNewTasks();
@@ -60,7 +64,8 @@ export function DashboardFilters({
     const filters = {
       projectId: projectId !== "all" ? projectId : undefined,
       status: status !== "all" ? status : undefined,
-      priority: priority !== "all" ? priority : undefined
+      priority: priority !== "all" ? priority : undefined,
+      projectType: projectType !== "all" ? projectType : undefined
     };
     onFilterChange(filters);
     toast({
@@ -87,7 +92,7 @@ export function DashboardFilters({
             </Button>
           </div>
         )}
-        <div className="grid gap-1.5 w-full md:w-1/4">
+        <div className="grid gap-1.5 w-full md:w-1/5">
           <Label htmlFor="project-filter">Project</Label>
           <Select value={projectId} onValueChange={value => setProjectId(value)}>
             <SelectTrigger id="project-filter">
@@ -104,7 +109,7 @@ export function DashboardFilters({
           </Select>
         </div>
 
-        <div className="grid gap-1.5 w-full md:w-1/4">
+        <div className="grid gap-1.5 w-full md:w-1/5">
           <Label htmlFor="status-filter">Task Status</Label>
           <Select value={status} onValueChange={value => setStatus(value)}>
             <SelectTrigger id="status-filter">
@@ -121,7 +126,7 @@ export function DashboardFilters({
           </Select>
         </div>
 
-        <div className="grid gap-1.5 w-full md:w-1/4">
+        <div className="grid gap-1.5 w-full md:w-1/5">
           <Label htmlFor="priority-filter">Task Priority</Label>
           <Select value={priority} onValueChange={value => setPriority(value)}>
             <SelectTrigger id="priority-filter">
@@ -136,7 +141,21 @@ export function DashboardFilters({
           </Select>
         </div>
 
-        <div className="flex gap-2 w-full md:w-1/4">
+        <div className="grid gap-1.5 w-full md:w-1/5">
+          <Label htmlFor="project-type-filter">Project Type</Label>
+          <Select value={projectType} onValueChange={value => setProjectType(value)}>
+            <SelectTrigger id="project-type-filter">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="billable">Billable</SelectItem>
+              <SelectItem value="non-billable">Non-billable</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2 w-full md:w-1/5">
           <Button onClick={applyFilters} className="w-full" variant="secondary">
             <Filter className="mr-2 h-4 w-4" /> Apply Filters
           </Button>
