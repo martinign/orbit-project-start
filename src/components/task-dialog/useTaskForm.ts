@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { WorkdayCodeOption, fetchWorkdayCodes } from '@/utils/workdayCombinedUtils';
+import { WorkdayCodeOption, fetchWorkdayCodes, fetchProjectWorkdayCodes } from '@/utils/workdayCombinedUtils';
 
 interface Project {
   id: string;
@@ -70,10 +70,21 @@ export const useTaskForm = (
         fetchProjects();
       }
 
-      // Fetch workday codes
+      // Fetch workday codes for the specific project if projectId is available
       const loadWorkdayCodes = async () => {
-        const { data } = await fetchWorkdayCodes();
-        setWorkdayCodes(data);
+        if (projectId) {
+          // Fetch only workday codes assigned to this project
+          const { data } = await fetchProjectWorkdayCodes(projectId);
+          setWorkdayCodes(data);
+        } else if (task?.project_id) {
+          // For edit mode without projectId in props but available in task
+          const { data } = await fetchProjectWorkdayCodes(task.project_id);
+          setWorkdayCodes(data);
+        } else {
+          // Fallback to all workday codes if no project context
+          const { data } = await fetchWorkdayCodes();
+          setWorkdayCodes(data);
+        }
       };
 
       loadWorkdayCodes();
@@ -118,6 +129,23 @@ export const useTaskForm = (
       setDidInitialFormSet(true);
     }
   }, [mode, task, projectId, didInitialFormSet]);
+
+  // Listen for project selection changes and update workday codes accordingly
+  useEffect(() => {
+    if (selectedProject && selectedProject !== projectId) {
+      const loadWorkdayCodes = async () => {
+        const { data } = await fetchProjectWorkdayCodes(selectedProject);
+        setWorkdayCodes(data);
+        // Reset selected workday code if current selection isn't available for new project
+        const codeExists = data.some(code => code.id === selectedWorkdayCode);
+        if (!codeExists && selectedWorkdayCode !== 'none') {
+          setSelectedWorkdayCode('none');
+        }
+      };
+      
+      loadWorkdayCodes();
+    }
+  }, [selectedProject, projectId, selectedWorkdayCode]);
 
   // Reset form when dialog closes
   useEffect(() => {

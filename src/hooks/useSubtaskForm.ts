@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { WorkdayCodeOption, fetchWorkdayCodes } from '@/utils/workdayCombinedUtils';
+import { WorkdayCodeOption, fetchProjectWorkdayCodes } from '@/utils/workdayCombinedUtils';
 
 interface Subtask {
   id?: string;
@@ -20,6 +20,7 @@ interface Subtask {
 interface Task {
   id: string;
   title: string;
+  project_id: string; // Ensure project_id is part of Task interface
 }
 
 export const useSubtaskForm = (
@@ -41,10 +42,14 @@ export const useSubtaskForm = (
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch workday codes
+    // Fetch workday codes specific to the parent task's project
     const loadWorkdayCodes = async () => {
-      const { data } = await fetchWorkdayCodes();
-      setWorkdayCodes(data);
+      if (parentTask && parentTask.project_id) {
+        const { data } = await fetchProjectWorkdayCodes(parentTask.project_id);
+        setWorkdayCodes(data);
+      } else {
+        setWorkdayCodes([]);
+      }
     };
 
     loadWorkdayCodes();
