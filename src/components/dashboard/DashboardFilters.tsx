@@ -92,6 +92,21 @@ export function DashboardFilters({
             </Button>
           </div>
         )}
+
+        <div className="grid gap-1.5 w-full md:w-1/5">
+          <Label htmlFor="project-type-filter">Project Type</Label>
+          <Select value={projectType} onValueChange={value => setProjectType(value)}>
+            <SelectTrigger id="project-type-filter">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="billable">Billable</SelectItem>
+              <SelectItem value="non-billable">Non-billable</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
         <div className="grid gap-1.5 w-full md:w-1/5">
           <Label htmlFor="project-filter">Project</Label>
           <Select value={projectId} onValueChange={value => setProjectId(value)}>
@@ -105,20 +120,6 @@ export function DashboardFilters({
                   {project.project_number} - {project.Sponsor}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-1.5 w-full md:w-1/5">
-          <Label htmlFor="project-type-filter">Project Type</Label>
-          <Select value={projectType} onValueChange={value => setProjectType(value)}>
-            <SelectTrigger id="project-type-filter">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="billable">Billable</SelectItem>
-              <SelectItem value="non-billable">Non-billable</SelectItem>
             </SelectContent>
           </Select>
         </div>
