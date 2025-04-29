@@ -7,25 +7,32 @@ export const useInvitationsCount = () => {
   const { data: count = 0, refetch } = useQuery({
     queryKey: ["pending_invitations_count"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return 0;
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return 0;
 
-      const { count, error } = await supabase
-        .from("project_invitations")
-        .select("*", { count: "exact", head: true })
-        .eq("invitee_id", user.user.id)
-        .eq("status", "pending");
+        // Explicitly requesting count only and using head:true to optimize query
+        const { count, error } = await supabase
+          .from("project_invitations")
+          .select("*", { count: "exact", head: true })
+          .eq("invitee_id", user.user.id)
+          .eq("status", "pending");
 
-      if (error) {
-        console.error("Error fetching invitations count:", error);
+        if (error) {
+          console.error("Error fetching invitations count:", error);
+          return 0;
+        }
+
+        return count || 0;
+      } catch (error) {
+        console.error("Error in invitations count query:", error);
         return 0;
       }
-
-      return count || 0;
     },
   });
 
   useEffect(() => {
+    // Set up realtime subscription to refresh count when invitations change
     const channel = supabase
       .channel("invitations_changes")
       .on(

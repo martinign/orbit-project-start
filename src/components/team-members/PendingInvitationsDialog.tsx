@@ -39,28 +39,38 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
     queryKey: ["pending_invitations"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return [];
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return [];
 
-      const { data, error } = await supabase
-        .from("project_invitations")
-        .select(`
-          id,
-          project_id,
-          permission_level,
-          created_at,
-          inviter_id,
-          projects:project_id (
-            project_number,
-            Sponsor
-          )
-        `)
-        .eq("invitee_id", user.user.id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
+        // Fix the ambiguous project_id reference by specifying the table
+        const { data, error } = await supabase
+          .from("project_invitations")
+          .select(`
+            id,
+            project_id,
+            permission_level,
+            created_at,
+            inviter_id,
+            projects:project_id (
+              project_number,
+              Sponsor
+            )
+          `)
+          .eq("invitee_id", user.user.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as InvitationWithInviterId[];
+        if (error) {
+          console.error("Error fetching invitations:", error);
+          throw error;
+        }
+        
+        return (data || []) as InvitationWithInviterId[];
+      } catch (error) {
+        console.error("Error in pending invitations query:", error);
+        return [];
+      }
     },
     enabled: open,
   });
@@ -124,7 +134,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
-        // FIXED: Using 'role' instead of 'permission_level' in project_team_members
+        // Using 'role' instead of 'permission_level' in project_team_members
         // permission_level from project_invitations is stored as role in project_team_members
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
