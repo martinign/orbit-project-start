@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { WorkdayCodeOption, fetchWorkdayCodes } from '@/utils/workdayCombinedUtils';
 
 interface Project {
   id: string;
@@ -21,6 +22,8 @@ interface TaskFormData {
   notes: string;
   assignedTo: string;
   projects: Project[];
+  workdayCodes: WorkdayCodeOption[];
+  selectedWorkdayCode: string;
   isSubmitting: boolean;
   didInitialFormSet: boolean;
 }
@@ -46,6 +49,8 @@ export const useTaskForm = (
   const [notes, setNotes] = useState('');
   const [assignedTo, setAssignedTo] = useState('none');
   const [projects, setProjects] = useState<Project[]>([]);
+  const [workdayCodes, setWorkdayCodes] = useState<WorkdayCodeOption[]>([]);
+  const [selectedWorkdayCode, setSelectedWorkdayCode] = useState<string>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
   
@@ -65,6 +70,14 @@ export const useTaskForm = (
         fetchProjects();
       }
 
+      // Fetch workday codes
+      const loadWorkdayCodes = async () => {
+        const { data } = await fetchWorkdayCodes();
+        setWorkdayCodes(data);
+      };
+
+      loadWorkdayCodes();
+
       if (mode === 'edit' && task) {
         setTitle(task.title || '');
         setDescription(task.description || '');
@@ -83,6 +96,13 @@ export const useTaskForm = (
         if (task.due_date) {
           setDueDate(new Date(task.due_date));
         }
+
+        // Set workday code if exists
+        if (task.workday_code_id) {
+          setSelectedWorkdayCode(task.workday_code_id);
+        } else {
+          setSelectedWorkdayCode('none');
+        }
       } else {
         setTitle('');
         setDescription('');
@@ -92,6 +112,7 @@ export const useTaskForm = (
         setAssignedTo('none');
         setDueDate(undefined);
         setSelectedProject(projectId);
+        setSelectedWorkdayCode('none');
       }
 
       setDidInitialFormSet(true);
@@ -140,6 +161,7 @@ export const useTaskForm = (
         due_date: dueDate ? dueDate.toISOString() : null,
         assigned_to: assignedTo === 'none' ? null : assignedTo,
         user_id: user.id,
+        workday_code_id: selectedWorkdayCode === 'none' ? null : selectedWorkdayCode
       };
       
       console.log("Saving task with data:", taskData);
@@ -215,6 +237,9 @@ export const useTaskForm = (
     selectedProject,
     setSelectedProject,
     projects,
+    workdayCodes,
+    selectedWorkdayCode,
+    setSelectedWorkdayCode,
     isSubmitting,
     handleSubmit,
   };

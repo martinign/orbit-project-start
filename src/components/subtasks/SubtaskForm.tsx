@@ -20,6 +20,7 @@ import {
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkdayCodeOption } from '@/utils/workdayCombinedUtils';
 
 interface SubtaskFormProps {
   title: string;
@@ -28,6 +29,7 @@ interface SubtaskFormProps {
   dueDate: Date | undefined;
   notes: string;
   assignedTo: string;
+  selectedWorkdayCode: string;
   isSubmitting: boolean;
   setTitle: (value: string) => void;
   setDescription: (value: string) => void;
@@ -35,7 +37,9 @@ interface SubtaskFormProps {
   setDueDate: (date: Date | undefined) => void;
   setNotes: (value: string) => void;
   setAssignedTo: (value: string) => void;
+  setSelectedWorkdayCode: (value: string) => void;
   teamMembers?: { id: string; full_name: string; last_name: string; display_name?: string; }[];
+  workdayCodes?: WorkdayCodeOption[];
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
@@ -47,6 +51,7 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
   dueDate,
   notes,
   assignedTo,
+  selectedWorkdayCode,
   isSubmitting,
   setTitle,
   setDescription,
@@ -54,7 +59,9 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
   setDueDate,
   setNotes,
   setAssignedTo,
+  setSelectedWorkdayCode,
   teamMembers,
+  workdayCodes = [],
   onSubmit,
   onClose,
 }) => {
@@ -99,6 +106,23 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="workdayCode">Workday Code (Optional)</Label>
+        <Select value={selectedWorkdayCode} onValueChange={setSelectedWorkdayCode}>
+          <SelectTrigger id="workdayCode">
+            <SelectValue placeholder="Select a workday code" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {workdayCodes.map((code) => (
+              <SelectItem key={code.id} value={code.id}>
+                {code.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="assignedTo">Assigned To (Optional)</Label>
         <Select value={assignedTo} onValueChange={setAssignedTo}>
           <SelectTrigger id="assignedTo">
@@ -125,12 +149,13 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
                 "w-full justify-start text-left font-normal",
                 !dueDate && "text-muted-foreground"
               )}
+              type="button"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dueDate ? format(dueDate, "PPP") : "Pick a date"}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0" align="start">
             <Calendar
               mode="single"
               selected={dueDate}
@@ -156,7 +181,7 @@ export const SubtaskForm: React.FC<SubtaskFormProps> = ({
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600 text-white">
           {isSubmitting ? 'Saving...' : 'Save Subtask'}
         </Button>
       </div>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { WorkdayCodeOption, fetchWorkdayCodes } from '@/utils/workdayCombinedUtils';
 
 interface Subtask {
   id?: string;
@@ -13,6 +14,7 @@ interface Subtask {
   parent_task_id: string;
   notes?: string;
   assigned_to?: string;
+  workday_code_id?: string;
 }
 
 interface Task {
@@ -34,9 +36,19 @@ export const useSubtaskForm = (
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
   const [assignedTo, setAssignedTo] = useState('none');
+  const [workdayCodes, setWorkdayCodes] = useState<WorkdayCodeOption[]>([]);
+  const [selectedWorkdayCode, setSelectedWorkdayCode] = useState<string>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Fetch workday codes
+    const loadWorkdayCodes = async () => {
+      const { data } = await fetchWorkdayCodes();
+      setWorkdayCodes(data);
+    };
+
+    loadWorkdayCodes();
+
     if (mode === 'edit' && subtask) {
       setTitle(subtask.title || '');
       setDescription(subtask.description || '');
@@ -54,6 +66,12 @@ export const useSubtaskForm = (
       } else {
         setDueDate(undefined);
       }
+
+      if (subtask.workday_code_id) {
+        setSelectedWorkdayCode(subtask.workday_code_id);
+      } else {
+        setSelectedWorkdayCode('none');
+      }
     } else {
       // Reset form for create mode
       setTitle('');
@@ -62,6 +80,7 @@ export const useSubtaskForm = (
       setDueDate(undefined);
       setNotes('');
       setAssignedTo('none');
+      setSelectedWorkdayCode('none');
     }
   }, [mode, subtask, parentTask]);
 
@@ -97,7 +116,8 @@ export const useSubtaskForm = (
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
         user_id: user.id,
-        assigned_to: assignedTo === 'none' ? null : assignedTo
+        assigned_to: assignedTo === 'none' ? null : assignedTo,
+        workday_code_id: selectedWorkdayCode === 'none' ? null : selectedWorkdayCode
       };
       
       if (mode === 'edit' && subtask?.id) {
@@ -153,6 +173,9 @@ export const useSubtaskForm = (
     setNotes,
     assignedTo,
     setAssignedTo,
+    workdayCodes,
+    selectedWorkdayCode,
+    setSelectedWorkdayCode,
     isSubmitting,
     handleSubmit,
   };

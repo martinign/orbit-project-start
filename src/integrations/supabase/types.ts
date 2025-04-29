@@ -276,6 +276,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          workday_code_id: string | null
         }
         Insert: {
           assigned_to?: string | null
@@ -289,6 +290,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          workday_code_id?: string | null
         }
         Update: {
           assigned_to?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          workday_code_id?: string | null
         }
         Relationships: [
           {
@@ -309,6 +312,13 @@ export type Database = {
             columns: ["parent_task_id"]
             isOneToOne: false
             referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_subtasks_workday_code_id_fkey"
+            columns: ["workday_code_id"]
+            isOneToOne: false
+            referencedRelation: "workday_codes"
             referencedColumns: ["id"]
           },
         ]
@@ -365,6 +375,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          workday_code_id: string | null
         }
         Insert: {
           assigned_to?: string | null
@@ -382,6 +393,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          workday_code_id?: string | null
         }
         Update: {
           assigned_to?: string | null
@@ -399,6 +411,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          workday_code_id?: string | null
         }
         Relationships: [
           {
@@ -406,6 +419,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_workday_code_id_fkey"
+            columns: ["workday_code_id"]
+            isOneToOne: false
+            referencedRelation: "workday_codes"
             referencedColumns: ["id"]
           },
         ]

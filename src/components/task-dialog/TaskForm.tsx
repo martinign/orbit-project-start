@@ -22,6 +22,7 @@ import { CalendarIcon, BookTemplate } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DialogFooter } from "@/components/ui/dialog";
 import { TeamMember } from '@/hooks/useTeamMembers';
+import { WorkdayCodeOption } from '@/utils/workdayCombinedUtils';
 
 interface Project {
   id: string;
@@ -46,8 +47,11 @@ interface TaskFormProps {
   setNotes: (notes: string) => void;
   assignedTo: string;
   setAssignedTo: (memberId: string) => void;
+  selectedWorkdayCode: string;
+  setSelectedWorkdayCode: (codeId: string) => void;
   teamMembers?: TeamMember[];
   projects?: Project[];
+  workdayCodes?: WorkdayCodeOption[];
   hasFixedProject: boolean;
   isSubmitting: boolean;
   onSubmit: (e: React.FormEvent) => void;
@@ -73,8 +77,11 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   setNotes,
   assignedTo,
   setAssignedTo,
+  selectedWorkdayCode,
+  setSelectedWorkdayCode,
   teamMembers = [],
   projects = [],
+  workdayCodes = [],
   hasFixedProject,
   isSubmitting,
   onSubmit,
@@ -175,6 +182,23 @@ export const TaskForm: React.FC<TaskFormProps> = ({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="workdayCode">Workday Code (Optional)</Label>
+        <Select value={selectedWorkdayCode} onValueChange={setSelectedWorkdayCode}>
+          <SelectTrigger id="workdayCode">
+            <SelectValue placeholder="Select a workday code" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {workdayCodes.map((code) => (
+              <SelectItem key={code.id} value={code.id}>
+                {code.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="assignedTo">Assigned To (Optional)</Label>
         <Select value={assignedTo} onValueChange={setAssignedTo}>
           <SelectTrigger id="assignedTo">
@@ -233,7 +257,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600 text-white">
           {isSubmitting ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Create task'}
         </Button>
       </DialogFooter>

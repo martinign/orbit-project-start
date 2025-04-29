@@ -21,6 +21,7 @@ interface Subtask {
   parent_task_id: string;
   notes?: string;
   assigned_to?: string;
+  workday_code_id?: string;
 }
 
 interface SubtaskDialogProps {
@@ -68,6 +69,9 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
         <SubtaskForm
           {...formProps}
           teamMembers={processedTeamMembers}
+          workdayCodes={formProps.workdayCodes}
+          selectedWorkdayCode={formProps.selectedWorkdayCode}
+          setSelectedWorkdayCode={formProps.setSelectedWorkdayCode}
           onSubmit={formProps.handleSubmit}
           onClose={onClose}
         />
