@@ -57,7 +57,7 @@ export function useNewItems(projectId: string) {
       channel
         .on('postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Changed from 'INSERT' to '*' to listen for all events including DELETE
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`

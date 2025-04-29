@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,10 +32,29 @@ export function RecentActivities({ filters }: RecentActivitiesProps) {
   const { user } = useAuth();
   const { data: userProfile } = useUserProfile(user?.id);
   const [isNewTasksFilterActive, setIsNewTasksFilterActive] = useState(filters.showNewTasks || false);
-
+  const queryClient = useQueryClient();
+  
   useEffect(() => {
     setIsNewTasksFilterActive(filters.showNewTasks || false);
   }, [filters.showNewTasks]);
+  
+  // Add real-time subscription for task changes
+  useEffect(() => {
+    const channel = supabase.channel('recent_activities_tasks')
+      .on('postgres_changes', {
+        event: '*', // Listen to all events including DELETE
+        schema: 'public',
+        table: 'project_tasks'
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["recent_activities", filters] });
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [filters, queryClient]);
   
   const { data: recentActivities, isLoading: activitiesLoading } = useQuery({
     queryKey: ["recent_activities", filters],

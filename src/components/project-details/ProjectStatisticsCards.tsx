@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -42,7 +43,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       channel
         .on('postgres_changes',
           {
-            event: '*',
+            event: '*', // Changed from 'INSERT' to '*' to listen for all events
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`

@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export function useTotalNewItemsCount() {
   const queryClient = useQueryClient();
@@ -40,6 +40,36 @@ export function useTotalNewItemsCount() {
       return count || 0;
     },
   });
+
+  // Add real-time subscription for tasks and events
+  useEffect(() => {
+    // Subscribe to task changes
+    const tasksChannel = supabase.channel('total_new_tasks_count')
+      .on('postgres_changes', {
+        event: '*', // Listen to all events
+        schema: 'public',
+        table: 'project_tasks',
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+      })
+      .subscribe();
+      
+    // Subscribe to event changes
+    const eventsChannel = supabase.channel('total_new_events_count')
+      .on('postgres_changes', {
+        event: '*', // Listen to all events
+        schema: 'public',
+        table: 'project_events',
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(eventsChannel);
+    };
+  }, [queryClient]);
 
   // Calculate total count
   const totalCount = badgeVisible ? (newTasksCount || 0) + (newEventsCount || 0) : 0;

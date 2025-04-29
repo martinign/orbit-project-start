@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Kanban, Calendar, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -31,7 +30,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   useEffect(() => {
     const channel = supabase.channel('project-tasks-changes')
       .on('postgres_changes', {
-        event: '*',
+        event: '*',  // Changed from '*' to '*' to be explicit (it was already correct)
         schema: 'public',
         table: 'project_tasks',
         filter: `project_id=eq.${projectId}`
@@ -71,7 +70,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           </div>
           <Button 
             onClick={() => setIsTaskDialogOpen(true)} 
-            className="bg-blue-500 hover:bg-blue-600" 
+            className="bg-blue-500 hover:bg-blue-600 text-white" 
             size="sm"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -100,7 +99,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             </p>
             <Button 
               onClick={() => setIsTaskDialogOpen(true)} 
-              className="bg-blue-500 hover:bg-blue-600"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               <Plus className="mr-2 h-4 w-4" /> Create Task
             </Button>
