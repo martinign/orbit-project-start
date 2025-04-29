@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,13 +37,13 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const channels = ['project_tasks', 'project_notes', 'project_events'].map(table => {
+    const channels = ['project_tasks', 'project_notes'].map(table => {
       const channel = supabase.channel(`stats_${table}_${projectId}`);
       
       channel
         .on('postgres_changes',
           {
-            event: '*', // Listen for all events
+            event: '*', // Changed from 'INSERT' to '*' to listen for all events
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`
@@ -50,10 +51,6 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
           () => {
             queryClient.invalidateQueries({ queryKey: ['project_tasks', projectId] });
             queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
-            queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
-            queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
-            queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
-            queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
           }
         )
         .subscribe();
@@ -68,7 +65,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
     };
   }, [projectId, queryClient]);
 
-  const renderBadge = (type: 'task' | 'note' | 'event') => {
+  const renderBadge = (type: 'task' | 'note') => {
     const count = newItemsCount[type];
     if (!count) return null;
     
@@ -136,10 +133,9 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       </Card>
 
       <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
+        className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('calendar')}
       >
-        {renderBadge('event')}
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
