@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) return [];
 
-        // FIX: Explicitly specify the project_invitations table for project_id
+        // Fix: Using a different approach for the join that explicitly specifies the projects table
         const { data, error } = await supabase
           .from("project_invitations")
           .select(`
@@ -52,7 +51,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             permission_level,
             created_at,
             inviter_id,
-            projects:project_id (
+            projects:projects!project_invitations_project_id_fkey (
               project_number,
               Sponsor
             )
@@ -200,15 +199,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                   key={invitation.id}
                   className="flex flex-col space-y-2 p-4 border rounded-lg"
                 >
-
-                  
                   <div className="font-medium">
                     {invitation.projects ?
                       `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
                       "Unknown Project"}
                   </div>
-
-                  
                   <div className="text-sm text-muted-foreground">
                     Permission Level: {invitation.permission_level}
                   </div>
