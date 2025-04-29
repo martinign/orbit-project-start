@@ -22,6 +22,10 @@ export function useNewItems(projectId: string) {
       const counts = await Promise.all(
         types.map(async (type) => {
           let tableName: string;
+          let count = 0;
+          let error = null;
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
           
           // Map the ItemType to actual table names
           switch(type) {
@@ -38,16 +42,13 @@ export function useNewItems(projectId: string) {
               tableName = `project_${type}s`;
           }
           
-          // Use explicit query for each table type to avoid TypeScript errors
-          let count = 0;
-          let error = null;
-          
+          // Use explicit query for each table type
           if (tableName === 'project_tasks') {
             const result = await supabase
               .from('project_tasks')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+              .gt('created_at', yesterday.toISOString());
             
             count = result.count || 0;
             error = result.error;
@@ -56,7 +57,7 @@ export function useNewItems(projectId: string) {
               .from('project_notes')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+              .gt('created_at', yesterday.toISOString());
             
             count = result.count || 0;
             error = result.error;
@@ -65,7 +66,7 @@ export function useNewItems(projectId: string) {
               .from('project_events')
               .select('id', { count: 'exact', head: true })
               .eq('project_id', projectId)
-              .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+              .gt('created_at', yesterday.toISOString());
             
             count = result.count || 0;
             error = result.error;
@@ -115,8 +116,10 @@ export function useNewItems(projectId: string) {
             // Also invalidate the specific count queries
             if (table === 'project_notes') {
               queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['notes', projectId] });
             } else if (table === 'project_events') {
               queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+              queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
             } else if (table === 'project_tasks') {
               queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
             }

@@ -39,11 +39,16 @@ export function useProjectEvents(projectId: string) {
         schema: 'public',
         table: 'project_events',
         filter: `project_id=eq.${projectId}`
-      }, () => {
+      }, (payload) => {
+        // Log the payload for debugging
+        console.log(`Project events changed for ${projectId}:`, payload);
+        
+        // Invalidate and refetch when any change happens
         queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
         queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
         queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+        queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
       })
       .subscribe();
 
@@ -81,6 +86,7 @@ export function useProjectEvents(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
       queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
       toast({
         title: "Event created",
         description: "The event has been created successfully.",
@@ -132,10 +138,12 @@ export function useProjectEvents(projectId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Important: invalidate ALL relevant queries when an event is deleted
       queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
       queryClient.invalidateQueries({ queryKey: ["project_events_count", projectId] });
       queryClient.invalidateQueries({ queryKey: ["new_events_count"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard_events"] });
+      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
       toast({
         title: "Event deleted",
         description: "The event has been deleted successfully.",

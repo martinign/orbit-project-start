@@ -51,11 +51,13 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         schema: 'public',
         table: 'project_events',
         filter: `project_id=eq.${projectId}`
-      }, () => {
+      }, (payload) => {
         // Invalidate and refetch when any change happens
+        console.log('Project events changed, refreshing data:', payload);
         queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
         queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
-        console.log('Project events changed, refreshing data');
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
       })
       .subscribe();
 
@@ -113,6 +115,16 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     setIsEventDialogOpen(true);
   };
 
+  const handleDeleteEvent = (id: string) => {
+    deleteEvent.mutate(id, {
+      onSuccess: () => {
+        // Re-invalidate these queries specifically to ensure UI refresh
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
+      }
+    });
+  };
+
   const filteredEvents = events.filter(event => {
     if (!selectedUserId) return true;
     return event.user_id === selectedUserId;
@@ -158,7 +170,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           events={filteredEvents}
           selectedDate={selectedDate}
           hasEditAccess={hasEditAccess}
-          onDelete={(id) => deleteEvent.mutate(id)}
+          onDelete={handleDeleteEvent}
           onEdit={handleEditEvent}
           isLoading={eventsLoading}
         />

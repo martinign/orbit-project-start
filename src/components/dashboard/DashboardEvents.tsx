@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -16,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DashboardEventsProps {
   filters: {
@@ -30,8 +33,32 @@ interface DashboardEventsProps {
 }
 
 export function DashboardEvents({ filters, newEventsCount = 0 }: DashboardEventsProps) {
+  const queryClient = useQueryClient();
   // Track if the new events filter is active
   const isNewEventsFilterActive = filters.showNewEvents || false;
+
+  // Add real-time subscription for events
+  useEffect(() => {
+    const channel = supabase.channel('dashboard_events_changes')
+      .on('postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'project_events'
+        },
+        (payload) => {
+          console.log('Dashboard events change detected:', payload);
+          // Invalidate the queries to trigger a refresh
+          queryClient.invalidateQueries({ queryKey: ['dashboard_events'] });
+          queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: events, isLoading } = useQuery({
     queryKey: ["dashboard_events", filters],
