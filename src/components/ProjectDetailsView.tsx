@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ const ProjectDetailsView = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('tasks');
   const [contactSearchQuery, setContactSearchQuery] = useState('');
+  const queryClient = useQueryClient();
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -111,6 +112,64 @@ const ProjectDetailsView = () => {
     },
     enabled: !!id,
   });
+
+  // Add real-time subscriptions to update counts
+  React.useEffect(() => {
+    if (!id) return;
+
+    // Set up real-time subscription for notes count
+    const notesChannel = supabase.channel(`notes_count_${id}`)
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_notes',
+          filter: `project_id=eq.${id}`
+        },
+        () => {
+          // Invalidate the query to update the notes count
+          queryClient.invalidateQueries({ queryKey: ['project_notes_count', id] });
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for events count
+    const eventsChannel = supabase.channel(`events_count_${id}`)
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_events',
+          filter: `project_id=eq.${id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['project_events_count', id] });
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for tasks count
+    const tasksChannel = supabase.channel(`tasks_count_${id}`)
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_tasks',
+          filter: `project_id=eq.${id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['tasks', id] });
+        }
+      )
+      .subscribe();
+
+    // Cleanup function
+    return () => {
+      supabase.removeChannel(notesChannel);
+      supabase.removeChannel(eventsChannel);
+      supabase.removeChannel(tasksChannel);
+    };
+  }, [id, queryClient]);
 
   const tasksStats = React.useMemo(() => {
     if (!tasks) return { total: 0, completed: 0, inProgress: 0 };
