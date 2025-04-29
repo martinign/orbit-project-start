@@ -11,7 +11,13 @@ export const useCollapsibleTaskColumns = (projectId: string) => {
   const getInitialState = (): CollapsibleState => {
     try {
       const savedState = localStorage.getItem(storageKey);
-      return savedState ? JSON.parse(savedState) : {};
+      if (savedState) {
+        return JSON.parse(savedState);
+      }
+      
+      // If no saved state, initialize all columns as collapsed by default
+      const initialState: CollapsibleState = {};
+      return initialState;
     } catch (error) {
       console.error('Error loading column state from localStorage:', error);
       return {};
@@ -20,7 +26,6 @@ export const useCollapsibleTaskColumns = (projectId: string) => {
   
   const [collapsedState, setCollapsedState] = useState<CollapsibleState>(getInitialState);
   
-  // Save state to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(collapsedState));
@@ -30,19 +35,19 @@ export const useCollapsibleTaskColumns = (projectId: string) => {
   }, [collapsedState, storageKey]);
   
   const isColumnCollapsed = (columnId: string): boolean => {
-    // If there's no state for this column yet, default to collapsed (true)
-    return columnId in collapsedState ? collapsedState[columnId] : true;
+    // If there's no state for this column yet, default to collapsed
+    return collapsedState[columnId] !== false;
   };
   
   const toggleColumnCollapsed = (columnId: string) => {
-    console.log(`Toggling column ${columnId}, current state:`, collapsedState[columnId]);
+    console.log(`Toggling column ${columnId}`);
     setCollapsedState(prevState => {
-      const newState = {
+      const currentlyCollapsed = isColumnCollapsed(columnId);
+      console.log(`Current state: ${currentlyCollapsed}, new state: ${!currentlyCollapsed}`);
+      return {
         ...prevState,
-        [columnId]: !(prevState[columnId] ?? true)
+        [columnId]: !currentlyCollapsed
       };
-      console.log(`New state for column ${columnId}:`, newState[columnId]);
-      return newState;
     });
   };
   

@@ -4,7 +4,6 @@ import { Droppable } from '@hello-pangea/dnd';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import TaskCard from './TaskCard';
 import { useCollapsibleTaskColumns } from '@/hooks/useCollapsibleTaskColumns';
 
@@ -51,63 +50,62 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
   projectId
 }) => {
   const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
-  const isExpanded = !isColumnCollapsed(column.id);
+  const isCollapsed = isColumnCollapsed(column.id);
+
+  const handleToggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleColumnCollapsed(column.id);
+  };
 
   return (
     <div className="flex flex-col h-full group relative bg-gray-50 rounded-md shadow-sm">
-      <Collapsible
-        open={isExpanded}
-        onOpenChange={() => toggleColumnCollapsed(column.id)}
-        className="h-full flex flex-col"
-      >
-        <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-medium truncate">{column.title}</h3>
-              <Badge className={column.badgeColor}>
-                {tasks.length}
-              </Badge>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCreateTask(column.status);
-                }}
-                title={`Add task to ${column.title}`}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  onClick={(e) => e.stopPropagation()}
-                  title={isExpanded ? 'Collapse section' : 'Expand section'}
-                >
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-            </div>
+      <div className={`p-3 rounded-t-md ${column.color} border-b-2`}>
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="font-medium truncate">{column.title}</h3>
+            <Badge className={column.badgeColor}>
+              {tasks.length}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCreateTask(column.status);
+              }}
+              title={`Add task to ${column.title}`}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              onClick={handleToggleCollapse}
+              title={isCollapsed ? 'Show tasks' : 'Hide tasks'}
+            >
+              {isCollapsed ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronUp className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
-        
-        <CollapsibleContent className="flex-grow overflow-hidden">
-          <Droppable droppableId={column.id}>
-            {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="p-2 min-h-[200px] h-full overflow-y-auto"
-              >
+      </div>
+      
+      {!isCollapsed && (
+        <Droppable droppableId={column.id}>
+          {(provided) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="p-2 min-h-[200px] h-full overflow-y-auto"
+            >
+              {tasks.length > 0 ? (
                 <div className="space-y-2">
                   {tasks.map((task, index) => (
                     <TaskCard
@@ -122,12 +120,16 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                     />
                   ))}
                 </div>
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </CollapsibleContent>
-      </Collapsible>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No tasks in this column
+                </div>
+              )}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      )}
     </div>
   );
 };
