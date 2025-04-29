@@ -91,6 +91,61 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
       <Card 
+        className="cursor-pointer transition-colors hover:bg-accent relative"
+        onClick={() => onTabChange('tasks')}
+      >
+        {renderBadge('task')}
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Tasks</p>
+              <p className="text-2xl font-bold">{tasksStats.total}</p>
+              <div className="flex gap-2 mt-1 text-xs">
+                <span className="text-green-600">
+                  {tasksStats.completed} Completed
+                </span>
+                <span className="text-blue-600">
+                  {tasksStats.inProgress} In Progress
+                </span>
+              </div>
+            </div>
+            <ListTodo className="h-8 w-8 text-green-500" />
+          </div>
+        </CardContent>
+      </Card>
+
+
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent relative"
+        onClick={() => onTabChange('notes')}
+      >
+        {renderBadge('note')}
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Notes</p>
+              <p className="text-2xl font-bold">{notesCount}</p>
+            </div>
+            <FileText className="h-8 w-8 text-orange-500" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card 
+        className="cursor-pointer transition-colors hover:bg-accent"
+        onClick={() => onTabChange('calendar')}
+      >
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Events</p>
+              <p className="text-2xl font-bold">{eventsCount}</p>
+            </div>
+            <CalendarDays className="h-8 w-8 text-blue-500" />
+          </div>
+        </CardContent>
+      </Card>      
+      <Card 
         className="cursor-pointer transition-colors hover:bg-accent"
         onClick={() => onTabChange('contacts')}
       >
@@ -116,61 +171,6 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
               <p className="text-2xl font-bold">{teamMembersCount}</p>
             </div>
             <UserRound className="h-8 w-8 text-purple-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
-        onClick={() => onTabChange('tasks')}
-      >
-        {renderBadge('task')}
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Tasks</p>
-              <p className="text-2xl font-bold">{tasksStats.total}</p>
-              <div className="flex gap-2 mt-1 text-xs">
-                <span className="text-green-600">
-                  {tasksStats.completed} Completed
-                </span>
-                <span className="text-blue-600">
-                  {tasksStats.inProgress} In Progress
-                </span>
-              </div>
-            </div>
-            <ListTodo className="h-8 w-8 text-green-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="cursor-pointer transition-colors hover:bg-accent"
-        onClick={() => onTabChange('calendar')}
-      >
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Events</p>
-              <p className="text-2xl font-bold">{eventsCount}</p>
-            </div>
-            <CalendarDays className="h-8 w-8 text-blue-500" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card 
-        className="cursor-pointer transition-colors hover:bg-accent relative"
-        onClick={() => onTabChange('notes')}
-      >
-        {renderBadge('note')}
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Notes</p>
-              <p className="text-2xl font-bold">{notesCount}</p>
-            </div>
-            <FileText className="h-8 w-8 text-orange-500" />
           </div>
         </CardContent>
       </Card>
