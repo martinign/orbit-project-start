@@ -9,7 +9,7 @@ export const useProjectTeamMembers = (projectId?: string) => {
       if (!projectId) return [];
 
       try {
-        // Explicitly specify project_invitations table for project_id
+        // Explicitly reference project_invitations table for project_id
         const { data: invitations, error: invitationsError } = await supabase
           .from('project_invitations')
           .select('inviter_id, invitee_id, status, permission_level')

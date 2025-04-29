@@ -24,7 +24,7 @@ export const useProjectInvitations = (projectId: string | null) => {
       if (!projectId) return [];
 
       try {
-        // No need to specify the table for project_id since we're not joining with other tables that have project_id
+        // Explicitly reference project_id from project_invitations table
         const { data, error } = await supabase
           .from("project_invitations")
           .select(`

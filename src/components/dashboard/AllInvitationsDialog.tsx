@@ -45,7 +45,7 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
     queryKey: ["all_invitations", filters],
     queryFn: async () => {
       try {
-        // When joining multiple tables, we need to be explicit about which table's project_id we're using
+        // Explicitly specify which table's project_id we're using
         let query = supabase
           .from("project_invitations")
           .select(`
