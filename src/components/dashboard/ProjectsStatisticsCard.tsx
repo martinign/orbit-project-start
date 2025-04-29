@@ -4,8 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectsBarChart } from "../charts/ProjectsBarChart";
+import { useNavigate } from "react-router-dom";
 
 export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
+  const navigate = useNavigate();
+  
   const { data: projects, isLoading } = useQuery({
     queryKey: ["projects_statistics", filters],
     queryFn: async () => {
@@ -72,16 +75,24 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
       }
       
       return [
-        { name: "Active", value: activeResult.data?.length || 0, color: "#4ade80" },
-        { name: "Pending", value: pendingResult.data?.length || 0, color: "#fbbf24" },
-        { name: "Completed", value: completedResult.data?.length || 0, color: "#60a5fa" },
-        { name: "Cancelled", value: cancelledResult.data?.length || 0, color: "#f87171" }
+        { name: "Active", value: activeResult.data?.length || 0, color: "#4ade80", status: "active" },
+        { name: "Pending", value: pendingResult.data?.length || 0, color: "#fbbf24", status: "pending" },
+        { name: "Completed", value: completedResult.data?.length || 0, color: "#60a5fa", status: "completed" },
+        { name: "Cancelled", value: cancelledResult.data?.length || 0, color: "#f87171", status: "cancelled" }
       ];
     },
     refetchOnWindowFocus: false,
   });
 
   const total = projects?.reduce((acc, item) => acc + item.value, 0) || 0;
+
+  const handleBarClick = (status: string) => {
+    navigate("/projects", { 
+      state: { 
+        filterStatus: status 
+      } 
+    });
+  };
 
   return (
     <Card>
@@ -100,13 +111,20 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
           </div>
         ) : (
           <div className="space-y-4">
-            <ProjectsBarChart data={projects || []} />
+            <ProjectsBarChart 
+              data={projects || []} 
+              onBarClick={handleBarClick} 
+            />
             
             {/* Two-row layout for status legend */}
             <div className="grid grid-rows-2 gap-2">
               <div className="grid grid-cols-2 gap-2">
                 {projects?.slice(0, 2).map((item) => (
-                  <div key={item.name} className="flex items-center gap-2">
+                  <div 
+                    key={item.name} 
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+                    onClick={() => handleBarClick(item.status)}
+                  >
                     <div 
                       className="h-2 w-2 rounded-full" 
                       style={{ backgroundColor: item.color }}
@@ -117,7 +135,11 @@ export function ProjectsStatisticsCard({ filters = {} }: { filters?: any }) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {projects?.slice(2).map((item) => (
-                  <div key={item.name} className="flex items-center gap-2">
+                  <div 
+                    key={item.name} 
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+                    onClick={() => handleBarClick(item.status)}
+                  >
                     <div 
                       className="h-2 w-2 rounded-full" 
                       style={{ backgroundColor: item.color }}
