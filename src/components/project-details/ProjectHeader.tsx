@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 interface ProjectHeaderProps {
   projectNumber: string;
   protocolTitle: string;
-  sponsor: string;
-  protocolNumber: string;
+  sponsor?: string;
+  protocolNumber?: string;
   status: string;
+  projectType?: string;
 }
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
@@ -18,7 +19,10 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   sponsor,
   protocolNumber,
   status,
+  projectType = 'billable',
 }) => {
+  const isBillableProject = projectType === 'billable';
+
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-4">
@@ -31,9 +35,11 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           <h1 className="text-2xl font-bold">
             {projectNumber}: {protocolTitle}
           </h1>
-          <p className="text-muted-foreground">
-            Sponsor: {sponsor} • Protocol: {protocolNumber}
-          </p>
+          {isBillableProject && sponsor && protocolNumber && (
+            <p className="text-muted-foreground">
+              Sponsor: {sponsor} • Protocol: {protocolNumber}
+            </p>
+          )}
         </div>
       </div>
       <div className="flex gap-2">

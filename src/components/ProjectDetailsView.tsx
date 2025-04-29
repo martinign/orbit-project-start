@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -143,6 +144,7 @@ const ProjectDetailsView = () => {
         sponsor={project.Sponsor}
         protocolNumber={project.protocol_number}
         status={project.status}
+        projectType={project.project_type}
       />
 
       {project.description && (
