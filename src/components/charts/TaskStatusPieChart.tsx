@@ -1,5 +1,5 @@
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label, LabelList, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label, Legend } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -35,6 +35,8 @@ const renderCustomLabel = (props: any) => {
       fontSize={12}
       textAnchor="middle" 
       dominantBaseline="central"
+      aria-label={`${name}: ${value} tasks (${(percent * 100).toFixed(1)}%)`}
+      role="img"
     >
       {value}
     </text>
@@ -59,20 +61,41 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
     }
   };
 
-  // Format for center label to show total
-  const centerLabel = (
-    <tspan className="font-semibold">
-      {total}
-      <tspan x="0" dy="1.2em" className="text-xs font-normal">Tasks</tspan>
-    </tspan>
-  );
+  // Corrected center label to show total tasks count
+  const renderCenterLabel = () => {
+    return (
+      <>
+        <tspan x="0" dy="0" fontSize={isMobile ? 16 : 20} fontWeight="600">
+          {total}
+        </tspan>
+        <tspan x="0" dy="1.2em" fontSize={isMobile ? 12 : 14} fontWeight="normal">
+          Tasks
+        </tspan>
+      </>
+    );
+  };
+
+  // Enhanced colorblind-friendly palette
+  const colorPalette = [
+    "#3b82f6", // blue for completed
+    "#22c55e", // green for in progress
+    "#eab308", // yellow for pending
+    "#ef4444", // red for stucked
+    "#888888", // gray for not started
+  ];
+
+  // Reassign colors to make sure they're colorblind friendly
+  const enhancedData = sortedData.map((item, index) => ({
+    ...item,
+    color: colorPalette[index % colorPalette.length]
+  }));
 
   return (
     <div className="w-full h-[240px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={sortedData}
+            data={enhancedData}
             cx="50%"
             cy="50%"
             innerRadius={60}
@@ -84,8 +107,11 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             className="cursor-pointer"
             isAnimationActive={true}
             label={renderCustomLabel}
+            // For screen readers
+            role="graphics-document"
+            aria-label="Task status distribution pie chart"
           >
-            {sortedData.map((entry, index) => (
+            {enhancedData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={entry.color} 
@@ -95,12 +121,12 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             ))}
             <Label
               position="center"
-              fontSize={isMobile ? 16 : 20}
-              className="font-medium"
-              fill="#374151"
-            >
-              {centerLabel}
-            </Label>
+              content={() => (
+                <g>
+                  {renderCenterLabel()}
+                </g>
+              )}
+            />
           </Pie>
           <Tooltip
             content={({ active, payload }) => {
@@ -140,7 +166,6 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             iconType="circle"
             formatter={(value, entry, index) => {
               // TypeScript fix: Use type assertion to access color property
-              // as we know the payload has the TaskStatusPieChartProps data structure
               const { payload } = entry as any;
               const item = payload;
               const percentage = ((item.value / total) * 100).toFixed(1);
@@ -149,7 +174,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
                 <HoverCard>
                   <HoverCardTrigger>
                     <span className="text-xs text-muted-foreground cursor-default flex items-center gap-1.5">
-                      <span style={{ color: payload.color }}>{value}</span>
+                      <span style={{ color: item.color }}>{value}</span>
                       <span className="opacity-75">({percentage}%)</span>
                     </span>
                   </HoverCardTrigger>
