@@ -32,8 +32,7 @@ const App = () => (
               <Route path="/projects/:id" element={<Dashboard />} />
               <Route path="/contacts" element={<Dashboard />} />
               <Route path="/team-members" element={<Dashboard />} />
-              <Route path="/workday-codes" element={<WorkdayCodes />} />
-              {/* Add more protected routes here as needed */}
+              <Route path="/workday-codes" element={<Dashboard />} />
             </Route>
             
             {/* Catch-all route */}

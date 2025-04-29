@@ -19,6 +19,7 @@ import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
+import WorkdayCodeDialog from "./WorkdayCodeDialog";
 
 export function AppSidebar() {
   const {
@@ -37,6 +38,7 @@ export function AppSidebar() {
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
+  const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
@@ -61,11 +63,18 @@ export function AppSidebar() {
       showBadgeIfNewItems();
     }
   });
+
   const handleDashboardClick = () => {
     if (location.pathname === "/dashboard") {
       hideBadge();
     }
   };
+
+  const handleWorkdayCodesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsWorkdayCodeDialogOpen(true);
+  };
+
   const {
     data: newTasksCount
   } = useQuery({
@@ -83,6 +92,7 @@ export function AppSidebar() {
       return count || 0;
     }
   });
+
   const {
     data: recentProjects,
     refetch: refetchRecentProjects
@@ -102,6 +112,7 @@ export function AppSidebar() {
     refetchOnWindowFocus: true,
     refetchOnMount: true
   });
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -116,6 +127,7 @@ export function AppSidebar() {
         return "text-gray-400";
     }
   };
+
   return <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center p-2">
@@ -157,12 +169,14 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link to="/workday-codes">
-                  <SidebarMenuButton tooltip="Workday Codes" className="hover:bg-blue-500/10 transition-colors duration-200">
-                    <Clock className="text-blue-500" />
-                    <span>Workday Codes</span>
-                  </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton 
+                  tooltip="Workday Codes" 
+                  className="hover:bg-blue-500/10 transition-colors duration-200"
+                  onClick={handleWorkdayCodesClick}
+                >
+                  <Clock className="text-blue-500" />
+                  <span>Workday Codes</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -208,5 +222,16 @@ export function AppSidebar() {
       <InviteMembersDialog open={isInviteMembersDialogOpen} onClose={() => setIsInviteMembersDialogOpen(false)} />
 
       <PendingInvitationsDialog open={isPendingInvitationsOpen} onClose={() => setIsPendingInvitationsOpen(false)} />
+
+      <WorkdayCodeDialog 
+        open={isWorkdayCodeDialogOpen} 
+        onClose={() => setIsWorkdayCodeDialogOpen(false)} 
+        onSuccess={() => {
+          queryClient.invalidateQueries({
+            queryKey: ["workday_codes"]
+          });
+          setIsWorkdayCodeDialogOpen(false);
+        }} 
+      />
     </Sidebar>;
 }
