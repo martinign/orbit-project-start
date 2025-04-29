@@ -201,12 +201,13 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                 "w-full justify-start text-left font-normal",
                 !dueDate && "text-muted-foreground"
               )}
+              type="button"
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dueDate ? format(dueDate, "PPP") : "Pick a date"}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0 z-50" align="start">
             <Calendar
               mode="single"
               selected={dueDate}
