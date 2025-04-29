@@ -105,6 +105,7 @@ const Projects = () => {
           statusFilter === 'active' ? 'bg-green-100 text-green-800' : 
           statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
           statusFilter === 'completed' ? 'bg-blue-100 text-blue-800' : 
+          statusFilter === 'cancelled' ? 'bg-red-100 text-red-800' :
           'bg-gray-100 text-gray-800'
         }`}>
           {statusFilter}
@@ -172,6 +173,12 @@ const Projects = () => {
   if (id) {
     return <ProjectDetailsView />;
   }
+
+  // Log to help debug the filtering
+  console.log("Status filter:", statusFilter);
+  console.log("Location state:", locationState);
+  console.log("Projects count:", projects?.length);
+  console.log("Filtered projects count:", filteredProjects.length);
 
   return (
     <div className="w-full">
@@ -245,7 +252,13 @@ const Projects = () => {
                             <TableCell className="max-w-xs truncate">{project.description}</TableCell>
                             
                             <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'active' ? 'bg-green-100 text-green-800' : project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                project.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                project.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
+                                project.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
                                 {project.status}
                               </span>
                             </TableCell>
