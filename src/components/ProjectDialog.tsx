@@ -292,32 +292,11 @@ const ProjectDialog = ({
                 </FormItem>} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Only show role select when editing an existing project */}
-              {isEditing && (
-                <FormField control={form.control} name="role" render={({
-                field
-              }) => <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="owner">Owner</SelectItem>
-                            <SelectItem value="manager">Manager</SelectItem>
-                            <SelectItem value="contributor">Contributor</SelectItem>
-                            <SelectItem value="viewer">Viewer</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>} />
-              )}
+              {/* Role field completely removed from the form UI */}
             
               <FormField control={form.control} name="status" render={({
               field
-            }) => <FormItem className={isEditing ? "" : "md:col-span-2"}>
+            }) => <FormItem className="md:col-span-2">
                     <FormLabel>Status</FormLabel>
                     <FormControl>
                       <ToggleGroup type="single" value={field.value} onValueChange={value => {
