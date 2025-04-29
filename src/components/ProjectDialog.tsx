@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+
 interface ProjectDialogProps {
   open: boolean;
   onClose: () => void;
@@ -21,21 +23,25 @@ interface ProjectDialogProps {
   project?: {
     id: string;
     project_number: string;
-    protocol_number: string;
-    protocol_title: string;
-    Sponsor: string;
+    protocol_number: string | null;
+    protocol_title: string | null;
+    Sponsor: string | null;
     description?: string | null;
     status: string;
+    project_type?: string;
   };
 }
+
 const formSchema = z.object({
   project_number: z.string().min(1, "Project number is required"),
-  protocol_number: z.string().min(1, "Protocol number is required"),
-  protocol_title: z.string().min(1, "Protocol title is required"),
-  Sponsor: z.string().min(1, "Sponsor is required"),
+  protocol_number: z.string().optional(),
+  protocol_title: z.string().optional(),
+  Sponsor: z.string().optional(),
   description: z.string().optional(),
-  status: z.string().min(1, "Status is required")
+  status: z.string().min(1, "Status is required"),
+  project_type: z.string().default("billable")
 });
+
 const ProjectDialog = ({
   open,
   onClose,
@@ -52,6 +58,7 @@ const ProjectDialog = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!project;
   const [minimalMode, setMinimalMode] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,32 +67,37 @@ const ProjectDialog = ({
       protocol_title: "",
       Sponsor: "",
       description: "",
-      status: "active"
+      status: "active",
+      project_type: "billable"
     }
   });
+
   useEffect(() => {
     if (project && open) {
       form.reset({
         project_number: project.project_number,
-        protocol_number: project.protocol_number,
-        protocol_title: project.protocol_title,
-        Sponsor: project.Sponsor,
+        protocol_number: project.protocol_number || "",
+        protocol_title: project.protocol_title || "",
+        Sponsor: project.Sponsor || "",
         description: project.description || "",
-        status: project.status
+        status: project.status,
+        project_type: project.project_type || "billable"
       });
-      setMinimalMode(false);
+      setMinimalMode(project.project_type === "non-billable");
     } else if (!project && open) {
       form.reset({
         project_number: "",
-        protocol_number: "-",
-        protocol_title: "-",
-        Sponsor: "-",
+        protocol_number: "",
+        protocol_title: "",
+        Sponsor: "",
         description: "",
-        status: "active"
+        status: "active",
+        project_type: "billable"
       });
       setMinimalMode(false);
     }
   }, [project, open, form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       toast({
@@ -95,21 +107,28 @@ const ProjectDialog = ({
       });
       return;
     }
+    
     setIsSubmitting(true);
     try {
+      // Set project_type based on minimalMode toggle
+      values.project_type = minimalMode ? "non-billable" : "billable";
+      
       if (isEditing && project) {
         const {
           error
         } = await supabase.from("projects").update({
           project_number: values.project_number,
-          protocol_number: values.protocol_number,
-          protocol_title: values.protocol_title,
-          Sponsor: values.Sponsor,
+          protocol_number: minimalMode ? null : values.protocol_number,
+          protocol_title: minimalMode ? null : values.protocol_title,
+          Sponsor: minimalMode ? null : values.Sponsor,
           description: values.description,
           status: values.status,
+          project_type: values.project_type,
           updated_at: new Date().toISOString()
         }).eq("id", project.id);
+        
         if (error) throw error;
+        
         queryClient.invalidateQueries({
           queryKey: ["recent_projects"]
         });
@@ -124,30 +143,23 @@ const ProjectDialog = ({
           description: "Project updated successfully"
         });
       } else {
-        const saveValues = minimalMode ? {
+        const saveValues = {
           project_number: values.project_number,
-          protocol_number: "-",
-          protocol_title: "-",
-          Sponsor: "-",
+          protocol_number: minimalMode ? null : values.protocol_number,
+          protocol_title: minimalMode ? null : values.protocol_title,
+          Sponsor: minimalMode ? null : values.Sponsor,
           description: values.description,
           status: values.status,
-          user_id: user.id
-        } : {
-          project_number: values.project_number,
-          protocol_number: values.protocol_number,
-          protocol_title: values.protocol_title,
-          Sponsor: values.Sponsor,
-          description: values.description,
-          status: values.status,
+          project_type: values.project_type,
           user_id: user.id
         };
-        if (minimalMode) {
-          saveValues.protocol_title = values.project_number;
-        }
+
         const {
           error
         } = await supabase.from("projects").insert(saveValues);
+        
         if (error) throw error;
+        
         queryClient.invalidateQueries({
           queryKey: ["recent_projects"]
         });
@@ -159,6 +171,7 @@ const ProjectDialog = ({
           description: "Project created successfully"
         });
       }
+      
       onSuccess();
       onClose();
       form.reset();
@@ -173,6 +186,13 @@ const ProjectDialog = ({
       setIsSubmitting(false);
     }
   };
+
+  const handleToggleChange = (checked: boolean) => {
+    setMinimalMode(checked);
+    // When toggling, update the project_type in the form
+    form.setValue("project_type", checked ? "non-billable" : "billable");
+  };
+
   return <Dialog open={open} onOpenChange={open => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
@@ -182,7 +202,12 @@ const ProjectDialog = ({
                 <span className="text-xs font-normal text-muted-foreground mr-1">
                   {minimalMode ? "Non-Billable" : "Billable"} view
                 </span>
-                <Switch checked={minimalMode} onCheckedChange={setMinimalMode} className="data-[state=checked]:bg-blue-500" id="toggle-mode">
+                <Switch 
+                  checked={minimalMode} 
+                  onCheckedChange={handleToggleChange} 
+                  className="data-[state=checked]:bg-blue-500" 
+                  id="toggle-mode"
+                >
                   {minimalMode ? <span className="inline-flex items-center ml-1">
                       <span className="sr-only">Switch to Billable</span>
                       <ToggleRight className="h-4 w-4" />

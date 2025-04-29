@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MoreHorizontal, Edit, Trash2 } from "lucide-react";
@@ -15,16 +16,18 @@ import {
 } from "@/components/ui/hover-card";
 import ProjectDialog from "@/components/ProjectDialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 interface ProjectCardProps {
   project: {
     id: string;
-    Sponsor: string;
+    Sponsor: string | null;
     project_number: string;
-    protocol_number: string;
-    protocol_title: string;
+    protocol_number: string | null;
+    protocol_title: string | null;
     description: string | null;
     status: string;
+    project_type?: string;
   };
   onDelete: (id: string) => void;
   onUpdate: () => void;
@@ -59,6 +62,8 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
     queryClient.invalidateQueries({ queryKey: ["project", project.id] });
     onUpdate();
   };
+
+  const isBillable = !project.project_type || project.project_type === 'billable';
 
   return (
     <div className="relative">
@@ -101,9 +106,16 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
                 </DropdownMenu>
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-bold truncate">{project.Sponsor}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold truncate">{project.Sponsor || project.project_number}</h3>
+                  <Badge variant={isBillable ? "default" : "secondary"} className={isBillable ? "bg-blue-500" : "bg-gray-500"}>
+                    {isBillable ? "Billable" : "Non-billable"}
+                  </Badge>
+                </div>
                 <p className="text-sm text-gray-600 truncate">Project #: {project.project_number}</p>
-                <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+                {isBillable && project.protocol_number && (
+                  <p className="text-sm text-gray-600 truncate">Protocol #: {project.protocol_number}</p>
+                )}
               </div>
               <div className="mt-4">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -123,8 +135,12 @@ const ProjectCard = ({ project, onDelete, onUpdate }: ProjectCardProps) => {
         </HoverCardTrigger>
         <HoverCardContent className="w-80 p-4">
           <div className="space-y-2">
-            <h4 className="font-semibold">Protocol Title:</h4>
-            <p className="text-sm">{project.protocol_title}</p>
+            {project.protocol_title && (
+              <>
+                <h4 className="font-semibold">Protocol Title:</h4>
+                <p className="text-sm">{project.protocol_title}</p>
+              </>
+            )}
             {project.description && (
               <>
                 <h4 className="font-semibold">Description:</h4>
