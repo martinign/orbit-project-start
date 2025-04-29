@@ -17,16 +17,18 @@ interface Invitation {
   project_id: string;
   permission_level: "owner" | "admin" | "edit" | "read_only";
   created_at: string;
-}
-
-interface ProjectDetails {
-  project_number: string;
-  Sponsor: string | null;
+  projects: {
+    project_number: string;
+    Sponsor: string;
+  } | null;
 }
 
 interface InvitationWithInviterId extends Invitation {
   inviter_id: string;
-  projects?: ProjectDetails;
+}
+
+interface InvitationWithSenderName extends InvitationWithInviterId {
+  inviterName?: string;
 }
 
 export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
@@ -37,56 +39,28 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
     queryKey: ["pending_invitations"],
     queryFn: async () => {
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) return [];
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
 
-        // Use separate query for projects to avoid ambiguous column reference
-        const { data, error } = await supabase
-          .from("project_invitations")
-          .select(`
-            id,
-            project_id,
-            permission_level,
-            created_at,
-            inviter_id
-          `)
-          .eq("invitee_id", user.user.id)
-          .eq("status", "pending")
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          project_id,
+          permission_level,
+          created_at,
+          inviter_id,
+          projects:project_id (
+            project_number,
+            Sponsor
+          )
+        `)
+        .eq("invitee_id", user.user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching invitations:", error);
-          throw error;
-        }
-        
-        if (!data || data.length === 0) {
-          return [] as InvitationWithInviterId[];
-        }
-
-        // Now fetch project details for each invitation
-        const invitationsWithProjects: InvitationWithInviterId[] = await Promise.all(
-          data.map(async (invitation: InvitationWithInviterId) => {
-            const { data: projectData, error: projectError } = await supabase
-              .from("projects")
-              .select("project_number, Sponsor")
-              .eq("id", invitation.project_id)
-              .single();
-
-            if (projectError) {
-              console.error("Error fetching project details:", projectError);
-              return { ...invitation, projects: undefined };
-            }
-
-            return { ...invitation, projects: projectData as ProjectDetails };
-          })
-        );
-        
-        return invitationsWithProjects;
-      } catch (err) {
-        console.error("Error in invitation query:", err);
-        return [] as InvitationWithInviterId[];
-      }
+      if (error) throw error;
+      return data as InvitationWithInviterId[];
     },
     enabled: open,
   });
@@ -107,28 +81,20 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: senderProfiles } = useQuery({
     queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)],
     queryFn: async () => {
-      try {
-        if (!uniqueInvitationsByProject.length) return {};
-        const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
-        if (inviterIds.length === 0) return {};
+      if (!uniqueInvitationsByProject.length) return {};
+      const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
+      if (inviterIds.length === 0) return {};
 
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("id, full_name, last_name")
-          .in("id", inviterIds);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, last_name")
+        .in("id", inviterIds);
 
-        if (error) {
-          console.error("Error fetching sender profiles:", error);
-          return {};
-        }
-        return data.reduce((acc, profile) => {
-          const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.trim();
-          return { ...acc, [profile.id]: fullName || "Unknown User" };
-        }, {});
-      } catch (err) {
-        console.error("Error in profiles query:", err);
+      if (error) {
+        console.error("Error fetching sender profiles:", error);
         return {};
       }
+      return data.reduce((acc, profile) => ({ ...acc, [profile.id]: `${profile.full_name} ${profile.last_name}` }), {});
     },
     enabled: open && !!uniqueInvitationsByProject.length,
   });
@@ -158,25 +124,22 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
-        // Insert into project_team_members using 'role' field to store permission level
+        // FIXED: Using 'role' instead of 'permission_level' in project_team_members
+        // permission_level from project_invitations is stored as role in project_team_members
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
             project_id: invitationToHandle.project_id,
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
-            last_name: profile?.last_name || "",
+            last_name: profile?.last_name || "Unnamed User",
             location: profile?.location,
-            role: invitationToHandle.permission_level // Store permission_level as role
+            role: invitationToHandle.permission_level // Use permission_level from invitation as role
           });
 
-        if (teamMemberError) {
-          console.error("Team member insertion error:", teamMemberError);
-          throw teamMemberError;
-        }
+        if (teamMemberError) throw teamMemberError;
       }
 
-      // Invalidate relevant queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
       queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
       queryClient.invalidateQueries({ queryKey: ["sender_profiles"] });
@@ -216,10 +179,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         </DialogHeader>
         <div className="space-y-4 py-4">
           {isLoadingCombined ? (
-            <div className="flex justify-center items-center py-4">
-              <LoaderIcon className="h-6 w-6 animate-spin" />
-              <span className="ml-2">Loading invitations...</span>
-            </div>
+            <div className="text-center py-4">Loading invitations...</div>
           ) : !allInvitations || allInvitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No pending invitations
@@ -233,11 +193,11 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                 >
                   <div className="font-medium">
                     {invitation.projects ?
-                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor || ''}` :
+                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
                       "Unknown Project"}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Permission Level: {formatPermissionLevel(invitation.permission_level)}
+                    Permission Level: {invitation.permission_level}
                   </div>
                   {invitation.inviter_id && senderProfiles?.[invitation.inviter_id] && (
                     <div className="text-sm text-muted-foreground">
@@ -274,17 +234,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
       </DialogContent>
     </Dialog>
   );
-};
-
-// Helper function to make permission levels more readable
-const formatPermissionLevel = (permission: string): string => {
-  switch(permission) {
-    case "owner": return "Owner";
-    case "admin": return "Admin";
-    case "edit": return "Can Edit";
-    case "read_only": return "Read Only";
-    default: return permission;
-  }
 };
 
 export default PendingInvitationsDialog;
