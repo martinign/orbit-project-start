@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 
-export type ItemType = 'task' | 'note';
+export type ItemType = 'task' | 'note' | 'event';
 
 interface NewItemsCount {
   [key: string]: number;
@@ -17,12 +17,15 @@ export function useNewItems(projectId: string) {
   const { data: counts } = useQuery({
     queryKey: ['new_items_count', projectId],
     queryFn: async () => {
-      const types: ItemType[] = ['task', 'note'];
+      const types: ItemType[] = ['task', 'note', 'event'];
       
       const counts = await Promise.all(
         types.map(async (type) => {
+          // Special handling for events which are stored in project_events table without the 's'
+          const tableName = type === 'event' ? 'project_events' : `project_${type}s`;
+          
           const { count, error } = await supabase
-            .from(`project_${type}s`)
+            .from(tableName)
             .select('id', { count: 'exact', head: true })
             .eq('project_id', projectId)
             .gt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
@@ -47,17 +50,18 @@ export function useNewItems(projectId: string) {
     }
   }, [counts]);
 
-  // Add real-time subscription for both tasks and notes
+  // Add real-time subscription for tasks, notes and events
   useEffect(() => {
     if (!projectId) return;
 
-    const channels = ['project_tasks', 'project_notes'].map(table => {
+    const tables = ['project_tasks', 'project_notes', 'project_events'];
+    const channels = tables.map(table => {
       const channel = supabase.channel(`${table}_changes_${projectId}`);
       
       channel
         .on('postgres_changes',
           {
-            event: '*', // Changed from 'INSERT' to '*' to listen for all events including DELETE
+            event: '*', // Listen to all events including DELETE
             schema: 'public',
             table,
             filter: `project_id=eq.${projectId}`

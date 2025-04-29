@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -98,7 +97,7 @@ const ProjectDetailsView = () => {
     enabled: !!id,
   });
 
-  const { data: notesCount } = useQuery({
+  const { data: notesCount, isLoading: notesCountLoading } = useQuery({
     queryKey: ['project_notes_count', id],
     queryFn: async () => {
       if (!id) return 0;
@@ -135,6 +134,39 @@ const ProjectDetailsView = () => {
       return dateString;
     }
   };
+
+  // Add a new useEffect for real-time subscription
+  useEffect(() => {
+    if (!id) return;
+    
+    // Create channels for project notes and events counts
+    const notesChannel = supabase.channel(`project_notes_count_${id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_notes',
+        filter: `project_id=eq.${id}`
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['project_notes_count', id] });
+      })
+      .subscribe();
+    
+    const eventsChannel = supabase.channel(`project_events_count_${id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'project_events',
+        filter: `project_id=eq.${id}`
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['project_events_count', id] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notesChannel);
+      supabase.removeChannel(eventsChannel);
+    };
+  }, [id, queryClient]);
 
   return (
     <div className="space-y-6">
