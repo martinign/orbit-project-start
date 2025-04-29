@@ -41,25 +41,34 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
     queryFn: async () => {
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-        .from("project_invitations")
-        .select(`
-          id,
-          invitee_id,
-          permission_level,
-          status,
-          created_at,
-          profiles:invitee_id (
-            full_name,
-            last_name,
-            email
-          )
-        `)
-        .eq("project_id", projectId)
-        .order("created_at", { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from("project_invitations")
+          .select(`
+            id,
+            invitee_id,
+            permission_level,
+            status,
+            created_at,
+            profiles:invitee_id (
+              full_name,
+              last_name,
+              email
+            )
+          `)
+          .eq("project_id", projectId)
+          .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Invitation[];
+        if (error) {
+          console.error("Error fetching project invitations list:", error);
+          throw error;
+        }
+        
+        return data as Invitation[];
+      } catch (error) {
+        console.error("Error in project invitations list query:", error);
+        return [];
+      }
     },
     enabled: !!projectId,
   });

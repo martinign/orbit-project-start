@@ -23,18 +23,27 @@ export const useProjectInvitations = (projectId: string | null) => {
     queryFn: async () => {
       if (!projectId) return [];
 
-      const { data, error } = await supabase
-        .from("project_invitations")
-        .select(`
-          id,
-          status,
-          inviter:inviter_id(id, full_name, last_name),
-          invitee:invitee_id(id, full_name, last_name)
-        `)
-        .eq("project_id", projectId);
+      try {
+        const { data, error } = await supabase
+          .from("project_invitations")
+          .select(`
+            id,
+            status,
+            inviter:inviter_id(id, full_name, last_name),
+            invitee:invitee_id(id, full_name, last_name)
+          `)
+          .eq("project_id", projectId);
 
-      if (error) throw error;
-      return data as unknown as ProjectInvitation[];
+        if (error) {
+          console.error("Error fetching project invitations:", error);
+          throw error;
+        }
+        
+        return data as unknown as ProjectInvitation[];
+      } catch (error) {
+        console.error("Error in project invitations query:", error);
+        return [];
+      }
     },
     enabled: !!projectId,
   });
