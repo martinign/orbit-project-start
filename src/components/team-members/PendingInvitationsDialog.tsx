@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ interface PendingInvitationsDialogProps {
 interface Invitation {
   id: string;
   project_id: string;
-  permission_level: "read_only" | "edit"; // Ensure correct type
+  permission_level: "owner" | "admin" | "edit" | "read_only";
   created_at: string;
   projects: {
     project_number: string;
@@ -36,7 +35,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ // Renamed 'invitations' to 'allInvitations'
+  const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
     queryKey: ["pending_invitations"],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
@@ -79,7 +78,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   }, [allInvitations]);
 
   const { data: senderProfiles } = useQuery({
-    queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)], // Use uniqueInvitationsByProject
+    queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)],
     queryFn: async () => {
       if (!uniqueInvitationsByProject.length) return {};
       const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
@@ -124,7 +123,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
-        // Fixed: Ensure permission_level is the correct type
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
@@ -133,7 +131,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             full_name: profile?.full_name || "Unnamed User",
             last_name: profile?.last_name || "Unnamed User",
             location: profile?.location,
-            permission_level: invitationToHandle.permission_level as "read_only" | "edit"
+            permission_level: invitationToHandle.permission_level
           });
 
         if (teamMemberError) throw teamMemberError;
@@ -153,7 +151,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           : "The invitation has been rejected.",
       });
 
-      if ((allInvitations?.length || 0) <= 1) { // Check against allInvitations
+      if ((allInvitations?.length || 0) <= 1) {
         onClose();
       }
     } catch (error: any) {
@@ -179,13 +177,13 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
         <div className="space-y-4 py-4">
           {isLoadingCombined ? (
             <div className="text-center py-4">Loading invitations...</div>
-          ) : !allInvitations || allInvitations.length === 0 ? ( // Check against allInvitations
+          ) : !allInvitations || allInvitations.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No pending invitations
             </div>
           ) : (
             <div className="space-y-4">
-              {uniqueInvitationsByProject.map((invitation) => ( // Map over uniqueInvitationsByProject
+              {uniqueInvitationsByProject.map((invitation) => (
                 <div
                   key={invitation.id}
                   className="flex flex-col space-y-2 p-4 border rounded-lg"

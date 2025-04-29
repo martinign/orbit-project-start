@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,7 @@ interface InvitationData {
   id: string;
   status: string;
   created_at: string;
-  permission_level: string;
+  permission_level: "owner" | "admin" | "edit" | "read_only";
   project_id: string;
   inviter_id: string;
   invitee_id: string;
@@ -113,6 +112,17 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
     return [data.full_name, data.last_name].filter(Boolean).join(" ") || "Unknown";
   };
 
+  // Helper function to make permission level more readable
+  const formatPermissionLevel = (permission: string): string => {
+    switch(permission) {
+      case "owner": return "Owner";
+      case "admin": return "Admin";
+      case "edit": return "Can Edit";
+      case "read_only": return "Read Only";
+      default: return permission;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -160,7 +170,7 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
                         {invitation.status}
                       </Badge>
                       <div className="text-xs text-muted-foreground">
-                        <p>Permission: {invitation.permission_level}</p>
+                        <p>Permission: {formatPermissionLevel(invitation.permission_level)}</p>
                         <p>{format(new Date(invitation.created_at), "MMM d, yyyy")}</p>
                       </div>
                     </div>

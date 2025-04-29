@@ -26,7 +26,7 @@ interface InvitationProfile {
 interface Invitation {
   id: string;
   invitee_id: string;
-  permission_level: "read_only" | "edit";
+  permission_level: "owner" | "admin" | "edit" | "read_only";
   status: string;
   created_at: string;
   profiles?: InvitationProfile | null;
@@ -65,7 +65,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   });
 
   const updatePermission = useMutation({
-    mutationFn: async ({ id, permission_level }: { id: string; permission_level: "read_only" | "edit" }) => {
+    mutationFn: async ({ id, permission_level }: { id: string; permission_level: "owner" | "admin" | "edit" | "read_only" }) => {
       const { error } = await supabase
         .from("project_invitations")
         .update({ permission_level })
@@ -90,7 +90,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
     },
   });
 
-  const handlePermissionChange = (invitationId: string, newPermission: "read_only" | "edit") => {
+  const handlePermissionChange = (invitationId: string, newPermission: "owner" | "admin" | "edit" | "read_only") => {
     updatePermission.mutate({ id: invitationId, permission_level: newPermission });
   };
 
@@ -148,7 +148,7 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
               <Shield className="h-4 w-4 text-muted-foreground" />
               <Select
                 value={invitation.permission_level}
-                onValueChange={(value: "read_only" | "edit") => 
+                onValueChange={(value: "owner" | "admin" | "edit" | "read_only") => 
                   handlePermissionChange(invitation.id, value)
                 }
                 disabled={invitation.status !== "pending"}
@@ -157,8 +157,10 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="read_only">View Only</SelectItem>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="edit">Can Edit</SelectItem>
+                  <SelectItem value="read_only">View Only</SelectItem>
                 </SelectContent>
               </Select>
             </div>

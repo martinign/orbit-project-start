@@ -10,7 +10,7 @@ export const useProjectTeamMembers = (projectId?: string) => {
 
       const { data: invitations, error: invitationsError } = await supabase
         .from('project_invitations')
-        .select('inviter_id, invitee_id, status')
+        .select('inviter_id, invitee_id, status, permission_level')
         .eq('project_id', projectId);
 
       if (invitationsError) throw invitationsError;
@@ -35,13 +35,15 @@ export const useProjectTeamMembers = (projectId?: string) => {
         if (inviter) {
           userMap.set(inviter.id, {
             ...inviter,
-            role: 'Inviter'
+            role: 'Inviter',
+            permission_level: invitation.permission_level
           });
         }
         if (invitee && invitation.status === 'accepted') {
           userMap.set(invitee.id, {
             ...invitee,
-            role: 'Invitee'
+            role: 'Invitee',
+            permission_level: invitation.permission_level
           });
         }
       });
@@ -50,4 +52,13 @@ export const useProjectTeamMembers = (projectId?: string) => {
     },
     enabled: !!projectId
   });
+};
+
+export const useTeamMemberName = (memberId?: string | null) => {
+  const { data: teamMembers, isLoading } = useTeamMembers();
+
+  if (!memberId) return { memberName: null, isLoading };
+
+  const member = teamMembers?.find((m) => m.id === memberId);
+  return { memberName: member?.full_name || null, isLoading };
 };
