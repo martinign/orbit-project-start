@@ -21,7 +21,7 @@ const renderCustomizedLabel = (props: any) => {
   
   const RADIAN = Math.PI / 180;
   // Position label closer to the outer edge of the slice (80% of radius)
-  const radius = outerRadius * 0.8;
+  const radius = outerRadius * 0.6;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
@@ -84,7 +84,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             cx="50%"
             cy="50%"
             labelLine={false}
-            outerRadius={isMobile ? 130 : 160}
+            outerRadius={isMobile ? 120 : 150}
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
