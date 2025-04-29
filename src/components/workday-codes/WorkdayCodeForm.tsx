@@ -39,6 +39,15 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
     defaultValues
   });
 
+  // Function to format project display text based on project type
+  const formatProjectDisplay = (project: Project): string => {
+    if (project.project_type === 'billable') {
+      return `${project.project_number} - ${project.Sponsor || ''}`;
+    } else {
+      return project.protocol_title || project.project_number;
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -91,7 +100,7 @@ const WorkdayCodeForm: React.FC<WorkdayCodeFormProps> = ({
                     <SelectItem value="none">None</SelectItem>
                     {projects.map((project) => (
                       <SelectItem key={project.id} value={project.id}>
-                        {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
+                        {formatProjectDisplay(project)}
                       </SelectItem>
                     ))}
                   </SelectContent>

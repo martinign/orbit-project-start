@@ -32,6 +32,15 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({
     }
   };
 
+  // Function to format project display text based on project type
+  const formatProjectDisplay = (project: Project): string => {
+    if (project.project_type === 'billable') {
+      return `${project.project_number} - ${project.Sponsor || ''}`;
+    } else {
+      return project.protocol_title || project.project_number;
+    }
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -61,7 +70,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({
                     <SelectContent>
                       {projects.map((project) => (
                         <SelectItem key={project.id} value={project.id}>
-                          {project.project_number} {project.protocol_title ? `- ${project.protocol_title}` : ''}
+                          {formatProjectDisplay(project)}
                         </SelectItem>
                       ))}
                     </SelectContent>
