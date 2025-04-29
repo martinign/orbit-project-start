@@ -1,4 +1,3 @@
-
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +75,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
   }));
 
   return (
-    <div className="w-full h-[300px] flex flex-col items-center justify-center">
+    <div className="w-full h-[220px] flex flex-col items-center justify-center">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -84,7 +83,7 @@ export function TaskStatusPieChart({ data, onSliceClick }: TaskStatusPieChartPro
             cx="50%"
             cy="50%"
             labelLine={false}
-            outerRadius={isMobile ? 80 : 100}
+            outerRadius={isMobile ? 70 : 90}
             dataKey="value"
             animationDuration={800}
             onClick={handlePieClick}
