@@ -1,4 +1,5 @@
-import { Folder, LayoutDashboard, LogOut, Clock } from "lucide-react";
+
+import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -194,8 +195,18 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>     
       
+      {/* Survey button - positioned between content and footer */}
+      <div className="px-2 my-2 border-t border-sidebar-border pt-2">
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start bg-blue-500 hover:bg-blue-600 text-white"
+        >
+          <ClipboardCheck className="mr-2 h-4 w-4" />
+          SURVEY
+        </Button>
+      </div>
+      
       <SidebarFooter className="border-t border-sidebar-border text-align: justify">
-             
         <Button variant="ghost" className="w-full justify-start text-gray-500 hover:text-red-500 hover:bg-red-50 transition-colors duration-200 mt-2" onClick={signOut}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out
