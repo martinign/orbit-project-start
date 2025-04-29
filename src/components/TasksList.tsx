@@ -4,16 +4,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { TasksTable } from './tasks/TasksTable';
-import { TaskMemberFilter } from './tasks/TaskMemberFilter';
 import { useTaskManagement } from '@/hooks/useTaskManagement';
-import TaskDialog from './task-dialog/TaskDialog';
-import DeleteTaskDialog from './DeleteTaskDialog';
-import SubtaskDialog from './SubtaskDialog';
-import TaskUpdateDialog from './TaskUpdateDialog';
-import TaskUpdatesDisplay from './TaskUpdatesDisplay';
+import { TaskDialogsContainer } from './tasks/TaskDialogsContainer';
+import { EmptyTasksState } from './tasks/EmptyTasksState';
+import { TasksListContent } from './tasks/TasksListContent';
+import { useProjectTeamMembers } from '@/hooks/useProjectTeamMembers';
 
 interface TasksListProps {
   projectId?: string;
@@ -43,53 +38,7 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
     deleteTask,
   } = useTaskManagement(projectId, searchTerm);
 
-  const { data: uniqueUsers = [] } = useQuery({
-    queryKey: ['project_team_members_and_invitations', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-
-      const { data: invitations, error: invitationsError } = await supabase
-        .from('project_invitations')
-        .select('inviter_id, invitee_id, status')
-        .eq('project_id', projectId);
-
-      if (invitationsError) throw invitationsError;
-
-      const userIds = new Set([
-        ...invitations.map(inv => inv.inviter_id),
-        ...invitations.map(inv => inv.invitee_id)
-      ]);
-
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, last_name')
-        .in('id', Array.from(userIds));
-
-      if (profilesError) throw profilesError;
-
-      const userMap = new Map();
-      invitations.forEach((invitation) => {
-        const inviter = profiles.find(p => p.id === invitation.inviter_id);
-        const invitee = profiles.find(p => p.id === invitation.invitee_id);
-
-        if (inviter) {
-          userMap.set(inviter.id, {
-            ...inviter,
-            role: 'Inviter'
-          });
-        }
-        if (invitee && invitation.status === 'accepted') {
-          userMap.set(invitee.id, {
-            ...invitee,
-            role: 'Invitee'
-          });
-        }
-      });
-
-      return Array.from(userMap.values());
-    },
-    enabled: !!projectId
-  });
+  const { data: uniqueUsers = [] } = useProjectTeamMembers(projectId);
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', projectId, searchTerm, selectedMemberId],
@@ -131,104 +80,67 @@ const TasksList: React.FC<TasksListProps> = ({ projectId, searchTerm = '' }) => 
 
   if (!tasks || tasks.length === 0) {
     return (
-      <div className="text-center p-8 border rounded-lg">
-        <div className="mb-4 flex justify-center">
-          <TaskMemberFilter
-            users={uniqueUsers}
-            selectedMemberId={selectedMemberId}
-            onMemberSelect={setSelectedMemberId}
-          />
-        </div>
-        <p className="text-muted-foreground mb-4">
-          {searchTerm
-            ? 'No tasks match your search criteria'
-            : 'No tasks found for this project'}
-        </p>
-        <Button onClick={() => setIsCreateTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600">
-          <Plus className="mr-2 h-4 w-4" /> Create Task
-        </Button>
-      </div>
+      <>
+        <EmptyTasksState
+          users={uniqueUsers}
+          selectedMemberId={selectedMemberId}
+          onMemberSelect={setSelectedMemberId}
+          searchTerm={searchTerm}
+          onCreateTask={() => setIsCreateTaskDialogOpen(true)}
+        />
+        
+        <TaskDialogsContainer
+          projectId={projectId}
+          selectedTask={selectedTask}
+          isDialogOpen={isDialogOpen}
+          isCreateTaskDialogOpen={isCreateTaskDialogOpen}
+          isDeleteConfirmOpen={isDeleteConfirmOpen}
+          isUpdateDialogOpen={isUpdateDialogOpen}
+          isSubtaskDialogOpen={isSubtaskDialogOpen}
+          isUpdatesDisplayOpen={isUpdatesDisplayOpen}
+          setIsDialogOpen={setIsDialogOpen}
+          setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
+          setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
+          setIsUpdateDialogOpen={setIsUpdateDialogOpen}
+          setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
+          setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen}
+          deleteTask={deleteTask}
+        />
+      </>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <TaskMemberFilter
-          users={uniqueUsers}
-          selectedMemberId={selectedMemberId}
-          onMemberSelect={setSelectedMemberId}
-        />
-        <Button onClick={() => setIsCreateTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600">
-          <Plus className="mr-2 h-4 w-4" /> Create Task
-        </Button>
-      </div>
-
-      <TasksTable
+    <div>
+      <TasksListContent
         tasks={tasks}
-        showProject={!projectId}
+        users={uniqueUsers}
+        selectedMemberId={selectedMemberId}
+        onMemberSelect={setSelectedMemberId}
+        onCreateTask={() => setIsCreateTaskDialogOpen(true)}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteConfirm}
         onTaskUpdates={handleTaskUpdates}
+        showProject={!projectId}
       />
 
-      <TaskDialog
-        open={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        mode="edit"
-        task={selectedTask}
+      <TaskDialogsContainer
         projectId={projectId}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-          setIsDialogOpen(false);
-        }}
+        selectedTask={selectedTask}
+        isDialogOpen={isDialogOpen}
+        isCreateTaskDialogOpen={isCreateTaskDialogOpen}
+        isDeleteConfirmOpen={isDeleteConfirmOpen}
+        isUpdateDialogOpen={isUpdateDialogOpen}
+        isSubtaskDialogOpen={isSubtaskDialogOpen}
+        isUpdatesDisplayOpen={isUpdatesDisplayOpen}
+        setIsDialogOpen={setIsDialogOpen}
+        setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
+        setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
+        setIsUpdateDialogOpen={setIsUpdateDialogOpen}
+        setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
+        setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen}
+        deleteTask={deleteTask}
       />
-
-      <TaskDialog
-        open={isCreateTaskDialogOpen}
-        onClose={() => setIsCreateTaskDialogOpen(false)}
-        mode="create"
-        projectId={projectId}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['tasks'] });
-          setIsCreateTaskDialogOpen(false);
-        }}
-      />
-
-      {selectedTask && (
-        <>
-          <DeleteTaskDialog
-            open={isDeleteConfirmOpen}
-            onOpenChange={setIsDeleteConfirmOpen}
-            taskTitle={selectedTask.title}
-            onDelete={deleteTask}
-          />
-
-          <SubtaskDialog
-            open={isSubtaskDialogOpen}
-            onClose={() => setIsSubtaskDialogOpen(false)}
-            parentTask={selectedTask}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['tasks'] });
-              setIsSubtaskDialogOpen(false);
-            }}
-          />
-
-          <TaskUpdateDialog
-            open={isUpdateDialogOpen}
-            onClose={() => setIsUpdateDialogOpen(false)}
-            taskId={selectedTask.id}
-            onSuccess={() => setIsUpdateDialogOpen(false)}
-          />
-
-          <TaskUpdatesDisplay
-            open={isUpdatesDisplayOpen}
-            onClose={() => setIsUpdatesDisplayOpen(false)}
-            taskId={selectedTask.id}
-            taskTitle={selectedTask.title}
-          />
-        </>
-      )}
     </div>
   );
 };
