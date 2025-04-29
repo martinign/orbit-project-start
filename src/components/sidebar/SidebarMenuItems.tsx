@@ -1,9 +1,9 @@
 
-import { Circle, Folder, LogOut } from "lucide-react";
+import { Circle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
-interface RecentProject {
+export interface RecentProject {
   id: string;
   project_number: string;
   Sponsor: string;
