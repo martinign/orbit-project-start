@@ -564,6 +564,48 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_responses: {
+        Row: {
+          additional_feedback: string | null
+          created_at: string
+          ease_of_use: number
+          id: string
+          improvement_area: string
+          most_useful_feature: string
+          task_management_satisfaction: number
+          updated_at: string
+          usage_frequency: string
+          user_id: string
+          workday_codes_usage: string
+        }
+        Insert: {
+          additional_feedback?: string | null
+          created_at?: string
+          ease_of_use: number
+          id?: string
+          improvement_area: string
+          most_useful_feature: string
+          task_management_satisfaction: number
+          updated_at?: string
+          usage_frequency: string
+          user_id: string
+          workday_codes_usage: string
+        }
+        Update: {
+          additional_feedback?: string | null
+          created_at?: string
+          ease_of_use?: number
+          id?: string
+          improvement_area?: string
+          most_useful_feature?: string
+          task_management_satisfaction?: number
+          updated_at?: string
+          usage_frequency?: string
+          user_id?: string
+          workday_codes_usage?: string
+        }
+        Relationships: []
+      }
       task_status_history: {
         Row: {
           changed_at: string

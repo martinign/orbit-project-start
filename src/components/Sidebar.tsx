@@ -20,6 +20,15 @@ import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
 import WorkdayCodeDialog from "./WorkdayCodeDialog";
+import SurveyDialog from "./SurveyDialog";
+import { useSurveyAvailability } from "@/hooks/useSurveyAvailability";
+import { format } from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function AppSidebar() {
   const {
@@ -39,6 +48,8 @@ export function AppSidebar() {
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
+  const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
+  const { canSubmitSurvey, nextAvailableDate, loading: loadingSurveyAvailability } = useSurveyAvailability();
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
@@ -73,6 +84,11 @@ export function AppSidebar() {
   const handleWorkdayCodesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsWorkdayCodeDialogOpen(true);
+  };
+
+  const handleSurveySuccess = () => {
+    // Invalidate the survey availability query to update the UI
+    queryClient.invalidateQueries({ queryKey: ["survey_availability"] });
   };
 
   const {
@@ -198,10 +214,28 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Survey" className="hover:bg-blue-500/10 transition-colors duration-200">
-                  <ClipboardCheck className="text-blue-500" />
-                  <span>SURVEY</span>
-                </SidebarMenuButton>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <SidebarMenuButton 
+                          tooltip="Survey" 
+                          className={`hover:bg-blue-500/10 transition-colors duration-200 ${!canSubmitSurvey ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => canSubmitSurvey && setIsSurveyDialogOpen(true)}
+                          disabled={!canSubmitSurvey || loadingSurveyAvailability}
+                        >
+                          <ClipboardCheck className={`${canSubmitSurvey ? 'text-blue-500' : 'text-gray-400'}`} />
+                          <span>SURVEY</span>
+                        </SidebarMenuButton>
+                      </div>
+                    </TooltipTrigger>
+                    {!canSubmitSurvey && nextAvailableDate && (
+                      <TooltipContent>
+                        <p>You can submit another survey after {format(nextAvailableDate, 'MMMM dd, yyyy')}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -245,6 +279,12 @@ export function AppSidebar() {
           });
           setIsWorkdayCodeDialogOpen(false);
         }} 
+      />
+
+      <SurveyDialog 
+        open={isSurveyDialogOpen}
+        onOpenChange={setIsSurveyDialogOpen}
+        onSuccess={handleSurveySuccess}
       />
     </Sidebar>;
 }
