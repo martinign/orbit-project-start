@@ -129,7 +129,7 @@ const ProjectDetailsView = () => {
         (payload) => {
           console.log('Notes count change detected:', payload);
           // Invalidate the query to update the notes count
-          queryClient.invalidateQueries({ queryKey: ['project_notes', id] });
+          queryClient.invalidateQueries({ queryKey: ['notes', id] });
         }
       )
       .subscribe();
