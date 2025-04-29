@@ -21,7 +21,7 @@ const renderCustomizedLabel = (props: any) => {
   
   const RADIAN = Math.PI / 180;
   // Position label in the middle of the slice
-  const radius = outerRadius * 0.6;
+  const radius = outerRadius * 0.4;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   
