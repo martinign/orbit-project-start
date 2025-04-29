@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { database, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -60,7 +60,7 @@ const WorkdayCodeDialog: React.FC<WorkdayCodeDialogProps> = ({
 
   // Subscribe to real-time changes in workday_codes table
   useRealtimeSubscription({
-    table: 'workday_codes',
+    table: 'workday_codes' as any,
     event: '*',
     onRecordChange: () => {
       fetchWorkdayCodes();

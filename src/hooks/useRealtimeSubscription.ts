@@ -15,7 +15,8 @@ type TableName =
   | 'project_team_members'
   | 'projects'
   | 'task_status_history'
-  | 'task_templates';
+  | 'task_templates'
+  | 'workday_codes';
 
 interface SubscriptionOptions {
   table: TableName;
