@@ -28,7 +28,7 @@ interface TaskActionsProps {
   onDelete: (task: Task) => void;
   onUpdate: (task: Task) => void;
   onAddSubtask: (task: Task) => void;
-  onShowUpdates: (task: Task) => void;
+  onShowUpdates: (e: React.MouseEvent) => void;
 }
 
 export const TaskActions: React.FC<TaskActionsProps> = ({
@@ -72,10 +72,7 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 relative"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUpdate(task);
-                }}
+                onClick={() => onUpdate(task)}
               >
                 <FilePen className="h-4 w-4" />
                 {updateCount > 0 && (
@@ -99,10 +96,7 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
                   variant="ghost" 
                   size="icon" 
                   className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onShowUpdates(task);
-                  }}
+                  onClick={onShowUpdates}
                 >
                   <MessageCircle className="h-4 w-4" />
                 </Button>

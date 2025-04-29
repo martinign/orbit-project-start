@@ -36,14 +36,12 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     isUpdateDialogOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
-    isUpdatesDisplayOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
-    setIsUpdatesDisplayOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
@@ -107,13 +105,11 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         isUpdateDialogOpen={isUpdateDialogOpen}
         isSubtaskDialogOpen={isSubtaskDialogOpen}
         isCreateTaskDialogOpen={isCreateTaskDialogOpen}
-        isUpdatesDisplayOpen={isUpdatesDisplayOpen}
         setIsDialogOpen={setIsDialogOpen}
         setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
         setIsUpdateDialogOpen={setIsUpdateDialogOpen}
         setIsSubtaskDialogOpen={setIsSubtaskDialogOpen}
         setIsCreateTaskDialogOpen={setIsCreateTaskDialogOpen}
-        setIsUpdatesDisplayOpen={setIsUpdatesDisplayOpen}
         onRefetch={onRefetch}
         deleteTask={deleteTask}
         selectedStatus={selectedStatus}

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +20,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
-  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
   const [isSubtaskDialogOpen, setIsSubtaskDialogOpen] = useState(false);
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -34,7 +32,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
     setIsUpdateDialogOpen(false);
     setIsSubtaskDialogOpen(false);
     setIsCreateTaskDialogOpen(false);
-    setIsUpdatesDisplayOpen(false);
   };
 
   const safeRefetch = async () => {
@@ -62,15 +59,6 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const handleTaskUpdates = (task: Task) => {
     setSelectedTask(task);
     setIsUpdateDialogOpen(true);
-    // Ensure updates display is closed when opening update dialog
-    setIsUpdatesDisplayOpen(false);
-  };
-
-  const handleShowUpdates = (task: Task) => {
-    setSelectedTask(task);
-    setIsUpdatesDisplayOpen(true);
-    // Ensure update dialog is closed when opening updates display
-    setIsUpdateDialogOpen(false);
   };
 
   const handleAddSubtask = (task: Task) => {
@@ -145,25 +133,24 @@ export const useTaskBoard = (onRefetch: () => void) => {
     }
   };
 
+  
+
   return {
     selectedTask,
     isDialogOpen,
     isDeleteConfirmOpen,
     isUpdateDialogOpen,
-    isUpdatesDisplayOpen,
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
     selectedStatus,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
-    setIsUpdatesDisplayOpen,
     setIsSubtaskDialogOpen,
     setIsCreateTaskDialogOpen,
     handleEditTask,
     handleDeleteConfirm,
     handleTaskUpdates,
-    handleShowUpdates,
     handleAddSubtask,
     handleCreateTask,
     deleteTask,
