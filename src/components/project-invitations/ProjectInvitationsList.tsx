@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,35 +41,25 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
     queryFn: async () => {
       if (!projectId) return [];
 
-      try {
-        // No need to specify table for project_id since we're not joining with tables that have the same column name
-        const { data, error } = await supabase
-          .from("project_invitations")
-          .select(`
-            id,
-            invitee_id,
-            permission_level,
-            status,
-            created_at,
-            profiles:invitee_id (
-              full_name,
-              last_name,
-              email
-            )
-          `)
-          .eq("project_id", projectId)
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          invitee_id,
+          permission_level,
+          status,
+          created_at,
+          profiles:invitee_id (
+            full_name,
+            last_name,
+            email
+          )
+        `)
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching project invitations list:", error);
-          throw error;
-        }
-        
-        return data as Invitation[];
-      } catch (error) {
-        console.error("Error in project invitations list query:", error);
-        return [];
-      }
+      if (error) throw error;
+      return data as Invitation[];
     },
     enabled: !!projectId,
   });
@@ -106,9 +97,9 @@ const ProjectInvitationsList = ({ projectId }: ProjectInvitationsListProps) => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "warning"; // Changed from "secondary" to "warning"
+        return "secondary"; // Changed from "warning" to "secondary"
       case "accepted":
-        return "success"; // Using success variant now that we've added it
+        return "default"; // Changed from "success" to "default"
       case "rejected":
         return "destructive";
       default:

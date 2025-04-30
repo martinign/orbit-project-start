@@ -38,38 +38,28 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
   const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
     queryKey: ["pending_invitations"],
     queryFn: async () => {
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) return [];
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
 
-        // Fix: Using a different approach for the join that explicitly specifies the projects table
-        const { data, error } = await supabase
-          .from("project_invitations")
-          .select(`
-            id,
-            project_id,
-            permission_level,
-            created_at,
-            inviter_id,
-            projects:projects!project_invitations_project_id_fkey (
-              project_number,
-              Sponsor
-            )
-          `)
-          .eq("invitee_id", user.user.id)
-          .eq("status", "pending")
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          project_id,
+          permission_level,
+          created_at,
+          inviter_id,
+          projects:project_id (
+            project_number,
+            Sponsor
+          )
+        `)
+        .eq("invitee_id", user.user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching invitations:", error);
-          throw error;
-        }
-        
-        return (data || []) as InvitationWithInviterId[];
-      } catch (error) {
-        console.error("Error in pending invitations query:", error);
-        return [];
-      }
+      if (error) throw error;
+      return data as InvitationWithInviterId[];
     },
     enabled: open,
   });
@@ -133,8 +123,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           .eq("id", user.user.id)
           .single();
 
-        // Using 'role' instead of 'permission_level' in project_team_members
-        // permission_level from project_invitations is stored as role in project_team_members
         const { error: teamMemberError } = await supabase
           .from("project_team_members")
           .insert({
@@ -142,7 +130,8 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
             last_name: profile?.last_name || "Unnamed User",
-            role: invitationToHandle.permission_level // Use permission_level from invitation as role
+            location: profile?.location,
+            permission_level: invitationToHandle.permission_level
           });
 
         if (teamMemberError) throw teamMemberError;
@@ -226,7 +215,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
                     <Button
                       onClick={() => handleInvitation(invitation.id, true)}
                       disabled={!!loading}
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
                     >
                       {loading === invitation.id ? (
                         <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />

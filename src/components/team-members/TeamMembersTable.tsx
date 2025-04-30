@@ -4,14 +4,12 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { TeamMember } from "@/hooks/useTeamMembers";
 
 interface TeamMembersTableProps {
-  teamMembers: TeamMember[];
+  teamMembers: any[];
   projectId: string | null;
-  onEdit: (member: TeamMember) => void;
-  onDelete: (member: TeamMember) => void;
+  onEdit: (member: any) => void;
+  onDelete: (member: any) => void;
 }
 
 const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
@@ -20,27 +18,14 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
   onEdit,
   onDelete
 }) => {
-  const handleEdit = (e: React.MouseEvent, member: TeamMember) => {
+  const handleEdit = (e: React.MouseEvent, member: any) => {
     e.stopPropagation();
     onEdit(member);
   };
 
-  const handleDelete = (e: React.MouseEvent, member: TeamMember) => {
+  const handleDelete = (e: React.MouseEvent, member: any) => {
     e.stopPropagation();
     onDelete(member);
-  };
-
-  const getRoleBadgeVariant = (role?: string) => {
-    if (!role) return "secondary";
-    
-    switch (role.toLowerCase()) {
-      case 'owner': return "success";
-      case 'admin': return "warning";
-      case 'edit': return "secondary";
-      case 'read': 
-      case 'read_only': return "outline";
-      default: return "secondary";
-    }
   };
 
   return (
@@ -61,13 +46,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
               <TableRow key={member.id}>
                 <TableCell className="font-medium">{member.full_name}</TableCell>
                 <TableCell className="font-medium">{member.last_name}</TableCell>
-                <TableCell>
-                  {member.role ? (
-                    <Badge variant={getRoleBadgeVariant(member.role)}>
-                      {member.role}
-                    </Badge>
-                  ) : '-'}
-                </TableCell>
+                <TableCell>{member.role || '-'}</TableCell>
                 {!projectId && <TableCell>{member.projects ? `${member.projects.project_number} - ${member.projects.Sponsor}` : '-'}</TableCell>}
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

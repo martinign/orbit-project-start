@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,62 +43,53 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
   const { data: invitations, isLoading } = useQuery({
     queryKey: ["all_invitations", filters],
     queryFn: async () => {
-      try {
-        // When joining multiple tables, we need to be explicit about which table's project_id we're using
-        let query = supabase
-          .from("project_invitations")
-          .select(`
-            id,
-            status,
-            created_at,
-            permission_level,
-            project_id,
-            inviter_id,
-            invitee_id,
-            projects:project_id (
-              project_number,
-              Sponsor
-            ),
-            profiles_inviter:inviter_id (
-              full_name,
-              last_name
-            ),
-            profiles_invitee:invitee_id (
-              full_name,
-              last_name,
-              email
-            )
-          `);
+      let query = supabase
+        .from("project_invitations")
+        .select(`
+          id,
+          status,
+          created_at,
+          permission_level,
+          project_id,
+          inviter_id,
+          invitee_id,
+          projects:project_id (
+            project_number,
+            Sponsor
+          ),
+          profiles_inviter:inviter_id (
+            full_name,
+            last_name
+          ),
+          profiles_invitee:invitee_id (
+            full_name,
+            last_name,
+            email
+          )
+        `);
 
-        if (filters.projectId && filters.projectId !== "all") {
-          query = query.eq("project_id", filters.projectId);
-        }
-
-        if (filters.startDate) {
-          query = query.gte("created_at", filters.startDate.toISOString());
-        }
-
-        if (filters.endDate) {
-          query = query.lte("created_at", filters.endDate.toISOString());
-        }
-
-        if (filters.status && filters.status !== "all") {
-          query = query.eq("status", filters.status);
-        }
-
-        const { data, error } = await query.order("created_at", { ascending: false });
-        
-        if (error) {
-          console.error("Error fetching all invitations:", error);
-          throw error;
-        }
-        
-        // Cast the data to ensure it matches our interface
-        return data as unknown as InvitationData[];
-      } catch (error) {
-        console.error("Error in all invitations query:", error);
-        return [];
+      if (filters.projectId && filters.projectId !== "all") {
+        query = query.eq("project_id", filters.projectId);
       }
+
+      if (filters.startDate) {
+        query = query.gte("created_at", filters.startDate.toISOString());
+      }
+
+      if (filters.endDate) {
+        query = query.lte("created_at", filters.endDate.toISOString());
+      }
+
+      if (filters.status && filters.status !== "all") {
+        query = query.eq("status", filters.status);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      
+      // Cast the data to ensure it matches our interface
+      return data as unknown as InvitationData[];
     },
     enabled: open,
   });

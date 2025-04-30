@@ -7,7 +7,7 @@ export interface TeamMember {
   user_id: string;
   full_name: string;
   last_name: string;
-  role?: string; // This represents the permission (owner, admin, edit, read)
+  role?: string;
   project_id: string;
   projects?: {
     project_number: string;
