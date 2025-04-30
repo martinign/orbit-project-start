@@ -27,6 +27,7 @@ interface Task {
   is_gantt_task?: boolean;
   user_id?: string;
   created_at?: string;
+  workday_code_id?: string;
 }
 
 interface TaskCardProps {
@@ -133,6 +134,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 assignedToName={assignedToName}
                 createdAt={task.created_at}
                 userId={task.user_id}
+                workdayCodeId={task.workday_code_id}
               />
             </HoverCardContent>
           </HoverCard>

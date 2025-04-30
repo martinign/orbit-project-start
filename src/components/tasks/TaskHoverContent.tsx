@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, User, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useWorkdayCodeDetails } from '@/hooks/useWorkdayCodeDetails';
 
 interface TaskHoverContentProps {
   title: string;
@@ -13,6 +14,7 @@ interface TaskHoverContentProps {
   assignedToName?: string;
   createdAt?: string;
   userId?: string;
+  workdayCodeId?: string;
 }
 
 export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
@@ -23,8 +25,10 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
   assignedToName,
   createdAt,
   userId,
+  workdayCodeId,
 }) => {
   const { data: userProfile } = useUserProfile(userId);
+  const { data: workdayCodeDetails } = useWorkdayCodeDetails(workdayCodeId);
   
   const getPriorityColor = (priority: string) => {
     switch(priority?.toLowerCase()) {
@@ -80,6 +84,17 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
           <p className="text-sm flex items-center">
             <User className="h-3 w-3 mr-1 flex-shrink-0" />
             {assignedToName}
+          </p>
+        </div>
+      )}
+      
+      {/* Workday code information */}
+      {workdayCodeDetails && (
+        <div>
+          <h5 className="text-xs font-medium text-gray-500">Workday Code</h5>
+          <p className="text-sm flex items-center">
+            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+            {workdayCodeDetails.label}
           </p>
         </div>
       )}

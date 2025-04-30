@@ -14,6 +14,7 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useWorkdayCodeDetails } from '@/hooks/useWorkdayCodeDetails';
 
 interface Subtask {
   id: string;
@@ -24,6 +25,7 @@ interface Subtask {
   assigned_to?: string;
   user_id?: string;
   created_at?: string;
+  workday_code_id?: string;
 }
 
 interface SubtaskItemProps {
@@ -39,6 +41,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
 }) => {
   const { memberName: subtaskAssignedToName } = useTeamMemberName(subtask.assigned_to);
   const { data: userProfile } = useUserProfile(subtask.user_id);
+  const { data: workdayCodeDetails } = useWorkdayCodeDetails(subtask.workday_code_id);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return null;
@@ -179,6 +182,17 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
                 <div className="flex items-center">
                   <User className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
                   <span className="text-sm">{subtaskAssignedToName}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Workday code information */}
+            {workdayCodeDetails && (
+              <div>
+                <h5 className="text-xs font-medium text-gray-500 mb-1">Workday Code</h5>
+                <div className="flex items-center">
+                  <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
+                  <span className="text-sm">{workdayCodeDetails.label}</span>
                 </div>
               </div>
             )}
