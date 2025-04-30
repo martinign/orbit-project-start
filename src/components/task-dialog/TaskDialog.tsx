@@ -19,6 +19,13 @@ interface TaskTemplate {
   description: string | null;
 }
 
+interface SOPTemplate {
+  id: string;
+  title: string;
+  sop_id: string | null;
+  sop_link: string | null;
+}
+
 interface TaskDialogProps {
   open: boolean;
   onClose: () => void;
@@ -44,18 +51,52 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   
   const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
 
-  const handleTemplateSelect = (template: TaskTemplate) => {
-    console.log("Applying template to form:", template);
+  const handleTemplateSelect = (template: TaskTemplate | SOPTemplate, templateType: 'task' | 'sop') => {
+    console.log(`Applying ${templateType} template to form:`, template);
     
+    // Common field (title exists in both template types)
     taskForm.setTitle(template.title || '');
-    if (template.description) {
-      taskForm.setDescription(template.description);
-    }
     
-    toast({
-      title: "Template Applied",
-      description: `Applied template: ${template.title}`,
-    });
+    // For regular task templates
+    if (templateType === 'task' && 'description' in template) {
+      if (template.description) {
+        taskForm.setDescription(template.description);
+      }
+    } 
+    // For SOP templates - add additional info to description
+    else if (templateType === 'sop') {
+      let descriptionContent = '';
+      
+      if ('description' in template && template.description) {
+        descriptionContent = template.description;
+      }
+      
+      // Add SOP ID and link to description if they exist
+      if ('sop_id' in template && template.sop_id) {
+        descriptionContent += `\n\nSOP ID: ${template.sop_id}`;
+      }
+      
+      if ('sop_link' in template && template.sop_link) {
+        descriptionContent += `\n\nSOP Link: ${template.sop_link}`;
+      }
+      
+      if (descriptionContent) {
+        taskForm.setDescription(descriptionContent.trim());
+      }
+      
+      // Show notification that SOP template was applied
+      toast({
+        title: "SOP Template Applied",
+        description: `Applied SOP template: ${template.title}`,
+        variant: "success",
+      });
+    } else {
+      // Regular task template
+      toast({
+        title: "Template Applied",
+        description: `Applied template: ${template.title}`,
+      });
+    }
   };
 
   return (

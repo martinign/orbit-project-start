@@ -558,6 +558,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pxl_sop_templates: {
+        Row: {
+          created_at: string
+          id: string
+          sop_id: string | null
+          sop_link: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sop_id?: string | null
+          sop_link?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sop_id?: string | null
+          sop_link?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       survey_responses: {
         Row: {
           additional_feedback: string | null
@@ -649,6 +679,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          sop_id: string | null
+          sop_link: string | null
           title: string
           updated_at: string
           user_id: string
@@ -657,6 +689,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          sop_id?: string | null
+          sop_link?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -665,6 +699,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          sop_id?: string | null
+          sop_link?: string | null
           title?: string
           updated_at?: string
           user_id?: string
