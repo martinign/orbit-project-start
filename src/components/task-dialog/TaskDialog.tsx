@@ -88,7 +88,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       toast({
         title: "SOP Template Applied",
         description: `Applied SOP template: ${template.title}`,
-        variant: "success",
+        // Fix the type error by using a valid variant
+        variant: "default",
       });
     } else {
       // Regular task template
