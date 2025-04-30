@@ -1,4 +1,3 @@
-
 import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, FileText, Link } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +29,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function AppSidebar() {
   const {
@@ -51,7 +57,9 @@ export function AppSidebar() {
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
-  const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
+  const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [canSubmitSurvey, loadingSurveyAvailability] = useSurveyAvailability();
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
@@ -86,6 +94,14 @@ export function AppSidebar() {
   const handleWorkdayCodesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsWorkdayCodeDialogOpen(true);
+  };
+
+  const handleFeatureSelect = (feature: string) => {
+    if (selectedFeatures.includes(feature)) {
+      setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
+    } else {
+      setSelectedFeatures([...selectedFeatures, feature]);
+    }
   };
 
   const handleSurveySuccess = () => {
@@ -171,34 +187,65 @@ export function AppSidebar() {
                 </RouterLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Popover>
-                  <PopoverTrigger asChild>
+                <Dialog open={isExtraFeaturesDialogOpen} onOpenChange={setIsExtraFeaturesDialogOpen}>
+                  <DialogTrigger asChild>
                     <SidebarMenuButton
                       tooltip="Extra Features"
                       className="hover:bg-indigo-500/10 transition-colors duration-200"
                     >
                       <span>Extra Features</span>
                     </SidebarMenuButton>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56 p-0">
-                    <div className="rounded-md border border-gray-200 bg-white shadow-sm">
-                      <div className="flex flex-col">
-                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Extra Features</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="site-initiation" 
+                          checked={selectedFeatures.includes('site-initiation')}
+                          onCheckedChange={() => handleFeatureSelect('site-initiation')}
+                        />
+                        <label 
+                          htmlFor="site-initiation" 
+                          className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                        >
                           <FileText className="h-4 w-4" />
                           <span>Site Initiation Tracker</span>
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="important-links" 
+                          checked={selectedFeatures.includes('important-links')}
+                          onCheckedChange={() => handleFeatureSelect('important-links')}
+                        />
+                        <label 
+                          htmlFor="important-links" 
+                          className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                        >
                           <Link className="h-4 w-4" />
                           <span>Important Links</span>
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="repository" 
+                          checked={selectedFeatures.includes('repository')}
+                          onCheckedChange={() => handleFeatureSelect('repository')}
+                        />
+                        <label 
+                          htmlFor="repository" 
+                          className="text-sm font-medium flex items-center gap-2 cursor-pointer"
+                        >
                           <Folder className="h-4 w-4" />
                           <span>Repository</span>
-                        </button>
+                        </label>
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                  </DialogContent>
+                </Dialog>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
