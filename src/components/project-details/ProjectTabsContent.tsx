@@ -6,6 +6,10 @@ import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
+import { SiteInitiationTab } from './tabs/SiteInitiationTab';
+import { ImportantLinksTab } from './tabs/ImportantLinksTab';
+import { RepositoryTab } from './tabs/RepositoryTab';
+import { useExtraFeatures } from '@/contexts/ExtraFeaturesContext';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -27,6 +31,7 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   setContactSearchQuery,
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
+  const { selectedFeatures } = useExtraFeatures();
 
   const handleRefetch = async () => {
     try {
@@ -81,6 +86,19 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           projectId={projectId}
           searchQuery={teamSearchQuery}
         />
+      )}
+      
+      {/* Dynamic feature tabs */}
+      {activeTab === 'site-initiation' && selectedFeatures.includes('site-initiation') && (
+        <SiteInitiationTab projectId={projectId} />
+      )}
+      
+      {activeTab === 'important-links' && selectedFeatures.includes('important-links') && (
+        <ImportantLinksTab projectId={projectId} />
+      )}
+      
+      {activeTab === 'repository' && selectedFeatures.includes('repository') && (
+        <RepositoryTab projectId={projectId} />
       )}
 
       {activeTab === 'invites' && (

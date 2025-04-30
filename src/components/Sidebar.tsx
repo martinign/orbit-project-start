@@ -23,6 +23,7 @@ import WorkdayCodeDialog from "./WorkdayCodeDialog";
 import SurveyDialog from "./SurveyDialog";
 import { useSurveyAvailability } from "@/hooks/useSurveyAvailability";
 import { format } from "date-fns";
+import { useExtraFeatures } from "@/contexts/ExtraFeaturesContext";
 import {
   Tooltip,
   TooltipContent,
@@ -58,7 +59,7 @@ export function AppSidebar() {
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const { selectedFeatures, setSelectedFeatures } = useExtraFeatures();
   
   // Fixed: Properly destructure the object returned by useSurveyAvailability
   const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
