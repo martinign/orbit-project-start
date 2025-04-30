@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link, FileText2, FileText } from "lucide-react";
+import { Link, FileText, File } from "lucide-react";
 import { 
   Dialog,
   DialogContent,
@@ -93,7 +93,7 @@ const ExtraFeaturesDialog: React.FC<ExtraFeaturesDialogProps> = ({ open, onOpenC
             />
             <div className="space-y-1 leading-none">
               <div className="flex items-center">
-                <FileText2 className="h-4 w-4 mr-2 text-purple-500" />
+                <File className="h-4 w-4 mr-2 text-purple-500" />
                 <Label htmlFor="sop">Standard Operating Procedure (SOP)</Label>
               </div>
               <p className="text-sm text-muted-foreground">
