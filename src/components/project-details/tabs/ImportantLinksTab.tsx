@@ -9,7 +9,7 @@ interface ImportantLinksTabProps {
 
 export const ImportantLinksTab: React.FC<ImportantLinksTabProps> = ({ projectId }) => {
   return (
-    <TabContentWrapper value="important-links" title="Project Important Links">
+    <TabContentWrapper value="important-links" title="Important Links">
       <ImportantLinks projectId={projectId} />
     </TabContentWrapper>
   );
