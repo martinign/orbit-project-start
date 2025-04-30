@@ -1,4 +1,5 @@
-import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
+
+import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, Sliders } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -102,7 +103,8 @@ export function AppSidebar() {
         count,
         error
       } = await supabase.from("project_tasks").select("id", {
-        count: "exact"
+        count: "exact",
+        head: true
       }).gte("created_at", yesterday.toISOString());
       if (error) throw error;
       return count || 0;
@@ -165,6 +167,14 @@ export function AppSidebar() {
                     {totalCount > 0 && <Badge className="ml-auto bg-purple-500">
                         {totalCount} new
                       </Badge>}
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link to="/extra-features">
+                  <SidebarMenuButton tooltip="Extra Features" className="hover:bg-indigo-500/10 transition-colors duration-200">
+                    <Sliders className="text-indigo-500" />
+                    <span>Extra Features</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
