@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -130,8 +131,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
             user_id: user.user.id,
             full_name: profile?.full_name || "Unnamed User",
             last_name: profile?.last_name || "Unnamed User",
-            location: profile?.location,
-            permission_level: invitationToHandle.permission_level
+            location: profile?.location
           });
 
         if (teamMemberError) throw teamMemberError;
