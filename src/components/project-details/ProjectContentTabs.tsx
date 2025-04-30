@@ -1,23 +1,26 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail } from 'lucide-react';
+import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive } from 'lucide-react';
+import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectContentTabsProps {
   activeTab: string;
   onTabChange: (value: string) => void;
   children: React.ReactNode;
+  extraFeatures?: ExtraFeaturesState;
 }
 
 export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   activeTab,
   onTabChange,
-  children
+  children,
+  extraFeatures
 }) => {
   return (
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
       <div className="overflow-x-auto pb-2">
-        <TabsList className="grid grid-cols-6 md:grid-cols-6 sm:grid-cols-4 xs:grid-cols-2 w-full max-w-3xl">
+        <TabsList className="w-full max-w-fit">
           <TabsTrigger value="tasks" className="flex items-center gap-2">
             <ListTodo className="h-4 w-4" />
             <span className="hidden sm:inline">Tasks</span>
@@ -53,6 +56,30 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
             <span className="hidden sm:inline">Invites</span>
             <span className="sm:hidden">Invites</span>
           </TabsTrigger>
+
+          {extraFeatures?.importantLinks && (
+            <TabsTrigger value="important-links" className="flex items-center gap-2">
+              <Link className="h-4 w-4" />
+              <span className="hidden sm:inline">Important Links</span>
+              <span className="sm:hidden">Links</span>
+            </TabsTrigger>
+          )}
+
+          {extraFeatures?.siteInitiationTracker && (
+            <TabsTrigger value="site-initiation" className="flex items-center gap-2">
+              <Flag className="h-4 w-4" />
+              <span className="hidden sm:inline">Site Initiation</span>
+              <span className="sm:hidden">Site</span>
+            </TabsTrigger>
+          )}
+
+          {extraFeatures?.repository && (
+            <TabsTrigger value="repository" className="flex items-center gap-2">
+              <Archive className="h-4 w-4" />
+              <span className="hidden sm:inline">Repository</span>
+              <span className="sm:hidden">Repo</span>
+            </TabsTrigger>
+          )}
         </TabsList>
       </div>
       {children}

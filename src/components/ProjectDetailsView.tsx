@@ -10,6 +10,7 @@ import { ProjectStatisticsCards } from './project-details/ProjectStatisticsCards
 import { ProjectContentTabs } from './project-details/ProjectContentTabs';
 import { ProjectTabsContent } from './project-details/ProjectTabsContent';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useExtraFeatures } from '@/hooks/useExtraFeatures';
 import { User } from 'lucide-react';
 
 const ProjectDetailsView = () => {
@@ -18,6 +19,7 @@ const ProjectDetailsView = () => {
   const [activeTab, setActiveTab] = useState('tasks');
   const [contactSearchQuery, setContactSearchQuery] = useState('');
   const queryClient = useQueryClient();
+  const { features } = useExtraFeatures();
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -263,7 +265,11 @@ const ProjectDetailsView = () => {
         </CardHeader>
       </Card>
 
-      <ProjectContentTabs activeTab={activeTab} onTabChange={setActiveTab}>
+      <ProjectContentTabs 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        extraFeatures={features}
+      >
         <ProjectTabsContent
           activeTab={activeTab}
           projectId={id || ''}
@@ -272,6 +278,7 @@ const ProjectDetailsView = () => {
           refetchTasks={refetchTasks}
           contactSearchQuery={contactSearchQuery}
           setContactSearchQuery={setContactSearchQuery}
+          extraFeatures={features}
         />
       </ProjectContentTabs>
     </div>

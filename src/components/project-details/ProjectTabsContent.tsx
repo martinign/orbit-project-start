@@ -6,6 +6,10 @@ import { CalendarTab } from './tabs/CalendarTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
+import { ImportantLinksTab } from './tabs/ImportantLinksTab';
+import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
+import { RepositoryTab } from './tabs/RepositoryTab';
+import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -15,6 +19,7 @@ interface ProjectTabsContentProps {
   refetchTasks: () => void;
   contactSearchQuery: string;
   setContactSearchQuery: (query: string) => void;
+  extraFeatures?: ExtraFeaturesState;
 }
 
 export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
@@ -25,6 +30,7 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   refetchTasks,
   contactSearchQuery,
   setContactSearchQuery,
+  extraFeatures
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
 
@@ -85,6 +91,19 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
 
       {activeTab === 'invites' && (
         <InvitesTab projectId={projectId} />
+      )}
+
+      {/* Extra Features Tabs */}
+      {activeTab === 'important-links' && extraFeatures?.importantLinks && (
+        <ImportantLinksTab projectId={projectId} />
+      )}
+
+      {activeTab === 'site-initiation' && extraFeatures?.siteInitiationTracker && (
+        <SiteInitiationTrackerTab projectId={projectId} />
+      )}
+
+      {activeTab === 'repository' && extraFeatures?.repository && (
+        <RepositoryTab projectId={projectId} />
       )}
     </>
   );
