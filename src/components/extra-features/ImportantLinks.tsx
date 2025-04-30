@@ -97,6 +97,8 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
   });
 
   const fetchLinks = async () => {
+    if (!projectId) return;
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -106,6 +108,7 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log("Fetched important links:", data);
       setLinks(data || []);
     } catch (error) {
       console.error('Error fetching important links:', error);
@@ -128,7 +131,7 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
   // Add real-time subscription for links
   useRealtimeSubscription({
     table: 'project_important_links',
-    filter: 'project_id',
+    filter: projectId ? 'project_id' : undefined,
     filterValue: projectId,
     onRecordChange: (payload) => {
       console.log('Important links change detected:', payload);
@@ -137,10 +140,16 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
   });
 
   const handleAddLink = async (values: LinkFormValues) => {
-    if (!user || !projectId) return;
+    if (!user || !projectId) {
+      toast({
+        title: 'Error',
+        description: 'User or project information missing',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     try {
-      // Fix: Explicitly specify the table name for the project_id column
       const { error } = await supabase.from('project_important_links').insert({
         project_id: projectId,
         title: values.title,
@@ -159,11 +168,11 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
       setIsAddDialogOpen(false);
       form.reset();
       fetchLinks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding link:', error);
       toast({
         title: 'Error',
-        description: 'Failed to add link',
+        description: error.message || 'Failed to add link',
         variant: 'destructive',
       });
     }
@@ -193,11 +202,11 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
       setCurrentLink(null);
       editForm.reset();
       fetchLinks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating link:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update link',
+        description: error.message || 'Failed to update link',
         variant: 'destructive',
       });
     }
@@ -222,11 +231,11 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
       setIsDeleteDialogOpen(false);
       setCurrentLink(null);
       fetchLinks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting link:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete link',
+        description: error.message || 'Failed to delete link',
         variant: 'destructive',
       });
     }
