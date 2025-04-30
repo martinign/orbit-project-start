@@ -41,7 +41,6 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Important Links</h3>
         <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
           <Plus className="h-4 w-4 mr-2" /> Add Link
         </Button>
