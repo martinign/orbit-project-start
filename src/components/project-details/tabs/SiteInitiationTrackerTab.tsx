@@ -12,7 +12,7 @@ export const SiteInitiationTrackerTab: React.FC<SiteInitiationTrackerTabProps> =
     <TabsContent value="site-initiation" className="space-y-4">
       <div className="bg-white p-4 rounded-lg shadow-sm">
         <h3 className="text-lg font-medium mb-4">Site Initiation Tracker</h3>
-        <SiteInitiationTracker />
+        <SiteInitiationTracker projectId={projectId} />
       </div>
     </TabsContent>
   );

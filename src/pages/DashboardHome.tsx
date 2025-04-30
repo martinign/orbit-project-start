@@ -46,7 +46,7 @@ const DashboardHome = () => {
   const [showNewTasks, setShowNewTasks] = useState(false);
   const [showNewEvents, setShowNewEvents] = useState(false);
   const { newTasksCount, newEventsCount, hideBadge } = useTotalNewItemsCount();
-  const { features } = useExtraFeatures();
+  const { features, setFeatures } = useExtraFeatures();
   
   // Collapsible states for each section
   const [isRecentActivitiesOpen, setIsRecentActivitiesOpen] = useState(true);
@@ -59,6 +59,14 @@ const DashboardHome = () => {
   useEffect(() => {
     hideBadge();
   }, [hideBadge]);
+
+  // Ensure we see the extra features immediately when they're enabled
+  useEffect(() => {
+    const savedFeatures = localStorage.getItem("extraFeatures");
+    if (savedFeatures) {
+      setFeatures(JSON.parse(savedFeatures));
+    }
+  }, [setFeatures]);
 
   // Create debounced invalidation functions to prevent UI freezes
   const debouncedInvalidateProjects = useCallback(
@@ -271,7 +279,7 @@ const DashboardHome = () => {
                 </CardHeader>
                 <CollapsibleContent>
                   <CardContent className="pt-4">
-                    <ImportantLinks />
+                    <ImportantLinks projectId={filters.projectId} />
                   </CardContent>
                 </CollapsibleContent>
               </Card>
@@ -298,7 +306,7 @@ const DashboardHome = () => {
                 </CardHeader>
                 <CollapsibleContent>
                   <CardContent className="pt-4">
-                    <SiteInitiationTracker />
+                    <SiteInitiationTracker projectId={filters.projectId} />
                   </CardContent>
                 </CollapsibleContent>
               </Card>
@@ -325,7 +333,7 @@ const DashboardHome = () => {
                 </CardHeader>
                 <CollapsibleContent>
                   <CardContent className="pt-4">
-                    <Repository />
+                    <Repository projectId={filters.projectId} />
                   </CardContent>
                 </CollapsibleContent>
               </Card>

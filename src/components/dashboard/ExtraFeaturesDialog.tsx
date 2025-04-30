@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 
 interface ExtraFeaturesDialogProps {
   open: boolean;
@@ -19,27 +20,27 @@ interface ExtraFeaturesDialogProps {
 
 export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogProps) {
   const { toast } = useToast();
-  const [selectedFeatures, setSelectedFeatures] = useState<{
-    importantLinks: boolean;
-    siteInitiationTracker: boolean;
-    repository: boolean;
-  }>(() => {
-    // Load saved preferences from local storage or use defaults
-    const savedFeatures = localStorage.getItem("extraFeatures");
-    return savedFeatures ? JSON.parse(savedFeatures) : {
-      importantLinks: false,
-      siteInitiationTracker: false,
-      repository: false,
-    };
+  const { features, setFeatures } = useExtraFeatures();
+  const [selectedFeatures, setSelectedFeatures] = useState({
+    importantLinks: features.importantLinks,
+    siteInitiationTracker: features.siteInitiationTracker,
+    repository: features.repository,
   });
 
-  // Save preferences to local storage whenever they change
+  // Sync with actual features when dialog opens
   useEffect(() => {
-    localStorage.setItem("extraFeatures", JSON.stringify(selectedFeatures));
-  }, [selectedFeatures]);
+    if (open) {
+      setSelectedFeatures({
+        importantLinks: features.importantLinks,
+        siteInitiationTracker: features.siteInitiationTracker,
+        repository: features.repository,
+      });
+    }
+  }, [open, features]);
 
   const handleSave = () => {
     // Save changes
+    setFeatures(selectedFeatures);
     localStorage.setItem("extraFeatures", JSON.stringify(selectedFeatures));
     
     toast({
