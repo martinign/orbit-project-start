@@ -1,4 +1,4 @@
-import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
+import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
@@ -22,6 +22,7 @@ import { useLocation } from "react-router-dom";
 import WorkdayCodeDialog from "./WorkdayCodeDialog";
 import SurveyDialog from "./SurveyDialog";
 import { useSurveyAvailability } from "@/hooks/useSurveyAvailability";
+import { ExtraFeaturesDialog } from "./dashboard/ExtraFeaturesDialog";
 import { format } from "date-fns";
 import {
   Tooltip,
@@ -50,6 +51,7 @@ export function AppSidebar() {
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
+  const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
@@ -84,6 +86,11 @@ export function AppSidebar() {
   const handleWorkdayCodesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsWorkdayCodeDialogOpen(true);
+  };
+
+  const handleExtraFeaturesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExtraFeaturesDialogOpen(true);
   };
 
   const handleSurveySuccess = () => {
@@ -167,6 +174,16 @@ export function AppSidebar() {
                       </Badge>}
                   </SidebarMenuButton>
                 </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  tooltip="Extra Features" 
+                  className="hover:bg-indigo-500/10 transition-colors duration-200"
+                  onClick={handleExtraFeaturesClick}
+                >
+                  <Package className="text-indigo-500" />
+                  <span>Extra Features</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -285,6 +302,11 @@ export function AppSidebar() {
         open={isSurveyDialogOpen}
         onOpenChange={setIsSurveyDialogOpen}
         onSuccess={handleSurveySuccess}
+      />
+
+      <ExtraFeaturesDialog
+        open={isExtraFeaturesDialogOpen}
+        onOpenChange={setIsExtraFeaturesDialogOpen}
       />
     </Sidebar>;
 }
