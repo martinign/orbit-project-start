@@ -10,7 +10,6 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { ExtraFeaturesProvider } from "./contexts/ExtraFeaturesContext";
 import WorkdayCodes from "./pages/WorkdayCodes";
 
 const queryClient = new QueryClient();
@@ -22,25 +21,23 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <ExtraFeaturesProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              
-              {/* Protected routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/projects" element={<Dashboard />} />
-                <Route path="/projects/:id" element={<Dashboard />} />
-                <Route path="/contacts" element={<Dashboard />} />
-                <Route path="/team-members" element={<Dashboard />} />
-                <Route path="/workday-codes" element={<Dashboard />} />
-              </Route>
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ExtraFeaturesProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Dashboard />} />
+              <Route path="/projects/:id" element={<Dashboard />} />
+              <Route path="/contacts" element={<Dashboard />} />
+              <Route path="/team-members" element={<Dashboard />} />
+              <Route path="/workday-codes" element={<Dashboard />} />
+            </Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
