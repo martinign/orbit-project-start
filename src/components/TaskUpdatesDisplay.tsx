@@ -13,6 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TaskUpdate {
   id: string;
@@ -37,6 +38,7 @@ const TaskUpdatesDisplay: React.FC<TaskUpdatesDisplayProps> = ({
 }) => {
   const [updates, setUpdates] = useState<TaskUpdate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (open) {
@@ -44,7 +46,7 @@ const TaskUpdatesDisplay: React.FC<TaskUpdatesDisplayProps> = ({
       
       // Subscribe to realtime updates
       const channel = supabase
-        .channel('task-updates')
+        .channel(`task-updates-display-${taskId}`)
         .on(
           'postgres_changes',
           {
@@ -57,15 +59,21 @@ const TaskUpdatesDisplay: React.FC<TaskUpdatesDisplayProps> = ({
             // @ts-ignore - payload.new exists
             const newUpdate = payload.new as TaskUpdate;
             setUpdates(prev => [newUpdate, ...prev]);
+            
+            // Invalidate queries to update counts elsewhere in the app
+            queryClient.invalidateQueries({ queryKey: ['task-updates'] });
           }
         )
         .subscribe();
+        
+      // Mark updates as viewed when the display is opened
+      queryClient.invalidateQueries({ queryKey: ['task-updates', taskId] });
         
       return () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [open, taskId]);
+  }, [open, taskId, queryClient]);
 
   const fetchUpdates = async () => {
     setIsLoading(true);

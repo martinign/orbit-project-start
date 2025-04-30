@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Kanban, Calendar, Plus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -30,7 +31,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   useEffect(() => {
     const channel = supabase.channel('project-tasks-changes')
       .on('postgres_changes', {
-        event: '*',  // Changed from '*' to '*' to be explicit (it was already correct)
+        event: '*',  // Listen for all events
         schema: 'public',
         table: 'project_tasks',
         filter: `project_id=eq.${projectId}`
@@ -42,8 +43,21 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       })
       .subscribe();
 
+    // Add subscription for task updates
+    const updateChannel = supabase.channel('project-task-updates')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'project_task_updates'
+      }, () => {
+        // Invalidate any queries that might be caching task update counts
+        queryClient.invalidateQueries({ queryKey: ['task-updates'] });
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(updateChannel);
     };
   }, [projectId, queryClient, refetchTasks]);
   

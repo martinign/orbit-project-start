@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -8,7 +8,6 @@ import { TaskActions } from './TaskActions';
 import { TaskMetadata } from './TaskMetadata';
 import { TaskHoverContent } from './TaskHoverContent';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
-import { useTaskUpdates } from '@/hooks/useTaskUpdates';
 
 interface Task {
   id: string;
@@ -36,6 +35,7 @@ interface DraggableTaskCardProps {
   onUpdate: (task: Task) => void;
   onAddSubtask: (task: Task) => void;
   onShowUpdates: (task: Task) => void;
+  updateCount?: number;
 }
 
 export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
@@ -49,9 +49,9 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   onUpdate,
   onAddSubtask,
   onShowUpdates,
+  updateCount = 0,
 }) => {
   const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
-  const { updateCount } = useTaskUpdates(task.id);
 
   return (
     <Draggable draggableId={task.id} index={index}>

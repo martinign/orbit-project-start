@@ -28,6 +28,7 @@ interface TaskCardProps {
   handleTaskUpdates: (task: Task) => void;
   handleShowUpdates: (task: Task) => void;
   handleAddSubtask: (task: Task) => void;
+  updateCount?: number;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -38,6 +39,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   handleTaskUpdates,
   handleShowUpdates,
   handleAddSubtask,
+  updateCount = 0,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const { subtasks } = useSubtasks(task.id);
@@ -69,6 +71,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onUpdate={handleTaskUpdates}
           onAddSubtask={handleAddSubtask}
           onShowUpdates={handleShowUpdates}
+          updateCount={updateCount}
         />
         
         {isExpanded && subtasks.length > 0 && <SubtaskList subtasks={subtasks} />}

@@ -25,6 +25,10 @@ interface ColumnConfig {
   badgeColor: string;
 }
 
+interface UpdateCounts {
+  [taskId: string]: number;
+}
+
 interface TaskBoardColumnProps {
   column: ColumnConfig;
   tasks: Task[];
@@ -37,6 +41,7 @@ interface TaskBoardColumnProps {
   projectId: string;
   isColumnCollapsed: (columnId: string) => boolean;
   toggleColumnCollapsed: (columnId: string) => void;
+  taskUpdateCounts?: UpdateCounts;
 }
 
 const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
@@ -50,7 +55,8 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
   handleCreateTask,
   projectId,
   isColumnCollapsed,
-  toggleColumnCollapsed
+  toggleColumnCollapsed,
+  taskUpdateCounts = {}
 }) => {
   const isCollapsed = isColumnCollapsed(column.id);
   
@@ -137,7 +143,8 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
                     handleDeleteConfirm={handleDeleteConfirm} 
                     handleTaskUpdates={handleTaskUpdates}
                     handleShowUpdates={handleShowUpdates}
-                    handleAddSubtask={handleAddSubtask} 
+                    handleAddSubtask={handleAddSubtask}
+                    updateCount={taskUpdateCounts[task.id] || 0}
                   />
                 ))}
                 

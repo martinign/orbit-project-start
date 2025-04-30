@@ -11,6 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCollapsibleTaskColumns } from '@/hooks/useCollapsibleTaskColumns';
+import { useProjectTaskUpdates } from '@/hooks/useProjectTaskUpdates';
 
 interface Task {
   id: string;
@@ -31,6 +32,8 @@ interface TaskBoardProps {
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
   const queryClient = useQueryClient();
   const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
+  const { updateCounts, markTaskUpdatesAsViewed } = useProjectTaskUpdates(projectId);
+  
   const {
     selectedTask,
     isDialogOpen,
@@ -75,6 +78,12 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     };
   }, [queryClient, onRefetch]);
 
+  // Handle when a user views task updates - mark them as viewed
+  const handleViewTaskUpdates = (task: Task) => {
+    handleShowUpdates(task);
+    markTaskUpdatesAsViewed(task.id);
+  };
+
   const getTasksForColumn = (status: string) => {
     return tasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
@@ -95,11 +104,12 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                 handleEditTask={handleEditTask}
                 handleDeleteConfirm={handleDeleteConfirm}
                 handleTaskUpdates={handleTaskUpdates}
-                handleShowUpdates={handleShowUpdates}
+                handleShowUpdates={handleViewTaskUpdates}
                 handleAddSubtask={handleAddSubtask}
                 handleCreateTask={handleCreateTask}
                 isColumnCollapsed={isColumnCollapsed}
                 toggleColumnCollapsed={toggleColumnCollapsed}
+                taskUpdateCounts={updateCounts}
               />
             ))}
           </div>
