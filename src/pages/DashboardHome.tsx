@@ -16,6 +16,9 @@ import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { ImportantLinks } from "@/components/extra-features/ImportantLinks";
 import { SiteInitiationTracker } from "@/components/extra-features/SiteInitiationTracker";
 import { Repository } from "@/components/extra-features/Repository";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DashboardFilters {
   projectId?: string;
@@ -42,6 +45,7 @@ const DashboardHome = () => {
   const [showNewEvents, setShowNewEvents] = useState(false);
   const { newTasksCount, newEventsCount, hideBadge } = useTotalNewItemsCount();
   const { features } = useExtraFeatures();
+  const [isExtraFeaturesOpen, setIsExtraFeaturesOpen] = useState(true);
 
   // Hide badge when we first load the dashboard
   useEffect(() => {
@@ -153,6 +157,8 @@ const DashboardHome = () => {
     onToggleNewEvents: toggleNewEventsFilter
   };
 
+  const hasEnabledFeatures = features.importantLinks || features.siteInitiationTracker || features.repository;
+
   return (
     <div className="w-full space-y-6">
       <DashboardHeader />
@@ -168,29 +174,6 @@ const DashboardHome = () => {
         }}
       />
 
-      {/* Extra Features Section */}
-      {(features.importantLinks || features.siteInitiationTracker || features.repository) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.importantLinks && (
-            <div className="col-span-1">
-              <ImportantLinks />
-            </div>
-          )}
-          
-          {features.siteInitiationTracker && (
-            <div className="col-span-1">
-              <SiteInitiationTracker />
-            </div>
-          )}
-          
-          {features.repository && (
-            <div className="col-span-1 lg:col-span-1">
-              <Repository />
-            </div>
-          )}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <ProjectsStatisticsCard filters={filters} />
         <TasksStatisticsCard filters={filters} />
@@ -202,6 +185,49 @@ const DashboardHome = () => {
         <RecentActivities filters={activitiesFilters} />
         <DashboardEvents filters={eventsFilters} newEventsCount={newEventsCount} />
       </div>
+
+      {/* Extra Features Section - Moved below recent activities and events */}
+      {hasEnabledFeatures && (
+        <Collapsible 
+          open={isExtraFeaturesOpen}
+          onOpenChange={setIsExtraFeaturesOpen}
+          className="border rounded-md bg-white shadow-sm"
+        >
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="text-lg font-semibold">Extra Features</h3>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isExtraFeaturesOpen ? 
+                  <ChevronUp className="h-4 w-4" /> : 
+                  <ChevronDown className="h-4 w-4" />
+                }
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          
+          <CollapsibleContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {features.importantLinks && (
+                <div className="col-span-1">
+                  <ImportantLinks />
+                </div>
+              )}
+              
+              {features.siteInitiationTracker && (
+                <div className="col-span-1">
+                  <SiteInitiationTracker />
+                </div>
+              )}
+              
+              {features.repository && (
+                <div className="col-span-1 lg:col-span-1">
+                  <Repository />
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
     </div>
   );
 };
