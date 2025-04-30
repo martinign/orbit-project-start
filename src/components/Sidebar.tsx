@@ -59,7 +59,9 @@ export function AppSidebar() {
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [canSubmitSurvey, loadingSurveyAvailability] = useSurveyAvailability();
+  
+  // Fixed: Properly destructure the object returned by useSurveyAvailability
+  const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
 
   // Subscribe to real-time task changes to update the new tasks badge
   useRealtimeSubscription({
