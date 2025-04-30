@@ -1,4 +1,3 @@
-
 import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, Sliders } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +29,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import ExtraFeaturesDialog from "./ExtraFeaturesDialog";
 
 export function AppSidebar() {
   const {
@@ -50,6 +50,7 @@ export function AppSidebar() {
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
+  const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
   const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
 
   // Subscribe to real-time task changes to update the new tasks badge
@@ -85,6 +86,11 @@ export function AppSidebar() {
   const handleWorkdayCodesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsWorkdayCodeDialogOpen(true);
+  };
+
+  const handleExtraFeaturesClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExtraFeaturesDialogOpen(true);
   };
 
   const handleSurveySuccess = () => {
@@ -171,12 +177,14 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link to="/extra-features">
-                  <SidebarMenuButton tooltip="Extra Features" className="hover:bg-indigo-500/10 transition-colors duration-200">
-                    <Sliders className="text-indigo-500" />
-                    <span>Extra Features</span>
-                  </SidebarMenuButton>
-                </Link>
+                <SidebarMenuButton 
+                  tooltip="Extra Features" 
+                  className="hover:bg-indigo-500/10 transition-colors duration-200"
+                  onClick={handleExtraFeaturesClick}
+                >
+                  <Sliders className="text-indigo-500" />
+                  <span>Extra Features</span>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -295,6 +303,11 @@ export function AppSidebar() {
         open={isSurveyDialogOpen}
         onOpenChange={setIsSurveyDialogOpen}
         onSuccess={handleSurveySuccess}
+      />
+
+      <ExtraFeaturesDialog 
+        open={isExtraFeaturesDialogOpen} 
+        onOpenChange={setIsExtraFeaturesDialogOpen} 
       />
     </Sidebar>;
 }
