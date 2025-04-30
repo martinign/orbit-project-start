@@ -22,12 +22,14 @@ export const useTaskSubmission = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitTask = async (taskData: any) => {
+    console.time('taskSubmission');
     setIsSubmitting(true);
     
     try {
       console.log("Saving task with data:", taskData);
       
       if (mode === 'edit' && taskId) {
+        console.time('taskUpdate');
         const { error } = await supabase
           .from('project_tasks')
           .update({
@@ -35,6 +37,7 @@ export const useTaskSubmission = ({
             updated_at: new Date().toISOString(),
           })
           .eq('id', taskId);
+        console.timeEnd('taskUpdate');
           
         if (error) throw error;
         
@@ -43,9 +46,11 @@ export const useTaskSubmission = ({
           description: "Task updated successfully",
         });
       } else {
+        console.time('taskCreate');
         const { error } = await supabase
           .from('project_tasks')
           .insert(taskData);
+        console.timeEnd('taskCreate');
           
         if (error) throw error;
         
@@ -77,6 +82,7 @@ export const useTaskSubmission = ({
       });
     } finally {
       setIsSubmitting(false);
+      console.timeEnd('taskSubmission');
     }
   };
 

@@ -21,7 +21,11 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   // Initialize form data
   useEffect(() => {
     if (!didInitialFormSet) {
+      console.time('initializeTaskForm');
+      
       if (mode === 'edit' && task) {
+        console.log('Initializing edit form with task data:', task);
+        
         setTitle(task.title || '');
         setDescription(task.description || '');
         setStatus(task.status || 'not started');
@@ -38,6 +42,8 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
           setDueDate(new Date(task.due_date));
         }
       } else {
+        // For create mode, reset all fields
+        console.log('Initializing create form with default values');
         setTitle('');
         setDescription('');
         setStatus(initialStatus);
@@ -48,6 +54,7 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
       }
 
       setDidInitialFormSet(true);
+      console.timeEnd('initializeTaskForm');
     }
   }, [mode, task, didInitialFormSet, initialStatus]);
 

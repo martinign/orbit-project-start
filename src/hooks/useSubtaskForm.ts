@@ -40,54 +40,74 @@ export const useSubtaskForm = (
   const [workdayCodes, setWorkdayCodes] = useState<WorkdayCodeOption[]>([]);
   const [selectedWorkdayCode, setSelectedWorkdayCode] = useState<string>('none');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Fetch workday codes specific to the parent task's project
     const loadWorkdayCodes = async () => {
+      console.time('loadWorkdayCodesList');
+      
       if (parentTask && parentTask.project_id) {
         const { data } = await fetchProjectWorkdayCodes(parentTask.project_id);
         setWorkdayCodes(data);
+        console.log(`Loaded ${data.length} workday codes for project: ${parentTask.project_id}`);
       } else {
         setWorkdayCodes([]);
+        console.log('No parent task or project ID available to load workday codes');
       }
+      
+      console.timeEnd('loadWorkdayCodesList');
     };
 
-    loadWorkdayCodes();
+    const initializeForm = () => {
+      console.time('initializeSubtaskForm');
+      
+      if (mode === 'edit' && subtask) {
+        console.log('Initializing edit subtask form with data:', subtask);
+        
+        setTitle(subtask.title || '');
+        setDescription(subtask.description || '');
+        setStatus(subtask.status || 'not started');
+        setNotes(subtask.notes || '');
+        
+        if (subtask.assigned_to) {
+          setAssignedTo(subtask.assigned_to);
+        } else {
+          setAssignedTo('none');
+        }
+        
+        if (subtask.due_date) {
+          setDueDate(new Date(subtask.due_date));
+        } else {
+          setDueDate(undefined);
+        }
 
-    if (mode === 'edit' && subtask) {
-      setTitle(subtask.title || '');
-      setDescription(subtask.description || '');
-      setStatus(subtask.status || 'not started');
-      setNotes(subtask.notes || '');
-      
-      if (subtask.assigned_to) {
-        setAssignedTo(subtask.assigned_to);
+        if (subtask.workday_code_id) {
+          setSelectedWorkdayCode(subtask.workday_code_id);
+        } else {
+          setSelectedWorkdayCode('none');
+        }
       } else {
-        setAssignedTo('none');
-      }
-      
-      if (subtask.due_date) {
-        setDueDate(new Date(subtask.due_date));
-      } else {
+        // Reset form for create mode
+        console.log('Initializing create subtask form with default values');
+        setTitle('');
+        setDescription('');
+        setStatus('not started');
         setDueDate(undefined);
-      }
-
-      if (subtask.workday_code_id) {
-        setSelectedWorkdayCode(subtask.workday_code_id);
-      } else {
+        setNotes('');
+        setAssignedTo('none');
         setSelectedWorkdayCode('none');
       }
-    } else {
-      // Reset form for create mode
-      setTitle('');
-      setDescription('');
-      setStatus('not started');
-      setDueDate(undefined);
-      setNotes('');
-      setAssignedTo('none');
-      setSelectedWorkdayCode('none');
+      
+      console.timeEnd('initializeSubtaskForm');
+      setIsInitialized(true);
+    };
+
+    if (!isInitialized) {
+      loadWorkdayCodes();
+      initializeForm();
     }
-  }, [mode, subtask, parentTask]);
+  }, [mode, subtask, parentTask, isInitialized]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +131,7 @@ export const useSubtaskForm = (
     }
     
     setIsSubmitting(true);
+    console.time('subtaskSubmission');
     
     try {
       const subtaskData = {
@@ -161,9 +182,17 @@ export const useSubtaskForm = (
         variant: "destructive",
       });
     } finally {
+      console.timeEnd('subtaskSubmission');
       setIsSubmitting(false);
     }
   };
+
+  // Reset the initialization state when dependencies change
+  useEffect(() => {
+    return () => {
+      setIsInitialized(false);
+    };
+  }, [mode, subtask?.id, parentTask?.id]);
 
   return {
     title,

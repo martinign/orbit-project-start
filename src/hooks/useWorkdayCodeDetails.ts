@@ -12,6 +12,8 @@ export function useWorkdayCodeDetails(workdayCodeId?: string | null) {
   return useQuery({
     queryKey: ["workday_code", workdayCodeId],
     queryFn: async (): Promise<WorkdayCodeDetails | null> => {
+      const startTime = performance.now();
+      
       if (!workdayCodeId) return null;
       
       const { data, error } = await supabase
@@ -24,6 +26,9 @@ export function useWorkdayCodeDetails(workdayCodeId?: string | null) {
         console.error('Error fetching workday code details:', error);
         return null;
       }
+      
+      const endTime = performance.now();
+      console.log(`Workday code fetch took ${endTime - startTime}ms for ID: ${workdayCodeId}`);
       
       if (data) {
         return {
