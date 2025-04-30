@@ -45,6 +45,12 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
     setFeatures(selectedFeatures);
     localStorage.setItem("extraFeatures", JSON.stringify(selectedFeatures));
     
+    // Dispatch a storage event to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'extraFeatures',
+      newValue: JSON.stringify(selectedFeatures)
+    }));
+    
     toast({
       title: "Features updated",
       description: "Your selected features have been saved"

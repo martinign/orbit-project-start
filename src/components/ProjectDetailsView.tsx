@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -20,6 +20,21 @@ const ProjectDetailsView = () => {
   const [contactSearchQuery, setContactSearchQuery] = useState('');
   const queryClient = useQueryClient();
   const { features } = useExtraFeatures();
+
+  // Listen for extra features changes via storage events
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'extraFeatures') {
+        // Force a component update when extra features change
+        setActiveTab(prev => prev === 'tasks' ? 'tasks' : 'tasks');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', id],
@@ -269,6 +284,7 @@ const ProjectDetailsView = () => {
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         extraFeatures={features}
+        key={`tabs-${JSON.stringify(features)}`}
       >
         <ProjectTabsContent
           activeTab={activeTab}
@@ -279,6 +295,7 @@ const ProjectDetailsView = () => {
           contactSearchQuery={contactSearchQuery}
           setContactSearchQuery={setContactSearchQuery}
           extraFeatures={features}
+          key={`content-${JSON.stringify(features)}`}
         />
       </ProjectContentTabs>
     </div>

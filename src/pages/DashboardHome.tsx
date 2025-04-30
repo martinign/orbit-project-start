@@ -54,6 +54,18 @@ const DashboardHome = () => {
     if (savedFeatures) {
       setFeatures(JSON.parse(savedFeatures));
     }
+    
+    // Listen for storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'extraFeatures' && e.newValue) {
+        setFeatures(JSON.parse(e.newValue));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [setFeatures]);
 
   // Filter setups for activities and events
@@ -105,6 +117,7 @@ const DashboardHome = () => {
         setIsSiteTrackerOpen={setIsSiteTrackerOpen}
         setIsRepositoryOpen={setIsRepositoryOpen}
         setIsDocPrintingOpen={setIsDocPrintingOpen}
+        key={`extra-features-${JSON.stringify(features)}`}
       />
     </div>
   );

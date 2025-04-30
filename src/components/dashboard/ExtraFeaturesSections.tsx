@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Card, 
   CardHeader,
@@ -40,13 +40,36 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
   setIsRepositoryOpen,
   setIsDocPrintingOpen
 }) => {
-  const hasEnabledFeatures = features.importantLinks || features.siteInitiationTracker || features.repository || features.docPrinting;
+  // Use state to track features so we can update immediately
+  const [localFeatures, setLocalFeatures] = useState(features);
+  
+  // Update local state when props change
+  useEffect(() => {
+    setLocalFeatures(features);
+  }, [features]);
+
+  // Listen for storage events
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'extraFeatures' && e.newValue) {
+        setLocalFeatures(JSON.parse(e.newValue));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
+  const hasEnabledFeatures = localFeatures.importantLinks || localFeatures.siteInitiationTracker || 
+                            localFeatures.repository || localFeatures.docPrinting;
 
   if (!hasEnabledFeatures) return null;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {features.importantLinks && (
+      {localFeatures.importantLinks && (
         <Collapsible 
           open={isImportantLinksOpen}
           onOpenChange={setIsImportantLinksOpen}
@@ -73,7 +96,7 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
         </Collapsible>
       )}
       
-      {features.siteInitiationTracker && (
+      {localFeatures.siteInitiationTracker && (
         <Collapsible 
           open={isSiteTrackerOpen}
           onOpenChange={setIsSiteTrackerOpen}
@@ -100,7 +123,7 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
         </Collapsible>
       )}
       
-      {features.repository && (
+      {localFeatures.repository && (
         <Collapsible 
           open={isRepositoryOpen}
           onOpenChange={setIsRepositoryOpen}
@@ -127,7 +150,7 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
         </Collapsible>
       )}
       
-      {features.docPrinting && (
+      {localFeatures.docPrinting && (
         <Collapsible 
           open={isDocPrintingOpen}
           onOpenChange={setIsDocPrintingOpen}

@@ -20,15 +20,37 @@ export function useExtraFeatures() {
     };
   });
 
+  // Listen for storage events from other components
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'extraFeatures' && e.newValue) {
+        setFeatures(JSON.parse(e.newValue));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Save to localStorage when features change
   useEffect(() => {
     localStorage.setItem("extraFeatures", JSON.stringify(features));
   }, [features]);
 
   const toggleFeature = (featureName: keyof ExtraFeaturesState, value?: boolean) => {
-    setFeatures(prev => ({
-      ...prev,
-      [featureName]: value !== undefined ? value : !prev[featureName]
+    const newFeatures = {
+      ...features,
+      [featureName]: value !== undefined ? value : !features[featureName]
+    };
+    
+    setFeatures(newFeatures);
+    
+    // Dispatch a storage event to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'extraFeatures',
+      newValue: JSON.stringify(newFeatures)
     }));
   };
 
