@@ -168,7 +168,7 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {selectionMode ? "Select Task Template" : "Task Templates"}
@@ -263,10 +263,10 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>SOP ID</TableHead>
-                      <TableHead>SOP Link</TableHead>
-                      {selectionMode && <TableHead className="w-24">Action</TableHead>}
+                      <TableHead className="w-1/3">Title</TableHead>
+                      <TableHead className="w-1/4">SOP ID</TableHead>
+                      <TableHead className="w-1/4">SOP Link</TableHead>
+                      {selectionMode && <TableHead className="w-1/6 text-right">Action</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -278,7 +278,7 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
                         <TableCell className="font-medium">
                           {sop.title}
                         </TableCell>
-                        <TableCell>{sop.sop_id || "—"}</TableCell>
+                        <TableCell className="whitespace-nowrap">{sop.sop_id || "—"}</TableCell>
                         <TableCell>
                           {sop.sop_link ? (
                             <a 
@@ -298,7 +298,7 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
                           )}
                         </TableCell>
                         {selectionMode && (
-                          <TableCell>
+                          <TableCell className="text-right">
                             <Button 
                               variant="outline" 
                               size="sm"
