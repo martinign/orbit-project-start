@@ -45,12 +45,12 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   return (
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
       <div className="overflow-x-auto pb-2">
-        <TabsList className="flex w-full max-w-full space-x-1">
+        <TabsList className="inline-flex w-auto space-x-1">
           {allTabs.map(tab => (
             <TabsTrigger 
               key={tab.value} 
               value={tab.value} 
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
             >
               <tab.icon className="h-4 w-4" />
               <span className="hidden sm:inline">{tab.label}</span>
