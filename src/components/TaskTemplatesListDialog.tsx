@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
-import { Edit, Trash2, Search, ExternalLink } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -31,30 +29,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
+// Import the new components
+import TaskTemplatesTab from '@/components/templates/TaskTemplatesTab';
+import SopTemplatesTab from '@/components/templates/SopTemplatesTab';
+import TemplateSearch from '@/components/templates/TemplateSearch';
+import { TaskTemplate, SOPTemplate } from '@/components/templates/types';
 import TaskTemplateDialog from "@/components/TaskTemplateDialog";
-import TaskTemplateList from "@/components/TaskTemplateList";
-
-interface TaskTemplate {
-  id: string;
-  title: string;
-  description: string | null;
-}
-
-interface SOPTemplate {
-  id: string;
-  title: string;
-  sop_id: string | null;
-  sop_link: string | null;
-}
 
 interface TaskTemplatesListDialogProps {
   open: boolean;
@@ -71,10 +52,9 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TaskTemplate | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'my-templates' | 'standard-sops'>('my-templates');
 
@@ -100,7 +80,6 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
   const {
     data: sopTemplates,
     isLoading: isLoadingSops,
-    refetch: refetchSops
   } = useQuery({
     queryKey: ["sop_templates"],
     queryFn: async () => {
@@ -154,18 +133,6 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
     }
   };
 
-  // Filter templates based on search query
-  const filteredTemplates = templates?.filter(template => 
-    template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (template.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Filter SOP templates based on search query
-  const filteredSopTemplates = sopTemplates?.filter(template =>
-    template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (template.sop_id || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -182,16 +149,10 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
         
         <div className="w-full mb-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div className="relative w-64">
-              <Input
-                type="text"
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-              <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-            </div>
+            <TemplateSearch 
+              searchQuery={searchQuery} 
+              setSearchQuery={setSearchQuery} 
+            />
             
             {!selectionMode && activeTab === 'my-templates' && (
               <Button 
@@ -213,112 +174,31 @@ const TaskTemplatesListDialog: React.FC<TaskTemplatesListDialogProps> = ({
             </TabsList>
             
             <TabsContent value="my-templates">
-              {isLoadingTemplates ? (
-                <div className="flex justify-center p-4">Loading templates...</div>
-              ) : filteredTemplates && filteredTemplates.length > 0 ? (
-                selectionMode ? (
-                  <div className="space-y-4">
-                    {filteredTemplates.map((template) => (
-                      <div 
-                        key={template.id}
-                        className="border p-4 rounded-md hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleTemplateSelection(template, 'task')}
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium">{template.title}</h3>
-                          <Badge variant="secondary">User Template</Badge>
-                        </div>
-                        {template.description && (
-                          <p className="text-sm text-gray-500 mt-1">{template.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <TaskTemplateList 
-                    templates={filteredTemplates}
-                    onEdit={(template) => {
-                      setSelectedTemplate(template);
-                      setIsEditDialogOpen(true);
-                    }}
-                    onDelete={(template) => {
-                      setSelectedTemplate(template);
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  />
-                )
-              ) : (
-                <div className="text-center p-4">
-                  <p className="text-muted-foreground">
-                    {searchQuery ? "No templates match your search criteria" : "No templates found"}
-                  </p>
-                </div>
-              )}
+              <TaskTemplatesTab
+                templates={templates}
+                isLoading={isLoadingTemplates}
+                searchQuery={searchQuery}
+                selectionMode={selectionMode}
+                onTemplateSelect={(template, type) => handleTemplateSelection(template, type)}
+                onEdit={(template) => {
+                  setSelectedTemplate(template);
+                  setIsEditDialogOpen(true);
+                }}
+                onDelete={(template) => {
+                  setSelectedTemplate(template);
+                  setIsDeleteDialogOpen(true);
+                }}
+              />
             </TabsContent>
             
             <TabsContent value="standard-sops">
-              {isLoadingSops ? (
-                <div className="flex justify-center p-4">Loading SOPs...</div>
-              ) : filteredSopTemplates && filteredSopTemplates.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-1/3">Title</TableHead>
-                      <TableHead className="w-1/4">SOP ID</TableHead>
-                      <TableHead className="w-1/4">SOP Link</TableHead>
-                      {selectionMode && <TableHead className="w-1/6 text-right">Action</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSopTemplates.map((sop) => (
-                      <TableRow 
-                        key={sop.id} 
-                        className={selectionMode ? "cursor-pointer hover:bg-gray-50" : ""}
-                      >
-                        <TableCell className="font-medium">
-                          {sop.title}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">{sop.sop_id || "—"}</TableCell>
-                        <TableCell>
-                          {sop.sop_link ? (
-                            <a 
-                              href={sop.sop_link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center text-blue-600 hover:text-blue-800"
-                              onClick={(e) => {
-                                // Prevent selection when clicking the link
-                                if (selectionMode) e.stopPropagation();
-                              }}
-                            >
-                              View <ExternalLink className="ml-1 h-3 w-3" />
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        {selectionMode && (
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleTemplateSelection(sop, 'sop')}
-                            >
-                              Select
-                            </Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center p-4">
-                  <p className="text-muted-foreground">
-                    {searchQuery ? "No SOPs match your search criteria" : "No standard SOPs found"}
-                  </p>
-                </div>
-              )}
+              <SopTemplatesTab
+                templates={sopTemplates}
+                isLoading={isLoadingSops}
+                searchQuery={searchQuery}
+                selectionMode={selectionMode}
+                onTemplateSelect={(template, type) => handleTemplateSelection(template, type)}
+              />
             </TabsContent>
           </Tabs>
         </div>
