@@ -169,6 +169,14 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Extra Features"
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <span>Extra Features</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -193,14 +201,6 @@ export function AppSidebar() {
                 >
                   <Clock className="text-blue-500" />
                   <span>Workday Codes</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Extra Features"
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  <span>Extra Features</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
