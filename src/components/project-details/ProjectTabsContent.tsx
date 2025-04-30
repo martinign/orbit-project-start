@@ -9,6 +9,7 @@ import { InvitesTab } from './tabs/InvitesTab';
 import { ImportantLinksTab } from './tabs/ImportantLinksTab';
 import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
 import { RepositoryTab } from './tabs/RepositoryTab';
+import { DocPrintingTab } from './tabs/DocPrintingTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectTabsContentProps {
@@ -104,6 +105,10 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
 
       {activeTab === 'repository' && extraFeatures?.repository && (
         <RepositoryTab projectId={projectId} />
+      )}
+      
+      {activeTab === 'doc-printing' && extraFeatures?.docPrinting && (
+        <DocPrintingTab projectId={projectId} />
       )}
     </>
   );

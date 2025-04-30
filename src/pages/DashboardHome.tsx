@@ -31,11 +31,13 @@ const DashboardHome = () => {
     isImportantLinksOpen,
     isSiteTrackerOpen,
     isRepositoryOpen,
+    isDocPrintingOpen,
     setIsRecentActivitiesOpen,
     setIsUpcomingEventsOpen,
     setIsImportantLinksOpen,
     setIsSiteTrackerOpen,
-    setIsRepositoryOpen
+    setIsRepositoryOpen,
+    setIsDocPrintingOpen
   } = useDashboardSections();
   
   // Setup realtime subscriptions
@@ -98,9 +100,11 @@ const DashboardHome = () => {
         isImportantLinksOpen={isImportantLinksOpen}
         isSiteTrackerOpen={isSiteTrackerOpen}
         isRepositoryOpen={isRepositoryOpen}
+        isDocPrintingOpen={isDocPrintingOpen}
         setIsImportantLinksOpen={setIsImportantLinksOpen}
         setIsSiteTrackerOpen={setIsSiteTrackerOpen}
         setIsRepositoryOpen={setIsRepositoryOpen}
+        setIsDocPrintingOpen={setIsDocPrintingOpen}
       />
     </div>
   );

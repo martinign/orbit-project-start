@@ -11,6 +11,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { ImportantLinks } from '@/components/extra-features/ImportantLinks';
 import { SiteInitiationTracker } from '@/components/extra-features/SiteInitiationTracker';
 import { Repository } from '@/components/extra-features/Repository';
+import { DocPrinting } from '@/components/extra-features/DocPrinting';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
@@ -20,9 +21,11 @@ interface ExtraFeaturesSectionsProps {
   isImportantLinksOpen: boolean;
   isSiteTrackerOpen: boolean;
   isRepositoryOpen: boolean;
+  isDocPrintingOpen: boolean;
   setIsImportantLinksOpen: (isOpen: boolean) => void;
   setIsSiteTrackerOpen: (isOpen: boolean) => void;
   setIsRepositoryOpen: (isOpen: boolean) => void;
+  setIsDocPrintingOpen: (isOpen: boolean) => void;
 }
 
 export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
@@ -31,11 +34,13 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
   isImportantLinksOpen,
   isSiteTrackerOpen,
   isRepositoryOpen,
+  isDocPrintingOpen,
   setIsImportantLinksOpen,
   setIsSiteTrackerOpen,
-  setIsRepositoryOpen
+  setIsRepositoryOpen,
+  setIsDocPrintingOpen
 }) => {
-  const hasEnabledFeatures = features.importantLinks || features.siteInitiationTracker || features.repository;
+  const hasEnabledFeatures = features.importantLinks || features.siteInitiationTracker || features.repository || features.docPrinting;
 
   if (!hasEnabledFeatures) return null;
 
@@ -116,6 +121,33 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
             <CollapsibleContent>
               <CardContent className="pt-4">
                 <Repository projectId={projectId} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
+      
+      {features.docPrinting && (
+        <Collapsible 
+          open={isDocPrintingOpen}
+          onOpenChange={setIsDocPrintingOpen}
+          className="col-span-1"
+        >
+          <Card>
+            <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Doc Printing</CardTitle>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isDocPrintingOpen ? 
+                    <ChevronUp className="h-4 w-4" /> : 
+                    <ChevronDown className="h-4 w-4" />
+                  }
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="pt-4">
+                <DocPrinting projectId={projectId} />
               </CardContent>
             </CollapsibleContent>
           </Card>

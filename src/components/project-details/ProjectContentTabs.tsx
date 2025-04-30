@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive } from 'lucide-react';
+import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive, Printer } from 'lucide-react';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectContentTabsProps {
@@ -78,6 +78,14 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
               <Archive className="h-4 w-4" />
               <span className="hidden sm:inline">Repository</span>
               <span className="sm:hidden">Repo</span>
+            </TabsTrigger>
+          )}
+          
+          {extraFeatures?.docPrinting && (
+            <TabsTrigger value="doc-printing" className="flex items-center gap-2">
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Doc Printing</span>
+              <span className="sm:hidden">Print</span>
             </TabsTrigger>
           )}
         </TabsList>

@@ -5,6 +5,7 @@ export interface ExtraFeaturesState {
   importantLinks: boolean;
   siteInitiationTracker: boolean;
   repository: boolean;
+  docPrinting: boolean;
 }
 
 export function useExtraFeatures() {
@@ -15,6 +16,7 @@ export function useExtraFeatures() {
       importantLinks: false,
       siteInitiationTracker: false,
       repository: false,
+      docPrinting: false,
     };
   });
 

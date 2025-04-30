@@ -25,6 +25,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
     repository: features.repository,
+    docPrinting: features.docPrinting,
   });
 
   // Sync with actual features when dialog opens
@@ -34,6 +35,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
         importantLinks: features.importantLinks,
         siteInitiationTracker: features.siteInitiationTracker,
         repository: features.repository,
+        docPrinting: features.docPrinting,
       });
     }
   }, [open, features]);
@@ -99,6 +101,20 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
               }
             />
             <Label htmlFor="repository" className="cursor-pointer">Repository</Label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="docPrinting" 
+              checked={selectedFeatures.docPrinting}
+              onCheckedChange={(checked) => 
+                setSelectedFeatures(prev => ({
+                  ...prev, 
+                  docPrinting: checked === true
+                }))
+              }
+            />
+            <Label htmlFor="docPrinting" className="cursor-pointer">Doc Printing</Label>
           </div>
         </div>
         
