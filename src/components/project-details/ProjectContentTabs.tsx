@@ -17,16 +17,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
 }) => {
   const { selectedFeatures } = useExtraFeatures();
   
-  // Calculate grid columns based on number of tabs
-  const getGridCols = () => {
-    const baseTabsCount = 6; // tasks, notes, calendar, contacts, team, invites
-    const extraTabsCount = selectedFeatures.length;
-    const totalTabs = baseTabsCount + extraTabsCount;
-    
-    if (totalTabs <= 6) return 'grid-cols-6';
-    return `grid-cols-${totalTabs}`;
-  };
-  
   // Prepare all standard tabs first
   const standardTabs = [
     { value: 'tasks', label: 'Tasks', icon: ListTodo },
@@ -55,7 +45,7 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   return (
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
       <div className="overflow-x-auto pb-2">
-        <TabsList className={`grid ${getGridCols()} md:grid-cols-${allTabs.length} sm:grid-cols-4 xs:grid-cols-2 w-full max-w-4xl`}>
+        <TabsList className="flex w-full max-w-full space-x-1">
           {allTabs.map(tab => (
             <TabsTrigger 
               key={tab.value} 
