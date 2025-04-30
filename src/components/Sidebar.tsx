@@ -1,4 +1,3 @@
-
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +7,12 @@ import { useInvitationsCount } from "@/hooks/useInvitationsCount";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarFooter, 
+  SidebarHeader 
+} from "@/components/ui/sidebar";
 import { ProjectInvitationsSection } from "./sidebar/ProjectInvitationsSection";
 import { TaskManagementSection } from "./sidebar/TaskManagementSection";
 import { SidebarMenuItems } from "./sidebar/SidebarMenuItems";
@@ -163,12 +167,12 @@ export function AppSidebar() {
           onViewTemplatesClick={() => setIsViewTemplatesDialogOpen(true)} 
         />
 
-        <SidebarGroup>
-          <SidebarGroupLabel>RECENT PROJECTS</SidebarGroupLabel>
-          <SidebarGroupContent>
+        <div className="sidebar-group">
+          <div className="sidebar-group-label">RECENT PROJECTS</div>
+          <div className="sidebar-group-content">
             <SidebarMenuItems recentProjects={recentProjects} getStatusColor={getStatusColor} />
-          </SidebarGroupContent>
-        </SidebarGroup>
+          </div>
+        </div>
       </SidebarContent>
       
       <SurveySection 

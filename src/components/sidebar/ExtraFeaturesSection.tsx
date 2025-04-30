@@ -1,6 +1,13 @@
 
 import { Sliders } from "lucide-react";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { 
+  SidebarGroup, 
+  SidebarGroupContent, 
+  SidebarGroupLabel, 
+  SidebarMenu, 
+  SidebarMenuButton, 
+  SidebarMenuItem 
+} from "@/components/ui/sidebar";
 
 interface ExtraFeaturesSectionProps {
   onExtraFeaturesClick: (e: React.MouseEvent) => void;
@@ -11,7 +18,7 @@ export const ExtraFeaturesSection = ({
 }: ExtraFeaturesSectionProps) => {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>OVERVIEW</SidebarGroupLabel>
+      <SidebarGroupLabel>EXTRA FEATURES</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <SidebarMenuItem>

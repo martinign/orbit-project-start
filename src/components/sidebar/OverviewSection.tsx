@@ -1,5 +1,9 @@
 
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
+import { 
+  SidebarGroup, 
+  SidebarGroupContent, 
+  SidebarGroupLabel 
+} from "@/components/ui/sidebar";
 import { DashboardSection } from "./DashboardSection";
 
 interface OverviewSectionProps {
