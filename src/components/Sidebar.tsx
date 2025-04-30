@@ -172,7 +172,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Extra Features"
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className="hover:bg-indigo-500/10 transition-colors duration-200"
                 >
                   <span>Extra Features</span>
                 </SidebarMenuButton>
