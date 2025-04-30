@@ -21,6 +21,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -150,13 +151,16 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
     }
     
     try {
-      const { error } = await supabase.from('project_important_links').insert({
-        project_id: projectId,
-        title: values.title,
-        url: values.url,
-        description: values.description || null,
-        created_by: user.id,
-      });
+      // Use explicit column references to avoid ambiguity
+      const { error } = await supabase
+        .from('project_important_links')
+        .insert({
+          project_id: projectId,
+          title: values.title,
+          url: values.url,
+          description: values.description || null,
+          created_by: user.id,
+        });
 
       if (error) throw error;
       
@@ -339,6 +343,9 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Important Link</DialogTitle>
+            <DialogDescription>
+              Add a new important link for your project.
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleAddLink)} className="space-y-4">
@@ -411,6 +418,9 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Link</DialogTitle>
+            <DialogDescription>
+              Edit the link details below.
+            </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditLink)} className="space-y-4">
