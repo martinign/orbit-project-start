@@ -1,18 +1,8 @@
-
 import React from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-interface TaskTemplate {
-  id: string;
-  title: string;
-  description: string | null;
-  user_id: string;
-  project_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { TaskTemplate } from '@/components/templates/types';
 
 interface TaskTemplateListProps {
   templates: TaskTemplate[];
