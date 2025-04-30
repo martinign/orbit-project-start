@@ -43,6 +43,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface ImportantLink {
   id: string;
@@ -124,10 +125,22 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
     }
   }, [projectId]);
 
+  // Add real-time subscription for links
+  useRealtimeSubscription({
+    table: 'project_important_links',
+    filter: 'project_id',
+    filterValue: projectId,
+    onRecordChange: (payload) => {
+      console.log('Important links change detected:', payload);
+      fetchLinks(); // Refetch the links when changes occur
+    }
+  });
+
   const handleAddLink = async (values: LinkFormValues) => {
     if (!user || !projectId) return;
     
     try {
+      // Fix: Explicitly specify the table name for the project_id column
       const { error } = await supabase.from('project_important_links').insert({
         project_id: projectId,
         title: values.title,
