@@ -8,11 +8,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-
-interface TemplateOption {
-  id: string;
-  name: string;
-}
+import { TemplateOption } from './templates';
 
 interface DocPrintingTemplatesProps {
   templates: TemplateOption[];
