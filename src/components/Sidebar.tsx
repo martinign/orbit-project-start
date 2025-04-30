@@ -1,6 +1,6 @@
 
-import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, FileText, Link } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,6 +30,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export function AppSidebar() {
   const {
@@ -159,7 +160,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link to="/dashboard">
+                <RouterLink to="/dashboard">
                   <SidebarMenuButton tooltip="Dashboard" className="hover:bg-indigo-500/10 transition-colors duration-200" onClick={handleDashboardClick}>
                     <LayoutDashboard className="text-indigo-500" />
                     <span>Dashboard</span>
@@ -167,15 +168,37 @@ export function AppSidebar() {
                         {totalCount} new
                       </Badge>}
                   </SidebarMenuButton>
-                </Link>
+                </RouterLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Extra Features"
-                  className="hover:bg-indigo-500/10 transition-colors duration-200"
-                >
-                  <span>Extra Features</span>
-                </SidebarMenuButton>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <SidebarMenuButton
+                      tooltip="Extra Features"
+                      className="hover:bg-indigo-500/10 transition-colors duration-200"
+                    >
+                      <span>Extra Features</span>
+                    </SidebarMenuButton>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-0">
+                    <div className="rounded-md border border-gray-200 bg-white shadow-sm">
+                      <div className="flex flex-col">
+                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                          <FileText className="h-4 w-4" />
+                          <span>Site Initiation Tracker</span>
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                          <Link className="h-4 w-4" />
+                          <span>Important Links</span>
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100">
+                          <Folder className="h-4 w-4" />
+                          <span>Repository</span>
+                        </button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -186,12 +209,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <Link to="/projects">
+                <RouterLink to="/projects">
                   <SidebarMenuButton tooltip="Projects" className="hover:bg-blue-500/10 transition-colors duration-200">
                     <Folder className="text-blue-500" />
                     <span>Projects</span>
                   </SidebarMenuButton>
-                </Link>
+                </RouterLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton 
