@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { TabsContent } from "@/components/ui/tabs";
 import { Repository } from '@/components/extra-features/Repository';
+import { TabContentWrapper } from './TabContentWrapper';
 
 interface RepositoryTabProps {
   projectId: string;
@@ -9,11 +9,8 @@ interface RepositoryTabProps {
 
 export const RepositoryTab: React.FC<RepositoryTabProps> = ({ projectId }) => {
   return (
-    <TabsContent value="repository" className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow-sm">
-        <h3 className="text-lg font-medium mb-4">Project Repository</h3>
-        <Repository projectId={projectId} />
-      </div>
-    </TabsContent>
+    <TabContentWrapper value="repository" title="Project Repository">
+      <Repository projectId={projectId} />
+    </TabContentWrapper>
   );
 };

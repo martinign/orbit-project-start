@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { TabsContent } from "@/components/ui/tabs";
 import { SiteInitiationTracker } from '@/components/extra-features/SiteInitiationTracker';
+import { TabContentWrapper } from './TabContentWrapper';
 
 interface SiteInitiationTrackerTabProps {
   projectId: string;
@@ -9,11 +9,8 @@ interface SiteInitiationTrackerTabProps {
 
 export const SiteInitiationTrackerTab: React.FC<SiteInitiationTrackerTabProps> = ({ projectId }) => {
   return (
-    <TabsContent value="site-initiation" className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow-sm">
-        <h3 className="text-lg font-medium mb-4">Site Initiation Tracker</h3>
-        <SiteInitiationTracker projectId={projectId} />
-      </div>
-    </TabsContent>
+    <TabContentWrapper value="site-initiation" title="Site Initiation Tracker">
+      <SiteInitiationTracker projectId={projectId} />
+    </TabContentWrapper>
   );
 };
