@@ -2,15 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CircleDashed, CalendarClock, CalendarDays, Clock } from "lucide-react";
+import { CircleDashed, CalendarClock } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -116,69 +109,64 @@ export function DashboardEvents({ filters, newEventsCount = 0 }: DashboardEvents
   };
 
   return (
-    <Card className="min-h-[300px]">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Upcoming Events</CardTitle>
-          {newEventsCount > 0 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger onClick={handleNewEventsClick} asChild>
-                  <Badge 
-                    className={`cursor-pointer ${
-                      isNewEventsFilterActive 
-                        ? "bg-purple-700 hover:bg-purple-800" 
-                        : "bg-purple-500 hover:bg-purple-600"
-                    }`}
-                  >
-                    {newEventsCount} new
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Click to {isNewEventsFilterActive ? 'hide' : 'show'} new events in the last 24 hours</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+    <div>
+      <div className="flex justify-between items-center mb-2">
+        {newEventsCount > 0 && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger onClick={handleNewEventsClick} asChild>
+                <Badge 
+                  className={`cursor-pointer ${
+                    isNewEventsFilterActive 
+                      ? "bg-purple-700 hover:bg-purple-800" 
+                      : "bg-purple-500 hover:bg-purple-600"
+                  }`}
+                >
+                  {newEventsCount} new
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click to {isNewEventsFilterActive ? 'hide' : 'show'} new events in the last 24 hours</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-40">
+          <p className="text-muted-foreground">Loading events...</p>
         </div>
-        <CardDescription>Events happening soon</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center h-40">
-            <p className="text-muted-foreground">Loading events...</p>
-          </div>
-        ) : events && events.length > 0 ? (
-          <div className="space-y-4">
-            {events.map((event) => (
-              <div key={event.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
-                    <CalendarClock className="h-5 w-5 text-orange-500" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{event.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {event.projects?.project_number} - {event.projects?.Sponsor}
-                    </p>
-                  </div>
+      ) : events && events.length > 0 ? (
+        <div className="space-y-4">
+          {events.map((event) => (
+            <div key={event.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">
+                  <CalendarClock className="h-5 w-5 text-orange-500" />
                 </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-muted-foreground">
-                    {event.event_date ? format(new Date(event.event_date), "MMM d, h:mm a") : "No date"}
-                  </span>
+                <div>
+                  <p className="font-medium">{event.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {event.projects?.project_number} - {event.projects?.Sponsor}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-            <CircleDashed className="h-8 w-8 mb-2" />
-            <p>No upcoming events found</p>
-            <p className="text-sm mt-1">Try adjusting your filters</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-muted-foreground">
+                  {event.event_date ? format(new Date(event.event_date), "MMM d, h:mm a") : "No date"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+          <CircleDashed className="h-8 w-8 mb-2" />
+          <p>No upcoming events found</p>
+          <p className="text-sm mt-1">Try adjusting your filters</p>
+        </div>
+      )}
+    </div>
   );
 }

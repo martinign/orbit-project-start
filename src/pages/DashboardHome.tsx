@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ import { Repository } from "@/components/extra-features/Repository";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 interface DashboardFilters {
   projectId?: string;
@@ -45,7 +47,13 @@ const DashboardHome = () => {
   const [showNewEvents, setShowNewEvents] = useState(false);
   const { newTasksCount, newEventsCount, hideBadge } = useTotalNewItemsCount();
   const { features } = useExtraFeatures();
-  const [isExtraFeaturesOpen, setIsExtraFeaturesOpen] = useState(true);
+  
+  // Collapsible states for each section
+  const [isRecentActivitiesOpen, setIsRecentActivitiesOpen] = useState(true);
+  const [isUpcomingEventsOpen, setIsUpcomingEventsOpen] = useState(true);
+  const [isImportantLinksOpen, setIsImportantLinksOpen] = useState(true);
+  const [isSiteTrackerOpen, setIsSiteTrackerOpen] = useState(true);
+  const [isRepositoryOpen, setIsRepositoryOpen] = useState(true);
 
   // Hide badge when we first load the dashboard
   useEffect(() => {
@@ -157,6 +165,7 @@ const DashboardHome = () => {
     onToggleNewEvents: toggleNewEventsFilter
   };
 
+  // Function to determine if any extra features are enabled
   const hasEnabledFeatures = features.importantLinks || features.siteInitiationTracker || features.repository;
 
   return (
@@ -182,51 +191,147 @@ const DashboardHome = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <RecentActivities filters={activitiesFilters} />
-        <DashboardEvents filters={eventsFilters} newEventsCount={newEventsCount} />
+        {/* Recent Activities Section - Now Collapsible */}
+        <Collapsible 
+          open={isRecentActivitiesOpen}
+          onOpenChange={setIsRecentActivitiesOpen}
+        >
+          <Card>
+            <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>Latest actions across all projects</CardDescription>
+              </div>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isRecentActivitiesOpen ? 
+                    <ChevronUp className="h-4 w-4" /> : 
+                    <ChevronDown className="h-4 w-4" />
+                  }
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="pt-4">
+                <RecentActivities filters={activitiesFilters} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
+        {/* Dashboard Events Section - Now Collapsible */}
+        <Collapsible 
+          open={isUpcomingEventsOpen}
+          onOpenChange={setIsUpcomingEventsOpen}
+        >
+          <Card>
+            <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+              <div>
+                <CardTitle>Upcoming Events</CardTitle>
+                <CardDescription>Events happening soon</CardDescription>
+              </div>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isUpcomingEventsOpen ? 
+                    <ChevronUp className="h-4 w-4" /> : 
+                    <ChevronDown className="h-4 w-4" />
+                  }
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent className="pt-4">
+                <DashboardEvents filters={eventsFilters} newEventsCount={newEventsCount} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
-      {/* Extra Features Section - Moved below recent activities and events */}
+      {/* Extra Features Section - Each with its own collapsible */}
       {hasEnabledFeatures && (
-        <Collapsible 
-          open={isExtraFeaturesOpen}
-          onOpenChange={setIsExtraFeaturesOpen}
-          className="border rounded-md bg-white shadow-sm"
-        >
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="text-lg font-semibold">Extra Features</h3>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isExtraFeaturesOpen ? 
-                  <ChevronUp className="h-4 w-4" /> : 
-                  <ChevronDown className="h-4 w-4" />
-                }
-              </Button>
-            </CollapsibleTrigger>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.importantLinks && (
+            <Collapsible 
+              open={isImportantLinksOpen}
+              onOpenChange={setIsImportantLinksOpen}
+              className="col-span-1"
+            >
+              <Card>
+                <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle>Important Links</CardTitle>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      {isImportantLinksOpen ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />
+                      }
+                    </Button>
+                  </CollapsibleTrigger>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="pt-4">
+                    <ImportantLinks />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
           
-          <CollapsibleContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {features.importantLinks && (
-                <div className="col-span-1">
-                  <ImportantLinks />
-                </div>
-              )}
-              
-              {features.siteInitiationTracker && (
-                <div className="col-span-1">
-                  <SiteInitiationTracker />
-                </div>
-              )}
-              
-              {features.repository && (
-                <div className="col-span-1 lg:col-span-1">
-                  <Repository />
-                </div>
-              )}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+          {features.siteInitiationTracker && (
+            <Collapsible 
+              open={isSiteTrackerOpen}
+              onOpenChange={setIsSiteTrackerOpen}
+              className="col-span-1"
+            >
+              <Card>
+                <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle>Site Initiation Tracker</CardTitle>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      {isSiteTrackerOpen ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />
+                      }
+                    </Button>
+                  </CollapsibleTrigger>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="pt-4">
+                    <SiteInitiationTracker />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+          
+          {features.repository && (
+            <Collapsible 
+              open={isRepositoryOpen}
+              onOpenChange={setIsRepositoryOpen}
+              className="col-span-1"
+            >
+              <Card>
+                <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle>Repository</CardTitle>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      {isRepositoryOpen ? 
+                        <ChevronUp className="h-4 w-4" /> : 
+                        <ChevronDown className="h-4 w-4" />
+                      }
+                    </Button>
+                  </CollapsibleTrigger>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="pt-4">
+                    <Repository />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+        </div>
       )}
     </div>
   );
