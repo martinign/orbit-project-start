@@ -184,6 +184,47 @@ export type Database = {
           },
         ]
       }
+      project_important_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          project_id: string
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          project_id: string
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          project_id?: string
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_important_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_invitations: {
         Row: {
           created_at: string | null
@@ -764,6 +805,10 @@ export type Database = {
         Returns: boolean
       }
       has_project_read_permission: {
+        Args: { project_id: string }
+        Returns: boolean
+      }
+      is_project_team_member: {
         Args: { project_id: string }
         Returns: boolean
       }
