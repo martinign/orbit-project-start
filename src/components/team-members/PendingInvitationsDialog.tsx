@@ -50,7 +50,7 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
           permission_level,
           created_at,
           inviter_id,
-          projects:project_id (
+          projects: (
             project_number,
             Sponsor
           )
