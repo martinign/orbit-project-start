@@ -7,11 +7,13 @@ interface ProjectInvitationsSectionProps {
   pendingInvitationsCount: number;
   onInviteMembersClick: () => void;
   onPendingInvitationsClick: () => void;
+  onProjectInvitesClick: () => void; // New prop
 }
 export const ProjectInvitationsSection = ({
   pendingInvitationsCount,
   onInviteMembersClick,
-  onPendingInvitationsClick
+  onPendingInvitationsClick,
+  onProjectInvitesClick // New prop
 }: ProjectInvitationsSectionProps) => {
   return <SidebarGroup>
       <SidebarGroupLabel>PROJECT INVITATIONS</SidebarGroupLabel>
@@ -34,7 +36,7 @@ export const ProjectInvitationsSection = ({
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Project Invites" className="hover:bg-purple-500/10 transition-colors duration-200">
+            <SidebarMenuButton tooltip="Project Invites" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onProjectInvitesClick}>
               <Mail className="text-purple-500" />
               <span>Project Invites</span>
             </SidebarMenuButton>

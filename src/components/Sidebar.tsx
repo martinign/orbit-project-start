@@ -1,3 +1,4 @@
+
 import { Folder, LayoutDashboard, LogOut, Clock, ClipboardCheck, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ import TaskTemplateDialog from "./TaskTemplateDialog";
 import TaskTemplatesListDialog from "./TaskTemplatesListDialog";
 import InviteMembersDialog from "./team-members/InviteMembersDialog";
 import PendingInvitationsDialog from "./team-members/PendingInvitationsDialog";
+import ProjectInvitesDialog from "./team-members/ProjectInvitesDialog"; // Import the new dialog
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useLocation } from "react-router-dom";
@@ -48,6 +50,7 @@ export function AppSidebar() {
   const [isViewTemplatesDialogOpen, setIsViewTemplatesDialogOpen] = useState(false);
   const [isInviteMembersDialogOpen, setIsInviteMembersDialogOpen] = useState(false);
   const [isPendingInvitationsOpen, setIsPendingInvitationsOpen] = useState(false);
+  const [isProjectInvitesOpen, setIsProjectInvitesOpen] = useState(false); // New state
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const { canSubmitSurvey, loading: loadingSurveyAvailability } = useSurveyAvailability();
@@ -215,7 +218,12 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <ProjectInvitationsSection pendingInvitationsCount={pendingInvitationsCount} onInviteMembersClick={() => setIsInviteMembersDialogOpen(true)} onPendingInvitationsClick={() => setIsPendingInvitationsOpen(true)} />
+        <ProjectInvitationsSection 
+          pendingInvitationsCount={pendingInvitationsCount} 
+          onInviteMembersClick={() => setIsInviteMembersDialogOpen(true)} 
+          onPendingInvitationsClick={() => setIsPendingInvitationsOpen(true)}
+          onProjectInvitesClick={() => setIsProjectInvitesOpen(true)} // New handler
+        />
 
         <TaskManagementSection onTaskTemplateClick={() => setIsTaskTemplateDialogOpen(true)} onViewTemplatesClick={() => setIsViewTemplatesDialogOpen(true)} />
 
@@ -286,6 +294,9 @@ export function AppSidebar() {
       <InviteMembersDialog open={isInviteMembersDialogOpen} onClose={() => setIsInviteMembersDialogOpen(false)} />
 
       <PendingInvitationsDialog open={isPendingInvitationsOpen} onClose={() => setIsPendingInvitationsOpen(false)} />
+      
+      {/* Add the new ProjectInvitesDialog */}
+      <ProjectInvitesDialog open={isProjectInvitesOpen} onClose={() => setIsProjectInvitesOpen(false)} />
 
       <WorkdayCodeDialog 
         open={isWorkdayCodeDialogOpen} 
