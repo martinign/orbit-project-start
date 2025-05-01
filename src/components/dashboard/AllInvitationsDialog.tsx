@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,23 +17,23 @@ interface AllInvitationsDialogProps {
   };
 }
 
-interface InvitationData {
-  id: string;
-  status: string;
-  created_at: string;
-  permission_level: "owner" | "admin" | "edit" | "read_only";
-  project_id: string;
-  inviter_id: string;
-  invitee_id: string;
-  projects: {
+interface MemberInvitationData {
+  member_invitation_id: string;
+  invitation_status: string;
+  invitation_created_at: string;
+  member_role: "owner" | "admin";
+  member_project_id: string;
+  invitation_sender_id: string;
+  invitation_recipient_id: string;
+  project?: {
     project_number: string;
     Sponsor: string;
   } | null;
-  profiles_inviter: {
+  sender_profile?: {
     full_name: string | null;
     last_name: string | null;
   } | null;
-  profiles_invitee: {
+  recipient_profile?: {
     full_name: string | null;
     last_name: string | null;
     email: string | null;
@@ -41,27 +42,27 @@ interface InvitationData {
 
 export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitationsDialogProps) {
   const { data: invitations, isLoading } = useQuery({
-    queryKey: ["all_invitations", filters],
+    queryKey: ["all_member_invitations", filters],
     queryFn: async () => {
       let query = supabase
-        .from("project_invitations")
+        .from("member_invitations")
         .select(`
-          id,
-          status,
-          created_at,
-          permission_level,
-          project_id,
-          inviter_id,
-          invitee_id,
-          projects:project_id (
+          member_invitation_id,
+          invitation_status,
+          invitation_created_at,
+          member_role,
+          member_project_id,
+          invitation_sender_id,
+          invitation_recipient_id,
+          project:member_project_id (
             project_number,
             Sponsor
           ),
-          profiles_inviter:inviter_id (
+          sender_profile:invitation_sender_id (
             full_name,
             last_name
           ),
-          profiles_invitee:invitee_id (
+          recipient_profile:invitation_recipient_id (
             full_name,
             last_name,
             email
@@ -69,27 +70,26 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
         `);
 
       if (filters.projectId && filters.projectId !== "all") {
-        query = query.eq("project_id", filters.projectId);
+        query = query.eq("member_project_id", filters.projectId);
       }
 
       if (filters.startDate) {
-        query = query.gte("created_at", filters.startDate.toISOString());
+        query = query.gte("invitation_created_at", filters.startDate.toISOString());
       }
 
       if (filters.endDate) {
-        query = query.lte("created_at", filters.endDate.toISOString());
+        query = query.lte("invitation_created_at", filters.endDate.toISOString());
       }
 
       if (filters.status && filters.status !== "all") {
-        query = query.eq("status", filters.status);
+        query = query.eq("invitation_status", filters.status);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query.order("invitation_created_at", { ascending: false });
       
       if (error) throw error;
       
-      // Cast the data to ensure it matches our interface
-      return data as unknown as InvitationData[];
+      return data as unknown as MemberInvitationData[];
     },
     enabled: open,
   });
@@ -100,7 +100,7 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
         return "warning";
       case "accepted":
         return "success";
-      case "rejected":
+      case "cancelled":
         return "destructive";
       default:
         return "secondary";
@@ -112,14 +112,12 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
     return [data.full_name, data.last_name].filter(Boolean).join(" ") || "Unknown";
   };
 
-  // Helper function to make permission level more readable
-  const formatPermissionLevel = (permission: string): string => {
-    switch(permission) {
+  // Helper function to make role more readable
+  const formatRole = (role: string): string => {
+    switch(role) {
       case "owner": return "Owner";
       case "admin": return "Admin";
-      case "edit": return "Can Edit";
-      case "read_only": return "Read Only";
-      default: return permission;
+      default: return role;
     }
   };
 
@@ -145,33 +143,33 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
             <div className="space-y-4">
               {invitations.map((invitation) => (
                 <div
-                  key={invitation.id}
+                  key={invitation.member_invitation_id}
                   className="border rounded-lg p-4 space-y-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <h3 className="font-medium">
-                        {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
+                        {invitation.project?.project_number} - {invitation.project?.Sponsor}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Invitee: {formatName(invitation.profiles_invitee)}
+                        Invitee: {formatName(invitation.recipient_profile)}
                       </p>
-                      {invitation.profiles_invitee?.email && (
+                      {invitation.recipient_profile?.email && (
                         <p className="text-sm text-muted-foreground">
-                          Email: {invitation.profiles_invitee.email}
+                          Email: {invitation.recipient_profile.email}
                         </p>
                       )}
                       <p className="text-sm text-muted-foreground">
-                        Sent by: {formatName(invitation.profiles_inviter)}
+                        Sent by: {formatName(invitation.sender_profile)}
                       </p>
                     </div>
                     <div className="text-right space-y-2">
-                      <Badge variant={getStatusBadgeVariant(invitation.status)} className="mb-2">
-                        {invitation.status}
+                      <Badge variant={getStatusBadgeVariant(invitation.invitation_status)} className="mb-2">
+                        {invitation.invitation_status}
                       </Badge>
                       <div className="text-xs text-muted-foreground">
-                        <p>Permission: {formatPermissionLevel(invitation.permission_level)}</p>
-                        <p>{format(new Date(invitation.created_at), "MMM d, yyyy")}</p>
+                        <p>Role: {formatRole(invitation.member_role)}</p>
+                        <p>{format(new Date(invitation.invitation_created_at), "MMM d, yyyy")}</p>
                       </div>
                     </div>
                   </div>
