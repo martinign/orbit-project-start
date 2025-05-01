@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -7,7 +6,6 @@ import { Eye, Users, Contact } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { AllInvitationsDialog } from "./AllInvitationsDialog";
-
 interface InvitationsStatisticsCardProps {
   filters?: {
     projectId?: string;
@@ -17,39 +15,27 @@ interface InvitationsStatisticsCardProps {
     projectType?: string;
   };
 }
-
-export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatisticsCardProps) {
+export function InvitationsStatisticsCard({
+  filters = {}
+}: InvitationsStatisticsCardProps) {
   const [showDialog, setShowDialog] = useState(false);
-
-  const { data: combinedStats, isLoading } = useQuery({
+  const {
+    data: combinedStats,
+    isLoading
+  } = useQuery({
     queryKey: ["combined_statistics", filters],
     queryFn: async () => {
       // Query for team members
-      let teamMembersQuery = supabase
-        .from("project_team_members")
-        .select("id, project:project_id(project_type)");
-      
+      let teamMembersQuery = supabase.from("project_team_members").select("id, project:project_id(project_type)");
+
       // Query for contacts
-      let contactsQuery = supabase
-        .from("project_contacts")
-        .select("id, project:project_id(project_type)");
+      let contactsQuery = supabase.from("project_contacts").select("id, project:project_id(project_type)");
 
       // Base queries for invitations
-      let pendingQuery = supabase
-        .from("project_invitations")
-        .select("id, project:project_id(project_type)")
-        .eq("status", "pending");
-      
-      let acceptedQuery = supabase
-        .from("project_invitations")
-        .select("id, project:project_id(project_type)")
-        .eq("status", "accepted");
-      
-      let rejectedQuery = supabase
-        .from("project_invitations")
-        .select("id, project:project_id(project_type)")
-        .eq("status", "rejected");
-        
+      let pendingQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "pending");
+      let acceptedQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "accepted");
+      let rejectedQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "rejected");
+
       // Apply project filter if provided
       if (filters.projectId && filters.projectId !== "all") {
         pendingQuery = pendingQuery.eq("project_id", filters.projectId);
@@ -58,36 +44,20 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         teamMembersQuery = teamMembersQuery.eq("project_id", filters.projectId);
         contactsQuery = contactsQuery.eq("project_id", filters.projectId);
       }
-      
+
       // Apply date filters if provided
       if (filters.startDate) {
         pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
         acceptedQuery = acceptedQuery.gte("updated_at", filters.startDate.toISOString());
         rejectedQuery = rejectedQuery.gte("updated_at", filters.startDate.toISOString());
       }
-      
       if (filters.endDate) {
         pendingQuery = pendingQuery.lte("updated_at", filters.endDate.toISOString());
         acceptedQuery = acceptedQuery.lte("updated_at", filters.endDate.toISOString());
         rejectedQuery = rejectedQuery.lte("updated_at", filters.endDate.toISOString());
       }
-      
-      const [
-        pendingResult, 
-        acceptedResult, 
-        rejectedResult,
-        teamMembersResult,
-        contactsResult
-      ] = await Promise.all([
-        pendingQuery,
-        acceptedQuery,
-        rejectedQuery,
-        teamMembersQuery,
-        contactsQuery
-      ]);
-      
-      if (pendingResult.error || acceptedResult.error || rejectedResult.error || 
-          teamMembersResult.error || contactsResult.error) {
+      const [pendingResult, acceptedResult, rejectedResult, teamMembersResult, contactsResult] = await Promise.all([pendingQuery, acceptedQuery, rejectedQuery, teamMembersQuery, contactsQuery]);
+      if (pendingResult.error || acceptedResult.error || rejectedResult.error || teamMembersResult.error || contactsResult.error) {
         throw new Error("Failed to fetch statistics");
       }
 
@@ -97,7 +67,6 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
       let rejectedData = rejectedResult.data;
       let teamMembersData = teamMembersResult.data;
       let contactsData = contactsResult.data;
-
       if (filters.projectType && filters.projectType !== "all") {
         pendingData = pendingData.filter(item => item.project?.project_type === filters.projectType);
         acceptedData = acceptedData.filter(item => item.project?.project_type === filters.projectType);
@@ -105,7 +74,6 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         teamMembersData = teamMembersData.filter(item => item.project?.project_type === filters.projectType);
         contactsData = contactsData.filter(item => item.project?.project_type === filters.projectType);
       }
-      
       return {
         pending: pendingData.length,
         accepted: acceptedData.length,
@@ -115,11 +83,9 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         contacts: contactsData.length
       };
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false
   });
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -129,14 +95,11 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading ? (
-          <div className="space-y-2">
+        {isLoading ? <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-4/5" />
-          </div>
-        ) : (
-          <div className="space-y-4">
+          </div> : <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-blue-500" />
@@ -151,44 +114,10 @@ export function InvitationsStatisticsCard({ filters = {} }: InvitationsStatistic
               </div>
               <span className="text-xl font-bold">{combinedStats?.contacts || 0}</span>
             </div>
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Invitations</span>
-                <span className="text-xl font-bold">{combinedStats?.total || 0}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Pending</span>
-                  <span className="text-sm font-medium text-yellow-600">{combinedStats?.pending || 0}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Accepted</span>
-                  <span className="text-sm font-medium text-green-600">{combinedStats?.accepted || 0}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground">Rejected</span>
-                  <span className="text-sm font-medium text-red-600">{combinedStats?.rejected || 0}</span>
-                </div>
-              </div>
-            </div>
-            {combinedStats?.total > 0 && (
-              <Button 
-                variant="default"
-                className="w-full mt-4 bg-primary text-white hover:bg-primary/90" 
-                onClick={() => setShowDialog(true)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View All Invitations
-              </Button>
-            )}
-          </div>
-        )}
+            
+            {combinedStats?.total > 0}
+          </div>}
       </CardContent>
-      <AllInvitationsDialog
-        open={showDialog}
-        onClose={() => setShowDialog(false)}
-        filters={filters}
-      />
-    </Card>
-  );
+      <AllInvitationsDialog open={showDialog} onClose={() => setShowDialog(false)} filters={filters} />
+    </Card>;
 }
