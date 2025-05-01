@@ -1,4 +1,5 @@
-import { Bell, UserPlus, UserRound, Users } from "lucide-react";
+
+import { Bell, UserPlus, UserRound, Users, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -30,6 +31,12 @@ export const ProjectInvitationsSection = ({
             <SidebarMenuButton tooltip="Invite Members" className="hover:bg-purple-500/10 transition-colors duration-200 relative" onClick={onInviteMembersClick}>
               <UserPlus className="text-purple-500" />
               <span>Invite Members</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Project Invites" className="hover:bg-purple-500/10 transition-colors duration-200">
+              <Mail className="text-purple-500" />
+              <span>Project Invites</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           {pendingInvitationsCount > 0 && <SidebarMenuItem>
