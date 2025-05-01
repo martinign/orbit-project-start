@@ -28,12 +28,15 @@ interface Project {
   Sponsor?: string;
 }
 
+type PermissionLevel = "owner" | "admin";
+
 export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>("admin");
   const [loading, setLoading] = useState<boolean>(false);
   
   // Reset state when dialog opens/closes
@@ -42,6 +45,7 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
       setSelectedProject("");
       setSearchQuery("");
       setSelectedUsers([]);
+      setPermissionLevel("admin");
     }
   }, [open]);
 
@@ -130,7 +134,7 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
         inviter_id: user.user.id,
         invitee_id: userId,
         status: "pending",
-        permission_level: "read_only",
+        permission_level: permissionLevel, // This now has the correct type
       }));
 
       const { error } = await supabase
@@ -223,6 +227,27 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
                 )}
               </SelectContent>
             </Select>
+          </div>
+          
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Select Permission Level</h3>
+            <Select 
+              value={permissionLevel} 
+              onValueChange={(value: PermissionLevel) => setPermissionLevel(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select permission level *" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Owner:</strong> Full control over the project, including deletion.
+              <br />
+              <strong>Admin:</strong> Can manage tasks and team members, but cannot delete the project.
+            </p>
           </div>
 
           <div>
