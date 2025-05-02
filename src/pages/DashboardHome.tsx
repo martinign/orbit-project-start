@@ -10,6 +10,7 @@ import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { useDashboardSections } from "@/hooks/useDashboardSections";
+import { useNewTasksCount } from "@/hooks/useNewTasksCount";
 
 const DashboardHome = () => {
   // Custom hooks
@@ -101,6 +102,7 @@ const DashboardHome = () => {
         isRecentActivitiesOpen={isRecentActivitiesOpen}
         isUpcomingEventsOpen={isUpcomingEventsOpen}
         newEventsCount={newEventsCount}
+        newTasksCount={newTasksCount}
         setIsRecentActivitiesOpen={setIsRecentActivitiesOpen}
         setIsUpcomingEventsOpen={setIsUpcomingEventsOpen}
       />
