@@ -6,6 +6,8 @@ export interface ExtraFeaturesState {
   siteInitiationTracker: boolean;
   repository: boolean;
   docPrinting: boolean;
+  billOfMaterials: boolean;
+  designSheet: boolean;
 }
 
 export function useExtraFeatures() {
@@ -17,6 +19,8 @@ export function useExtraFeatures() {
       siteInitiationTracker: false,
       repository: false,
       docPrinting: false,
+      billOfMaterials: false,
+      designSheet: false,
     };
   });
 

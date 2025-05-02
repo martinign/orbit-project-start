@@ -26,6 +26,8 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
     siteInitiationTracker: features.siteInitiationTracker,
     repository: features.repository,
     docPrinting: features.docPrinting,
+    billOfMaterials: features.billOfMaterials || false,
+    designSheet: features.designSheet || false,
   });
 
   // Sync with actual features when dialog opens
@@ -36,6 +38,8 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
         siteInitiationTracker: features.siteInitiationTracker,
         repository: features.repository,
         docPrinting: features.docPrinting,
+        billOfMaterials: features.billOfMaterials || false,
+        designSheet: features.designSheet || false,
       });
     }
   }, [open, features]);
@@ -61,66 +65,100 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Extra Features</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="importantLinks" 
-              checked={selectedFeatures.importantLinks}
-              onCheckedChange={(checked) => 
-                setSelectedFeatures(prev => ({
-                  ...prev, 
-                  importantLinks: checked === true
-                }))
-              }
-            />
-            <Label htmlFor="importantLinks" className="cursor-pointer">Important Links</Label>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-4 py-4">
+          {/* First Column */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="importantLinks" 
+                checked={selectedFeatures.importantLinks}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    importantLinks: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="importantLinks" className="cursor-pointer font-medium">Important Links</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="siteInitiationTracker" 
+                checked={selectedFeatures.siteInitiationTracker}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    siteInitiationTracker: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="siteInitiationTracker" className="cursor-pointer font-medium">Site Initiation Tracker</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="repository" 
+                checked={selectedFeatures.repository}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    repository: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="repository" className="cursor-pointer font-medium">Repository</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="docPrinting" 
+                checked={selectedFeatures.docPrinting}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    docPrinting: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="docPrinting" className="cursor-pointer font-medium">Doc Printing</Label>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="siteInitiationTracker" 
-              checked={selectedFeatures.siteInitiationTracker}
-              onCheckedChange={(checked) => 
-                setSelectedFeatures(prev => ({
-                  ...prev, 
-                  siteInitiationTracker: checked === true
-                }))
-              }
-            />
-            <Label htmlFor="siteInitiationTracker" className="cursor-pointer">Site Initiation Tracker</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="repository" 
-              checked={selectedFeatures.repository}
-              onCheckedChange={(checked) => 
-                setSelectedFeatures(prev => ({
-                  ...prev, 
-                  repository: checked === true
-                }))
-              }
-            />
-            <Label htmlFor="repository" className="cursor-pointer">Repository</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="docPrinting" 
-              checked={selectedFeatures.docPrinting}
-              onCheckedChange={(checked) => 
-                setSelectedFeatures(prev => ({
-                  ...prev, 
-                  docPrinting: checked === true
-                }))
-              }
-            />
-            <Label htmlFor="docPrinting" className="cursor-pointer">Doc Printing</Label>
+          {/* Second Column */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="billOfMaterials" 
+                checked={selectedFeatures.billOfMaterials}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    billOfMaterials: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="billOfMaterials" className="cursor-pointer font-medium">TP34-Bill of Materials</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="designSheet" 
+                checked={selectedFeatures.designSheet}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    designSheet: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="designSheet" className="cursor-pointer font-medium">Design Sheet</Label>
+            </div>
           </div>
         </div>
         
@@ -128,7 +166,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="bg-blue-500 hover:bg-blue-600 text-white">
             Save
           </Button>
         </DialogFooter>
