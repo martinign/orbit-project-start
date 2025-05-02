@@ -30,7 +30,7 @@ export type NewDocRequest = Omit<DocRequest, 'id' | 'created_at' | 'updated_at' 
 
 // Fetch document requests for a project
 export const fetchDocRequests = async (projectId: string) => {
-  // Modify the query to not join with profiles table for now
+  // Explicitly specify the table name for each column to avoid ambiguity
   const { data: requests, error } = await supabase
     .from('project_doc_requests')
     .select('*')
@@ -118,14 +118,15 @@ export const updateDocRequest = async (id: string, updates: Partial<DocRequest>)
 
     if (error) {
       console.error('Error updating document request:', error);
-      toast.error('Failed to update request');
+      toast.error('Failed to update request: ' + error.message);
       throw error;
     }
 
     console.log("Document request updated successfully:", data);
     return data as DocRequest;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in updateDocRequest:", error);
+    toast.error('Error: ' + (error.message || 'Failed to update request'));
     throw error;
   }
 };
@@ -142,14 +143,15 @@ export const deleteDocRequest = async (id: string) => {
 
     if (error) {
       console.error('Error deleting document request:', error);
-      toast.error('Failed to delete request');
+      toast.error('Failed to delete request: ' + error.message);
       throw error;
     }
 
     console.log("Document request deleted successfully");
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in deleteDocRequest:", error);
+    toast.error('Error: ' + (error.message || 'Failed to delete request'));
     throw error;
   }
 };
