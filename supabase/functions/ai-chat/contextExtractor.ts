@@ -51,8 +51,8 @@ export const getUserTemplates = async (supabase: any, userId: string) => {
 
 export const extractProjectInfo = async (supabase: any, userId: string) => {
   try {
-    // Get user's projects with detailed information
-    const { data: projects, error: projectsError } = await supabase
+    // Get projects where user is the owner
+    const { data: ownedProjects, error: ownedProjectsError } = await supabase
       .from('projects')
       .select(`
         id, 
@@ -68,20 +68,79 @@ export const extractProjectInfo = async (supabase: any, userId: string) => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (projectsError) {
-      console.error('Error fetching projects:', projectsError);
-      throw projectsError;
+    if (ownedProjectsError) {
+      console.error('Error fetching owned projects:', ownedProjectsError);
+      throw ownedProjectsError;
     }
 
-    console.log(`Found ${projects?.length || 0} projects for user ${userId}`);
+    // Get projects where user is a team member
+    const { data: teamProjects, error: teamProjectsError } = await supabase
+      .from('project_team_members')
+      .select(`
+        projects:project_id (
+          id, 
+          project_number,
+          protocol_title,
+          protocol_number,
+          Sponsor,
+          status,
+          description,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('user_id', userId);
 
-    if (!projects || projects.length === 0) {
+    if (teamProjectsError) {
+      console.error('Error fetching team projects:', teamProjectsError);
+      throw teamProjectsError;
+    }
+
+    // Get projects where user has accepted invitations
+    const { data: invitedProjects, error: invitedProjectsError } = await supabase
+      .from('member_invitations')
+      .select(`
+        projects:member_project_id (
+          id, 
+          project_number,
+          protocol_title,
+          protocol_number,
+          Sponsor,
+          status,
+          description,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq('invitation_recipient_id', userId)
+      .eq('invitation_status', 'accepted');
+
+    if (invitedProjectsError) {
+      console.error('Error fetching invited projects:', invitedProjectsError);
+      throw invitedProjectsError;
+    }
+
+    // Combine all projects and remove duplicates
+    const allProjects = [
+      ...ownedProjects,
+      ...(teamProjects?.map(item => item.projects) || []),
+      ...(invitedProjects?.map(item => item.projects) || [])
+    ].filter(Boolean);
+
+    // Remove duplicates by project ID
+    const uniqueProjects = Array.from(
+      new Map(allProjects.map(project => [project.id, project])).values()
+    );
+
+    console.log(`Found ${uniqueProjects?.length || 0} total accessible projects for user ${userId}`);
+
+    if (!uniqueProjects || uniqueProjects.length === 0) {
       return [];
     }
 
     // For each project, get related data in parallel for better performance
     const projectsWithData = await Promise.all(
-      projects.map(async (project: any) => {
+      uniqueProjects.map(async (project: any) => {
         const [
           tasksResult,
           notesResult, 
