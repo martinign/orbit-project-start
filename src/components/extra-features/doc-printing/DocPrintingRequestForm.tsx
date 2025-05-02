@@ -213,7 +213,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
                 <FormLabel>Delivery Address</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  value={field.value || ''}
+                  value={field.value || undefined}
                   disabled={isSubmitting}
                 >
                   <FormControl>
@@ -239,7 +239,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
                 <FormLabel>Assigned To</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  value={field.value || ''}
+                  value={field.value || undefined}
                   disabled={isSubmitting || isLoadingTeamMembers}
                 >
                   <FormControl>
@@ -248,7 +248,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
                     {teamMembers?.map((member) => (
                       <SelectItem key={member.id} value={member.id}>{member.full_name}</SelectItem>
                     ))}
@@ -268,7 +268,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
               <FormLabel>Selected Vendor</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
-                value={field.value || ''}
+                value={field.value || undefined}
                 disabled={isSubmitting}
               >
                 <FormControl>
@@ -277,7 +277,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   <SelectItem value="OPTION 1">OPTION 1</SelectItem>
                   <SelectItem value="OPTION 2">OPTION 2</SelectItem>
                   <SelectItem value="OPTION 3">OPTION 3</SelectItem>
