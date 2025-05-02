@@ -226,9 +226,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     const subtasks = isExpanded ? getSubtasksForTask(task.id) : [];
                     
                     // Calculate row height based on expanded state
-                    const rowHeight = isExpanded && subtasks.length > 0 
-                      ? 33 + (subtasks.length * 25) 
-                      : 33;
+                    const rowHeight = 33;
 
                     return (
                       <div key={task.id} className="relative" style={{ height: `${rowHeight}px` }}>
@@ -247,48 +245,45 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           onToggleExpand={(e) => handleToggleExpand(task.id, e)}
                         />
                         
-                        {/* Render subtasks if expanded */}
-                        {isExpanded && subtasks.map((subtask, index) => {
-                          const subtaskStart = new Date(subtask.created_at);
-                          const subtaskEnd = subtask.updated_at 
-                            ? new Date(subtask.updated_at) 
-                            : today;
-                          const subtaskCompleted = subtask.status === 'completed';
-                          
-                          const subtaskOffsetDays = Math.max(
-                            0,
-                            Math.floor((subtaskStart.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
-                          );
-                          const subtaskRawDur = Math.ceil(
-                            ((subtaskCompleted ? subtaskEnd : today).getTime() - subtaskStart.getTime()) /
-                              (1000 * 60 * 60 * 24)
-                          );
-                          const subtaskDuration = Math.max(1, subtaskRawDur);
-                          
-                          return (
-                            <div 
-                              key={subtask.id} 
-                              className="absolute" 
-                              style={{ 
-                                top: `${33 + (index * 25)}px`, 
-                                left: '15px', 
-                                right: 0,
-                                height: '25px'
-                              }}
-                            >
-                              <SubtaskTimelineBar
-                                subtask={subtask}
-                                style={{
-                                  left: `${subtaskOffsetDays * dayPct}%`,
-                                  width: `${subtaskDuration * dayPct}%`,
-                                }}
-                                onClick={() => handleSubtaskClick(subtask)}
-                                durationDays={subtaskDuration}
-                                isCompleted={subtaskCompleted}
-                              />
+                        {/* Render subtasks if expanded - now in a separate row below */}
+                        {isExpanded && subtasks.length > 0 && (
+                          <div className="absolute left-0 right-0 top-full">
+                            <div className="relative" style={{ height: `${subtasks.length * 16}px` }}>
+                              {subtasks.map((subtask, index) => {
+                                const subtaskStart = new Date(subtask.created_at);
+                                const subtaskEnd = subtask.updated_at 
+                                  ? new Date(subtask.updated_at) 
+                                  : today;
+                                const subtaskCompleted = subtask.status === 'completed';
+                                
+                                const subtaskOffsetDays = Math.max(
+                                  0,
+                                  Math.floor((subtaskStart.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
+                                );
+                                const subtaskRawDur = Math.ceil(
+                                  ((subtaskCompleted ? subtaskEnd : today).getTime() - subtaskStart.getTime()) /
+                                    (1000 * 60 * 60 * 24)
+                                );
+                                const subtaskDuration = Math.max(1, subtaskRawDur);
+                                
+                                return (
+                                  <SubtaskTimelineBar
+                                    key={subtask.id}
+                                    subtask={subtask}
+                                    style={{
+                                      left: `${subtaskOffsetDays * dayPct}%`,
+                                      width: `${subtaskDuration * dayPct}%`,
+                                      top: `${index * 16}px`,
+                                    }}
+                                    onClick={() => handleSubtaskClick(subtask)}
+                                    durationDays={subtaskDuration}
+                                    isCompleted={subtaskCompleted}
+                                  />
+                                );
+                              })}
                             </div>
-                          );
-                        })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
