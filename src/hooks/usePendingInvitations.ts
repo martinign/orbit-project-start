@@ -141,10 +141,13 @@ export const usePendingInvitations = (open: boolean) => {
         
       if (getError) throw getError;
       
-      // 2. Update the invitation status
+      // 2. Update the invitation status using the correct field name
       const { error: updateError } = await supabase
         .from("member_invitations")
-        .update({ invitation_status: "accepted" })
+        .update({ 
+          invitation_status: "accepted"
+          // No need to include updated_at as it doesn't exist in this table
+        })
         .eq("member_invitation_id", invitationId);
         
       if (updateError) throw updateError;
@@ -192,9 +195,13 @@ export const usePendingInvitations = (open: boolean) => {
 
   const rejectInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
+      // Update using the correct field name
       const { error } = await supabase
         .from("member_invitations")
-        .update({ invitation_status: "rejected" })
+        .update({ 
+          invitation_status: "rejected"
+          // No need to include updated_at as it doesn't exist in this table
+        })
         .eq("member_invitation_id", invitationId);
         
       if (error) throw error;
