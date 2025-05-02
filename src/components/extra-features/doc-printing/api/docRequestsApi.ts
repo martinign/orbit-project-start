@@ -51,17 +51,23 @@ export const fetchDocRequests = async (projectId: string) => {
 export const createDocRequest = async (request: NewDocRequest) => {
   console.log("Creating document request with data:", request);
   
-  try {
-    // Get the current user's ID from the session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      console.error("No authenticated user found");
-      const error = new Error('User not authenticated');
-      toast.error('You must be logged in to create requests');
-      throw error;
-    }
+  // First check for current session
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error("Error getting auth session:", sessionError);
+    toast.error('Authentication error: ' + sessionError.message);
+    throw sessionError;
+  }
+  
+  if (!session?.user) {
+    const authError = new Error('User not authenticated');
+    console.error("No authenticated user found");
+    toast.error('You must be logged in to create requests');
+    throw authError;
+  }
 
+  try {
     const userId = session.user.id;
     console.log("Current user ID:", userId);
     
@@ -83,11 +89,20 @@ export const createDocRequest = async (request: NewDocRequest) => {
 
     if (error) {
       console.error('Error creating document request:', error);
-      toast.error('Failed to create request: ' + error.message);
+      let errorMessage = 'Failed to create request: ';
+      
+      if (error.message.includes('violates row-level security policy')) {
+        errorMessage += 'You do not have permission to add documents to this project';
+      } else {
+        errorMessage += error.message;
+      }
+      
+      toast.error(errorMessage);
       throw error;
     }
 
     console.log("Document request created successfully:", data);
+    toast.success('Document request created successfully');
     return data as DocRequest;
   } catch (error: any) {
     console.error("Error in createDocRequest:", error);
@@ -123,6 +138,7 @@ export const updateDocRequest = async (id: string, updates: Partial<DocRequest>)
     }
 
     console.log("Document request updated successfully:", data);
+    toast.success('Document request updated successfully');
     return data as DocRequest;
   } catch (error: any) {
     console.error("Error in updateDocRequest:", error);
@@ -148,6 +164,7 @@ export const deleteDocRequest = async (id: string) => {
     }
 
     console.log("Document request deleted successfully");
+    toast.success('Document request deleted successfully');
     return true;
   } catch (error: any) {
     console.error("Error in deleteDocRequest:", error);

@@ -13,11 +13,13 @@ import {
 } from './api/docRequestsApi';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useDocPrintingRequests = (projectId: string) => {
   const queryClient = useQueryClient();
   const [filterDocType, setFilterDocType] = useState<DocType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<DocStatus | 'all'>('all');
+  const { user } = useAuth();
 
   const queryKey = ['doc-requests', projectId];
   
@@ -54,16 +56,14 @@ export const useDocPrintingRequests = (projectId: string) => {
   const createMutation = useMutation({
     mutationFn: async (newRequest: NewDocRequest) => {
       console.log("Submitting new doc request with data:", newRequest);
+      if (!user) {
+        throw new Error("You must be logged in to create requests");
+      }
       return await createDocRequest(newRequest);
     },
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Document request created successfully');
-    },
-    onError: (error) => {
-      console.error('Error creating doc request:', error);
-      toast.error(`Failed to create document request: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   });
 
@@ -73,11 +73,6 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequest(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Document request updated successfully');
-    },
-    onError: (error) => {
-      console.error('Error updating doc request:', error);
-      toast.error('Failed to update document request');
     }
   });
 
@@ -86,11 +81,6 @@ export const useDocPrintingRequests = (projectId: string) => {
     mutationFn: (id: string) => deleteDocRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Document request deleted successfully');
-    },
-    onError: (error) => {
-      console.error('Error deleting doc request:', error);
-      toast.error('Failed to delete document request');
     }
   });
 
@@ -100,11 +90,6 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequestStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
-      toast.success('Document status updated successfully');
-    },
-    onError: (error) => {
-      console.error('Error updating doc status:', error);
-      toast.error('Failed to update document status');
     }
   });
 
@@ -142,5 +127,6 @@ export const useDocPrintingRequests = (projectId: string) => {
     deleteRequest: deleteMutation.mutate,
     updateStatus: updateStatusMutation.mutate,
     statusCounts: statusCounts(),
+    isAuthenticated: !!user,
   };
 };

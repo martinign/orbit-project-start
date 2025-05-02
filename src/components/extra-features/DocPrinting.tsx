@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, AlertTriangle } from 'lucide-react';
 import { useDocPrintingRequests } from './doc-printing/useDocPrintingRequests';
 import { DocPrintingRequests } from './doc-printing/DocPrintingRequests';
 import { DocPrintingRequestDialog } from './doc-printing/DocPrintingRequestDialog';
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DocPrintingProps {
   projectId?: string;
@@ -24,6 +25,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<DocRequest | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   // Set up the active tab for SLB vs General
   const [activeDocType, setActiveDocType] = useState<DocType | 'all'>('all');
@@ -40,10 +42,15 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     updateRequest,
     deleteRequest,
     updateStatus,
-    statusCounts
+    statusCounts,
+    isAuthenticated
   } = useDocPrintingRequests(projectId || '');
 
   const handleNewRequest = () => {
+    if (!user) {
+      toast.error("You must be logged in to create document requests");
+      return;
+    }
     setCurrentRequest(undefined);
     setIsDialogOpen(true);
   };
@@ -67,6 +74,11 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
       return;
     }
     
+    if (!user) {
+      toast.error('You must be logged in to submit requests');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       if (currentRequest) {
@@ -83,7 +95,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error submitting request:', error);
-      toast.error(`Failed to submit request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Toast errors are now handled in the API functions
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +115,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
             <Button 
               onClick={handleNewRequest}
               className="bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={!projectId}
+              disabled={!projectId || !user}
             >
               <Plus className="h-4 w-4 mr-1" /> New Request
             </Button>
@@ -166,6 +178,13 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
             </div>
           </div>
           
+          {!user && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              <p className="text-yellow-700 text-sm">Please sign in to create and manage document requests</p>
+            </div>
+          )}
+          
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
               <p>Loading document requests...</p>
@@ -187,7 +206,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
         </div>
       )}
       
-      {projectId && (
+      {projectId && user && (
         <DocPrintingRequestDialog
           isOpen={isDialogOpen}
           onClose={() => setIsDialogOpen(false)}
