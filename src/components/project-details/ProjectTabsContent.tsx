@@ -15,6 +15,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Placeholder components for new tabs
+const BillOfMaterialsTab: React.FC<{projectId: string}> = ({ projectId }) => (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">TP34-Bill of Materials</h2>
+    <p className="text-gray-600">This feature is coming soon. You'll be able to manage bill of materials for this project here.</p>
+  </div>
+);
+
+const DesignSheetTab: React.FC<{projectId: string}> = ({ projectId }) => (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Design Sheet</h2>
+    <p className="text-gray-600">This feature is coming soon. You'll be able to manage design sheets for this project here.</p>
+  </div>
+);
+
 interface ProjectTabsContentProps {
   activeTab: string;
   projectId: string;
@@ -132,6 +147,15 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       
       {activeTab === 'doc-printing' && extraFeatures?.docPrinting && (
         <DocPrintingTab projectId={projectId} />
+      )}
+      
+      {/* New tabs for Bill of Materials and Design Sheet */}
+      {activeTab === 'bill-of-materials' && extraFeatures?.billOfMaterials && (
+        <BillOfMaterialsTab projectId={projectId} />
+      )}
+      
+      {activeTab === 'design-sheet' && extraFeatures?.designSheet && (
+        <DesignSheetTab projectId={projectId} />
       )}
     </>
   );

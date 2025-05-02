@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive, Printer } from 'lucide-react';
+import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive, Printer, FileBarChart2, FileSpreadsheet } from 'lucide-react';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectContentTabsProps {
@@ -90,6 +90,22 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
               <Printer className="h-4 w-4" />
               <span className="hidden sm:inline">Doc Printing</span>
               <span className="sm:hidden">Print</span>
+            </TabsTrigger>
+          )}
+          
+          {extraFeatures?.billOfMaterials && (
+            <TabsTrigger value="bill-of-materials" className="flex items-center gap-2">
+              <FileBarChart2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Bill of Materials</span>
+              <span className="sm:hidden">BOM</span>
+            </TabsTrigger>
+          )}
+          
+          {extraFeatures?.designSheet && (
+            <TabsTrigger value="design-sheet" className="flex items-center gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              <span className="hidden sm:inline">Design Sheet</span>
+              <span className="sm:hidden">Design</span>
             </TabsTrigger>
           )}
         </TabsList>
