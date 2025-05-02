@@ -102,6 +102,16 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     };
   }, [setContactSearchQuery]);
 
+  // Ensure extraFeatures is never undefined
+  const safeFeatures = extraFeatures || {
+    importantLinks: false,
+    siteInitiationTracker: false,
+    repository: false,
+    docPrinting: false,
+    billOfMaterials: false,
+    designSheet: false
+  };
+
   return (
     <>
       {activeTab === 'tasks' && (
@@ -140,28 +150,28 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       )}
 
       {/* Extra Features Tabs */}
-      {activeTab === 'important-links' && extraFeatures?.importantLinks && (
+      {activeTab === 'important-links' && safeFeatures.importantLinks && (
         <ImportantLinksTab projectId={projectId} />
       )}
 
-      {activeTab === 'site-initiation' && extraFeatures?.siteInitiationTracker && (
+      {activeTab === 'site-initiation' && safeFeatures.siteInitiationTracker && (
         <SiteInitiationTrackerTab projectId={projectId} />
       )}
 
-      {activeTab === 'repository' && extraFeatures?.repository && (
+      {activeTab === 'repository' && safeFeatures.repository && (
         <RepositoryTab projectId={projectId} />
       )}
       
-      {activeTab === 'doc-printing' && extraFeatures?.docPrinting && (
+      {activeTab === 'doc-printing' && safeFeatures.docPrinting && (
         <DocPrintingTab projectId={projectId} />
       )}
       
       {/* New tabs for Bill of Materials and Design Sheet */}
-      {activeTab === 'bill-of-materials' && extraFeatures?.billOfMaterials && (
+      {activeTab === 'bill-of-materials' && safeFeatures.billOfMaterials && (
         <BillOfMaterialsTab projectId={projectId} />
       )}
       
-      {activeTab === 'design-sheet' && extraFeatures?.designSheet && (
+      {activeTab === 'design-sheet' && safeFeatures.designSheet && (
         <DesignSheetTab projectId={projectId} />
       )}
     </>

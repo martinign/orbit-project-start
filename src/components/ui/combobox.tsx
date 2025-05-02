@@ -35,7 +35,7 @@ interface ComboboxProps {
 }
 
 export function Combobox({
-  options,
+  options = [], // Default to empty array to prevent undefined options
   value,
   onChange,
   placeholder = "Select an option",
