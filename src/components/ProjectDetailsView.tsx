@@ -9,6 +9,7 @@ import { ProjectContentTabs } from './project-details/ProjectContentTabs';
 import { ProjectTabsContent } from './project-details/ProjectTabsContent';
 import { ProjectDescription } from './project-details/ProjectDescription';
 import { ProjectTimeline } from './project-details/ProjectTimeline';
+import { ExtraFeaturesCard } from './project-details/ExtraFeaturesCard';
 import { useProjectDetails } from './project-details/useProjectDetails';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -91,6 +92,9 @@ const ProjectDetailsView = () => {
         status={project.status}
         projectType={project.project_type}
       />
+
+      {/* Add Extra Features Card at the beginning */}
+      <ExtraFeaturesCard projectId={id || ''} />
 
       <ProjectDescription description={project.description} />
 
