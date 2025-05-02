@@ -1,8 +1,9 @@
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Define types
+// --- Types ---
 export type DocRequestType = 'printing' | 'proposal';
 export type DocType = 'SLB' | 'general';
 export type DocStatus = 'pending' | 'approved' | 'completed' | 'cancelled';
@@ -26,154 +27,128 @@ export interface DocRequest {
   updated_at: string;
 }
 
-export type NewDocRequest = Omit<DocRequest, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
+export type NewDocRequest = Omit<
+  DocRequest,
+  'id' | 'created_at' | 'updated_at' | 'user_id'
+>;
 
-// Fetch document requests for a project
-export const fetchDocRequests = async (projectId: string) => {
-  // Explicitly specify the table name for each column to avoid ambiguity
-  const { data: requests, error } = await supabase
-    .from('project_doc_requests')
-    .select('*')
-    .eq('doc_project_id', projectId)
-    .order('updated_at', { ascending: false });
+// --- Hook to fetch document requests ---
+export function useDocRequests(projectId: string) {
+  return useQuery<DocRequest[], Error>(
+    ["project_doc_requests", projectId],
+    async () => {
+      const { data, error } = await supabase
+        .from('project_doc_requests')
+        .select('*')
+        .eq('doc_project_id', projectId)
+        .order('updated_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching document requests:', error);
-    toast.error('Failed to load document requests');
-    throw error;
-  }
-
-  console.log("Fetched document requests:", requests);
-  return requests as unknown as DocRequest[];
-};
-
-// Create a new document request
-export const createDocRequest = async (request: NewDocRequest) => {
-  console.log("Creating document request with data:", request);
-  
-  // First check for current session
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (sessionError) {
-    console.error("Error getting auth session:", sessionError);
-    toast.error('Authentication error: ' + sessionError.message);
-    throw sessionError;
-  }
-  
-  if (!session?.user) {
-    const authError = new Error('User not authenticated');
-    console.error("No authenticated user found");
-    toast.error('You must be logged in to create requests');
-    throw authError;
-  }
-
-  try {
-    const userId = session.user.id;
-    console.log("Current user ID:", userId);
-    
-    // Only include doc_process_number_range if doc_type is SLB
-    const requestData = {
-      ...request,
-      user_id: userId,
-      // If it's not an SLB type document, set process number range to null
-      doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
-    };
-
-    console.log("Sending data to Supabase:", requestData);
-
-    const { data, error } = await supabase
-      .from('project_doc_requests')
-      .insert(requestData)
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error creating document request:', error);
-      let errorMessage = 'Failed to create request: ';
-      
-      if (error.message.includes('violates row-level security policy')) {
-        errorMessage += 'You do not have permission to add documents to this project';
-      } else {
-        errorMessage += error.message;
-      }
-      
-      toast.error(errorMessage);
-      throw error;
+      if (error) throw error;
+      return data as DocRequest[];
     }
+  );
+}
 
-    console.log("Document request created successfully:", data);
-    toast.success('Document request created successfully');
-    return data as DocRequest;
-  } catch (error: any) {
-    console.error("Error in createDocRequest:", error);
-    toast.error('Error: ' + (error.message || 'Failed to create request'));
-    throw error;
-  }
-};
+// --- Hook to create a new document request ---
+export function useCreateDocRequest(projectId: string) {
+  const { user } = useAuth();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-// Update an existing document request
-export const updateDocRequest = async (id: string, updates: Partial<DocRequest>) => {
-  try {
-    console.log("Updating document request:", id, updates);
-    
-    // Only include doc_process_number_range in the update if doc_type is SLB
-    const updateData = { ...updates };
-    
-    // If doc type is being changed and not to SLB, remove process number range
-    if (updates.doc_type && updates.doc_type !== 'SLB') {
-      updateData.doc_process_number_range = null;
+  return useMutation<DocRequest, Error, NewDocRequest>(
+    async (newReq) => {
+      if (!user) throw new Error('Not authenticated');
+
+      const payload = {
+        ...newReq,
+        doc_project_id: projectId,
+        user_id: user.id,
+        doc_process_number_range:
+          newReq.doc_type === 'SLB' ? newReq.doc_process_number_range : null,
+      };
+
+      const { data, error } = await supabase
+        .from('project_doc_requests')
+        .insert(payload)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data as DocRequest;
+    },
+    {
+      onSuccess() {
+        toast.success('Document request created');
+        queryClient.invalidateQueries(["project_doc_requests", projectId]);
+        queryClient.invalidateQueries(["new_items_count", projectId]);
+      },
+      onError(err) {
+        toast.error('Create failed: ' + err.message);
+      },
     }
+  );
+}
 
-    const { data, error } = await supabase
-      .from('project_doc_requests')
-      .update(updateData)
-      .eq('id', id)
-      .select('*')
-      .single();
+// --- Hook to update a document request ---
+export function useUpdateDocRequest(projectId: string) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-    if (error) {
-      console.error('Error updating document request:', error);
-      toast.error('Failed to update request: ' + error.message);
-      throw error;
+  return useMutation<DocRequest, Error, Partial<DocRequest> & { id: string }>(
+    async ({ id, ...updates }) => {
+      const payload = {
+        ...updates,
+        doc_process_number_range:
+          updates.doc_type && updates.doc_type !== 'SLB'
+            ? null
+            : updates.doc_process_number_range,
+      };
+
+      const { data, error } = await supabase
+        .from('project_doc_requests')
+        .update(payload)
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data as DocRequest;
+    },
+    {
+      onSuccess() {
+        toast.success('Document request updated');
+        queryClient.invalidateQueries(["project_doc_requests", projectId]);
+      },
+      onError(err) {
+        toast.error('Update failed: ' + err.message);
+      },
     }
+  );
+}
 
-    console.log("Document request updated successfully:", data);
-    toast.success('Document request updated successfully');
-    return data as DocRequest;
-  } catch (error: any) {
-    console.error("Error in updateDocRequest:", error);
-    toast.error('Error: ' + (error.message || 'Failed to update request'));
-    throw error;
-  }
-};
+// --- Hook to delete a document request ---
+export function useDeleteDocRequest(projectId: string) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-// Delete a document request
-export const deleteDocRequest = async (id: string) => {
-  try {
-    console.log("Deleting document request:", id);
-    
-    const { error } = await supabase
-      .from('project_doc_requests')
-      .delete()
-      .eq('id', id);
+  return useMutation<void, Error, string>(
+    async (id) => {
+      const { error } = await supabase
+        .from('project_doc_requests')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting document request:', error);
-      toast.error('Failed to delete request: ' + error.message);
-      throw error;
+      if (error) throw error;
+    },
+    {
+      onSuccess() {
+        toast.success('Document request deleted');
+        queryClient.invalidateQueries(["project_doc_requests", projectId]);
+        queryClient.invalidateQueries(["new_items_count", projectId]);
+      },
+      onError(err) {
+        toast.error('Delete failed: ' + err.message);
+      },
     }
-
-    console.log("Document request deleted successfully");
-    toast.success('Document request deleted successfully');
-    return true;
-  } catch (error: any) {
-    console.error("Error in deleteDocRequest:", error);
-    toast.error('Error: ' + (error.message || 'Failed to delete request'));
-    throw error;
-  }
-};
-
-// Update document request status
-export const updateDocRequestStatus = async (id: string, status: DocStatus) => {
-  return updateDocRequest(id, { doc_status: status });
-};
+  );
+}
