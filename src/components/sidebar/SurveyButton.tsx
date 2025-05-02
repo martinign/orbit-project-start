@@ -8,7 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNewSurveyResponses } from "@/hooks/useNewSurveyResponses";
-import { Badge } from "@/components/ui/badge";
 
 interface SurveyButtonProps {
   canSubmitSurvey: boolean;
@@ -50,10 +49,10 @@ export const SurveyButton = ({
                   <span>SURVEY</span>
                 </SidebarMenuButton>
 
-                {/* New responses badge - fixed positioning and visibility */}
+                {/* New responses badge - display as a dot without using asChild on Badge */}
                 {hasNewResponses && (
-                  <Badge 
-                    className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-red-500 rounded-full text-[10px] text-white"
+                  <div 
+                    className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full"
                     aria-label="New survey responses"
                   />
                 )}
