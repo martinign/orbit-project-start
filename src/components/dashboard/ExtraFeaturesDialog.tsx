@@ -111,6 +111,26 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
         newValue: JSON.stringify(selectedFeatures)
       }));
       
+      // Dispatch a custom event specifically for this project
+      const featureUpdateEvent = new CustomEvent('featureUpdate', {
+        detail: {
+          projectId: projectId,
+          features: selectedFeatures
+        }
+      });
+      window.dispatchEvent(featureUpdateEvent);
+      
+      // Dispatch a DOM event to force UI updates
+      document.dispatchEvent(new CustomEvent('extraFeaturesChanged', {
+        detail: {
+          projectId: projectId,
+          features: selectedFeatures
+        }
+      }));
+      
+      // Force query invalidation for this project
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving features:', error);

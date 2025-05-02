@@ -54,6 +54,9 @@ export function useExtraFeatures(projectId?: string) {
             }
           });
           setFeaturesState(projectFeatures);
+          
+          // Update local storage for this project
+          localStorage.setItem("extraFeatures", JSON.stringify(projectFeatures));
         }
       } catch (error) {
         console.error('Error fetching project features:', error);
@@ -63,19 +66,49 @@ export function useExtraFeatures(projectId?: string) {
     };
     
     fetchProjectFeatures();
+    
+    // Set up real-time subscription for project features
+    if (projectId) {
+      const channel = supabase
+        .channel('project_features_changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'project_features',
+          filter: `project_id=eq.${projectId}`
+        }, () => {
+          fetchProjectFeatures();
+        })
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [projectId, user]);
 
   // Listen for storage events from other components
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'extraFeatures' && e.newValue && !projectId) {
-        setFeaturesState(JSON.parse(e.newValue));
+      if (e.key === 'extraFeatures' && e.newValue) {
+        const updatedFeatures = JSON.parse(e.newValue);
+        setFeaturesState(updatedFeatures);
+      }
+    };
+    
+    // Also listen for custom events
+    const handleFeatureUpdate = (e: CustomEvent) => {
+      if (e.detail && (!projectId || e.detail.projectId === projectId)) {
+        setFeaturesState(e.detail.features);
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('featureUpdate', handleFeatureUpdate as EventListener);
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('featureUpdate', handleFeatureUpdate as EventListener);
     };
   }, [projectId]);
 
@@ -111,6 +144,17 @@ export function useExtraFeatures(projectId?: string) {
 
       if (error) throw error;
 
+      // Dispatch custom event with the updated features
+      projectIds.forEach(pid => {
+        const event = new CustomEvent('featureUpdate', {
+          detail: {
+            projectId: pid,
+            features: updatedFeatures
+          }
+        });
+        window.dispatchEvent(event);
+      });
+
     } catch (error) {
       console.error('Error saving project features:', error);
       throw error;
@@ -136,6 +180,17 @@ export function useExtraFeatures(projectId?: string) {
       key: 'extraFeatures',
       newValue: JSON.stringify(newFeatures)
     }));
+    
+    // Dispatch custom event with project ID if available
+    if (projectId) {
+      const event = new CustomEvent('featureUpdate', {
+        detail: {
+          projectId: projectId,
+          features: newFeatures
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   return {

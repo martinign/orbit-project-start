@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useExtraFeatures } from '@/hooks/useExtraFeatures';
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { features, isLoading: featuresLoading } = useExtraFeatures(id);
+  const [localFeatures, setLocalFeatures] = useState(features);
   const { user } = useAuth();
   
   const {
@@ -38,21 +39,48 @@ const ProjectDetailsView = () => {
 
   // Get the creator's profile information
   const { data: creatorProfile } = useUserProfile(project?.user_id);
+  
+  // Counter to force re-render of tabs when features change
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
+
+  // Keep local features in sync
+  useEffect(() => {
+    setLocalFeatures(features);
+  }, [features]);
 
   // Listen for extra features changes via storage events
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'extraFeatures') {
         // Force a component update when extra features change
-        setActiveTab(prev => prev === 'tasks' ? 'tasks' : 'tasks');
+        setForceUpdateCounter(prev => prev + 1);
+      }
+    };
+    
+    const handleFeatureUpdate = (e: CustomEvent) => {
+      if (e.detail && e.detail.projectId === id) {
+        setLocalFeatures(e.detail.features);
+        setForceUpdateCounter(prev => prev + 1);
+      }
+    };
+    
+    const handleExtraFeaturesChanged = (e: CustomEvent) => {
+      if (e.detail && e.detail.projectId === id) {
+        setLocalFeatures(e.detail.features);
+        setForceUpdateCounter(prev => prev + 1);
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('featureUpdate', handleFeatureUpdate as EventListener);
+    document.addEventListener('extraFeaturesChanged', handleExtraFeaturesChanged as EventListener);
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('featureUpdate', handleFeatureUpdate as EventListener);
+      document.removeEventListener('extraFeaturesChanged', handleExtraFeaturesChanged as EventListener);
     };
-  }, [setActiveTab]);
+  }, [id, setActiveTab]);
 
   // If the user is viewing the invites tab but is not the project owner,
   // redirect them to the tasks tab
@@ -63,7 +91,7 @@ const ProjectDetailsView = () => {
   }, [activeTab, isProjectOwner, setActiveTab]);
 
   // Ensure features is never undefined
-  const safeFeatures = features || {
+  const safeFeatures = localFeatures || {
     importantLinks: false,
     siteInitiationTracker: false,
     repository: false,
@@ -113,7 +141,7 @@ const ProjectDetailsView = () => {
         onTabChange={setActiveTab}
         extraFeatures={safeFeatures}
         isProjectOwner={isProjectOwner}
-        key={`tabs-${JSON.stringify(safeFeatures)}`}
+        key={`tabs-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}`}
       >
         <ProjectTabsContent
           activeTab={activeTab}
@@ -124,7 +152,7 @@ const ProjectDetailsView = () => {
           contactSearchQuery={contactSearchQuery}
           setContactSearchQuery={setContactSearchQuery}
           extraFeatures={safeFeatures}
-          key={`content-${JSON.stringify(safeFeatures)}-${id}`}
+          key={`content-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}-${id}`}
         />
       </ProjectContentTabs>
     </div>
