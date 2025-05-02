@@ -81,7 +81,8 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       // Convert date object to string if it exists
       doc_due_date: values.doc_due_date ? values.doc_due_date.toISOString() : null,
       doc_comments: values.doc_comments || null,
-      doc_process_number_range: values.doc_process_number_range || null,
+      // Only include process number range if doc_type is SLB
+      doc_process_number_range: values.doc_type === 'SLB' ? values.doc_process_number_range || null : null,
     };
     
     onSubmit(docRequestData);
@@ -194,22 +195,6 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
               )}
             />
           </div>
-        )}
-
-        {docType === 'general' && (
-          <FormField
-            control={form.control}
-            name="doc_process_number_range"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Process Number Range</FormLabel>
-                <FormControl>
-                  <Input placeholder="e.g., 1-100" {...field} disabled={isSubmitting} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
         )}
 
         <FormField

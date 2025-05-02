@@ -94,7 +94,10 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
                   <TableCell>
                     {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
                   </TableCell>
-                  <TableCell>{request.doc_process_number_range || '-'}</TableCell>
+                  <TableCell>
+                    {request.doc_type === 'SLB' && request.doc_process_number_range ? 
+                      request.doc_process_number_range : '-'}
+                  </TableCell>
                   <TableCell>{request.doc_delivery_address || '-'}</TableCell>
                   <TableCell>
                     {request.doc_due_date

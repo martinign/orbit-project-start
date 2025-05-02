@@ -57,12 +57,17 @@ export const createDocRequest = async (request: NewDocRequest) => {
     throw error;
   }
 
+  // Only include doc_process_number_range if doc_type is SLB
+  const requestData = {
+    ...request,
+    user_id: user.id,
+    // If it's not an SLB type document, set process number range to null
+    doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
+  };
+
   const { data, error } = await supabase
     .from('project_doc_requests')
-    .insert({
-      ...request,
-      user_id: user.id
-    })
+    .insert(requestData)
     .select('*')
     .single();
 
@@ -78,9 +83,17 @@ export const createDocRequest = async (request: NewDocRequest) => {
 
 // Update an existing document request
 export const updateDocRequest = async (id: string, updates: Partial<DocRequest>) => {
+  // Only include doc_process_number_range in the update if doc_type is SLB
+  const updateData = { ...updates };
+  
+  // If doc type is being changed and not to SLB, remove process number range
+  if (updates.doc_type && updates.doc_type !== 'SLB') {
+    updateData.doc_process_number_range = null;
+  }
+
   const { data, error } = await supabase
     .from('project_doc_requests')
-    .update(updates)
+    .update(updateData)
     .eq('id', id)
     .select('*')
     .single();
