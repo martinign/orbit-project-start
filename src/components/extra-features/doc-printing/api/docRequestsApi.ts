@@ -28,6 +28,7 @@ export interface DocRequest {
   updated_at: string;
 }
 
+// Modified to explicitly exclude user_id since it will be added by the createDocRequest function
 export type NewDocRequest = Omit<
   DocRequest,
   'id' | 'created_at' | 'updated_at' | 'user_id'
@@ -49,16 +50,31 @@ export async function fetchDocRequests(projectId: string): Promise<DocRequest[]>
 
 // Function to create a document request
 export async function createDocRequest(newRequest: NewDocRequest): Promise<DocRequest> {
-  const user = supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  // Get current user session
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session) {
+    throw new Error('Not authenticated');
+  }
+  
+  const userId = sessionData.session.user.id;
+  
+  // Add user_id to the request data
+  const requestWithUserId = {
+    ...newRequest,
+    user_id: userId
+  };
 
   const { data, error } = await supabase
     .from('project_doc_requests')
-    .insert(newRequest)
+    .insert(requestWithUserId)
     .select('*')
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error("Error creating document request:", error);
+    throw error;
+  }
+  
   return data as DocRequest;
 }
 
@@ -114,19 +130,12 @@ export function useCreateDocRequest(projectId: string) {
       const payload = {
         ...newReq,
         doc_project_id: projectId,
-        user_id: user.id,
         doc_process_number_range:
           newReq.doc_type === 'SLB' ? newReq.doc_process_number_range : null,
       };
 
-      const { data, error } = await supabase
-        .from('project_doc_requests')
-        .insert(payload)
-        .select('*')
-        .single();
-
-      if (error) throw error;
-      return data as DocRequest;
+      // createDocRequest will add the user_id
+      return createDocRequest(payload);
     },
     onSuccess() {
       toast.toast({

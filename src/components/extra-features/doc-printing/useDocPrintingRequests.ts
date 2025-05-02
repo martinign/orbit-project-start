@@ -59,13 +59,8 @@ export const useDocPrintingRequests = (projectId: string) => {
         throw new Error("You must be logged in to create requests");
       }
       
-      // Add user_id to the request
-      const requestWithUserId = {
-        ...newRequest,
-        user_id: user.id
-      };
-      
-      return await createDocRequest(requestWithUserId);
+      // createDocRequest will add user_id internally using the authenticated user
+      return await createDocRequest(newRequest);
     },
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
