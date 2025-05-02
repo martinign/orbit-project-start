@@ -34,6 +34,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
     docPrinting: features.docPrinting,
     billOfMaterials: features.billOfMaterials || false,
     designSheet: features.designSheet || false,
+    workdayScheduled: features.workdayScheduled || false,
   });
 
   // Sync with actual features when dialog opens
@@ -46,6 +47,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
         docPrinting: features.docPrinting,
         billOfMaterials: features.billOfMaterials || false,
         designSheet: features.designSheet || false,
+        workdayScheduled: features.workdayScheduled || false,
       });
     }
   }, [open, features]);
@@ -237,6 +239,20 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                 }
               />
               <Label htmlFor="designSheet" className="cursor-pointer">Design Sheet</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="workdayScheduled" 
+                checked={selectedFeatures.workdayScheduled}
+                onCheckedChange={(checked) => 
+                  setSelectedFeatures(prev => ({
+                    ...prev, 
+                    workdayScheduled: checked === true
+                  }))
+                }
+              />
+              <Label htmlFor="workdayScheduled" className="cursor-pointer">Workday Scheduled</Label>
             </div>
           </div>
         </div>

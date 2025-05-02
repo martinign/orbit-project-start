@@ -10,6 +10,7 @@ export interface ExtraFeaturesState {
   docPrinting: boolean;
   billOfMaterials: boolean;
   designSheet: boolean;
+  workdayScheduled: boolean;
 }
 
 const defaultFeatures: ExtraFeaturesState = {
@@ -19,6 +20,7 @@ const defaultFeatures: ExtraFeaturesState = {
   docPrinting: false,
   billOfMaterials: false,
   designSheet: false,
+  workdayScheduled: false,
 };
 
 export function useExtraFeatures(projectId?: string) {
