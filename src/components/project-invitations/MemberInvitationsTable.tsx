@@ -65,11 +65,6 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
     }
   };
 
-  const formatName = (profile: { full_name: string | null, last_name: string | null } | null | undefined) => {
-    if (!profile) return 'Unknown User';
-    return profile.full_name || 'Unknown User';
-  };
-
   if (error) {
     return <div className="text-center py-4 text-red-500">Error loading invitations: {error.message}</div>;
   }
@@ -103,10 +98,10 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
           {invitations.map((invitation: MemberInvitation) => (
             <TableRow key={invitation.member_invitation_id}>
               <TableCell className="font-medium">
-                {formatName(invitation.invitation_recipient)}
+                {invitation.recipient_name}
               </TableCell>
               <TableCell>
-                {formatName(invitation.invitation_sender)}
+                {invitation.sender_name}
               </TableCell>
               <TableCell>
                 {getStatusBadge(invitation.invitation_status)}
