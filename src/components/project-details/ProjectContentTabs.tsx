@@ -9,13 +9,15 @@ interface ProjectContentTabsProps {
   onTabChange: (value: string) => void;
   children: React.ReactNode;
   extraFeatures?: ExtraFeaturesState;
+  isProjectOwner: boolean;
 }
 
 export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   activeTab,
   onTabChange,
   children,
-  extraFeatures
+  extraFeatures,
+  isProjectOwner
 }) => {
   return (
     <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
@@ -51,11 +53,13 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
             <span className="sm:hidden">Team</span>
           </TabsTrigger>
           
-          <TabsTrigger value="invites" className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Invites</span>
-            <span className="sm:hidden">Invites</span>
-          </TabsTrigger>
+          {isProjectOwner && (
+            <TabsTrigger value="invites" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">Invites</span>
+              <span className="sm:hidden">Invites</span>
+            </TabsTrigger>
+          )}
 
           {extraFeatures?.importantLinks && (
             <TabsTrigger value="important-links" className="flex items-center gap-2">

@@ -11,6 +11,9 @@ import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
 import { RepositoryTab } from './tabs/RepositoryTab';
 import { DocPrintingTab } from './tabs/DocPrintingTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -34,6 +37,26 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   extraFeatures
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
+  const { user } = useAuth();
+  
+  // Check if current user is the project owner
+  const { data: project } = useQuery({
+    queryKey: ['project_owner_check', projectId],
+    queryFn: async () => {
+      if (!projectId || !user) return null;
+      const { data, error } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', projectId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId && !!user
+  });
+  
+  const isProjectOwner = user?.id === project?.user_id;
 
   const handleRefetch = async () => {
     try {
@@ -90,7 +113,7 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
         />
       )}
 
-      {activeTab === 'invites' && (
+      {activeTab === 'invites' && isProjectOwner && (
         <InvitesTab projectId={projectId} />
       )}
 

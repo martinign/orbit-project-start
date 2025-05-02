@@ -10,10 +10,12 @@ import { ProjectTabsContent } from './project-details/ProjectTabsContent';
 import { ProjectDescription } from './project-details/ProjectDescription';
 import { ProjectTimeline } from './project-details/ProjectTimeline';
 import { useProjectDetails } from './project-details/useProjectDetails';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
   const { features } = useExtraFeatures();
+  const { user } = useAuth();
   
   const {
     project,
@@ -32,6 +34,9 @@ const ProjectDetailsView = () => {
     setContactSearchQuery
   } = useProjectDetails(id);
 
+  // Check if the current user is the project owner
+  const isProjectOwner = user?.id === project?.user_id;
+
   // Get the creator's profile information
   const { data: creatorProfile } = useUserProfile(project?.user_id);
 
@@ -49,6 +54,14 @@ const ProjectDetailsView = () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // If the user is viewing the invites tab but is not the project owner,
+  // redirect them to the tasks tab
+  useEffect(() => {
+    if (activeTab === 'invites' && !isProjectOwner) {
+      setActiveTab('tasks');
+    }
+  }, [activeTab, isProjectOwner, setActiveTab]);
 
   if (projectLoading) {
     return <div className="flex justify-center items-center h-64">Loading project details...</div>;
@@ -90,6 +103,7 @@ const ProjectDetailsView = () => {
         activeTab={activeTab} 
         onTabChange={setActiveTab}
         extraFeatures={features}
+        isProjectOwner={isProjectOwner}
         key={`tabs-${JSON.stringify(features)}`}
       >
         <ProjectTabsContent
