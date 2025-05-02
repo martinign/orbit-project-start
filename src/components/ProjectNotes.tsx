@@ -113,7 +113,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
 
       <DeleteNoteDialog 
         open={isDeleteDialogOpen}
-        onClose={setIsDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
         onDelete={deleteNote}
         selectedNote={selectedNote}
       />
