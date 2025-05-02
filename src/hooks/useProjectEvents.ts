@@ -57,29 +57,41 @@ export function useProjectEvents(projectId: string) {
     };
   }, [projectId, queryClient]);
 
+  // Query to check if the current user has edit access to the project
   const { data: hasEditAccess } = useQuery({
     queryKey: ["project_edit_access", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc('has_project_edit_access', { project_id: projectId });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error checking project edit access:", error);
+        return false;
+      }
       return !!data;
     },
   });
 
+  // Mutation to create an event
   const createEvent = useMutation({
     mutationFn: async (event: EventInput) => {
       if (!user) throw new Error("User not authenticated");
 
-      const { error } = await supabase
+      // The RLS policy will ensure the user has edit access
+      const { data, error } = await supabase
         .from('project_events')
         .insert({
           ...event,
           user_id: user.id
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating event:", error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
@@ -92,7 +104,8 @@ export function useProjectEvents(projectId: string) {
         description: "The event has been created successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Create event error:", error);
       toast({
         title: "Error",
         description: "Failed to create the event. Please try again.",
@@ -101,14 +114,22 @@ export function useProjectEvents(projectId: string) {
     },
   });
 
+  // Mutation to update an event
   const updateEvent = useMutation({
     mutationFn: async ({ id, ...event }: EventInput & { id: string }) => {
-      const { error } = await supabase
+      // The RLS policy will ensure the user has edit access
+      const { data, error } = await supabase
         .from('project_events')
         .update(event)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating event:", error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project_events", projectId] });
@@ -119,7 +140,8 @@ export function useProjectEvents(projectId: string) {
         description: "The event has been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Update event error:", error);
       toast({
         title: "Error",
         description: "Failed to update the event. Please try again.",
@@ -128,14 +150,22 @@ export function useProjectEvents(projectId: string) {
     },
   });
 
+  // Mutation to delete an event
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      // The RLS policy will ensure the user has edit access
+      const { data, error } = await supabase
         .from('project_events')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting event:", error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
       // Important: invalidate ALL relevant queries when an event is deleted
@@ -149,7 +179,8 @@ export function useProjectEvents(projectId: string) {
         description: "The event has been deleted successfully.",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Delete event error:", error);
       toast({
         title: "Error",
         description: "Failed to delete the event. Please try again.",
