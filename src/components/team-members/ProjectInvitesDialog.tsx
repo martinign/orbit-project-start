@@ -5,6 +5,11 @@ import { ProjectSelector } from "./ProjectSelector";
 import { RoleSelector } from "./RoleSelector";
 import { UsersList } from "./UsersList";
 import { DialogFooter } from "./DialogFooter";
+import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProjectInvitesDialogProps {
   open: boolean;
@@ -12,6 +17,26 @@ interface ProjectInvitesDialogProps {
 }
 
 export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
+  const { user } = useAuth();
+  
+  const { data: ownedProjects, isLoading: checkingProjects } = useQuery({
+    queryKey: ["owned_projects"],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("user_id", user.id);
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user && open,
+  });
+  
+  const isProjectOwner = ownedProjects && ownedProjects.length > 0;
+
   const {
     selectedProject,
     setSelectedProject,
@@ -35,6 +60,26 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
       onClose();
     }
   };
+
+  // Show access denied message if user isn't a project owner
+  if (!checkingProjects && !isProjectOwner) {
+    return (
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Project Invites</DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive" className="mt-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Access Denied</AlertTitle>
+            <AlertDescription>
+              Only project owners can send project invitations.
+            </AlertDescription>
+          </Alert>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

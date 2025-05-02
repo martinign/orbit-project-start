@@ -38,18 +38,17 @@ export const ProjectInvitationsSection = ({
           <SidebarMenuItem>
             
           </SidebarMenuItem>
-          {isProjectOwner && (
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                tooltip="Project Invites" 
-                className={`hover:bg-purple-500/10 transition-colors duration-200 ${activeTab === 'invites' ? 'bg-purple-500/10 text-purple-600' : ''}`} 
-                onClick={onProjectInvitesClick}
-              >
-                <Mail className={`${activeTab === 'invites' ? 'text-purple-600' : 'text-purple-500'}`} />
-                <span>Project Invites</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
+          {/* Removed the isProjectOwner condition - Project Invites is now always visible */}
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              tooltip="Project Invites" 
+              className={`hover:bg-purple-500/10 transition-colors duration-200 ${activeTab === 'invites' ? 'bg-purple-500/10 text-purple-600' : ''}`} 
+              onClick={onProjectInvitesClick}
+            >
+              <Mail className={`${activeTab === 'invites' ? 'text-purple-600' : 'text-purple-500'}`} />
+              <span>Project Invites</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip="Pending Invitations" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onPendingInvitationsClick}>
               <UserPlus className="text-purple-500" />
@@ -66,3 +65,4 @@ export const ProjectInvitationsSection = ({
       </SidebarGroupContent>
     </SidebarGroup>;
 };
+
