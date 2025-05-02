@@ -10,6 +10,7 @@ interface ProjectInvitationsSectionProps {
   onPendingInvitationsClick: () => void;
   onProjectInvitesClick: () => void;
   isProjectOwner?: boolean;
+  activeTab?: string;
 }
 
 export const ProjectInvitationsSection = ({
@@ -17,7 +18,8 @@ export const ProjectInvitationsSection = ({
   onInviteMembersClick,
   onPendingInvitationsClick,
   onProjectInvitesClick,
-  isProjectOwner = false
+  isProjectOwner = false,
+  activeTab
 }: ProjectInvitationsSectionProps) => {
   return <SidebarGroup>
       <SidebarGroupLabel>PROJECT INVITATIONS</SidebarGroupLabel>
@@ -38,8 +40,12 @@ export const ProjectInvitationsSection = ({
           </SidebarMenuItem>
           {isProjectOwner && (
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Project Invites" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onProjectInvitesClick}>
-                <Mail className="text-purple-500" />
+              <SidebarMenuButton 
+                tooltip="Project Invites" 
+                className={`hover:bg-purple-500/10 transition-colors duration-200 ${activeTab === 'invites' ? 'bg-purple-500/10 text-purple-600' : ''}`} 
+                onClick={onProjectInvitesClick}
+              >
+                <Mail className={`${activeTab === 'invites' ? 'text-purple-600' : 'text-purple-500'}`} />
                 <span>Project Invites</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

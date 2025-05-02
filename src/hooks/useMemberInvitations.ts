@@ -16,6 +16,7 @@ export interface MemberInvitation {
   };
   invitation_status: string;
   member_role: string;
+  invitation_created_at: string;
 }
 
 export const useMemberInvitations = (projectId: string | null) => {
@@ -30,6 +31,7 @@ export const useMemberInvitations = (projectId: string | null) => {
           member_invitation_id,
           invitation_status,
           member_role,
+          invitation_created_at,
           invitation_sender:invitation_sender_id(id, full_name, last_name),
           invitation_recipient:invitation_recipient_id(id, full_name, last_name)
         `)

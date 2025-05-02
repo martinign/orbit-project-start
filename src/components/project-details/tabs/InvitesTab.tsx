@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import MemberInvitationsList from '@/components/project-invitations/MemberInvitationsList';
+import MemberInvitationsTable from '@/components/project-invitations/MemberInvitationsTable';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -60,7 +60,7 @@ export const InvitesTab: React.FC<InvitesTabProps> = ({ projectId }) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <MemberInvitationsList projectId={projectId} />
+        <MemberInvitationsTable projectId={projectId} />
       </CardContent>
     </Card>
   );
