@@ -39,38 +39,89 @@ export const usePendingInvitations = (open: boolean) => {
       // Debug the user ID
       console.log("Current user ID:", user.user.id);
       
-      const { data, error } = await supabase
+      // 1. First get all pending invitations for the current user
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from("member_invitations")
         .select(`
           member_invitation_id, 
           invitation_status, 
           invitation_created_at,
           member_role,
-          projects:member_project_id (
-            id, 
-            project_number, 
-            Sponsor, 
-            protocol_number
-          ),
-          profiles:invitation_sender_id (
-            id,
-            full_name,
-            last_name
-          )
+          member_project_id,
+          invitation_sender_id
         `)
         .eq("invitation_recipient_id", user.user.id)
         .eq("invitation_status", "pending");
         
-      if (error) {
-        console.error("Error fetching member invitations:", error);
+      if (invitationsError) {
+        console.error("Error fetching member invitations:", invitationsError);
         return [];
       }
       
-      // Debug the returned data
-      console.log("Fetched invitations data:", data);
+      if (!invitationsData || invitationsData.length === 0) {
+        return [];
+      }
       
-      // Type cast to handle potential type mismatches
-      return data as unknown as MemberInvitationWithProject[];
+      // Debug the returned invitations data
+      console.log("Fetched invitations data:", invitationsData);
+      
+      // 2. Extract project IDs to fetch project details
+      const projectIds = invitationsData
+        .map(invitation => invitation.member_project_id)
+        .filter(Boolean);
+        
+      // 3. Extract sender IDs to fetch profile details
+      const senderIds = invitationsData
+        .map(invitation => invitation.invitation_sender_id)
+        .filter(Boolean);
+      
+      // 4. Fetch project details
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("id, project_number, Sponsor, protocol_number")
+        .in("id", projectIds);
+        
+      if (projectsError) {
+        console.error("Error fetching projects:", projectsError);
+      }
+      
+      // 5. Fetch profile details
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, last_name")
+        .in("id", senderIds);
+        
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+      
+      // 6. Create lookup tables for efficient joining
+      const projectsMap = (projectsData || []).reduce((map, project) => {
+        map[project.id] = project;
+        return map;
+      }, {});
+      
+      const profilesMap = (profilesData || []).reduce((map, profile) => {
+        map[profile.id] = profile;
+        return map;
+      }, {});
+      
+      // 7. Combine the data to create the expected structure
+      const combinedInvitations = invitationsData.map(invitation => {
+        return {
+          member_invitation_id: invitation.member_invitation_id,
+          invitation_status: invitation.invitation_status,
+          invitation_created_at: invitation.invitation_created_at,
+          member_role: invitation.member_role,
+          projects: projectsMap[invitation.member_project_id] || null,
+          profiles: profilesMap[invitation.invitation_sender_id] || null
+        };
+      });
+      
+      // Debug the combined data
+      console.log("Combined invitations data:", combinedInvitations);
+      
+      return combinedInvitations as MemberInvitationWithProject[];
     },
     enabled: open
   });
