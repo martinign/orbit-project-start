@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +26,7 @@ export const useImportantLinks = (projectId?: string) => {
       const { data, error } = await supabase
         .from('project_important_links')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('link_project_id', projectId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -52,7 +53,7 @@ export const useImportantLinks = (projectId?: string) => {
   // Add real-time subscription for links
   useRealtimeSubscription({
     table: 'project_important_links',
-    filter: projectId ? 'project_id' : undefined,
+    filter: projectId ? 'link_project_id' : undefined,
     filterValue: projectId,
     onRecordChange: (payload) => {
       console.log('Important links change detected:', payload);
@@ -76,10 +77,10 @@ export const useImportantLinks = (projectId?: string) => {
       const { error } = await supabase
         .from('project_important_links')
         .insert({
-          project_id: projectId,
-          title: values.title,
-          url: values.url,
-          description: values.description || null,
+          link_project_id: projectId,
+          link_title: values.title,
+          link_url: values.url,
+          link_description: values.description || null,
           user_id: user.id,
         });
 
@@ -111,9 +112,9 @@ export const useImportantLinks = (projectId?: string) => {
       const { error } = await supabase
         .from('project_important_links')
         .update({
-          title: values.title,
-          url: values.url,
-          description: values.description || null,
+          link_title: values.title,
+          link_url: values.url,
+          link_description: values.description || null,
         })
         .eq('id', currentLink.id);
 

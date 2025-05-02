@@ -231,38 +231,38 @@ export type Database = {
       project_important_links: {
         Row: {
           created_at: string
-          description: string | null
           id: string
-          project_id: string
-          title: string
+          link_description: string | null
+          link_project_id: string
+          link_title: string
+          link_url: string
           updated_at: string
-          url: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          description?: string | null
           id?: string
-          project_id: string
-          title: string
+          link_description?: string | null
+          link_project_id: string
+          link_title: string
+          link_url: string
           updated_at?: string
-          url: string
           user_id: string
         }
         Update: {
           created_at?: string
-          description?: string | null
           id?: string
-          project_id?: string
-          title?: string
+          link_description?: string | null
+          link_project_id?: string
+          link_title?: string
+          link_url?: string
           updated_at?: string
-          url?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_important_links_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "project_important_links_link_project_id_fkey"
+            columns: ["link_project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
