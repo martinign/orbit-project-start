@@ -70,7 +70,8 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
       
       if (error) throw error;
       
-      return data as unknown as MemberInvitationData[];
+      console.log("Fetched member invitations:", data);
+      return data as MemberInvitationData[];
     },
     enabled: open,
   });
@@ -102,6 +103,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
         <DialogHeader>
           <DialogTitle>All Invitations</DialogTitle>
         </DialogHeader>
+        
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
