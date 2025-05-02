@@ -1,6 +1,6 @@
 
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { PenSquare, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useEffect } from "react";
@@ -69,7 +69,7 @@ export function EventCard({
             onClick={onEdit}
             className="bg-blue-500 hover:bg-blue-600 text-white"
           >
-            <Edit className="h-4 w-4 text-white" />
+            <PenSquare className="h-4 w-4 text-white" />
           </Button>
           <Button
             variant="ghost"
@@ -77,7 +77,7 @@ export function EventCard({
             onClick={onDelete}
             className="bg-red-500 hover:bg-red-600 text-white"
           >
-            <Trash2 className="h-4 w-4 text-white" />
+            <Trash className="h-4 w-4 text-white" />
           </Button>
         </div>
       )}
