@@ -216,7 +216,7 @@ export function useExtraFeatures(projectId?: string) {
           projectId: projectId,
           features: newFeatures
         }
-      });
+      })); // Fixed: Added closing parenthesis here
     }
   };
 
