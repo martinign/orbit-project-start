@@ -5,6 +5,7 @@ import { useNewItems } from '@/hooks/useNewItems';
 import { StatisticCard } from './statistics/StatisticCard';
 import { TaskStatisticCard } from './statistics/TaskStatisticCard';
 import { RealtimeUpdatesManager } from './statistics/RealtimeUpdatesManager';
+import { ExtraFeaturesCard } from './ExtraFeaturesCard';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -35,7 +36,12 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
     <>
       <RealtimeUpdatesManager projectId={projectId} />
       
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+        <ExtraFeaturesCard 
+          projectId={projectId} 
+          onClick={() => onTabChange('extraFeatures')}
+        />
+
         <TaskStatisticCard
           tasksStats={tasksStats}
           newItemsCount={newItemsCount.task}
