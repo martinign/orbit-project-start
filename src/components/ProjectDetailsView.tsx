@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -97,7 +98,8 @@ const ProjectDetailsView = () => {
     repository: false,
     docPrinting: false,
     billOfMaterials: false,
-    designSheet: false
+    designSheet: false,
+    workdayScheduled: false
   };
 
   if (projectLoading) {

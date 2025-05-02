@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TasksTab } from './tabs/TasksTab';
 import { NotesTab } from './tabs/NotesTab';
@@ -10,6 +9,7 @@ import { ImportantLinksTab } from './tabs/ImportantLinksTab';
 import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
 import { RepositoryTab } from './tabs/RepositoryTab';
 import { DocPrintingTab } from './tabs/DocPrintingTab';
+import { WorkdayScheduleTab } from './tabs/WorkdayScheduleTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -55,7 +55,8 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     repository: false,
     docPrinting: false,
     billOfMaterials: false,
-    designSheet: false
+    designSheet: false,
+    workdayScheduled: false
   }
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
@@ -109,7 +110,8 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     repository: false,
     docPrinting: false,
     billOfMaterials: false,
-    designSheet: false
+    designSheet: false,
+    workdayScheduled: false
   };
 
   return (
@@ -173,6 +175,11 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       
       {activeTab === 'design-sheet' && safeFeatures.designSheet && (
         <DesignSheetTab projectId={projectId} />
+      )}
+
+      {/* New tab for Workday Schedule */}
+      {activeTab === 'workday-schedule' && safeFeatures.workdayScheduled && (
+        <WorkdayScheduleTab projectId={projectId} />
       )}
     </>
   );

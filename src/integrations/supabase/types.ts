@@ -925,6 +925,57 @@ export type Database = {
         }
         Relationships: []
       }
+      workday_time_entries: {
+        Row: {
+          created_at: string
+          date: string
+          hours: number
+          id: string
+          notes: string | null
+          task_id: string
+          updated_at: string
+          user_id: string
+          workday_code_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          hours: number
+          id?: string
+          notes?: string | null
+          task_id: string
+          updated_at?: string
+          user_id: string
+          workday_code_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+          workday_code_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workday_time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workday_time_entries_workday_code_id_fkey"
+            columns: ["workday_code_id"]
+            isOneToOne: false
+            referencedRelation: "workday_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
