@@ -14,6 +14,7 @@ interface PendingInvitationsDialogProps {
   onClose: () => void;
 }
 
+// Updated interface to match what Supabase returns
 interface MemberInvitationWithProject {
   member_invitation_id: string;
   invitation_status: string;
@@ -66,7 +67,8 @@ export function PendingInvitationsDialog({ open, onClose }: PendingInvitationsDi
         .order("invitation_created_at", { ascending: false });
         
       if (error) throw error;
-      return data as MemberInvitationWithProject[];
+      // Type cast to handle potential type mismatches
+      return data as unknown as MemberInvitationWithProject[];
     },
     enabled: open
   });
