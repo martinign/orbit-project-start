@@ -15,6 +15,10 @@ import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { ComboboxOption, Combobox } from "@/components/ui/combobox";
+import { useProjectsForSelector } from "@/hooks/useProjectsForSelector";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ExtraFeaturesDialogProps {
   open: boolean;
@@ -24,9 +28,10 @@ interface ExtraFeaturesDialogProps {
 
 export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeaturesDialogProps) {
   const { toast } = useToast();
-  const { features, setFeatures } = useExtraFeatures();
+  const { features, setFeatures, saveProjectFeatures } = useExtraFeatures(projectId);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { projects, isLoading: projectsLoading } = useProjectsForSelector();
   const [selectedFeatures, setSelectedFeatures] = useState({
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
@@ -35,6 +40,9 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
     billOfMaterials: features.billOfMaterials || false,
     designSheet: features.designSheet || false,
   });
+  const [selectedProjects, setSelectedProjects] = useState<string[]>(projectId ? [projectId] : []);
+  const [inputValue, setInputValue] = useState("");
+  const [open2, setOpen2] = useState(false);
 
   // Sync with actual features when dialog opens
   useEffect(() => {
@@ -47,11 +55,16 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
         billOfMaterials: features.billOfMaterials || false,
         designSheet: features.designSheet || false,
       });
+      
+      // Initialize selected projects
+      if (projectId) {
+        setSelectedProjects([projectId]);
+      }
     }
-  }, [open, features]);
+  }, [open, features, projectId]);
 
-  const createBOMTask = async () => {
-    if (!projectId || !user) return;
+  const createBOMTask = async (projectId: string) => {
+    if (!user) return;
     
     try {
       // Check if Bill of Materials task already exists
@@ -88,27 +101,70 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
   };
 
   const handleSave = async () => {
-    // Check if bill of materials was newly enabled
-    if (selectedFeatures.billOfMaterials && !features.billOfMaterials && projectId) {
-      await createBOMTask();
+    try {
+      // If specific projects are selected, save features to those projects
+      if (selectedProjects.length > 0) {
+        // Check if bill of materials was newly enabled and create task if needed
+        if (selectedFeatures.billOfMaterials && !features.billOfMaterials) {
+          for (const projectId of selectedProjects) {
+            await createBOMTask(projectId);
+          }
+        }
+        
+        // Save to database
+        await saveProjectFeatures(selectedProjects, selectedFeatures);
+        
+        // If current project is in selection, update local state
+        if (!projectId || selectedProjects.includes(projectId)) {
+          setFeatures(selectedFeatures);
+        }
+        
+        toast({
+          title: "Project features updated",
+          description: `Features updated for ${selectedProjects.length} project(s)`
+        });
+      } else {
+        // If no projects selected, save to localStorage (legacy behavior)
+        setFeatures(selectedFeatures);
+        
+        toast({
+          title: "Features updated",
+          description: "Your selected features have been saved as default settings"
+        });
+      }
+      
+      // Dispatch a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'extraFeatures',
+        newValue: JSON.stringify(selectedFeatures)
+      }));
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error saving features:', error);
+      toast({
+        title: "Error saving features",
+        description: "An error occurred while saving features",
+        variant: "destructive"
+      });
     }
-    
-    // Save changes
-    setFeatures(selectedFeatures);
-    localStorage.setItem("extraFeatures", JSON.stringify(selectedFeatures));
-    
-    // Dispatch a storage event to notify other components
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'extraFeatures',
-      newValue: JSON.stringify(selectedFeatures)
-    }));
-    
-    toast({
-      title: "Features updated",
-      description: "Your selected features have been saved"
-    });
-    
-    onOpenChange(false);
+  };
+
+  const handleRemoveProject = (projectId: string) => {
+    setSelectedProjects(prev => prev.filter(id => id !== projectId));
+  };
+
+  const handleSelectProject = (projectId: string) => {
+    if (!selectedProjects.includes(projectId)) {
+      setSelectedProjects(prev => [...prev, projectId]);
+    }
+    setOpen2(false);
+    setInputValue("");
+  };
+
+  const getProjectLabel = (projectId: string) => {
+    const project = projects.find(p => p.value === projectId);
+    return project ? project.label : projectId;
   };
 
   return (
@@ -117,6 +173,47 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
         <DialogHeader>
           <DialogTitle>Extra Features</DialogTitle>
         </DialogHeader>
+        
+        <div className="mb-4">
+          <Label className="text-sm font-medium mb-2 block">Select Projects</Label>
+          <div className="flex items-center mb-2">
+            <div className="relative w-full">
+              <Combobox
+                options={projects.filter(p => !selectedProjects.includes(p.value))}
+                value=""
+                onChange={handleSelectProject}
+                placeholder="Select projects..."
+                emptyMessage="No projects found"
+                className="w-full"
+                isLoading={projectsLoading}
+                onDropdownOpenChange={setOpen2}
+              />
+            </div>
+          </div>
+          
+          {/* Selected projects */}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {selectedProjects.map(projectId => (
+              <div 
+                key={projectId}
+                className="flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-sm"
+              >
+                <span className="truncate max-w-[200px]">{getProjectLabel(projectId)}</span>
+                <button 
+                  onClick={() => handleRemoveProject(projectId)} 
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedProjects.length === 0 && (
+              <span className="text-sm text-muted-foreground">
+                No projects selected. Features will be saved as global defaults.
+              </span>
+            )}
+          </div>
+        </div>
         
         <div className="grid grid-cols-2 gap-x-8 gap-y-4 py-4">
           {/* First Column */}
@@ -132,7 +229,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="importantLinks" className="cursor-pointer font-medium">Important Links</Label>
+              <Label htmlFor="importantLinks" className="cursor-pointer">Important Links</Label>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -146,7 +243,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="siteInitiationTracker" className="cursor-pointer font-medium">Site Initiation Tracker</Label>
+              <Label htmlFor="siteInitiationTracker" className="cursor-pointer">Site Initiation Tracker</Label>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -160,7 +257,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="repository" className="cursor-pointer font-medium">Repository</Label>
+              <Label htmlFor="repository" className="cursor-pointer">Repository</Label>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -174,7 +271,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="docPrinting" className="cursor-pointer font-medium">Doc Printing</Label>
+              <Label htmlFor="docPrinting" className="cursor-pointer">Doc Printing</Label>
             </div>
           </div>
           
@@ -191,7 +288,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="billOfMaterials" className="cursor-pointer font-medium">TP34-Bill of Materials</Label>
+              <Label htmlFor="billOfMaterials" className="cursor-pointer">TP34-Bill of Materials</Label>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -205,7 +302,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
                   }))
                 }
               />
-              <Label htmlFor="designSheet" className="cursor-pointer font-medium">Design Sheet</Label>
+              <Label htmlFor="designSheet" className="cursor-pointer">Design Sheet</Label>
             </div>
           </div>
         </div>

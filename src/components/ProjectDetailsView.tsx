@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
-  const { features } = useExtraFeatures();
+  const { features } = useExtraFeatures(id);
   const { user } = useAuth();
   
   const {
