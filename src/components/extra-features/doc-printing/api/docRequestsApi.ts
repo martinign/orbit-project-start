@@ -24,7 +24,6 @@ export interface DocRequest {
   user_id: string;
   created_at: string;
   updated_at: string;
-  profiles?: any; // To accommodate the join with profiles table
 }
 
 export type NewDocRequest = Omit<DocRequest, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
@@ -49,83 +48,107 @@ export const fetchDocRequests = async (projectId: string) => {
 
 // Create a new document request
 export const createDocRequest = async (request: NewDocRequest) => {
-  // Get the current user's ID from the session
-  const { data: { session } } = await supabase.auth.getSession();
+  console.log("Creating document request with data:", request);
   
-  if (!session?.user) {
-    const error = new Error('User not authenticated');
-    toast.error('You must be logged in to create requests');
+  try {
+    // Get the current user's ID from the session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      const error = new Error('User not authenticated');
+      toast.error('You must be logged in to create requests');
+      throw error;
+    }
+
+    const userId = session.user.id;
+    
+    // Only include doc_process_number_range if doc_type is SLB
+    const requestData = {
+      ...request,
+      user_id: userId,
+      // If it's not an SLB type document, set process number range to null
+      doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
+    };
+
+    const { data, error } = await supabase
+      .from('project_doc_requests')
+      .insert(requestData)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating document request:', error);
+      toast.error('Failed to create request');
+      throw error;
+    }
+
+    console.log("Document request created successfully:", data);
+    toast.success('Document request created successfully');
+    return data as DocRequest;
+  } catch (error) {
+    console.error("Error in createDocRequest:", error);
     throw error;
   }
-
-  const userId = session.user.id;
-  
-  // Only include doc_process_number_range if doc_type is SLB
-  const requestData = {
-    ...request,
-    user_id: userId,
-    // If it's not an SLB type document, set process number range to null
-    doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
-  };
-
-  const { data, error } = await supabase
-    .from('project_doc_requests')
-    .insert(requestData)
-    .select('*')
-    .single();
-
-  if (error) {
-    console.error('Error creating document request:', error);
-    toast.error('Failed to create request');
-    throw error;
-  }
-
-  toast.success('Document request created successfully');
-  return data as DocRequest;
 };
 
 // Update an existing document request
 export const updateDocRequest = async (id: string, updates: Partial<DocRequest>) => {
-  // Only include doc_process_number_range in the update if doc_type is SLB
-  const updateData = { ...updates };
-  
-  // If doc type is being changed and not to SLB, remove process number range
-  if (updates.doc_type && updates.doc_type !== 'SLB') {
-    updateData.doc_process_number_range = null;
-  }
+  try {
+    console.log("Updating document request:", id, updates);
+    
+    // Only include doc_process_number_range in the update if doc_type is SLB
+    const updateData = { ...updates };
+    
+    // If doc type is being changed and not to SLB, remove process number range
+    if (updates.doc_type && updates.doc_type !== 'SLB') {
+      updateData.doc_process_number_range = null;
+    }
 
-  const { data, error } = await supabase
-    .from('project_doc_requests')
-    .update(updateData)
-    .eq('id', id)
-    .select('*')
-    .single();
+    const { data, error } = await supabase
+      .from('project_doc_requests')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
 
-  if (error) {
-    console.error('Error updating document request:', error);
-    toast.error('Failed to update request');
+    if (error) {
+      console.error('Error updating document request:', error);
+      toast.error('Failed to update request');
+      throw error;
+    }
+
+    console.log("Document request updated successfully:", data);
+    toast.success('Document request updated successfully');
+    return data as DocRequest;
+  } catch (error) {
+    console.error("Error in updateDocRequest:", error);
     throw error;
   }
-
-  toast.success('Document request updated successfully');
-  return data as DocRequest;
 };
 
 // Delete a document request
 export const deleteDocRequest = async (id: string) => {
-  const { error } = await supabase
-    .from('project_doc_requests')
-    .delete()
-    .eq('id', id);
+  try {
+    console.log("Deleting document request:", id);
+    
+    const { error } = await supabase
+      .from('project_doc_requests')
+      .delete()
+      .eq('id', id);
 
-  if (error) {
-    console.error('Error deleting document request:', error);
-    toast.error('Failed to delete request');
+    if (error) {
+      console.error('Error deleting document request:', error);
+      toast.error('Failed to delete request');
+      throw error;
+    }
+
+    console.log("Document request deleted successfully");
+    toast.success('Document request deleted successfully');
+    return true;
+  } catch (error) {
+    console.error("Error in deleteDocRequest:", error);
     throw error;
   }
-
-  toast.success('Document request deleted successfully');
-  return true;
 };
 
 // Update document request status

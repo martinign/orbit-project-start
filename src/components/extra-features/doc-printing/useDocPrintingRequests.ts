@@ -43,6 +43,9 @@ export const useDocPrintingRequests = (projectId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
+    onError: (error) => {
+      console.error('Error creating doc request:', error);
+    }
   });
 
   // Update request mutation
@@ -52,6 +55,9 @@ export const useDocPrintingRequests = (projectId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
+    onError: (error) => {
+      console.error('Error updating doc request:', error);
+    }
   });
 
   // Delete request mutation
@@ -60,6 +66,9 @@ export const useDocPrintingRequests = (projectId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
+    onError: (error) => {
+      console.error('Error deleting doc request:', error);
+    }
   });
 
   // Update status mutation
@@ -69,6 +78,9 @@ export const useDocPrintingRequests = (projectId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
     },
+    onError: (error) => {
+      console.error('Error updating doc status:', error);
+    }
   });
 
   // Count documents by status

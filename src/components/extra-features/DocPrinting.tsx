@@ -1,8 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter } from 'lucide-react';
 import { useDocPrintingRequests } from './doc-printing/useDocPrintingRequests';
@@ -22,9 +20,9 @@ interface DocPrintingProps {
 }
 
 export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
-  const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentRequest, setCurrentRequest] = useState<DocRequest | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Set up the active tab for SLB vs General
   const [activeDocType, setActiveDocType] = useState<DocType | 'all'>('all');
@@ -62,13 +60,20 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     updateStatus({ id: requestId, status });
   };
 
-  const handleSubmit = (data: NewDocRequest) => {
-    if (currentRequest) {
-      updateRequest({ id: currentRequest.id, updates: data });
-    } else {
-      createRequest(data);
+  const handleSubmit = async (data: NewDocRequest) => {
+    setIsSubmitting(true);
+    try {
+      if (currentRequest) {
+        await updateRequest({ id: currentRequest.id, updates: data });
+      } else {
+        await createRequest(data);
+      }
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error submitting request:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsDialogOpen(false);
   };
 
   // Filter requests based on active tab
@@ -176,7 +181,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
           onSubmit={handleSubmit}
           projectId={projectId}
           initialData={currentRequest}
-          isSubmitting={false}
+          isSubmitting={isSubmitting}
         />
       )}
     </div>
