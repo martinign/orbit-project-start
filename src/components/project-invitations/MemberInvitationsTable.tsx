@@ -21,13 +21,14 @@ import { MemberInvitation, useMemberInvitations } from '@/hooks/useMemberInvitat
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 
 interface MemberInvitationsTableProps {
   projectId: string;
 }
 
 const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ projectId }) => {
-  const { data: invitations, isLoading, refetch } = useMemberInvitations(projectId);
+  const { data: invitations, isLoading, refetch, error } = useMemberInvitations(projectId);
   const [updatingInvitationId, setUpdatingInvitationId] = useState<string | null>(null);
 
   const handleRoleChange = async (invitationId: string, newRole: string) => {
@@ -64,17 +65,26 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
     }
   };
 
-  const formatName = (profile: { full_name: string | null, last_name: string | null }) => {
+  const formatName = (profile: { full_name: string | null, last_name: string | null } | null | undefined) => {
     if (!profile) return 'Unknown User';
     return profile.full_name || 'Unknown User';
   };
 
+  if (error) {
+    return <div className="text-center py-4 text-red-500">Error loading invitations: {error.message}</div>;
+  }
+
   if (isLoading) {
-    return <div className="text-center py-4">Loading invitations...</div>;
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <span>Loading invitations...</span>
+      </div>
+    );
   }
 
   if (!invitations || invitations.length === 0) {
-    return <div className="text-center py-4 text-muted-foreground">No invitations found.</div>;
+    return <div className="text-center py-4 text-muted-foreground">No invitations found for this project.</div>;
   }
 
   return (
