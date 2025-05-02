@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useProjectEvents } from '@/hooks/useProjectEvents';
 import { CalendarCard } from './CalendarCard';
 import { EventsGrid } from './EventsGrid';
+import { useAuth } from '@/contexts/AuthContext'; // Added import for useAuth
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -41,6 +42,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Added to check user authentication
   
   // Add a useEffect for real-time subscriptions
   useEffect(() => {
@@ -96,10 +98,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
-    if (!hasEditAccess) {
+    // Check if user is authenticated instead of checking edit access
+    if (!user) {
       toast({
-        title: "Permission denied",
-        description: "You don't have permission to create events.",
+        title: "Authentication required",
+        description: "You must be logged in to create events.",
         variant: "destructive",
       });
       return;
@@ -111,11 +114,31 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   };
 
   const handleEditEvent = (event: Event) => {
+    // Only users with edit access can edit events
+    if (!hasEditAccess) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to edit events.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setEditingEvent(event);
     setIsEventDialogOpen(true);
   };
 
   const handleDeleteEvent = (id: string) => {
+    // Only users with edit access can delete events
+    if (!hasEditAccess) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to delete events.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     deleteEvent.mutate(id, {
       onSuccess: () => {
         // Re-invalidate these queries specifically to ensure UI refresh
@@ -164,6 +187,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           onSelect={handleDateSelect}
           hasEditAccess={hasEditAccess}
           events={filteredEvents}
+          isAuthenticated={!!user} // Added to indicate if user is authenticated
         />
         
         <EventsGrid
