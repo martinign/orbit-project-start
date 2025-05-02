@@ -22,6 +22,8 @@ export const useSidebarDialogs = () => {
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
+  // Added a state for holding the selected project ID when opening from sidebar
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
   const handleSurveySuccess = () => {
     queryClient.invalidateQueries({ queryKey: ["survey_availability"] });
@@ -46,6 +48,8 @@ export const useSidebarDialogs = () => {
     setIsSurveyDialogOpen,
     isExtraFeaturesDialogOpen,
     setIsExtraFeaturesDialogOpen,
+    selectedProjectId,
+    setSelectedProjectId,
     dialogs: (
       <>
         <TaskTemplateDialog 
@@ -105,6 +109,7 @@ export const useSidebarDialogs = () => {
         <ExtraFeaturesDialog
           open={isExtraFeaturesDialogOpen}
           onOpenChange={setIsExtraFeaturesDialogOpen}
+          projectId={selectedProjectId || "default"}  
         />
       </>
     ),

@@ -1,3 +1,4 @@
+
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +44,7 @@ export function AppSidebar() {
     setIsWorkdayCodeDialogOpen,
     setIsSurveyDialogOpen,
     setIsExtraFeaturesDialogOpen,
+    setSelectedProjectId,
     dialogs
   } = useSidebarDialogs();
 
@@ -79,6 +81,12 @@ export function AppSidebar() {
 
   const handleExtraFeaturesClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    // Extract project ID from URL if on a project page
+    const projectIdMatch = location.pathname.match(/\/projects\/([^/]+)/);
+    const currentProjectId = projectIdMatch ? projectIdMatch[1] : "";
+    
+    // Set the selected project ID before opening the dialog
+    setSelectedProjectId(currentProjectId);
     setIsExtraFeaturesDialogOpen(true);
   };
 
