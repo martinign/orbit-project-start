@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 // Define types
@@ -32,9 +31,10 @@ export type NewDocRequest = Omit<DocRequest, 'id' | 'created_at' | 'updated_at' 
 
 // Fetch document requests for a project
 export const fetchDocRequests = async (projectId: string) => {
+  // Modify the query to not join with profiles table for now
   const { data: requests, error } = await supabase
     .from('project_doc_requests')
-    .select('*, profiles!doc_assigned_to(full_name)')
+    .select('*')
     .eq('doc_project_id', projectId)
     .order('updated_at', { ascending: false });
 
@@ -49,18 +49,21 @@ export const fetchDocRequests = async (projectId: string) => {
 
 // Create a new document request
 export const createDocRequest = async (request: NewDocRequest) => {
-  const { user } = useAuth();
+  // Get the current user's ID from the session
+  const { data: { session } } = await supabase.auth.getSession();
   
-  if (!user) {
+  if (!session?.user) {
     const error = new Error('User not authenticated');
     toast.error('You must be logged in to create requests');
     throw error;
   }
 
+  const userId = session.user.id;
+  
   // Only include doc_process_number_range if doc_type is SLB
   const requestData = {
     ...request,
-    user_id: user.id,
+    user_id: userId,
     // If it's not an SLB type document, set process number range to null
     doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
   };
