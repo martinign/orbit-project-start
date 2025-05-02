@@ -81,11 +81,10 @@ export const createDocRequest = async (request: NewDocRequest) => {
 
     console.log("Sending data to Supabase:", requestData);
 
-    // Important: Using explicit column references in the query to avoid ambiguity
     const { data, error } = await supabase
       .from('project_doc_requests')
       .insert(requestData)
-      .select()
+      .select('*')
       .single();
 
     if (error) {
@@ -129,7 +128,7 @@ export const updateDocRequest = async (id: string, updates: Partial<DocRequest>)
       .from('project_doc_requests')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
 
     if (error) {
