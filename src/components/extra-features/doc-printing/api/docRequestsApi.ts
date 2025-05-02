@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,31 +33,82 @@ export type NewDocRequest = Omit<
   'id' | 'created_at' | 'updated_at' | 'user_id'
 >;
 
-// --- Hook to fetch document requests ---
-export function useDocRequests(projectId: string) {
-  return useQuery<DocRequest[], Error>(
-    ["project_doc_requests", projectId],
-    async () => {
-      const { data, error } = await supabase
-        .from('project_doc_requests')
-        .select('*')
-        .eq('doc_project_id', projectId)
-        .order('updated_at', { ascending: false });
+// --- API Functions ---
 
-      if (error) throw error;
-      return data as DocRequest[];
-    }
-  );
+// Function to fetch document requests
+export async function fetchDocRequests(projectId: string): Promise<DocRequest[]> {
+  const { data, error } = await supabase
+    .from('project_doc_requests')
+    .select('*')
+    .eq('doc_project_id', projectId)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return data as DocRequest[];
 }
 
-// --- Hook to create a new document request ---
+// Function to create a document request
+export async function createDocRequest(newRequest: NewDocRequest): Promise<DocRequest> {
+  const user = supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('project_doc_requests')
+    .insert(newRequest)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as DocRequest;
+}
+
+// Function to update a document request
+export async function updateDocRequest(id: string, updates: Partial<DocRequest>): Promise<DocRequest> {
+  const { data, error } = await supabase
+    .from('project_doc_requests')
+    .update(updates)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as DocRequest;
+}
+
+// Function to delete a document request
+export async function deleteDocRequest(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('project_doc_requests')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+// Function to update document request status
+export async function updateDocRequestStatus(id: string, status: DocStatus): Promise<DocRequest> {
+  return updateDocRequest(id, { doc_status: status });
+}
+
+// --- Hooks ---
+
+// Hook to fetch document requests
+export function useDocRequests(projectId: string) {
+  return useQuery({
+    queryKey: ["project_doc_requests", projectId],
+    queryFn: () => fetchDocRequests(projectId),
+    enabled: !!projectId
+  });
+}
+
+// Hook to create a new document request
 export function useCreateDocRequest(projectId: string) {
   const { user } = useAuth();
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  return useMutation<DocRequest, Error, NewDocRequest>(
-    async (newReq) => {
+  return useMutation({
+    mutationFn: async (newReq: NewDocRequest) => {
       if (!user) throw new Error('Not authenticated');
 
       const payload = {
@@ -76,26 +128,31 @@ export function useCreateDocRequest(projectId: string) {
       if (error) throw error;
       return data as DocRequest;
     },
-    {
-      onSuccess() {
-        toast.success('Document request created');
-        queryClient.invalidateQueries(["project_doc_requests", projectId]);
-        queryClient.invalidateQueries(["new_items_count", projectId]);
-      },
-      onError(err) {
-        toast.error('Create failed: ' + err.message);
-      },
-    }
-  );
+    onSuccess() {
+      toast.toast({
+        title: "Success",
+        description: "Document request created successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ["project_doc_requests", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
+    },
+    onError(err) {
+      toast.toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to create request: ${err instanceof Error ? err.message : String(err)}`
+      });
+    },
+  });
 }
 
-// --- Hook to update a document request ---
+// Hook to update a document request
 export function useUpdateDocRequest(projectId: string) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  return useMutation<DocRequest, Error, Partial<DocRequest> & { id: string }>(
-    async ({ id, ...updates }) => {
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<DocRequest> & { id: string }) => {
       const payload = {
         ...updates,
         doc_process_number_range:
@@ -114,25 +171,30 @@ export function useUpdateDocRequest(projectId: string) {
       if (error) throw error;
       return data as DocRequest;
     },
-    {
-      onSuccess() {
-        toast.success('Document request updated');
-        queryClient.invalidateQueries(["project_doc_requests", projectId]);
-      },
-      onError(err) {
-        toast.error('Update failed: ' + err.message);
-      },
-    }
-  );
+    onSuccess() {
+      toast.toast({
+        title: "Success",
+        description: "Document request updated successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ["project_doc_requests", projectId] });
+    },
+    onError(err) {
+      toast.toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Update failed: ${err instanceof Error ? err.message : String(err)}`
+      });
+    },
+  });
 }
 
-// --- Hook to delete a document request ---
+// Hook to delete a document request
 export function useDeleteDocRequest(projectId: string) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, string>(
-    async (id) => {
+  return useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('project_doc_requests')
         .delete()
@@ -140,15 +202,20 @@ export function useDeleteDocRequest(projectId: string) {
 
       if (error) throw error;
     },
-    {
-      onSuccess() {
-        toast.success('Document request deleted');
-        queryClient.invalidateQueries(["project_doc_requests", projectId]);
-        queryClient.invalidateQueries(["new_items_count", projectId]);
-      },
-      onError(err) {
-        toast.error('Delete failed: ' + err.message);
-      },
-    }
-  );
+    onSuccess() {
+      toast.toast({
+        title: "Success",
+        description: "Document request deleted successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ["project_doc_requests", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["new_items_count", projectId] });
+    },
+    onError(err) {
+      toast.toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Delete failed: ${err instanceof Error ? err.message : String(err)}`
+      });
+    },
+  });
 }

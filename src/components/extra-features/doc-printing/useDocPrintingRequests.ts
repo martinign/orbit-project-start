@@ -1,15 +1,14 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  DocRequest, DocType, 
+  DocRequest, DocType, DocStatus,
   fetchDocRequests, 
-  createDocRequest, 
+  createDocRequest,
   updateDocRequest, 
   deleteDocRequest, 
   updateDocRequestStatus,
-  NewDocRequest,
-  DocStatus
+  NewDocRequest
 } from './api/docRequestsApi';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { toast } from 'sonner';
@@ -59,11 +58,23 @@ export const useDocPrintingRequests = (projectId: string) => {
       if (!user) {
         throw new Error("You must be logged in to create requests");
       }
-      return await createDocRequest(newRequest);
+      
+      // Add user_id to the request
+      const requestWithUserId = {
+        ...newRequest,
+        user_id: user.id
+      };
+      
+      return await createDocRequest(requestWithUserId);
     },
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
+      toast.success("Document request created successfully");
       queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error) => {
+      console.error("Error creating document request:", error);
+      toast.error(`Failed to create request: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
@@ -72,7 +83,11 @@ export const useDocPrintingRequests = (projectId: string) => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<DocRequest> }) => 
       updateDocRequest(id, updates),
     onSuccess: () => {
+      toast.success("Document request updated successfully");
       queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error) => {
+      toast.error(`Update failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
@@ -80,7 +95,11 @@ export const useDocPrintingRequests = (projectId: string) => {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDocRequest(id),
     onSuccess: () => {
+      toast.success("Document request deleted successfully");
       queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error) => {
+      toast.error(`Delete failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
@@ -89,7 +108,11 @@ export const useDocPrintingRequests = (projectId: string) => {
     mutationFn: ({ id, status }: { id: string; status: DocStatus }) => 
       updateDocRequestStatus(id, status),
     onSuccess: () => {
+      toast.success("Document status updated successfully");
       queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error) => {
+      toast.error(`Status update failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   });
 
