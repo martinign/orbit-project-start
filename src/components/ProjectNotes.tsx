@@ -84,10 +84,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         open={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSave={saveNewNote}
-        title={title}
-        setTitle={setTitle}
-        content={content}
-        setContent={setContent}
+        initialData={{ title, content }}
       />
       
       <EditNoteDialog 
