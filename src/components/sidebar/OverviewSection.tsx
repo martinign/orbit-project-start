@@ -1,5 +1,4 @@
-
-import { LayoutDashboard, Package, PuzzlePiece } from "lucide-react";
+import { LayoutDashboard, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -29,10 +28,7 @@ export const OverviewSection = ({
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Extra Features" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onExtraFeaturesClick}>
-              <PuzzlePiece className="text-purple-500" />
-              <span>Extra Features</span>
-            </SidebarMenuButton>
+            
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

@@ -28,15 +28,15 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedFeatures, setSelectedFeatures] = useState({
-    importantLinks: false,
-    siteInitiationTracker: false,
-    repository: false,
-    docPrinting: false,
-    billOfMaterials: false,
-    designSheet: false,
+    importantLinks: features.importantLinks,
+    siteInitiationTracker: features.siteInitiationTracker,
+    repository: features.repository,
+    docPrinting: features.docPrinting,
+    billOfMaterials: features.billOfMaterials || false,
+    designSheet: features.designSheet || false,
   });
 
-  // Sync with actual features when dialog opens or features change
+  // Sync with actual features when dialog opens
   useEffect(() => {
     if (open) {
       setSelectedFeatures({
@@ -88,28 +88,28 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
   };
 
   const handleSave = async () => {
-    if (!projectId) {
-      toast({
-        title: "Error",
-        description: "No project selected",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     try {
       // Check if bill of materials was newly enabled and create task if needed
       if (selectedFeatures.billOfMaterials && !features.billOfMaterials) {
         await createBOMTask(projectId);
       }
       
-      // Save to database for this specific project
+      // Save to database for the current project
       await saveProjectFeatures([projectId], selectedFeatures);
+      
+      // Update local state
+      setFeatures(selectedFeatures);
       
       toast({
         title: "Project features updated",
         description: "Features have been updated for this project"
       });
+      
+      // Dispatch a storage event to notify other components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'extraFeatures',
+        newValue: JSON.stringify(selectedFeatures)
+      }));
       
       // Dispatch a custom event specifically for this project
       const featureUpdateEvent = new CustomEvent('featureUpdate', {
@@ -120,7 +120,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
       });
       window.dispatchEvent(featureUpdateEvent);
       
-      // Also dispatch a DOM event
+      // Dispatch a DOM event to force UI updates
       document.dispatchEvent(new CustomEvent('extraFeaturesChanged', {
         detail: {
           projectId: projectId,
@@ -146,7 +146,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Configure Extra Features for Project</DialogTitle>
+          <DialogTitle>Configure Extra Features</DialogTitle>
         </DialogHeader>
         
         <div className="grid grid-cols-2 gap-x-8 gap-y-4 py-4">

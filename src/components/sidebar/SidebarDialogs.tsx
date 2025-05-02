@@ -106,14 +106,11 @@ export const useSidebarDialogs = () => {
           onSuccess={handleSurveySuccess}
         />
 
-        {/* Don't render the dialog if no project is selected */}
-        {selectedProjectId && (
-          <ExtraFeaturesDialog
-            open={isExtraFeaturesDialogOpen}
-            onOpenChange={setIsExtraFeaturesDialogOpen}
-            projectId={selectedProjectId}  
-          />
-        )}
+        <ExtraFeaturesDialog
+          open={isExtraFeaturesDialogOpen}
+          onOpenChange={setIsExtraFeaturesDialogOpen}
+          projectId={selectedProjectId || "default"}  
+        />
       </>
     ),
   };

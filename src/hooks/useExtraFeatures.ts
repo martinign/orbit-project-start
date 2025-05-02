@@ -22,7 +22,11 @@ const defaultFeatures: ExtraFeaturesState = {
 };
 
 export function useExtraFeatures(projectId?: string) {
-  const [features, setFeaturesState] = useState<ExtraFeaturesState>(defaultFeatures);
+  const [features, setFeaturesState] = useState<ExtraFeaturesState>(() => {
+    // Load saved preferences from local storage or use defaults
+    const savedFeatures = localStorage.getItem("extraFeatures");
+    return savedFeatures ? JSON.parse(savedFeatures) : defaultFeatures;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -51,12 +55,8 @@ export function useExtraFeatures(projectId?: string) {
           });
           setFeaturesState(projectFeatures);
           
-          // Store project-specific features in localStorage
-          const storageKey = `extraFeatures-${projectId}`;
-          localStorage.setItem(storageKey, JSON.stringify(projectFeatures));
-        } else {
-          // No features found for this project, use defaults
-          setFeaturesState(defaultFeatures);
+          // Update local storage for this project
+          localStorage.setItem("extraFeatures", JSON.stringify(projectFeatures));
         }
       } catch (error) {
         console.error('Error fetching project features:', error);
@@ -65,25 +65,12 @@ export function useExtraFeatures(projectId?: string) {
       }
     };
     
-    // Try loading from localStorage first for immediate display while fetching from DB
-    if (projectId) {
-      const storageKey = `extraFeatures-${projectId}`;
-      const savedFeatures = localStorage.getItem(storageKey);
-      if (savedFeatures) {
-        try {
-          setFeaturesState(JSON.parse(savedFeatures));
-        } catch (e) {
-          console.error("Error parsing saved features", e);
-        }
-      }
-    }
-    
     fetchProjectFeatures();
     
     // Set up real-time subscription for project features
     if (projectId) {
       const channel = supabase
-        .channel(`project_features_${projectId}`)
+        .channel('project_features_changes')
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
@@ -100,22 +87,28 @@ export function useExtraFeatures(projectId?: string) {
     }
   }, [projectId, user]);
 
-  // Listen for custom events for this specific project
+  // Listen for storage events from other components
   useEffect(() => {
-    if (!projectId) return;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'extraFeatures' && e.newValue) {
+        const updatedFeatures = JSON.parse(e.newValue);
+        setFeaturesState(updatedFeatures);
+      }
+    };
     
+    // Also listen for custom events
     const handleFeatureUpdate = (e: CustomEvent) => {
-      if (e.detail && e.detail.projectId === projectId) {
+      if (e.detail && (!projectId || e.detail.projectId === projectId)) {
         setFeaturesState(e.detail.features);
       }
     };
     
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('featureUpdate', handleFeatureUpdate as EventListener);
-    document.addEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     
     return () => {
+      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('featureUpdate', handleFeatureUpdate as EventListener);
-      document.removeEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     };
   }, [projectId]);
 
@@ -151,12 +144,8 @@ export function useExtraFeatures(projectId?: string) {
 
       if (error) throw error;
 
-      // Update local storage for each project
+      // Dispatch custom event with the updated features
       projectIds.forEach(pid => {
-        const storageKey = `extraFeatures-${pid}`;
-        localStorage.setItem(storageKey, JSON.stringify(updatedFeatures));
-        
-        // Dispatch custom event with the updated features for this project
         const event = new CustomEvent('featureUpdate', {
           detail: {
             projectId: pid,
@@ -164,14 +153,6 @@ export function useExtraFeatures(projectId?: string) {
           }
         });
         window.dispatchEvent(event);
-        
-        // Also dispatch DOM event
-        document.dispatchEvent(new CustomEvent('extraFeaturesChanged', {
-          detail: {
-            projectId: pid,
-            features: updatedFeatures
-          }
-        }));
       });
 
     } catch (error) {
@@ -180,19 +161,13 @@ export function useExtraFeatures(projectId?: string) {
     }
   };
 
-  // Set features for specific project
+  // Set features for local storage (backward compatibility)
   const setFeatures = (newFeatures: ExtraFeaturesState) => {
     setFeaturesState(newFeatures);
-    
-    if (projectId) {
-      const storageKey = `extraFeatures-${projectId}`;
-      localStorage.setItem(storageKey, JSON.stringify(newFeatures));
-    }
+    localStorage.setItem("extraFeatures", JSON.stringify(newFeatures));
   };
 
   const toggleFeature = (featureName: keyof ExtraFeaturesState, value?: boolean) => {
-    if (!projectId) return;
-    
     const newFeatures = {
       ...features,
       [featureName]: value !== undefined ? value : !features[featureName]
@@ -200,7 +175,13 @@ export function useExtraFeatures(projectId?: string) {
     
     setFeatures(newFeatures);
     
-    // Dispatch project-specific custom event
+    // Dispatch a storage event to notify other components
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'extraFeatures',
+      newValue: JSON.stringify(newFeatures)
+    }));
+    
+    // Dispatch custom event with project ID if available
     if (projectId) {
       const event = new CustomEvent('featureUpdate', {
         detail: {
@@ -209,14 +190,6 @@ export function useExtraFeatures(projectId?: string) {
         }
       });
       window.dispatchEvent(event);
-      
-      // Also dispatch DOM event
-      document.dispatchEvent(new CustomEvent('extraFeaturesChanged', {
-        detail: {
-          projectId: projectId,
-          features: newFeatures
-        }
-      })); // Fixed: Added closing parenthesis here
     }
   };
 
