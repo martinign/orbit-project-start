@@ -17,11 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { MemberInvitation, useMemberInvitations } from '@/hooks/useMemberInvitations';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from 'date-fns';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserMinus, AlertTriangle } from 'lucide-react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface MemberInvitationsTableProps {
   projectId: string;
@@ -30,6 +43,8 @@ interface MemberInvitationsTableProps {
 const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ projectId }) => {
   const { data: invitations, isLoading, refetch, error } = useMemberInvitations(projectId);
   const [updatingInvitationId, setUpdatingInvitationId] = useState<string | null>(null);
+  const [removingInvitationId, setRemovingInvitationId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const handleRoleChange = async (invitationId: string, newRole: string) => {
     try {
@@ -44,11 +59,70 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
       
       toast.success("Role updated successfully");
       refetch();
+      
+      // Update team member's role if invitation is accepted
+      const invitation = invitations?.find(inv => inv.member_invitation_id === invitationId);
+      if (invitation && invitation.invitation_status === 'accepted') {
+        const { error: updateError } = await supabase
+          .from('project_team_members')
+          .update({ role: newRole })
+          .eq('project_id', projectId)
+          .eq('user_id', invitation.invitation_recipient_id);
+          
+        if (updateError) {
+          console.error("Error updating team member role:", updateError);
+          toast.error("Updated invitation but failed to update team member role");
+        } else {
+          // Invalidate team members query to refresh data
+          queryClient.invalidateQueries({ queryKey: ['team_members', projectId] });
+        }
+      }
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error("Failed to update role");
     } finally {
       setUpdatingInvitationId(null);
+    }
+  };
+
+  const handleRemoveMember = async (invitationId: string) => {
+    try {
+      setRemovingInvitationId(invitationId);
+      
+      // Get the invitation details to find the user_id
+      const invitation = invitations?.find(inv => inv.member_invitation_id === invitationId);
+      if (!invitation) {
+        throw new Error("Invitation not found");
+      }
+      
+      // First, remove the user from the project_team_members table
+      const { error: teamMemberError } = await supabase
+        .from('project_team_members')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('user_id', invitation.invitation_recipient_id);
+        
+      if (teamMemberError) throw teamMemberError;
+      
+      // Then, update the invitation status to 'revoked'
+      const { error: invitationError } = await supabase
+        .from('member_invitations')
+        .update({ invitation_status: 'revoked' })
+        .eq('member_invitation_id', invitationId);
+        
+      if (invitationError) throw invitationError;
+      
+      toast.success("Team member removed successfully");
+      
+      // Refetch invitations and invalidate team members query
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['team_members', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['project_team_members', projectId] });
+    } catch (error) {
+      console.error("Error removing team member:", error);
+      toast.error("Failed to remove team member");
+    } finally {
+      setRemovingInvitationId(null);
     }
   };
 
@@ -58,6 +132,8 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
         return <Badge className="bg-green-500">Accepted</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
+      case 'revoked':
+        return <Badge variant="outline" className="border-red-500 text-red-500">Revoked</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-500">Pending</Badge>;
       default:
@@ -92,6 +168,7 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
             <TableHead>Status</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Invited</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -107,7 +184,8 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
                 {getStatusBadge(invitation.invitation_status)}
               </TableCell>
               <TableCell>
-                {invitation.invitation_status === 'pending' ? (
+                {/* Enable role dropdown for both pending AND accepted invitations */}
+                {(invitation.invitation_status === 'pending' || invitation.invitation_status === 'accepted') ? (
                   <Select
                     defaultValue={invitation.member_role}
                     disabled={updatingInvitationId === invitation.member_invitation_id}
@@ -129,6 +207,48 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
                 {invitation.invitation_created_at ? 
                   formatDistanceToNow(new Date(invitation.invitation_created_at), { addSuffix: true }) : 
                   'Unknown date'}
+              </TableCell>
+              <TableCell>
+                {invitation.invitation_status === 'accepted' && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <UserMinus className="h-4 w-4 mr-1" />
+                        Remove
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-red-500" /> Remove Team Member
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to remove <strong>{invitation.recipient_name}</strong> from this project? 
+                          This will revoke their access to the project and all associated data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleRemoveMember(invitation.member_invitation_id);
+                          }}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          {removingInvitationId === invitation.member_invitation_id ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : null}
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </TableCell>
             </TableRow>
           ))}
