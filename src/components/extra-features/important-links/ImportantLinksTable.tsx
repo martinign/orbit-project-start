@@ -13,10 +13,10 @@ import { ExternalLink, Pencil, Trash } from 'lucide-react';
 
 export interface ImportantLink {
   id: string;
-  link_project_id: string;
-  link_title: string;
-  link_url: string;
-  link_description: string | null;
+  link_project_id: string;  // Updated from project_id to link_project_id
+  link_title: string;       // Updated from title to link_title
+  link_url: string;         // Updated from url to link_url
+  link_description: string | null;  // Updated from description to link_description
   user_id: string;
   created_at: string;
   updated_at: string;
