@@ -1,3 +1,4 @@
+
 import { Bell, UserPlus, UserRound, Users, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,15 @@ export const ProjectInvitationsSection = ({
             <SidebarMenuButton tooltip="Project Invites" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onProjectInvitesClick}>
               <Mail className="text-purple-500" />
               <span>Project Invites</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Pending Invitations" className="hover:bg-purple-500/10 transition-colors duration-200" onClick={onPendingInvitationsClick}>
+              <UserPlus className="text-purple-500" />
+              <span>Pending Invitations</span>
+              {memberInvitationsCount > 0 && (
+                <Badge className="ml-auto bg-purple-500">{memberInvitationsCount}</Badge>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
           {memberInvitationsCount > 0 && <SidebarMenuItem>
