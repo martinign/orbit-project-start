@@ -53,10 +53,13 @@ export async function createDocRequest(newRequest: NewDocRequest): Promise<DocRe
   // Get current user session
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData.session) {
+    console.error("Session error:", sessionError);
     throw new Error('Not authenticated');
   }
   
   const userId = sessionData.session.user.id;
+  console.log("Creating document request with user ID:", userId);
+  console.log("Request data:", newRequest);
   
   // Add user_id to the request data
   const requestWithUserId = {
@@ -64,18 +67,29 @@ export async function createDocRequest(newRequest: NewDocRequest): Promise<DocRe
     user_id: userId
   };
 
-  const { data, error } = await supabase
-    .from('project_doc_requests')
-    .insert(requestWithUserId)
-    .select('*')
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('project_doc_requests')
+      .insert(requestWithUserId)
+      .select('*')
+      .single();
 
-  if (error) {
-    console.error("Error creating document request:", error);
+    if (error) {
+      console.error("Error creating document request:", error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.error("No data returned from insert operation");
+      throw new Error("Failed to create document request - no data returned");
+    }
+    
+    console.log("Document request created successfully:", data);
+    return data as DocRequest;
+  } catch (error) {
+    console.error("Exception during document request creation:", error);
     throw error;
   }
-  
-  return data as DocRequest;
 }
 
 // Function to update a document request

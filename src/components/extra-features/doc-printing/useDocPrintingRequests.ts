@@ -59,17 +59,23 @@ export const useDocPrintingRequests = (projectId: string) => {
         throw new Error("You must be logged in to create requests");
       }
       
-      // createDocRequest will add user_id internally using the authenticated user
-      return await createDocRequest(newRequest);
+      try {
+        // createDocRequest will add user_id internally using the authenticated user
+        return await createDocRequest(newRequest);
+      } catch (error) {
+        console.error("Error in createMutation:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
       toast.success("Document request created successfully");
       queryClient.invalidateQueries({ queryKey });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error creating document request:", error);
-      toast.error(`Failed to create request: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error?.message || String(error) || 'Unknown error';
+      toast.error(`Failed to create request: ${errorMessage}`);
     }
   });
 

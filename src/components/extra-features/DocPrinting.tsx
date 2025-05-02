@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,6 +82,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     try {
       if (currentRequest) {
         await updateRequest({ id: currentRequest.id, updates: data });
+        setIsDialogOpen(false);
       } else {
         // Add project ID to the data
         const requestWithProject = {
@@ -91,11 +91,13 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
         };
         console.log("Submitting new request:", requestWithProject);
         await createRequest(requestWithProject);
+        setIsDialogOpen(false);
       }
-      setIsDialogOpen(false);
     } catch (error) {
       console.error('Error submitting request:', error);
-      // Toast errors are now handled in the API functions
+      // Show detailed error message
+      toast.error(`Error submitting request: ${error instanceof Error ? error.message : String(error)}`);
+      // Keep dialog open on error
     } finally {
       setIsSubmitting(false);
     }
