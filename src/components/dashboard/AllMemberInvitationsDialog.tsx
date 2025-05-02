@@ -20,11 +20,13 @@ interface AllMemberInvitationsDialogProps {
   };
 }
 
+// Update the type definition to match what we actually get from the database
 interface MemberInvitationData {
   member_invitation_id: string;
   invitation_status: string;
   invitation_created_at: string;
   member_role: string;
+  // Make profiles_recipient nullable and add proper shape
   profiles_recipient: {
     full_name: string | null;
     last_name: string | null;
@@ -43,7 +45,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           invitation_status,
           invitation_created_at,
           member_role,
-          profiles_recipient:invitation_recipient_id (
+          profiles_recipient:profiles(
             full_name,
             last_name,
             email
@@ -71,7 +73,8 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
       if (error) throw error;
       
       console.log("Fetched member invitations:", data);
-      return data as MemberInvitationData[];
+      // First cast to unknown, then to our expected type
+      return data as unknown as MemberInvitationData[];
     },
     enabled: open,
   });
