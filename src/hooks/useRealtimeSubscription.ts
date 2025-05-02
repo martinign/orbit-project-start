@@ -20,7 +20,8 @@ type TableName =
   | 'project_important_links'
   | 'survey_responses'
   | 'project_doc_requests'
-  | 'workday_time_entries';
+  | 'workday_time_entries'
+  | 'team_assigned_hours';
 
 interface SubscriptionOptions {
   table: TableName;

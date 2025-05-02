@@ -898,6 +898,57 @@ export type Database = {
         }
         Relationships: []
       }
+      team_assigned_hours: {
+        Row: {
+          assigned_hours: number
+          created_at: string
+          created_by: string
+          id: string
+          month: string
+          project_id: string
+          task_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_hours: number
+          created_at?: string
+          created_by: string
+          id?: string
+          month: string
+          project_id: string
+          task_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_hours?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          month?: string
+          project_id?: string
+          task_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_assigned_hours_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_assigned_hours_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workday_codes: {
         Row: {
           activity: string
