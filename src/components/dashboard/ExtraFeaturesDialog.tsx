@@ -12,15 +12,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useExtraFeatures } from "@/hooks/useExtraFeatures";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ExtraFeaturesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  projectId?: string; // Optional projectId when used from project details view
 }
 
-export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogProps) {
+export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeaturesDialogProps) {
   const { toast } = useToast();
   const { features, setFeatures } = useExtraFeatures();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedFeatures, setSelectedFeatures] = useState({
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
@@ -44,7 +50,49 @@ export function ExtraFeaturesDialog({ open, onOpenChange }: ExtraFeaturesDialogP
     }
   }, [open, features]);
 
-  const handleSave = () => {
+  const createBOMTask = async () => {
+    if (!projectId || !user) return;
+    
+    try {
+      // Check if Bill of Materials task already exists
+      const { data: existingTask, error: checkError } = await supabase
+        .from('project_tasks')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('title', 'TP34-Bill of Materials')
+        .limit(1);
+
+      if (checkError) throw checkError;
+
+      // Only create task if it doesn't exist yet
+      if (!existingTask || existingTask.length === 0) {
+        const { error } = await supabase
+          .from('project_tasks')
+          .insert({
+            title: 'TP34-Bill of Materials',
+            description: 'Setup and maintain the bill of materials for this project.',
+            status: 'not started',
+            priority: 'medium',
+            project_id: projectId,
+            user_id: user.id,
+          });
+
+        if (error) throw error;
+        
+        // Invalidate tasks query to refresh task list
+        queryClient.invalidateQueries({ queryKey: ['tasks', projectId] });
+      }
+    } catch (error) {
+      console.error('Error creating BOM task:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    // Check if bill of materials was newly enabled
+    if (selectedFeatures.billOfMaterials && !features.billOfMaterials && projectId) {
+      await createBOMTask();
+    }
+    
     // Save changes
     setFeatures(selectedFeatures);
     localStorage.setItem("extraFeatures", JSON.stringify(selectedFeatures));

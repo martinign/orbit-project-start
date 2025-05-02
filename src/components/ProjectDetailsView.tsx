@@ -115,7 +115,7 @@ const ProjectDetailsView = () => {
           contactSearchQuery={contactSearchQuery}
           setContactSearchQuery={setContactSearchQuery}
           extraFeatures={features}
-          key={`content-${JSON.stringify(features)}`}
+          key={`content-${JSON.stringify(features)}-${id}`}
         />
       </ProjectContentTabs>
     </div>
