@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InvitationItem } from "./InvitationItem";
 import { usePendingInvitations } from "@/hooks/usePendingInvitations";
@@ -33,6 +33,9 @@ export function PendingInvitationsDialog({ open, onClose }: PendingInvitationsDi
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Pending Invitations</DialogTitle>
+          <DialogDescription>
+            Review and manage project invitations you've received. Accept or reject membership requests from project owners.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {isLoading ? (
