@@ -1,10 +1,12 @@
 
-import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import { LoaderIcon } from "lucide-react";
 
 interface PendingInvitationsDialogProps {
@@ -12,215 +14,235 @@ interface PendingInvitationsDialogProps {
   onClose: () => void;
 }
 
-interface Invitation {
-  id: string;
-  project_id: string;
-  permission_level: "owner" | "admin" | "edit" | "read_only";
-  created_at: string;
+interface MemberInvitationWithProject {
+  member_invitation_id: string;
+  invitation_status: string;
+  invitation_created_at: string;
+  member_role: string;
   projects: {
+    id: string;
     project_number: string;
-    Sponsor: string;
+    Sponsor: string | null;
+    protocol_number: string | null;
+  } | null;
+  profiles: {
+    id: string;
+    full_name: string | null;
+    last_name: string | null;
   } | null;
 }
 
-interface InvitationWithInviterId extends Invitation {
-  inviter_id: string;
-}
-
-interface InvitationWithSenderName extends InvitationWithInviterId {
-  inviterName?: string;
-}
-
-export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDialogProps) => {
+export function PendingInvitationsDialog({ open, onClose }: PendingInvitationsDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [loading, setLoading] = useState<string | null>(null);
-
-  const { data: allInvitations, isLoading: isLoadingInvitations } = useQuery({ 
-    queryKey: ["pending_invitations"],
+  
+  const { data: invitations, isLoading, refetch } = useQuery({
+    queryKey: ["pending_member_invitations"],
     queryFn: async () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
-
+      
       const { data, error } = await supabase
-        .from("project_invitations")
+        .from("member_invitations")
         .select(`
-          id,
-          project_id,
-          permission_level,
-          created_at,
-          inviter_id,
-          projects(
-            project_number,
-            Sponsor
+          member_invitation_id, 
+          invitation_status, 
+          invitation_created_at,
+          member_role,
+          projects:member_project_id (
+            id, 
+            project_number, 
+            Sponsor, 
+            protocol_number
+          ),
+          profiles:invitation_sender_id (
+            id,
+            full_name,
+            last_name
           )
         `)
-        .eq("invitee_id", user.user.id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false });
-
+        .eq("invitation_recipient_id", user.user.id)
+        .eq("invitation_status", "pending")
+        .order("invitation_created_at", { ascending: false });
+        
       if (error) throw error;
-      return data as InvitationWithInviterId[];
+      return data as MemberInvitationWithProject[];
     },
-    enabled: open,
+    enabled: open
   });
 
-  // Process invitations to show each project only once
-  const uniqueInvitationsByProject = useMemo(() => {
-    if (!allInvitations) return [];
-    const seenProjects = new Set<string>();
-    return allInvitations.filter((invitation) => {
-      if (seenProjects.has(invitation.project_id)) {
-        return false;
-      }
-      seenProjects.add(invitation.project_id);
-      return true;
-    });
-  }, [allInvitations]);
-
-  const { data: senderProfiles } = useQuery({
-    queryKey: ["sender_profiles", uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean)],
-    queryFn: async () => {
-      if (!uniqueInvitationsByProject.length) return {};
-      const inviterIds = uniqueInvitationsByProject.map((inv) => inv.inviter_id).filter(Boolean);
-      if (inviterIds.length === 0) return {};
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, last_name")
-        .in("id", inviterIds);
-
-      if (error) {
-        console.error("Error fetching sender profiles:", error);
-        return {};
-      }
-      return data.reduce((acc, profile) => ({ ...acc, [profile.id]: `${profile.full_name} ${profile.last_name}` }), {});
-    },
-    enabled: open && !!uniqueInvitationsByProject.length,
-  });
-
-  const handleInvitation = async (invitationId: string, accept: boolean) => {
-    try {
-      setLoading(invitationId);
-      const invitationToHandle = allInvitations?.find((inv) => inv.id === invitationId);
-      if (!invitationToHandle) {
-        throw new Error("Invitation not found");
-      }
-
+  const acceptInvitation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("User not authenticated");
+      
+      // 1. First update the invitation status
+      const { data: invitation, error: getError } = await supabase
+        .from("member_invitations")
+        .select("member_project_id, member_role")
+        .eq("member_invitation_id", invitationId)
+        .single();
+        
+      if (getError) throw getError;
+      
+      // 2. Update the invitation status
       const { error: updateError } = await supabase
-        .from("project_invitations")
-        .update({ status: accept ? "accepted" : "rejected" })
-        .eq("id", invitationId);
-
+        .from("member_invitations")
+        .update({ invitation_status: "accepted" })
+        .eq("member_invitation_id", invitationId);
+        
       if (updateError) throw updateError;
-
-      if (accept) {
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) throw new Error("User not found");
-
-        const { data: profile } = await supabase
+      
+      // 3. Add the user to project team members
+      if (invitation) {
+        // Get user profile info
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .select("full_name, last_name, location")
+          .select("full_name, last_name")
           .eq("id", user.user.id)
           .single();
-
-        const { error: teamMemberError } = await supabase
+          
+        if (profileError) throw profileError;
+        
+        const { error: insertError } = await supabase
           .from("project_team_members")
           .insert({
-            project_id: invitationToHandle.project_id,
+            project_id: invitation.member_project_id,
             user_id: user.user.id,
-            full_name: profile?.full_name || "Unnamed User",
-            last_name: profile?.last_name || "Unnamed User",
-            location: profile?.location
+            full_name: profile?.full_name || user.user.email?.split('@')[0] || "Team Member",
+            last_name: profile?.last_name || "",
+            role: invitation.member_role,
           });
-
-        if (teamMemberError) throw teamMemberError;
+          
+        if (insertError) throw insertError;
       }
-
-      queryClient.invalidateQueries({ queryKey: ["pending_invitations"] });
-      queryClient.invalidateQueries({ queryKey: ["pending_invitations_count"] });
-      queryClient.invalidateQueries({ queryKey: ["sender_profiles"] });
-      if (accept) {
-        queryClient.invalidateQueries({ queryKey: ["team_members"] });
-      }
-
+    },
+    onSuccess: () => {
       toast({
-        title: accept ? "Invitation Accepted" : "Invitation Rejected",
-        description: accept
-          ? "You have been added to the project team."
-          : "The invitation has been rejected.",
+        title: "Success",
+        description: "Invitation accepted successfully",
       });
-
-      if ((allInvitations?.length || 0) <= 1) {
-        onClose();
-      }
-    } catch (error: any) {
-      console.error("Error handling invitation:", error);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["pending_member_invitations_count"] });
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to process invitation",
+        description: error.message || "Failed to accept invitation",
         variant: "destructive",
       });
-    } finally {
-      setLoading(null);
+    }
+  });
+
+  const rejectInvitation = useMutation({
+    mutationFn: async (invitationId: string) => {
+      const { error } = await supabase
+        .from("member_invitations")
+        .update({ invitation_status: "rejected" })
+        .eq("member_invitation_id", invitationId);
+        
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Invitation rejected",
+      });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["pending_member_invitations_count"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reject invitation",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAccept = (invitationId: string) => {
+    acceptInvitation.mutate(invitationId);
+  };
+  
+  const handleReject = (invitationId: string) => {
+    rejectInvitation.mutate(invitationId);
+  };
+  
+  const getRoleDisplay = (role: string) => {
+    switch (role) {
+      case 'owner':
+        return 'Owner';
+      case 'admin':
+        return 'Administrator';
+      default:
+        return role.charAt(0).toUpperCase() + role.slice(1);
     }
   };
-
-  const isLoadingCombined = isLoadingInvitations || !senderProfiles;
+  
+  const formatName = (profile: { full_name: string | null; last_name: string | null; } | null) => {
+    if (!profile) return "Unknown";
+    return [profile.full_name, profile.last_name].filter(Boolean).join(" ") || "Unknown";
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Pending Invitations</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          {isLoadingCombined ? (
-            <div className="text-center py-4">Loading invitations...</div>
-          ) : !allInvitations || allInvitations.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">
-              No pending invitations
+        <div className="space-y-4">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))}
             </div>
+          ) : !invitations || invitations.length === 0 ? (
+            <p className="text-center text-muted-foreground py-4">No pending invitations</p>
           ) : (
             <div className="space-y-4">
-              {uniqueInvitationsByProject.map((invitation) => (
+              {invitations.map((invitation) => (
                 <div
-                  key={invitation.id}
-                  className="flex flex-col space-y-2 p-4 border rounded-lg"
+                  key={invitation.member_invitation_id}
+                  className="border rounded-lg p-4 space-y-2"
                 >
-                  <div className="font-medium">
-                    {invitation.projects ?
-                      `${invitation.projects.project_number} - ${invitation.projects.Sponsor}` :
-                      "Unknown Project"}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Permission Level: {invitation.permission_level}
-                  </div>
-                  {invitation.inviter_id && senderProfiles?.[invitation.inviter_id] && (
-                    <div className="text-sm text-muted-foreground">
-                      Sent by: {senderProfiles[invitation.inviter_id]}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">
+                        {invitation.projects?.project_number} - {invitation.projects?.Sponsor || invitation.projects?.protocol_number}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        From: {formatName(invitation.profiles)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Role: {getRoleDisplay(invitation.member_role)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Date: {format(new Date(invitation.invitation_created_at), "PP")}
+                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-end space-x-2 mt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleInvitation(invitation.id, false)}
-                      disabled={!!loading}
-                    >
-                      {loading === invitation.id ? (
-                        <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Reject
-                    </Button>
-                    <Button
-                      onClick={() => handleInvitation(invitation.id, true)}
-                      disabled={!!loading}
-                    >
-                      {loading === invitation.id ? (
-                        <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
-                      ) : null}
-                      Accept
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        onClick={() => handleAccept(invitation.member_invitation_id)}
+                        disabled={acceptInvitation.isLoading || rejectInvitation.isLoading}
+                        className="w-28"
+                      >
+                        {acceptInvitation.isLoading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                        Accept
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleReject(invitation.member_invitation_id)}
+                        disabled={acceptInvitation.isLoading || rejectInvitation.isLoading}
+                        className="w-28"
+                      >
+                        {rejectInvitation.isLoading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                        Reject
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -230,6 +252,6 @@ export const PendingInvitationsDialog = ({ open, onClose }: PendingInvitationsDi
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default PendingInvitationsDialog;

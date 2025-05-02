@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +27,7 @@ interface Project {
   Sponsor?: string;
 }
 
-type PermissionLevel = "owner" | "admin";
+type MemberRole = "owner" | "admin";
 
 export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
   const { toast } = useToast();
@@ -36,7 +35,7 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>("admin");
+  const [memberRole, setMemberRole] = useState<MemberRole>("admin");
   const [loading, setLoading] = useState<boolean>(false);
   
   // Reset state when dialog opens/closes
@@ -45,7 +44,7 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
       setSelectedProject("");
       setSearchQuery("");
       setSelectedUsers([]);
-      setPermissionLevel("admin");
+      setMemberRole("admin");
     }
   }, [open]);
 
@@ -128,17 +127,17 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Not authenticated");
 
-      // Create project invitations for each selected user
+      // Create project invitations for each selected user using the new member_invitations table
       const invitations = selectedUsers.map(userId => ({
-        project_id: selectedProject,
-        inviter_id: user.user.id,
-        invitee_id: userId,
-        status: "pending",
-        permission_level: permissionLevel, // This now has the correct type
+        member_project_id: selectedProject,
+        invitation_sender_id: user.user.id,
+        invitation_recipient_id: userId,
+        invitation_status: "pending",
+        member_role: memberRole, // Using the correct field for the new table
       }));
 
       const { error } = await supabase
-        .from("project_invitations")
+        .from("member_invitations")
         .insert(invitations);
 
       if (error) throw error;
@@ -149,7 +148,7 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
       });
 
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["project_invitations"] });
+      queryClient.invalidateQueries({ queryKey: ["pending_member_invitations_count"] });
       
       // Close dialog and reset state
       onClose();
@@ -230,13 +229,13 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
           </div>
           
           <div>
-            <h3 className="mb-2 text-sm font-medium">Select Permission Level</h3>
+            <h3 className="mb-2 text-sm font-medium">Select Role</h3>
             <Select 
-              value={permissionLevel} 
-              onValueChange={(value: PermissionLevel) => setPermissionLevel(value)}
+              value={memberRole} 
+              onValueChange={(value: MemberRole) => setMemberRole(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select permission level *" />
+                <SelectValue placeholder="Select role *" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
