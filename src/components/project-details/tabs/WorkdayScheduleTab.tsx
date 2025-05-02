@@ -14,7 +14,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Clock, Edit, Trash2 } from 'lucide-react';
+import { CalendarIcon, Plus, Clock, Edit, Trash2, Filter } from 'lucide-react';
+import { getStatusBadge } from '@/utils/statusBadge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -37,6 +45,7 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
   const [hours, setHours] = useState<number | string>('');
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   
   const { timeEntries, isLoading: timeEntriesLoading, addTimeEntry, updateTimeEntry, deleteTimeEntry } = useWorkdayTimeEntries(projectId);
   
@@ -67,6 +76,26 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
     },
     enabled: !!projectId && !!user
   });
+
+  // Filter tasks by status
+  const filteredTasks = React.useMemo(() => {
+    if (!tasksWithWorkdayCodes) return [];
+    
+    if (statusFilter === 'all') {
+      return tasksWithWorkdayCodes;
+    }
+    
+    return tasksWithWorkdayCodes.filter(task => task.status === statusFilter);
+  }, [tasksWithWorkdayCodes, statusFilter]);
+  
+  // Extract unique statuses for filter
+  const availableStatuses = React.useMemo(() => {
+    if (!tasksWithWorkdayCodes) return [];
+    
+    const statuses = new Set<string>();
+    tasksWithWorkdayCodes.forEach(task => statuses.add(task.status));
+    return Array.from(statuses);
+  }, [tasksWithWorkdayCodes]);
   
   const openAddTimeEntryDialog = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -173,14 +202,37 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
     <div className="p-6">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Workday Schedule</CardTitle>
-          <CardDescription>
-            Track time spent on tasks with workday codes
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Workday Schedule</CardTitle>
+              <CardDescription>
+                Track time spent on tasks with workday codes
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {availableStatuses.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-8">
-            {tasksWithWorkdayCodes.map((task) => (
+            {filteredTasks.map((task) => (
               <TaskTimeEntryCard
                 key={task.id}
                 task={task}
@@ -362,8 +414,11 @@ const TaskTimeEntryCard: React.FC<TaskTimeEntryCardProps> = ({
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>{task.title}</CardTitle>
-            <CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle>{task.title}</CardTitle>
+              {getStatusBadge(task.status)}
+            </div>
+            <CardDescription className="mt-1">
               {workdayCode ? `${workdayCode.task} - ${workdayCode.activity}` : 'Loading workday code...'}
             </CardDescription>
           </div>
@@ -435,3 +490,4 @@ const TaskTimeEntryCard: React.FC<TaskTimeEntryCardProps> = ({
     </Card>
   );
 };
+
