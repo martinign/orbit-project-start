@@ -19,7 +19,8 @@ type TableName =
   | 'workday_codes'
   | 'project_important_links'
   | 'survey_responses'
-  | 'project_doc_requests';
+  | 'project_doc_requests'
+  | 'workday_time_entries';
 
 interface SubscriptionOptions {
   table: TableName;
