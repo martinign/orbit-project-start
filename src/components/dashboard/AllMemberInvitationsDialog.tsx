@@ -20,14 +20,13 @@ interface AllMemberInvitationsDialogProps {
   };
 }
 
-// Update the type definition to match what we actually get from the database
 interface MemberInvitationData {
   member_invitation_id: string;
   invitation_status: string;
   invitation_created_at: string;
   member_role: string;
-  // Make profiles_recipient nullable and add proper shape
-  profiles_recipient: {
+  invitation_recipient_id?: string;
+  profiles?: {
     full_name: string | null;
     last_name: string | null;
     email: string | null;
@@ -38,6 +37,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
   const { data: invitations, isLoading } = useQuery({
     queryKey: ["all_member_invitations", filters],
     queryFn: async () => {
+      // First fetch the invitations
       let query = supabase
         .from("member_invitations")
         .select(`
@@ -45,11 +45,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           invitation_status,
           invitation_created_at,
           member_role,
-          profiles_recipient:profiles(
-            full_name,
-            last_name,
-            email
-          )
+          invitation_recipient_id
         `);
 
       if (filters.projectId && filters.projectId !== "all") {
@@ -68,13 +64,34 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
         query = query.eq("invitation_status", filters.status);
       }
 
-      const { data, error } = await query.order("invitation_created_at", { ascending: false });
+      const { data: invitationData, error: invitationError } = await query.order("invitation_created_at", { ascending: false });
       
-      if (error) throw error;
+      if (invitationError) throw invitationError;
       
-      console.log("Fetched member invitations:", data);
-      // First cast to unknown, then to our expected type
-      return data as unknown as MemberInvitationData[];
+      console.log("Fetched member invitations:", invitationData);
+      
+      // Then for each invitation, fetch the recipient profile details
+      const invitationsWithProfiles = await Promise.all(
+        invitationData.map(async (invitation) => {
+          if (!invitation.invitation_recipient_id) {
+            return { ...invitation, profiles: null };
+          }
+          
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name, last_name, email")
+            .eq("id", invitation.invitation_recipient_id)
+            .single();
+            
+          return {
+            ...invitation,
+            profiles: profileData
+          };
+        })
+      );
+      
+      console.log("Invitations with profiles:", invitationsWithProfiles);
+      return invitationsWithProfiles as MemberInvitationData[];
     },
     enabled: open,
   });
@@ -94,10 +111,15 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
     }
   };
 
-  const formatName = (data: { full_name: string | null; last_name: string | null; email: string | null } | null) => {
-    if (!data) return "Unknown";
-    const name = [data.full_name, data.last_name].filter(Boolean).join(" ").trim();
-    return name || data.email || "Unknown";
+  const formatName = (invitation: MemberInvitationData) => {
+    if (!invitation.profiles) return "Unknown";
+    
+    const name = [invitation.profiles.full_name, invitation.profiles.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+      
+    return name || invitation.profiles.email || "Unknown";
   };
 
   return (
@@ -130,7 +152,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
                 {invitations.map((invitation) => (
                   <TableRow key={invitation.member_invitation_id}>
                     <TableCell className="font-medium">
-                      {formatName(invitation.profiles_recipient)}
+                      {formatName(invitation)}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(invitation.invitation_status)}
