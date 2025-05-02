@@ -6,7 +6,6 @@ import { useTeamAssignedHours } from './useTeamAssignedHours';
 import { useWorkdayTimeEntries } from './useWorkdayTimeEntries';
 import { useTeamMembers } from './useTeamMembers';
 import { format, parse, isValid } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 
 interface TeamHoursComparisonItem {
   userId: string;
@@ -20,6 +19,12 @@ interface SummaryStats {
   totalAssigned: number;
   totalWorked: number;
   totalVariance: number;
+}
+
+export interface VarianceBadgeProps {
+  variant: "outline" | "destructive" | "default";
+  className?: string;
+  children: string;
 }
 
 export function useTeamHoursComparison(projectId: string, monthFilter: string = '') {
@@ -132,19 +137,33 @@ export function useTeamHoursComparison(projectId: string, monthFilter: string = 
     return variance > 0 ? 'text-green-600' : 'text-red-600';
   };
   
-  // Helper function to get variance badge
-  const getVarianceBadge = (variance: number) => {
+  // Helper function to get variance badge properties rather than JSX directly
+  const getVarianceBadge = (variance: number): VarianceBadgeProps => {
     if (variance === 0) {
-      return <Badge variant="outline">Matched</Badge>;
+      return {
+        variant: "outline",
+        children: "Matched"
+      };
     }
     
     if (Math.abs(variance) <= 2) {
-      return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">Minor Variance</Badge>;
+      return {
+        variant: "outline",
+        className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
+        children: "Minor Variance"
+      };
     }
     
     return variance > 0 
-      ? <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Under Hours</Badge>
-      : <Badge variant="destructive">Over Hours</Badge>;
+      ? {
+          variant: "outline",
+          className: "bg-green-50 text-green-700 hover:bg-green-50",
+          children: "Under Hours"
+        }
+      : {
+          variant: "destructive",
+          children: "Over Hours"
+        };
   };
   
   return {

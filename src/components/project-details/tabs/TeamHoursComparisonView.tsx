@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { useTeamAssignedHours } from '@/hooks/useTeamAssignedHours';
-import { useTeamHoursComparison } from '@/hooks/useTeamHoursComparison';
+import { useTeamHoursComparison, VarianceBadgeProps } from '@/hooks/useTeamHoursComparison';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,13 @@ export const TeamHoursComparisonView: React.FC<TeamHoursComparisonViewProps> = (
   } = useTeamHoursComparison(projectId, monthFilter);
   
   const isLoading = teamMembersLoading || assignedHoursLoading || comparisonLoading;
+
+  // Helper to render badge using properties returned from the hook
+  const renderBadge = (badgeProps: VarianceBadgeProps) => (
+    <Badge variant={badgeProps.variant} className={badgeProps.className}>
+      {badgeProps.children}
+    </Badge>
+  );
   
   // Filter team members by search text
   const filteredTeamHours = React.useMemo(() => {
@@ -175,7 +182,7 @@ export const TeamHoursComparisonView: React.FC<TeamHoursComparisonViewProps> = (
                       </span>
                     </TableCell>
                     <TableCell>
-                      {getVarianceBadge(item.variance)}
+                      {renderBadge(getVarianceBadge(item.variance))}
                     </TableCell>
                   </TableRow>
                 ))
