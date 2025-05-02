@@ -59,21 +59,24 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
     }
   };
 
+  // Define a fixed width percentage for each column
+  const columnWidth = "11.11%"; // Dividing 100% by 9 columns
+
   return (
     <>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Request Type</TableHead>
-              <TableHead>Process Range</TableHead>
-              <TableHead>Delivery Address</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Vendor</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead style={{ width: columnWidth }}>Title</TableHead>
+              <TableHead style={{ width: columnWidth }}>Request Type</TableHead>
+              <TableHead style={{ width: columnWidth }}>Process Range</TableHead>
+              <TableHead style={{ width: columnWidth }}>Delivery Address</TableHead>
+              <TableHead style={{ width: columnWidth }}>Assigned To</TableHead>
+              <TableHead style={{ width: columnWidth }}>Vendor</TableHead>
+              <TableHead style={{ width: columnWidth }}>Due Date</TableHead>
+              <TableHead style={{ width: columnWidth }}>Status</TableHead>
+              <TableHead style={{ width: columnWidth }} className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,6 +94,7 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
                   onEdit={onEdit}
                   onDelete={handleDeleteClick}
                   onStatusChange={onStatusChange}
+                  columnWidth={columnWidth}
                 />
               ))
             )}
@@ -121,14 +125,21 @@ interface RequestRowProps {
   onEdit: (request: DocRequest) => void;
   onDelete: (request: DocRequest) => void;
   onStatusChange: (requestId: string, status: DocStatus) => void;
+  columnWidth: string;
 }
 
-const RequestRow: React.FC<RequestRowProps> = ({ request, onEdit, onDelete, onStatusChange }) => {
+const RequestRow: React.FC<RequestRowProps> = ({ 
+  request, 
+  onEdit, 
+  onDelete, 
+  onStatusChange,
+  columnWidth 
+}) => {
   const { memberName, isLoading: isLoadingMemberName } = useTeamMemberName(request.doc_assigned_to);
   
   return (
     <TableRow>
-      <TableCell className="font-medium">
+      <TableCell className="font-medium" style={{ width: columnWidth }}>
         {request.doc_title}
         {request.doc_type === 'SLB' && request.doc_version && (
           <span className="ml-1 text-xs text-gray-500">
@@ -136,15 +147,15 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, onEdit, onDelete, onSt
           </span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell style={{ width: columnWidth }}>
         {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
       </TableCell>
-      <TableCell>
+      <TableCell style={{ width: columnWidth }}>
         {request.doc_type === 'SLB' && request.doc_process_number_range ? 
           request.doc_process_number_range : '-'}
       </TableCell>
-      <TableCell>{request.doc_delivery_address || '-'}</TableCell>
-      <TableCell>
+      <TableCell style={{ width: columnWidth }}>{request.doc_delivery_address || '-'}</TableCell>
+      <TableCell style={{ width: columnWidth }}>
         {isLoadingMemberName ? (
           <span className="text-gray-400">Loading...</span>
         ) : memberName ? (
@@ -153,16 +164,16 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, onEdit, onDelete, onSt
           <span className="text-gray-400">Unassigned</span>
         )}
       </TableCell>
-      <TableCell>{request.doc_selected_vendor || '-'}</TableCell>
-      <TableCell>
+      <TableCell style={{ width: columnWidth }}>{request.doc_selected_vendor || '-'}</TableCell>
+      <TableCell style={{ width: columnWidth }}>
         {request.doc_due_date
           ? format(new Date(request.doc_due_date), 'MMM dd, yyyy')
           : '-'}
       </TableCell>
-      <TableCell>
+      <TableCell style={{ width: columnWidth }}>
         <DocRequestStatusBadge status={request.doc_status} />
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="text-right" style={{ width: columnWidth }}>
         <div className="flex justify-end gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
