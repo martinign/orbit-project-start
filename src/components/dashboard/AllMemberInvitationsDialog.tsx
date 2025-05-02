@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2 } from "lucide-react";
 
 interface AllMemberInvitationsDialogProps {
   open: boolean;
@@ -21,19 +24,7 @@ interface MemberInvitationData {
   member_invitation_id: string;
   invitation_status: string;
   invitation_created_at: string;
-  member_role: "owner" | "admin";
-  member_project_id: string;
-  invitation_sender_id: string;
-  invitation_recipient_id: string;
-  projects: {
-    project_number: string;
-    Sponsor: string;
-    project_type: string;
-  } | null;
-  profiles_sender: {
-    full_name: string | null;
-    last_name: string | null;
-  } | null;
+  member_role: string;
   profiles_recipient: {
     full_name: string | null;
     last_name: string | null;
@@ -52,18 +43,6 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           invitation_status,
           invitation_created_at,
           member_role,
-          member_project_id,
-          invitation_sender_id,
-          invitation_recipient_id,
-          projects:member_project_id (
-            project_number,
-            Sponsor,
-            project_type
-          ),
-          profiles_sender:invitation_sender_id (
-            full_name,
-            last_name
-          ),
           profiles_recipient:invitation_recipient_id (
             full_name,
             last_name,
@@ -91,107 +70,78 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
       
       if (error) throw error;
       
-      // Cast the data to ensure it matches our interface
       return data as unknown as MemberInvitationData[];
     },
     enabled: open,
   });
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "warning";
+        return <Badge className="bg-yellow-500">Pending</Badge>;
       case "accepted":
-        return "success";
+        return <Badge className="bg-green-500">Accepted</Badge>;
       case "rejected":
-        return "destructive";
+        return <Badge variant="destructive">Rejected</Badge>;
+      case "revoked":
+        return <Badge variant="outline" className="border-red-500 text-red-500">Revoked</Badge>;
       default:
-        return "secondary";
+        return <Badge>{status}</Badge>;
     }
   };
 
-  const formatName = (data: { full_name: string | null; last_name: string | null; } | null) => {
+  const formatName = (data: { full_name: string | null; last_name: string | null; email: string | null } | null) => {
     if (!data) return "Unknown";
-    return [data.full_name, data.last_name].filter(Boolean).join(" ") || "Unknown";
-  };
-
-  // Helper function to make role more readable
-  const formatRole = (role: string): string => {
-    switch(role) {
-      case "owner": return "Owner";
-      case "admin": return "Admin";
-      default: return role;
-    }
-  };
-
-  // Helper function to display project information based on project_type
-  const getProjectDisplay = (project: { project_number: string; Sponsor: string; project_type: string } | null) => {
-    if (!project) return "Unknown Project";
-    
-    if (project.project_type === "billable") {
-      return `${project.project_number} - ${project.Sponsor || "No Sponsor"}`;
-    } else {
-      return `Project Title: ${project.project_number}`;
-    }
+    const name = [data.full_name, data.last_name].filter(Boolean).join(" ").trim();
+    return name || data.email || "Unknown";
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>All Invitations</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                </div>
-              ))}
-            </div>
-          ) : !invitations || invitations.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">No invitations found</p>
-          ) : (
-            <div className="space-y-4">
-              {invitations.map((invitation) => (
-                <div
-                  key={invitation.member_invitation_id}
-                  className="border rounded-lg p-4 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-medium">
-                        {getProjectDisplay(invitation.projects)}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Invitee: {formatName(invitation.profiles_recipient)}
-                      </p>
-                      {invitation.profiles_recipient?.email && (
-                        <p className="text-sm text-muted-foreground">
-                          Email: {invitation.profiles_recipient.email}
-                        </p>
-                      )}
-                      <p className="text-sm text-muted-foreground">
-                        Sent by: {formatName(invitation.profiles_sender)}
-                      </p>
-                    </div>
-                    <div className="text-right space-y-2">
-                      <Badge variant={getStatusBadgeVariant(invitation.invitation_status)} className="mb-2">
-                        {invitation.invitation_status}
-                      </Badge>
-                      <div className="text-xs text-muted-foreground">
-                        <p>Role: {formatRole(invitation.member_role)}</p>
-                        <p>{format(new Date(invitation.invitation_created_at), "MMM d, yyyy")}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : !invitations || invitations.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No invitations found
+          </div>
+        ) : (
+          <ScrollArea className="h-[500px]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Recipient</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Invited On</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invitations.map((invitation) => (
+                  <TableRow key={invitation.member_invitation_id}>
+                    <TableCell className="font-medium">
+                      {formatName(invitation.profiles_recipient)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(invitation.invitation_status)}
+                    </TableCell>
+                    <TableCell className="capitalize">
+                      {invitation.member_role}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {format(new Date(invitation.invitation_created_at), "MMM d, yyyy")}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Eye, Users, Contact } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { AllInvitationsDialog } from "./AllInvitationsDialog";
+import { AllMemberInvitationsDialog } from "./AllMemberInvitationsDialog";
 
 interface InvitationsStatisticsCardProps {
   filters?: {
@@ -140,7 +140,7 @@ export function InvitationsStatisticsCard({
           </div>
         )}
       </CardContent>
-      <AllInvitationsDialog open={showDialog} onClose={() => setShowDialog(false)} filters={filters} />
+      <AllMemberInvitationsDialog open={showDialog} onClose={() => setShowDialog(false)} filters={filters} />
     </Card>
   );
 }
