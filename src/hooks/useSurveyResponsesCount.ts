@@ -52,6 +52,7 @@ export function useSurveyResponsesCount() {
       // Only increment new responses count for Martin
       if (isMartin) {
         setNewResponsesCount(prev => prev + 1);
+        console.log('New survey response received, incrementing new responses count');
       }
       
       // Refetch to ensure count stays in sync
