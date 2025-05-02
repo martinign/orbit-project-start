@@ -41,7 +41,7 @@ export function useTeamAssignedHours(projectId?: string) {
         .from('team_assigned_hours')
         .select(`
           *,
-          user_profile:profiles!team_assigned_hours_user_id_fkey(full_name, last_name),
+          user_profile:profiles(full_name, last_name),
           task:task_id(title)
         `)
         .eq('project_id', projectId)
@@ -52,7 +52,24 @@ export function useTeamAssignedHours(projectId?: string) {
         throw error;
       }
       
-      return data as TeamAssignedHour[];
+      // Transform data to match the expected interface
+      return (data as any[]).map(item => {
+        // Handle potential relationship errors
+        const userProfile = item.user_profile && !item.user_profile.error 
+          ? item.user_profile[0] || { full_name: "Unknown", last_name: null } 
+          : { full_name: "Unknown", last_name: null };
+        
+        // Handle potential task relationship errors
+        const task = item.task && !item.task.error
+          ? item.task
+          : null;
+          
+        return {
+          ...item,
+          user_profile: userProfile,
+          task: task
+        };
+      }) as TeamAssignedHour[];
     },
     enabled: !!projectId && !!user
   });
