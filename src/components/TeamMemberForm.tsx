@@ -126,8 +126,8 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
       <div>
         <Label htmlFor="project_id">Project *</Label>
         <ProjectSelector
-          value={formData.project_id}
-          onChange={handleProjectChange}
+          selectedProject={formData.project_id}
+          onProjectChange={handleProjectChange}
           disabled={(!!initialProjectId && !teamMember)}
           required
         />

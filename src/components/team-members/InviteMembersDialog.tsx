@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -172,8 +171,8 @@ const InviteMembersDialog = ({ open, onClose }: InviteMembersDialogProps) => {
         <div className="space-y-2">
           <label className="text-sm font-medium">Select Project</label>
           <ProjectSelector 
-            value={projectId} 
-            onChange={setProjectId} 
+            selectedProject={projectId} 
+            onProjectChange={setProjectId} 
             required
           />
         </div>
