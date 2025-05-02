@@ -18,7 +18,8 @@ type TableName =
   | 'task_templates'
   | 'workday_codes'
   | 'project_important_links'
-  | 'survey_responses';
+  | 'survey_responses'
+  | 'project_doc_requests';
 
 interface SubscriptionOptions {
   table: TableName;
@@ -36,6 +37,12 @@ export function useRealtimeSubscription({
   onRecordChange
 }: SubscriptionOptions) {
   useEffect(() => {
+    // Skip if no filterValue is provided when filter is required
+    if (filter && !filterValue) {
+      console.log(`Skipping realtime subscription for ${table} - missing filterValue`);
+      return;
+    }
+    
     const channelName = `db-changes-${table}-${Math.random().toString(36).substring(2, 15)}`;
     const channel = supabase.channel(channelName);
     
@@ -46,6 +53,8 @@ export function useRealtimeSubscription({
       ...(filter && filterValue ? { filter: `${filter}=eq.${filterValue}` } : {})
     };
 
+    console.log(`Setting up realtime subscription for ${table}:`, config);
+
     channel
       .on('postgres_changes', config, (payload) => {
         console.log(`Received change for ${table}:`, payload);
@@ -54,10 +63,13 @@ export function useRealtimeSubscription({
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.log(`Successfully subscribed to ${table} changes`);
+        } else {
+          console.log(`Subscription status for ${table}: ${status}`);
         }
       });
 
     return () => {
+      console.log(`Removing channel for ${table}`);
       supabase.removeChannel(channel);
     };
   }, [table, event, filter, filterValue, onRecordChange]);

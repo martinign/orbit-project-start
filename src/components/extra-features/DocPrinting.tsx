@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface DocPrintingProps {
   projectId?: string;
@@ -61,16 +62,28 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
   };
 
   const handleSubmit = async (data: NewDocRequest) => {
+    if (!projectId) {
+      toast.error('No project selected');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       if (currentRequest) {
         await updateRequest({ id: currentRequest.id, updates: data });
       } else {
-        await createRequest(data);
+        // Add project ID to the data
+        const requestWithProject = {
+          ...data,
+          doc_project_id: projectId
+        };
+        console.log("Submitting new request:", requestWithProject);
+        await createRequest(requestWithProject);
       }
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error submitting request:', error);
+      toast.error('Failed to submit request');
     } finally {
       setIsSubmitting(false);
     }

@@ -70,6 +70,8 @@ export const createDocRequest = async (request: NewDocRequest) => {
       doc_process_number_range: request.doc_type === 'SLB' ? request.doc_process_number_range : null
     };
 
+    console.log("Sending data to Supabase:", requestData);
+
     const { data, error } = await supabase
       .from('project_doc_requests')
       .insert(requestData)
@@ -78,15 +80,15 @@ export const createDocRequest = async (request: NewDocRequest) => {
 
     if (error) {
       console.error('Error creating document request:', error);
-      toast.error('Failed to create request');
+      toast.error('Failed to create request: ' + error.message);
       throw error;
     }
 
     console.log("Document request created successfully:", data);
-    toast.success('Document request created successfully');
     return data as DocRequest;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in createDocRequest:", error);
+    toast.error('Error: ' + (error.message || 'Failed to create request'));
     throw error;
   }
 };
@@ -118,7 +120,6 @@ export const updateDocRequest = async (id: string, updates: Partial<DocRequest>)
     }
 
     console.log("Document request updated successfully:", data);
-    toast.success('Document request updated successfully');
     return data as DocRequest;
   } catch (error) {
     console.error("Error in updateDocRequest:", error);
@@ -143,7 +144,6 @@ export const deleteDocRequest = async (id: string) => {
     }
 
     console.log("Document request deleted successfully");
-    toast.success('Document request deleted successfully');
     return true;
   } catch (error) {
     console.error("Error in deleteDocRequest:", error);

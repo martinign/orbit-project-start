@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   DocRequest, DocType, 
@@ -11,6 +11,8 @@ import {
   NewDocRequest,
   DocStatus
 } from './api/docRequestsApi';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { toast } from 'sonner';
 
 export const useDocPrintingRequests = (projectId: string) => {
   const queryClient = useQueryClient();
@@ -24,6 +26,17 @@ export const useDocPrintingRequests = (projectId: string) => {
     queryKey: queryKey,
     queryFn: () => fetchDocRequests(projectId),
     enabled: !!projectId
+  });
+
+  // Realtime subscription for document requests
+  useRealtimeSubscription({
+    table: 'project_doc_requests',
+    filter: 'doc_project_id',
+    filterValue: projectId,
+    onRecordChange: (payload) => {
+      console.log('Realtime update for doc requests:', payload);
+      queryClient.invalidateQueries({ queryKey });
+    }
   });
 
   // Filtered requests based on current filters
@@ -40,11 +53,14 @@ export const useDocPrintingRequests = (projectId: string) => {
   // Create request mutation
   const createMutation = useMutation({
     mutationFn: (newRequest: NewDocRequest) => createDocRequest(newRequest),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Document request created successfully:", data);
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request created successfully');
     },
     onError: (error) => {
       console.error('Error creating doc request:', error);
+      toast.error('Failed to create document request');
     }
   });
 
@@ -54,9 +70,11 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequest(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request updated successfully');
     },
     onError: (error) => {
       console.error('Error updating doc request:', error);
+      toast.error('Failed to update document request');
     }
   });
 
@@ -65,9 +83,11 @@ export const useDocPrintingRequests = (projectId: string) => {
     mutationFn: (id: string) => deleteDocRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request deleted successfully');
     },
     onError: (error) => {
       console.error('Error deleting doc request:', error);
+      toast.error('Failed to delete document request');
     }
   });
 
@@ -77,9 +97,11 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequestStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document status updated successfully');
     },
     onError: (error) => {
       console.error('Error updating doc status:', error);
+      toast.error('Failed to update document status');
     }
   });
 
