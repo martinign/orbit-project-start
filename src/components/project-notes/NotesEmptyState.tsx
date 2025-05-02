@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 
 type NotesEmptyStateProps = {
-  onCreateNote: () => void;
+  onCreateNote: (() => void) | undefined;
 };
 
 const NotesEmptyState = ({ onCreateNote }: NotesEmptyStateProps) => {
@@ -16,10 +16,12 @@ const NotesEmptyState = ({ onCreateNote }: NotesEmptyStateProps) => {
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-10">
         <p className="text-muted-foreground mb-4">No notes found for this project</p>
-        <Button onClick={onCreateNote} className="bg-blue-500 hover:bg-blue-600">
-          <Plus className="mr-2 h-4 w-4" />
-          Create First Note
-        </Button>
+        {onCreateNote && (
+          <Button onClick={onCreateNote} className="bg-blue-500 hover:bg-blue-600 text-white">
+            <Plus className="mr-2 h-4 w-4" />
+            Create First Note
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
