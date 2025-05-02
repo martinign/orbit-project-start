@@ -1,6 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useProjectInvitesDialog } from "@/hooks/useProjectInvitesDialog";
+import { useProjectInvitesDialog, MemberRole } from "@/hooks/useProjectInvitesDialog";
 import { ProjectSelector } from "./ProjectSelector";
 import { RoleSelector } from "./RoleSelector";
 import { UsersList } from "./UsersList";
@@ -54,10 +54,18 @@ export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProp
             />
           </div>
           
-          <RoleSelector
-            value={memberRole}
-            onChange={setMemberRole}
-          />
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Select Role</h3>
+            <RoleSelector
+              value={memberRole}
+              onChange={(value: MemberRole) => setMemberRole(value)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Owner:</strong> Full control over the project, including deletion.
+              <br />
+              <strong>Admin:</strong> Can manage tasks and team members, but cannot delete the project.
+            </p>
+          </div>
 
           <UsersList
             profiles={filteredProfiles}

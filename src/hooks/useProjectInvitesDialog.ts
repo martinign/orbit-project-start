@@ -16,6 +16,7 @@ export interface Project {
   Sponsor?: string;
 }
 
+// Update the MemberRole type to be a string literal union
 export type MemberRole = "owner" | "admin";
 
 export function useProjectInvitesDialog(open: boolean) {

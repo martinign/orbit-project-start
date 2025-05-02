@@ -8,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MemberRole } from "@/hooks/useProjectInvitesDialog";
 
 interface RoleSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: MemberRole;
+  onChange: (value: MemberRole) => void;
   disabled?: boolean;
 }
 
@@ -23,7 +24,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
   return (
     <Select
       value={value}
-      onValueChange={onChange}
+      onValueChange={onChange as (value: string) => void}
       disabled={disabled}
     >
       <SelectTrigger className="w-full">
