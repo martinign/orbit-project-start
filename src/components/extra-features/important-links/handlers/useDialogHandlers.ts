@@ -1,18 +1,18 @@
 
 import { ImportantLink } from '../ImportantLinksTable';
 
-export const useDialogHandlers = (
-  setCurrentLink: (link: ImportantLink | null) => void,
+export const useDialogHandlers = <T extends { id: string }>(
+  setCurrentItem: (item: T | null) => void,
   setIsEditDialogOpen: (isOpen: boolean) => void,
   setIsDeleteDialogOpen: (isOpen: boolean) => void,
 ) => {
-  const openEditDialog = (link: ImportantLink) => {
-    setCurrentLink(link);
+  const openEditDialog = (item: T) => {
+    setCurrentItem(item);
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (link: ImportantLink) => {
-    setCurrentLink(link);
+  const openDeleteDialog = (item: T) => {
+    setCurrentItem(item);
     setIsDeleteDialogOpen(true);
   };
 

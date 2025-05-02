@@ -187,6 +187,68 @@ export type Database = {
           },
         ]
       }
+      project_doc_requests: {
+        Row: {
+          created_at: string
+          doc_assigned_to: string | null
+          doc_comments: string | null
+          doc_delivery_address: string | null
+          doc_description: string | null
+          doc_due_date: string | null
+          doc_project_id: string
+          doc_request_type: string
+          doc_status: string
+          doc_title: string
+          doc_type: string
+          doc_version: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_assigned_to?: string | null
+          doc_comments?: string | null
+          doc_delivery_address?: string | null
+          doc_description?: string | null
+          doc_due_date?: string | null
+          doc_project_id: string
+          doc_request_type: string
+          doc_status?: string
+          doc_title: string
+          doc_type: string
+          doc_version?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_assigned_to?: string | null
+          doc_comments?: string | null
+          doc_delivery_address?: string | null
+          doc_description?: string | null
+          doc_due_date?: string | null
+          doc_project_id?: string
+          doc_request_type?: string
+          doc_status?: string
+          doc_title?: string
+          doc_type?: string
+          doc_version?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_doc_requests_doc_project_id_fkey"
+            columns: ["doc_project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_events: {
         Row: {
           created_at: string
