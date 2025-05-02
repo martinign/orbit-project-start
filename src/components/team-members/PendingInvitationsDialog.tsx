@@ -227,19 +227,19 @@ export function PendingInvitationsDialog({ open, onClose }: PendingInvitationsDi
                     <div className="flex flex-col gap-2">
                       <Button 
                         onClick={() => handleAccept(invitation.member_invitation_id)}
-                        disabled={acceptInvitation.isLoading || rejectInvitation.isLoading}
+                        disabled={acceptInvitation.isPending || rejectInvitation.isPending}
                         className="w-28"
                       >
-                        {acceptInvitation.isLoading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                        {acceptInvitation.isPending && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
                         Accept
                       </Button>
                       <Button 
                         variant="outline" 
                         onClick={() => handleReject(invitation.member_invitation_id)}
-                        disabled={acceptInvitation.isLoading || rejectInvitation.isLoading}
+                        disabled={acceptInvitation.isPending || rejectInvitation.isPending}
                         className="w-28"
                       >
-                        {rejectInvitation.isLoading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+                        {rejectInvitation.isPending && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
                         Reject
                       </Button>
                     </div>
