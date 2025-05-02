@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { DocRequest, DocType, DocRequestType } from './api/docRequestsApi';
+import { DocRequest, DocType, DocRequestType, NewDocRequest } from './api/docRequestsApi';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -29,12 +28,12 @@ const formSchema = z.object({
   doc_comments: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 interface DocPrintingRequestFormProps {
   initialData?: Partial<DocRequest>;
   projectId: string;
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: NewDocRequest) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -65,10 +64,15 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
   const docType = form.watch('doc_type');
 
   const handleSubmit = (values: FormValues) => {
-    onSubmit({
+    const docRequestData: NewDocRequest = {
       ...values,
       doc_project_id: projectId,
-    });
+      doc_status: initialData?.doc_status || 'pending',
+      // Convert date object to string if it exists
+      doc_due_date: values.doc_due_date ? values.doc_due_date.toISOString() : null,
+    };
+    
+    onSubmit(docRequestData);
   };
 
   return (
@@ -275,7 +279,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white" disabled={isSubmitting}>
             {isSubmitting ? 'Submitting...' : initialData ? 'Update Request' : 'Create Request'}
           </Button>
         </div>

@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,7 +32,8 @@ export const useImportantLinks = (projectId?: string) => {
     setIsDeleteDialogOpen,
   } = useLinksState();
 
-  const { openEditDialog, openDeleteDialog } = useDialogHandlers(
+  // Type assertion for setCurrentLink to match the expected function signature
+  const { openEditDialog, openDeleteDialog } = useDialogHandlers<any>(
     setCurrentLink,
     setIsEditDialogOpen,
     setIsDeleteDialogOpen

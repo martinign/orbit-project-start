@@ -24,6 +24,7 @@ export interface DocRequest {
   user_id: string;
   created_at: string;
   updated_at: string;
+  profiles?: any; // To accommodate the join with profiles table
 }
 
 export type NewDocRequest = Omit<DocRequest, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
@@ -42,7 +43,7 @@ export const fetchDocRequests = async (projectId: string) => {
     throw error;
   }
 
-  return requests;
+  return requests as unknown as DocRequest[];
 };
 
 // Create a new document request
@@ -71,7 +72,7 @@ export const createDocRequest = async (request: NewDocRequest) => {
   }
 
   toast.success('Document request created successfully');
-  return data;
+  return data as DocRequest;
 };
 
 // Update an existing document request
@@ -90,7 +91,7 @@ export const updateDocRequest = async (id: string, updates: Partial<DocRequest>)
   }
 
   toast.success('Document request updated successfully');
-  return data;
+  return data as DocRequest;
 };
 
 // Delete a document request

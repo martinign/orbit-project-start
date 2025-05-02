@@ -22,7 +22,7 @@ export const useDocPrintingRequests = (projectId: string) => {
   const queryKey = ['doc-requests', projectId];
   
   // Fetch document requests
-  const { data: requests, isLoading, error } = useQuery({
+  const { data: requests = [], isLoading, error } = useQuery({
     queryKey: queryKey,
     queryFn: () => fetchDocRequests(projectId),
     enabled: !!projectId && !!user
