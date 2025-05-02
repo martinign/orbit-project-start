@@ -14,7 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
-  const { features } = useExtraFeatures(id);
+  const { features, isLoading: featuresLoading } = useExtraFeatures(id);
   const { user } = useAuth();
   
   const {
@@ -53,7 +53,7 @@ const ProjectDetailsView = () => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [setActiveTab]);
 
   // If the user is viewing the invites tab but is not the project owner,
   // redirect them to the tasks tab
@@ -62,6 +62,16 @@ const ProjectDetailsView = () => {
       setActiveTab('tasks');
     }
   }, [activeTab, isProjectOwner, setActiveTab]);
+
+  // Ensure features is never undefined
+  const safeFeatures = features || {
+    importantLinks: false,
+    siteInitiationTracker: false,
+    repository: false,
+    docPrinting: false,
+    billOfMaterials: false,
+    designSheet: false
+  };
 
   if (projectLoading) {
     return <div className="flex justify-center items-center h-64">Loading project details...</div>;
@@ -102,9 +112,9 @@ const ProjectDetailsView = () => {
       <ProjectContentTabs 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
-        extraFeatures={features}
+        extraFeatures={safeFeatures}
         isProjectOwner={isProjectOwner}
-        key={`tabs-${JSON.stringify(features)}`}
+        key={`tabs-${JSON.stringify(safeFeatures)}`}
       >
         <ProjectTabsContent
           activeTab={activeTab}
@@ -114,8 +124,8 @@ const ProjectDetailsView = () => {
           refetchTasks={refetchTasks}
           contactSearchQuery={contactSearchQuery}
           setContactSearchQuery={setContactSearchQuery}
-          extraFeatures={features}
-          key={`content-${JSON.stringify(features)}-${id}`}
+          extraFeatures={safeFeatures}
+          key={`content-${JSON.stringify(safeFeatures)}-${id}`}
         />
       </ProjectContentTabs>
     </div>

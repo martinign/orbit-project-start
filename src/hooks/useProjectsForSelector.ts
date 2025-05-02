@@ -15,7 +15,10 @@ export function useProjectsForSelector() {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!user) return;
+      if (!user) {
+        setProjects([]);
+        return;
+      }
       
       setIsLoading(true);
       try {
@@ -25,15 +28,24 @@ export function useProjectsForSelector() {
           .select('id, project_number, protocol_title')
           .order('created_at', { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching projects:', error);
+          setProjects([]);
+          return;
+        }
         
         // Ensure we always have a valid array of projects
-        const projectOptions = data ? data.map(project => ({
+        if (!data || !Array.isArray(data)) {
+          setProjects([]);
+          return;
+        }
+        
+        const projectOptions = data.map(project => ({
           value: project.id,
           label: project.protocol_title 
             ? `${project.project_number} - ${project.protocol_title}` 
             : project.project_number
-        })) : [];
+        }));
         
         setProjects(projectOptions);
       } catch (error) {
@@ -48,5 +60,9 @@ export function useProjectsForSelector() {
     fetchProjects();
   }, [user]);
 
-  return { projects, isLoading };
+  // Always return a valid array, even if projects is somehow undefined
+  return { 
+    projects: Array.isArray(projects) ? projects : [], 
+    isLoading 
+  };
 }

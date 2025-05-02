@@ -49,7 +49,7 @@ export function Combobox({
   const [inputValue, setInputValue] = React.useState(value || "")
 
   // Ensure options is always an array, even if it's undefined
-  const safeOptions = options || []
+  const safeOptions = Array.isArray(options) ? options : []
 
   // Find the option that matches the current value
   const selectedOption = safeOptions.find(option => option.value === value)

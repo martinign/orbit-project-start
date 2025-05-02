@@ -3,8 +3,6 @@ import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 
 interface ProjectContentTabsProps {
   activeTab: string;
@@ -28,6 +26,16 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   },
   isProjectOwner
 }) => {
+  // Make sure extraFeatures is never undefined
+  const safeExtraFeatures = extraFeatures || {
+    importantLinks: false,
+    siteInitiationTracker: false,
+    repository: false,
+    docPrinting: false,
+    billOfMaterials: false,
+    designSheet: false
+  };
+  
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
       <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 w-full">
@@ -41,27 +49,27 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
           <TabsTrigger value="invites" className="text-xs md:text-sm">Invites</TabsTrigger>
         )}
         
-        {extraFeatures?.importantLinks && (
+        {safeExtraFeatures.importantLinks && (
           <TabsTrigger value="important-links" className="text-xs md:text-sm">Links</TabsTrigger>
         )}
         
-        {extraFeatures?.siteInitiationTracker && (
+        {safeExtraFeatures.siteInitiationTracker && (
           <TabsTrigger value="site-initiation" className="text-xs md:text-sm">Site Tracker</TabsTrigger>
         )}
         
-        {extraFeatures?.repository && (
+        {safeExtraFeatures.repository && (
           <TabsTrigger value="repository" className="text-xs md:text-sm">Repository</TabsTrigger>
         )}
         
-        {extraFeatures?.docPrinting && (
+        {safeExtraFeatures.docPrinting && (
           <TabsTrigger value="doc-printing" className="text-xs md:text-sm">Doc Printing</TabsTrigger>
         )}
         
-        {extraFeatures?.billOfMaterials && (
+        {safeExtraFeatures.billOfMaterials && (
           <TabsTrigger value="bill-of-materials" className="text-xs md:text-sm">Bill of Materials</TabsTrigger>
         )}
         
-        {extraFeatures?.designSheet && (
+        {safeExtraFeatures.designSheet && (
           <TabsTrigger value="design-sheet" className="text-xs md:text-sm">Design Sheet</TabsTrigger>
         )}
       </TabsList>
