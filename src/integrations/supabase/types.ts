@@ -198,6 +198,7 @@ export type Database = {
           doc_process_number_range: string | null
           doc_project_id: string
           doc_request_type: string
+          doc_selected_vendor: string | null
           doc_status: string
           doc_title: string
           doc_type: string
@@ -216,6 +217,7 @@ export type Database = {
           doc_process_number_range?: string | null
           doc_project_id: string
           doc_request_type: string
+          doc_selected_vendor?: string | null
           doc_status?: string
           doc_title: string
           doc_type: string
@@ -234,6 +236,7 @@ export type Database = {
           doc_process_number_range?: string | null
           doc_project_id?: string
           doc_request_type?: string
+          doc_selected_vendor?: string | null
           doc_status?: string
           doc_title?: string
           doc_type?: string

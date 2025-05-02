@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DocRequest, DocType, DocRequestType, NewDocRequest } from './api/docRequestsApi';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -28,6 +29,7 @@ const formSchema = z.object({
   doc_due_date: z.date().optional().nullable(),
   doc_comments: z.string().optional(),
   doc_process_number_range: z.string().optional(),
+  doc_selected_vendor: z.string().optional().nullable(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -47,6 +49,8 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
   onCancel,
   isSubmitting
 }) => {
+  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers(projectId);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,6 +64,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       doc_due_date: initialData?.doc_due_date ? new Date(initialData.doc_due_date) : null,
       doc_comments: initialData?.doc_comments || '',
       doc_process_number_range: initialData?.doc_process_number_range || '',
+      doc_selected_vendor: initialData?.doc_selected_vendor || null,
     }
   });
 
@@ -83,6 +88,8 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       doc_comments: values.doc_comments || null,
       // Only include process number range if doc_type is SLB
       doc_process_number_range: values.doc_type === 'SLB' ? values.doc_process_number_range || null : null,
+      // Add selected vendor
+      doc_selected_vendor: values.doc_selected_vendor || null,
     };
     
     onSubmit(docRequestData);
@@ -197,12 +204,68 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
           </div>
         )}
 
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="doc_delivery_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Delivery Address</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ''}
+                  disabled={isSubmitting}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select delivery address" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="EUDC">EUDC</SelectItem>
+                    <SelectItem value="NADC">NADC</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="doc_assigned_to"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assigned To</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ''}
+                  disabled={isSubmitting || isLoadingTeamMembers}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select team member" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">Unassigned</SelectItem>
+                    {teamMembers?.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>{member.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
-          name="doc_delivery_address"
+          name="doc_selected_vendor"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Delivery Address</FormLabel>
+              <FormLabel>Selected Vendor</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value || ''}
@@ -210,12 +273,14 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select delivery address" />
+                    <SelectValue placeholder="Select vendor" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="EUDC">EUDC</SelectItem>
-                  <SelectItem value="NADC">NADC</SelectItem>
+                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="OPTION 1">OPTION 1</SelectItem>
+                  <SelectItem value="OPTION 2">OPTION 2</SelectItem>
+                  <SelectItem value="OPTION 3">OPTION 3</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

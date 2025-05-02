@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { DocRequest, DocStatus } from './api/docRequestsApi';
 import { DocRequestStatusBadge } from './DocRequestStatusBadge';
 import { format } from 'date-fns';
+import { useTeamMemberName } from '@/hooks/useTeamMembers';
 
 interface DocPrintingRequestsProps {
   requests: DocRequest[];
@@ -68,6 +69,8 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
               <TableHead>Request Type</TableHead>
               <TableHead>Process Range</TableHead>
               <TableHead>Delivery Address</TableHead>
+              <TableHead>Assigned To</TableHead>
+              <TableHead>Vendor</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -76,81 +79,19 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
           <TableBody>
             {requests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No document requests found
                 </TableCell>
               </TableRow>
             ) : (
               requests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell className="font-medium">
-                    {request.doc_title}
-                    {request.doc_type === 'SLB' && request.doc_version && (
-                      <span className="ml-1 text-xs text-gray-500">
-                        (v{request.doc_version})
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
-                  </TableCell>
-                  <TableCell>
-                    {request.doc_type === 'SLB' && request.doc_process_number_range ? 
-                      request.doc_process_number_range : '-'}
-                  </TableCell>
-                  <TableCell>{request.doc_delivery_address || '-'}</TableCell>
-                  <TableCell>
-                    {request.doc_due_date
-                      ? format(new Date(request.doc_due_date), 'MMM dd, yyyy')
-                      : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <DocRequestStatusBadge status={request.doc_status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            Actions
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onEdit(request)}>
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteClick(request)}>
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            disabled={request.doc_status === 'pending'}
-                            onClick={() => onStatusChange(request.id, 'pending')}
-                          >
-                            Mark as Pending
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            disabled={request.doc_status === 'approved'}
-                            onClick={() => onStatusChange(request.id, 'approved')}
-                          >
-                            Mark as Approved
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            disabled={request.doc_status === 'completed'}
-                            onClick={() => onStatusChange(request.id, 'completed')}
-                          >
-                            Mark as Completed
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            disabled={request.doc_status === 'cancelled'}
-                            onClick={() => onStatusChange(request.id, 'cancelled')}
-                          >
-                            Mark as Cancelled
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <RequestRow 
+                  key={request.id} 
+                  request={request}
+                  onEdit={onEdit}
+                  onDelete={handleDeleteClick}
+                  onStatusChange={onStatusChange}
+                />
               ))
             )}
           </TableBody>
@@ -172,5 +113,98 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+};
+
+interface RequestRowProps {
+  request: DocRequest;
+  onEdit: (request: DocRequest) => void;
+  onDelete: (request: DocRequest) => void;
+  onStatusChange: (requestId: string, status: DocStatus) => void;
+}
+
+const RequestRow: React.FC<RequestRowProps> = ({ request, onEdit, onDelete, onStatusChange }) => {
+  const { memberName, isLoading: isLoadingMemberName } = useTeamMemberName(request.doc_assigned_to);
+  
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        {request.doc_title}
+        {request.doc_type === 'SLB' && request.doc_version && (
+          <span className="ml-1 text-xs text-gray-500">
+            (v{request.doc_version})
+          </span>
+        )}
+      </TableCell>
+      <TableCell>
+        {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
+      </TableCell>
+      <TableCell>
+        {request.doc_type === 'SLB' && request.doc_process_number_range ? 
+          request.doc_process_number_range : '-'}
+      </TableCell>
+      <TableCell>{request.doc_delivery_address || '-'}</TableCell>
+      <TableCell>
+        {isLoadingMemberName ? (
+          <span className="text-gray-400">Loading...</span>
+        ) : memberName ? (
+          memberName
+        ) : (
+          <span className="text-gray-400">Unassigned</span>
+        )}
+      </TableCell>
+      <TableCell>{request.doc_selected_vendor || '-'}</TableCell>
+      <TableCell>
+        {request.doc_due_date
+          ? format(new Date(request.doc_due_date), 'MMM dd, yyyy')
+          : '-'}
+      </TableCell>
+      <TableCell>
+        <DocRequestStatusBadge status={request.doc_status} />
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                Actions
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(request)}>
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDelete(request)}>
+                Delete
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                disabled={request.doc_status === 'pending'}
+                onClick={() => onStatusChange(request.id, 'pending')}
+              >
+                Mark as Pending
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                disabled={request.doc_status === 'approved'}
+                onClick={() => onStatusChange(request.id, 'approved')}
+              >
+                Mark as Approved
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                disabled={request.doc_status === 'completed'}
+                onClick={() => onStatusChange(request.id, 'completed')}
+              >
+                Mark as Completed
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                disabled={request.doc_status === 'cancelled'}
+                onClick={() => onStatusChange(request.id, 'cancelled')}
+              >
+                Mark as Cancelled
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </TableCell>
+    </TableRow>
   );
 };
