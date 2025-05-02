@@ -6,7 +6,6 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { DashboardEvents } from "@/components/dashboard/DashboardEvents";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Badge } from "@/components/ui/badge";
 
 interface ActivityEventsSectionProps {
   activitiesFilters: {
@@ -27,7 +26,6 @@ interface ActivityEventsSectionProps {
   isRecentActivitiesOpen: boolean;
   isUpcomingEventsOpen: boolean;
   newEventsCount: number;
-  newTasksCount: number;
   setIsRecentActivitiesOpen: (isOpen: boolean) => void;
   setIsUpcomingEventsOpen: (isOpen: boolean) => void;
 }
@@ -38,7 +36,6 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
   isRecentActivitiesOpen,
   isUpcomingEventsOpen,
   newEventsCount,
-  newTasksCount,
   setIsRecentActivitiesOpen,
   setIsUpcomingEventsOpen
 }) => {
@@ -55,21 +52,14 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
               <CardTitle>Recent Activity</CardTitle>
               <CardDescription>Latest actions across all projects</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              {newTasksCount > 0 && (
-                <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
-                  {newTasksCount} new
-                </Badge>
-              )}
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  {isRecentActivitiesOpen ? 
-                    <ChevronUp className="h-4 w-4" /> : 
-                    <ChevronDown className="h-4 w-4" />
-                  }
-                </Button>
-              </CollapsibleTrigger>
-            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isRecentActivitiesOpen ? 
+                  <ChevronUp className="h-4 w-4" /> : 
+                  <ChevronDown className="h-4 w-4" />
+                }
+              </Button>
+            </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="pt-4">
@@ -90,21 +80,14 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
               <CardTitle>Upcoming Events</CardTitle>
               <CardDescription>Events happening soon</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              {newEventsCount > 0 && (
-                <Badge variant="default" className="bg-purple-500 hover:bg-purple-600">
-                  {newEventsCount} new
-                </Badge>
-              )}
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  {isUpcomingEventsOpen ? 
-                    <ChevronUp className="h-4 w-4" /> : 
-                    <ChevronDown className="h-4 w-4" />
-                  }
-                </Button>
-              </CollapsibleTrigger>
-            </div>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isUpcomingEventsOpen ? 
+                  <ChevronUp className="h-4 w-4" /> : 
+                  <ChevronDown className="h-4 w-4" />
+                }
+              </Button>
+            </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="pt-4">
