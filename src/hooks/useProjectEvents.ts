@@ -57,8 +57,28 @@ export function useProjectEvents(projectId: string) {
     };
   }, [projectId, queryClient]);
 
+  // Add an explicit check for events access
+  const { data: eventsAccessible, isLoading: checkingAccess } = useQuery({
+    queryKey: ["project_events_access", projectId],
+    queryFn: async () => {
+      // Test if we can actually query the events table
+      const { data, error } = await supabase
+        .from('project_events')
+        .select('id')
+        .eq('project_id', projectId)
+        .limit(1);
+      
+      if (error) {
+        console.error("Access check for project events failed:", error);
+        return false;
+      }
+      
+      return true;
+    },
+  });
+
   // Query to check if the current user has edit access to the project
-  const { data: hasEditAccess } = useQuery({
+  const { data: hasEditAccess, isLoading: checkingEditAccess } = useQuery({
     queryKey: ["project_edit_access", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -191,6 +211,8 @@ export function useProjectEvents(projectId: string) {
 
   return {
     hasEditAccess,
+    eventsAccessible,
+    isLoading: checkingAccess || checkingEditAccess,
     createEvent,
     updateEvent,
     deleteEvent,

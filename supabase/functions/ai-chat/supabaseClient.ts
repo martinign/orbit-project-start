@@ -9,5 +9,9 @@ export const createAdminClient = () => {
     throw new Error('Missing Supabase URL or service role key');
   }
 
-  return createClient(supabaseUrl, supabaseServiceRoleKey);
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      persistSession: false,
+    }
+  });
 };
