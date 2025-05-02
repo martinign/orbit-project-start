@@ -29,7 +29,7 @@ interface MemberInvitationData {
   profiles?: {
     full_name: string | null;
     last_name: string | null;
-    email: string | null;
+    email?: string | null;
   } | null;
 }
 
@@ -79,7 +79,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           
           const { data: profileData } = await supabase
             .from("profiles")
-            .select("full_name, last_name, email")
+            .select("full_name, last_name")
             .eq("id", invitation.invitation_recipient_id)
             .single();
             
@@ -91,7 +91,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
       );
       
       console.log("Invitations with profiles:", invitationsWithProfiles);
-      return invitationsWithProfiles as MemberInvitationData[];
+      return invitationsWithProfiles as unknown as MemberInvitationData[];
     },
     enabled: open,
   });
@@ -119,7 +119,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
       .join(" ")
       .trim();
       
-    return name || invitation.profiles.email || "Unknown";
+    return name || "Unknown";
   };
 
   return (
