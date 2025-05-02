@@ -57,7 +57,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         {hasProjectAccess && (
           <Button 
             onClick={handleCreateNote} 
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-blue-500 hover:bg-blue-600 text-white"
             disabled={!user}
           >
             <Plus className="mr-2 h-4 w-4" />

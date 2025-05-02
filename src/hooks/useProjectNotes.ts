@@ -1,9 +1,9 @@
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
 
 interface ProjectNote {
   id: string;
@@ -25,6 +25,8 @@ export function useProjectNotes(projectId: string) {
   const { data: hasProjectAccess } = useQuery({
     queryKey: ["project_access", projectId],
     queryFn: async () => {
+      if (!projectId) return false;
+      
       const { data, error } = await supabase
         .rpc('has_project_access', { project_id: projectId });
       
@@ -32,8 +34,10 @@ export function useProjectNotes(projectId: string) {
         console.error("Error checking project access:", error);
         return false;
       }
+      
       return !!data;
     },
+    enabled: !!projectId,
   });
 
   // Query to fetch project notes
@@ -51,8 +55,10 @@ export function useProjectNotes(projectId: string) {
         throw error;
       }
       
+      console.info("Notes count from query:", data?.length);
       return data as ProjectNote[];
     },
+    enabled: !!projectId,
   });
 
   // Mutation to create a note
