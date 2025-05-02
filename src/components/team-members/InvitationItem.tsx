@@ -35,25 +35,6 @@ export const InvitationItem = ({
     return [profile.full_name, profile.last_name].filter(Boolean).join(" ") || "Unknown";
   };
 
-  const renderProjectInfo = () => {
-    const project = invitation.projects;
-    
-    if (!project) return "Unknown Project";
-    
-    // For billable projects: Display project_number and Sponsor
-    if (project.project_type === "billable") {
-      return (
-        <>{project.project_number} - {project.Sponsor || "No sponsor specified"}</>
-      );
-    }
-    // For non-billable projects: Display project_number as "Project Title"
-    else {
-      return (
-        <>Project Title: {project.project_number}</>
-      );
-    }
-  };
-
   return (
     <div
       key={invitation.member_invitation_id}
@@ -62,7 +43,7 @@ export const InvitationItem = ({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-medium">
-            {renderProjectInfo()}
+            {invitation.projects?.project_number} - {invitation.projects?.Sponsor || invitation.projects?.protocol_number}
           </h3>
           <p className="text-sm text-muted-foreground">
             From: {formatName(invitation.profiles)}

@@ -13,8 +13,8 @@ export const useInvitationsCount = () => {
       const { count, error } = await supabase
         .from("member_invitations")
         .select("*", { count: "exact", head: true })
-        .eq("invitation_recipient_id", user.user.id)
-        .eq("invitation_status", "pending");
+        .eq("invitee_id", user.user.id)
+        .eq("status", "pending");
 
       if (error) {
         console.error("Error fetching invitations count:", error);
