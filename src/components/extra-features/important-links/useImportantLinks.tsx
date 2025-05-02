@@ -1,37 +1,52 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { ImportantLink } from './ImportantLinksTable';
 import { LinkFormValues } from './ImportantLinkForm';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useLinksState } from './state/useLinksState';
+import { useDialogHandlers } from './handlers/useDialogHandlers';
+import { 
+  fetchImportantLinks, 
+  addImportantLink,
+  updateImportantLink,
+  deleteImportantLink
+} from './api/importantLinksApi';
 
 export const useImportantLinks = (projectId?: string) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [links, setLinks] = useState<ImportantLink[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentLink, setCurrentLink] = useState<ImportantLink | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { 
+    links, 
+    setLinks,
+    isLoading, 
+    setIsLoading,
+    isSubmitting,
+    setIsSubmitting,
+    currentLink,
+    setCurrentLink,
+    isAddDialogOpen,
+    setIsAddDialogOpen,
+    isEditDialogOpen,
+    setIsEditDialogOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+  } = useLinksState();
+
+  const { openEditDialog, openDeleteDialog } = useDialogHandlers(
+    setCurrentLink,
+    setIsEditDialogOpen,
+    setIsDeleteDialogOpen
+  );
 
   const fetchLinks = async () => {
     if (!projectId) return;
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('project_important_links')
-        .select('*')
-        .eq('link_project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await fetchImportantLinks(projectId);
       console.log("Fetched important links:", data);
-      setLinks(data || []);
+      setLinks(data);
     } catch (error) {
       console.error('Error fetching important links:', error);
       toast({
@@ -73,21 +88,7 @@ export const useImportantLinks = (projectId?: string) => {
     
     setIsSubmitting(true);
     try {
-      // Make sure to explicitly use the link_ prefixed column names
-      const { error } = await supabase
-        .from('project_important_links')
-        .insert({
-          link_project_id: projectId,
-          link_title: values.title,
-          link_url: values.url,
-          link_description: values.description || null,
-          user_id: user.id,
-        });
-
-      if (error) {
-        console.error('Insert error details:', error);
-        throw error;
-      }
+      await addImportantLink(values, projectId, user.id);
       
       toast({
         title: 'Success',
@@ -112,16 +113,7 @@ export const useImportantLinks = (projectId?: string) => {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('project_important_links')
-        .update({
-          link_title: values.title,
-          link_url: values.url,
-          link_description: values.description || null,
-        })
-        .eq('id', currentLink.id);
-
-      if (error) throw error;
+      await updateImportantLink(values, currentLink.id);
       
       toast({
         title: 'Success',
@@ -147,12 +139,7 @@ export const useImportantLinks = (projectId?: string) => {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('project_important_links')
-        .delete()
-        .eq('id', currentLink.id);
-
-      if (error) throw error;
+      await deleteImportantLink(currentLink.id);
       
       toast({
         title: 'Success',
@@ -171,16 +158,6 @@ export const useImportantLinks = (projectId?: string) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const openEditDialog = (link: ImportantLink) => {
-    setCurrentLink(link);
-    setIsEditDialogOpen(true);
-  };
-
-  const openDeleteDialog = (link: ImportantLink) => {
-    setCurrentLink(link);
-    setIsDeleteDialogOpen(true);
   };
 
   return {
