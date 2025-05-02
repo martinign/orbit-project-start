@@ -5,6 +5,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNewItems } from '@/hooks/useNewItems';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ProjectNote = {
   id: string;
@@ -26,6 +27,10 @@ type NoteItemProps = {
 const NoteItem = ({ note, onEdit, onDelete, hasEditAccess }: NoteItemProps) => {
   const { newItemsCount, markItemViewed } = useNewItems(note.project_id);
   const isNew = newItemsCount['note'] > 0;
+  const { user } = useAuth();
+  
+  // Check if the current user is the creator of this note
+  const isNoteOwner = user?.id === note.user_id;
 
   React.useEffect(() => {
     const handleViewItem = async () => {
@@ -47,7 +52,7 @@ const NoteItem = ({ note, onEdit, onDelete, hasEditAccess }: NoteItemProps) => {
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <h4 className="font-semibold text-lg mb-2 line-clamp-2">{note.title}</h4>
-          {hasEditAccess && (
+          {isNoteOwner && (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={(e) => {
                 e.stopPropagation();

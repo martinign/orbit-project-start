@@ -21,15 +21,15 @@ export function useProjectNotes(projectId: string) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Query to check if the current user has edit access to the project
-  const { data: hasEditAccess } = useQuery({
-    queryKey: ["project_edit_access", projectId],
+  // Check if the current user has project access (is a project member)
+  const { data: hasProjectAccess } = useQuery({
+    queryKey: ["project_access", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('has_project_edit_access', { project_id: projectId });
+        .rpc('has_project_access', { project_id: projectId });
       
       if (error) {
-        console.error("Error checking project edit access:", error);
+        console.error("Error checking project access:", error);
         return false;
       }
       return !!data;
@@ -159,7 +159,7 @@ export function useProjectNotes(projectId: string) {
   return {
     notes,
     isLoading: isLoading || loading,
-    hasEditAccess,
+    hasProjectAccess,
     createNote,
     updateNote,
     deleteNote,

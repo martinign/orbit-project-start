@@ -13,7 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProjectNotes({ projectId }: { projectId: string }) {
   const { user } = useAuth();
-  const { notes, isLoading, hasEditAccess } = useProjectNotes(projectId);
+  const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
     isCreateDialogOpen,
     setIsCreateDialogOpen,
@@ -54,7 +54,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold">Project Notes</h3>
-        {hasEditAccess && (
+        {hasProjectAccess && (
           <Button 
             onClick={handleCreateNote} 
             className="bg-blue-500 hover:bg-blue-600"
@@ -73,10 +73,10 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
           notes={notes} 
           onEditNote={handleEditNote} 
           onDeleteConfirmation={handleDeleteConfirmation}
-          hasEditAccess={!!hasEditAccess}
+          hasEditAccess={!!hasProjectAccess}
         />
       ) : (
-        <NotesEmptyState onCreateNote={hasEditAccess ? handleCreateNote : undefined} />
+        <NotesEmptyState onCreateNote={hasProjectAccess ? handleCreateNote : undefined} />
       )}
 
       {/* Dialog components */}
