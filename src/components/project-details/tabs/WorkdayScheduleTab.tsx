@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Clock, Edit, Trash2, Filter, Search, Users } from 'lucide-react';
+import { CalendarIcon, Plus, Clock, Edit, Trash2, Filter, Search } from 'lucide-react';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Select,
@@ -30,8 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TeamHoursComparisonView } from './TeamHoursComparisonView';
 
 interface WorkdayScheduleTabProps {
   projectId: string;
@@ -48,7 +47,6 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<string>('time-entries');
   
   const { timeEntries, isLoading: timeEntriesLoading, addTimeEntry, updateTimeEntry, deleteTimeEntry } = useWorkdayTimeEntries(projectId);
   
@@ -208,88 +206,71 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
   
   return (
     <div className="p-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 max-w-[400px] mb-6">
-          <TabsTrigger value="time-entries" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" /> Time Entries
-          </TabsTrigger>
-          <TabsTrigger value="team-hours" className="flex items-center gap-2">
-            <Users className="h-4 w-4" /> Team Hours
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="time-entries" className="space-y-4">
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Time Entries</CardTitle>
-                  <CardDescription>
-                    Track time spent on tasks with workday codes
-                  </CardDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search tasks..."
-                      className="pl-8 w-full sm:w-[200px]"
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <Select
-                      value={statusFilter}
-                      onValueChange={setStatusFilter}
-                    >
-                      <SelectTrigger className="w-full sm:w-[180px]">
-                        <SelectValue placeholder="Filter by status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        {availableStatuses.map(status => (
-                          <SelectItem key={status} value={status}>
-                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Workday Schedule</CardTitle>
+              <CardDescription>
+                Track time spent on tasks with workday codes
+              </CardDescription>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tasks..."
+                  className="pl-8 w-full sm:w-[200px]"
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                {filteredTasks.map((task) => (
-                  <TaskTimeEntryCard
-                    key={task.id}
-                    task={task}
-                    timeEntries={timeEntriesByTask[task.id] || []}
-                    totalHours={taskTotalHours[task.id] || 0}
-                    onAddEntry={() => openAddTimeEntryDialog(task.id)}
-                    onEditEntry={openEditTimeEntryDialog}
-                    onDeleteEntry={deleteTimeEntry}
-                  />
-                ))}
-                
-                {filteredTasks.length === 0 && (
-                  <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <Clock className="h-12 w-12 mb-2 opacity-20" />
-                    <p className="text-lg font-medium">No matching tasks found</p>
-                    <p className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</p>
-                  </div>
-                )}
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {availableStatuses.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="team-hours" className="space-y-4">
-          <TeamHoursComparisonView projectId={projectId} />
-        </TabsContent>
-      </Tabs>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-8">
+            {filteredTasks.map((task) => (
+              <TaskTimeEntryCard
+                key={task.id}
+                task={task}
+                timeEntries={timeEntriesByTask[task.id] || []}
+                totalHours={taskTotalHours[task.id] || 0}
+                onAddEntry={() => openAddTimeEntryDialog(task.id)}
+                onEditEntry={openEditTimeEntryDialog}
+                onDeleteEntry={deleteTimeEntry}
+              />
+            ))}
+            
+            {filteredTasks.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Clock className="h-12 w-12 mb-2 opacity-20" />
+                <p className="text-lg font-medium">No matching tasks found</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Add Time Entry Dialog */}
       <Dialog open={isAddingTimeEntry} onOpenChange={setIsAddingTimeEntry}>
@@ -534,3 +515,4 @@ const TaskTimeEntryCard: React.FC<TaskTimeEntryCardProps> = ({
     </Card>
   );
 };
+
