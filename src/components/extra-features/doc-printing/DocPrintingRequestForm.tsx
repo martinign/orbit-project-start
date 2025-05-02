@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,12 +65,20 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
   const docType = form.watch('doc_type');
 
   const handleSubmit = (values: FormValues) => {
+    // Ensure all required properties are included for NewDocRequest
     const docRequestData: NewDocRequest = {
-      ...values,
+      doc_type: values.doc_type,
+      doc_request_type: values.doc_request_type,
+      doc_title: values.doc_title,
+      doc_version: values.doc_version || null,
+      doc_delivery_address: values.doc_delivery_address || null,
+      doc_description: values.doc_description || null,
+      doc_assigned_to: values.doc_assigned_to || null,
       doc_project_id: projectId,
       doc_status: initialData?.doc_status || 'pending',
       // Convert date object to string if it exists
       doc_due_date: values.doc_due_date ? values.doc_due_date.toISOString() : null,
+      doc_comments: values.doc_comments || null,
     };
     
     onSubmit(docRequestData);
