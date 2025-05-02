@@ -1,6 +1,4 @@
 
-// src/components/tasks/timeline/TimelineView.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
   format,
@@ -13,6 +11,7 @@ import {
 import { TaskDetailsDialog } from './timeline/TaskDetailsDialog';
 import { TimelineTaskList } from './timeline/TimelineTaskList';
 import { TimelineTaskBar } from './timeline/TimelineTaskBar';
+import { SubtaskTimelineBar } from './timeline/SubtaskTimelineBar';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -23,6 +22,7 @@ import { useTextWidth } from '@/hooks/useTextWidth';
 import { toast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { useSubtasksTimeline, SubtaskWithMeta } from '@/hooks/useSubtasksTimeline';
 
 interface Task {
   id: string;
@@ -47,6 +47,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     []
   );
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedSubtask, setSelectedSubtask] = useState<SubtaskWithMeta | null>(null);
+
+  // Get subtasks and expansion state
+  const { 
+    hasSubtasks, 
+    getSubtasksForTask, 
+    isTaskExpanded, 
+    toggleTaskExpanded
+  } = useSubtasksTimeline(tasks);
 
   // Measure for list width
   const titles = tasks.map((t) => t.title);
@@ -95,6 +104,31 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       });
     }
   }, [tasks]);
+
+  // Handle clicking on a task
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setSelectedSubtask(null);
+  };
+
+  // Handle clicking on a subtask
+  const handleSubtaskClick = (subtask: SubtaskWithMeta) => {
+    setSelectedSubtask(subtask);
+    const parentTask = tasks.find(t => t.id === subtask.parent_task_id) || null;
+    setSelectedTask(parentTask);
+  };
+
+  // Handle toggling a task's expanded state
+  const handleToggleExpand = (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleTaskExpanded(taskId);
+  };
+
+  // Close the dialog
+  const handleCloseDialog = () => {
+    setSelectedTask(null);
+    setSelectedSubtask(null);
+  };
 
   if (isLoading) return <div className="text-center py-6">Loading tasks…</div>;
   if (!tasks.length) return <div className="text-center py-6">No tasks found.</div>;
@@ -183,19 +217,78 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                         (1000 * 60 * 60 * 24)
                     );
                     const duration = Math.max(1, rawDur);
+                    
+                    // Check if this task has subtasks
+                    const taskHasSubtasks = hasSubtasks(task.id);
+                    const isExpanded = isTaskExpanded(task.id);
+                    
+                    // Get subtasks if expanded
+                    const subtasks = isExpanded ? getSubtasksForTask(task.id) : [];
+                    
+                    // Calculate row height based on expanded state
+                    const rowHeight = isExpanded && subtasks.length > 0 
+                      ? 33 + (subtasks.length * 25) 
+                      : 33;
 
                     return (
-                      <div key={task.id} className="h-[33px] relative">
+                      <div key={task.id} className="relative" style={{ height: `${rowHeight}px` }}>
+                        {/* Main task bar */}
                         <TimelineTaskBar
                           task={task}
                           style={{
                             left: `${offsetDays * dayPct}%`,
                             width: `${duration * dayPct}%`,
                           }}
-                          onClick={() => setSelectedTask(task)}
+                          onClick={() => handleTaskClick(task)}
                           durationDays={duration}
                           isCompleted={completed}
+                          hasSubtasks={taskHasSubtasks}
+                          isExpanded={isExpanded}
+                          onToggleExpand={(e) => handleToggleExpand(task.id, e)}
                         />
+                        
+                        {/* Render subtasks if expanded */}
+                        {isExpanded && subtasks.map((subtask, index) => {
+                          const subtaskStart = new Date(subtask.created_at);
+                          const subtaskEnd = subtask.updated_at 
+                            ? new Date(subtask.updated_at) 
+                            : today;
+                          const subtaskCompleted = subtask.status === 'completed';
+                          
+                          const subtaskOffsetDays = Math.max(
+                            0,
+                            Math.floor((subtaskStart.getTime() - days[0].getTime()) / (1000 * 60 * 60 * 24))
+                          );
+                          const subtaskRawDur = Math.ceil(
+                            ((subtaskCompleted ? subtaskEnd : today).getTime() - subtaskStart.getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                          const subtaskDuration = Math.max(1, subtaskRawDur);
+                          
+                          return (
+                            <div 
+                              key={subtask.id} 
+                              className="absolute" 
+                              style={{ 
+                                top: `${33 + (index * 25)}px`, 
+                                left: '15px', 
+                                right: 0,
+                                height: '25px'
+                              }}
+                            >
+                              <SubtaskTimelineBar
+                                subtask={subtask}
+                                style={{
+                                  left: `${subtaskOffsetDays * dayPct}%`,
+                                  width: `${subtaskDuration * dayPct}%`,
+                                }}
+                                onClick={() => handleSubtaskClick(subtask)}
+                                durationDays={subtaskDuration}
+                                isCompleted={subtaskCompleted}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
@@ -216,7 +309,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       <TaskDetailsDialog
         task={selectedTask}
         open={!!selectedTask}
-        onOpenChange={() => setSelectedTask(null)}
+        onOpenChange={handleCloseDialog}
       />
     </div>
   );

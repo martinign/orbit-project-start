@@ -3,6 +3,8 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { useSubtasks } from '@/hooks/useSubtasks';
+import { Separator } from '@/components/ui/separator';
 
 interface Task {
   id: string;
@@ -25,6 +27,8 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { subtasks, isLoading } = useSubtasks(task?.id || '');
+  
   if (!task) return null;
 
   const getStatusColor = () => {
@@ -45,10 +49,20 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+  
+  const getSubtaskStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in progress': return 'bg-blue-100 text-blue-800';
+      case 'stucked': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{task.title}</DialogTitle>
         </DialogHeader>
@@ -84,6 +98,35 @@ export const TaskDetailsDialog: React.FC<TaskDetailsDialogProps> = ({
               </div>
             )}
           </div>
+          
+          {/* Subtasks section */}
+          {subtasks && subtasks.length > 0 && (
+            <div className="mt-4">
+              <Separator className="my-2" />
+              <h4 className="text-sm font-medium mb-2">Subtasks ({subtasks.length})</h4>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                {subtasks.map(subtask => (
+                  <div key={subtask.id} className="bg-slate-50 p-2 rounded-md border text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{subtask.title}</span>
+                      <Badge variant="outline" className={getSubtaskStatusColor(subtask.status)}>
+                        {subtask.status}
+                      </Badge>
+                    </div>
+                    {subtask.description && (
+                      <p className="text-xs text-muted-foreground mt-1">{subtask.description}</p>
+                    )}
+                    {subtask.due_date && (
+                      <p className="text-xs mt-1">
+                        <span className="font-medium">Due:</span>{' '}
+                        {format(new Date(subtask.due_date), 'MMM d, yyyy')}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

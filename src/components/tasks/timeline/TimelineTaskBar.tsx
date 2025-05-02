@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { User, Clock } from 'lucide-react';
+import { User, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TimelineTaskBarProps {
   task: {
@@ -25,6 +25,9 @@ interface TimelineTaskBarProps {
   durationDays: number;
   isCompleted: boolean;
   completionDate?: string;
+  hasSubtasks?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: (e: React.MouseEvent) => void;
 }
 
 export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
@@ -34,6 +37,9 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
   durationDays,
   isCompleted,
   completionDate,
+  hasSubtasks = false,
+  isExpanded = false,
+  onToggleExpand
 }) => {
   const { data: userProfile } = useUserProfile(task.user_id);
   const startDate = new Date(task.created_at);
@@ -61,6 +67,17 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
       default: return 'bg-gray-500 text-white';
     }
   };
+
+  const handleClick = (e: React.MouseEvent) => {
+    onClick();
+  };
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleExpand) {
+      onToggleExpand(e);
+    }
+  };
   
   return (
     <TooltipProvider>
@@ -68,9 +85,9 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
         <TooltipTrigger asChild>
           <Card
             className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-sm cursor-pointer transition-colors border
-              ${getStatusColor()}`}
+              ${getStatusColor()} ${hasSubtasks ? 'pr-6' : ''}`}
             style={style}
-            onClick={onClick}
+            onClick={handleClick}
           >
             {durationDays > 3 && (
               <div className="px-2 text-xs font-medium truncate flex items-center h-full">
@@ -81,6 +98,18 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   </span>
                 )}
               </div>
+            )}
+            
+            {hasSubtasks && (
+              <button 
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 bg-white bg-opacity-70 rounded-full hover:bg-opacity-100"
+                onClick={handleExpandClick}
+              >
+                {isExpanded ? 
+                  <ChevronUp className="h-3 w-3" /> : 
+                  <ChevronDown className="h-3 w-3" />
+                }
+              </button>
             )}
           </Card>
         </TooltipTrigger>
@@ -112,6 +141,13 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                   <User className="inline h-3 w-3 mr-1" />
                   <span className="text-muted-foreground">Created by:</span>{' '}
                   <span className="ml-1">{userProfile.displayName}</span>
+                </p>
+              )}
+              
+              {/* Show if task has subtasks */}
+              {hasSubtasks && (
+                <p className="col-span-2 text-xs italic mt-1">
+                  {isExpanded ? "Click to collapse subtasks" : "Click to expand subtasks"}
                 </p>
               )}
             </div>
