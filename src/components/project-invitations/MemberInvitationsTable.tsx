@@ -54,17 +54,18 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted':
-        return <Badge variant="success">Accepted</Badge>;
+        return <Badge className="bg-green-500">Accepted</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
       case 'pending':
-        return <Badge variant="warning">Pending</Badge>;
+        return <Badge className="bg-yellow-500">Pending</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
 
   const formatName = (profile: { full_name: string | null, last_name: string | null }) => {
+    if (!profile) return 'Unknown User';
     return profile.full_name || 'Unknown User';
   };
 

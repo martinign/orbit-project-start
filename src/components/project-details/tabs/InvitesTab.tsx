@@ -53,11 +53,11 @@ export const InvitesTab: React.FC<InvitesTabProps> = ({ projectId }) => {
         <CardTitle>Project Invitations</CardTitle>
         <CardDescription>
           View and manage project invitations. You can assign roles:
-          <ul className="mt-2 ml-4 list-disc text-sm">
-            <li>Owner - Full project control and ownership</li>
-            <li>Admin - Can manage team members and most settings</li>
-          </ul>
         </CardDescription>
+        <ul className="mt-2 ml-4 list-disc text-sm">
+          <li>Owner - Full project control and ownership</li>
+          <li>Admin - Can manage team members and most settings</li>
+        </ul>
       </CardHeader>
       <CardContent>
         <MemberInvitationsTable projectId={projectId} />

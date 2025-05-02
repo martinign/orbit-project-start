@@ -38,6 +38,7 @@ export const useMemberInvitations = (projectId: string | null) => {
         .eq("member_project_id", projectId);
 
       if (error) throw error;
+      console.log("Fetched invitations:", data);
       return data as unknown as MemberInvitation[];
     },
     enabled: !!projectId,
