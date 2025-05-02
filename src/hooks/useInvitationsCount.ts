@@ -11,7 +11,7 @@ export const useInvitationsCount = () => {
       if (!user.user) return 0;
 
       const { count, error } = await supabase
-        .from("project_invitations")
+        .from("member_invitations")
         .select("*", { count: "exact", head: true })
         .eq("invitee_id", user.user.id)
         .eq("status", "pending");
@@ -33,7 +33,7 @@ export const useInvitationsCount = () => {
         {
           event: "*",
           schema: "public",
-          table: "project_invitations",
+          table: "member_invitations",
         },
         () => {
           refetch();

@@ -19,12 +19,12 @@ export interface ProjectInvitation {
 
 export const useProjectInvitations = (projectId: string | null) => {
   return useQuery({
-    queryKey: ["project_invitations_with_profiles", projectId],
+    queryKey: ["member_invitations_with_profiles", projectId],
     queryFn: async () => {
       if (!projectId) return [];
 
       const { data, error } = await supabase
-        .from("project_invitations")
+        .from("member_invitations")
         .select(`
           id,
           status,
