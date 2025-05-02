@@ -23,11 +23,13 @@ export function useNewSurveyResponses() {
     if (newCount > 0 && isMartin) {
       setHasNewResponses(true);
       toast.info('New survey response submitted');
+      console.log('Setting hasNewResponses to true because newCount =', newCount);
     }
   }, [newCount, isMartin]);
 
   // Function to reset the "new responses" indicator
   const clearNewResponsesIndicator = () => {
+    console.log('Clearing new responses indicator');
     setHasNewResponses(false);
     resetNewResponsesCount();
   };

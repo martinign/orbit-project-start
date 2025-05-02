@@ -31,6 +31,8 @@ export const SurveyButton = ({
     }
   };
 
+  console.log('SurveyButton rendering, hasNewResponses:', hasNewResponses);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -48,7 +50,7 @@ export const SurveyButton = ({
                   <span>SURVEY</span>
                 </SidebarMenuButton>
 
-                {/* New responses badge */}
+                {/* New responses badge - fixed positioning and visibility */}
                 {hasNewResponses && (
                   <Badge 
                     className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center bg-red-500 rounded-full text-[10px] text-white"

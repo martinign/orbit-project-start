@@ -46,13 +46,14 @@ export function useSurveyResponsesCount() {
     table: 'survey_responses',
     event: 'INSERT',
     onRecordChange: () => {
+      console.log('Realtime survey response detected!');
       // Increment the counts
       setCount(prev => prev + 1);
       
       // Only increment new responses count for Martin
       if (isMartin) {
         setNewResponsesCount(prev => prev + 1);
-        console.log('New survey response received, incrementing new responses count');
+        console.log('New survey response received, incrementing new responses count:', newResponsesCount + 1);
       }
       
       // Refetch to ensure count stays in sync
@@ -62,6 +63,7 @@ export function useSurveyResponsesCount() {
 
   // Reset the new responses counter
   const resetNewResponsesCount = () => {
+    console.log('Resetting new responses count from', newResponsesCount, 'to 0');
     setNewResponsesCount(0);
   };
 
