@@ -22,28 +22,21 @@ export const ExtraFeaturesCard: React.FC<ExtraFeaturesCardProps> = ({ projectId,
     setLocalFeatures(features);
   }, [features]);
   
-  // Listen for storage events to update the card immediately
+  // Listen for feature update events specific to this project
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'extraFeatures' && e.newValue) {
-        const updatedFeatures = JSON.parse(e.newValue);
-        setLocalFeatures(updatedFeatures);
-      }
-    };
-    
-    // Also listen for custom events from the dialog
     const handleFeatureUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.projectId === projectId) {
         setLocalFeatures(e.detail.features);
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    // Listen for project-specific custom events
     window.addEventListener('featureUpdate', handleFeatureUpdate as EventListener);
+    document.addEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('featureUpdate', handleFeatureUpdate as EventListener);
+      document.removeEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     };
   }, [projectId]);
   

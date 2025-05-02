@@ -43,44 +43,56 @@ const ProjectDetailsView = () => {
   // Counter to force re-render of tabs when features change
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
-  // Keep local features in sync
+  // Keep local features in sync with hooks
   useEffect(() => {
     setLocalFeatures(features);
   }, [features]);
 
-  // Listen for extra features changes via storage events
+  // Listen for extra features changes specifically for this project
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'extraFeatures') {
-        // Force a component update when extra features change
-        setForceUpdateCounter(prev => prev + 1);
-      }
-    };
+    if (!id) return;
     
     const handleFeatureUpdate = (e: CustomEvent) => {
       if (e.detail && e.detail.projectId === id) {
         setLocalFeatures(e.detail.features);
         setForceUpdateCounter(prev => prev + 1);
+        
+        // If a new feature was enabled, consider switching to that tab
+        if (e.detail.features) {
+          const newEnabledFeatures = Object.entries(e.detail.features)
+            .filter(([name, enabled]) => 
+              enabled && !localFeatures[name as keyof typeof localFeatures]
+            )
+            .map(([name]) => name);
+          
+          // Switch to the first newly enabled feature tab if any
+          if (newEnabledFeatures.length > 0) {
+            const featureTabMap: Record<string, string> = {
+              'importantLinks': 'important-links',
+              'siteInitiationTracker': 'site-initiation',
+              'repository': 'repository',
+              'docPrinting': 'doc-printing',
+              'billOfMaterials': 'bill-of-materials',
+              'designSheet': 'design-sheet'
+            };
+            
+            const newTabId = featureTabMap[newEnabledFeatures[0]];
+            if (newTabId) {
+              setActiveTab(newTabId);
+            }
+          }
+        }
       }
     };
     
-    const handleExtraFeaturesChanged = (e: CustomEvent) => {
-      if (e.detail && e.detail.projectId === id) {
-        setLocalFeatures(e.detail.features);
-        setForceUpdateCounter(prev => prev + 1);
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('featureUpdate', handleFeatureUpdate as EventListener);
-    document.addEventListener('extraFeaturesChanged', handleExtraFeaturesChanged as EventListener);
+    document.addEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('featureUpdate', handleFeatureUpdate as EventListener);
-      document.removeEventListener('extraFeaturesChanged', handleExtraFeaturesChanged as EventListener);
+      document.removeEventListener('extraFeaturesChanged', handleFeatureUpdate as EventListener);
     };
-  }, [id, setActiveTab]);
+  }, [id, localFeatures, setActiveTab]);
 
   // If the user is viewing the invites tab but is not the project owner,
   // redirect them to the tasks tab
