@@ -32,9 +32,9 @@ export function InvitationsStatisticsCard({
       let contactsQuery = supabase.from("project_contacts").select("id, project:project_id(project_type)");
 
       // Base queries for invitations
-      let pendingQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "pending");
-      let acceptedQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "accepted");
-      let rejectedQuery = supabase.from("project_invitations").select("id, project:project_id(project_type)").eq("status", "rejected");
+      let pendingQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "pending");
+      let acceptedQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "accepted");
+      let rejectedQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "rejected");
 
       // Apply project filter if provided
       if (filters.projectId && filters.projectId !== "all") {

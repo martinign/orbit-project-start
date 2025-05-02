@@ -20,7 +20,7 @@ interface InvitationData {
   id: string;
   status: string;
   created_at: string;
-  permission_level: "owner" | "admin" | "edit" | "read_only";
+  permission_level: "owner" | "admin" ;
   project_id: string;
   inviter_id: string;
   invitee_id: string;
