@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeSubscription } from './useRealtimeSubscription';
 import { format } from 'date-fns';
+import { useState, useEffect, useMemo } from 'react';
 
 export interface TeamAssignedHour {
   id: string;
@@ -40,7 +41,7 @@ export function useTeamAssignedHours(projectId?: string) {
         .from('team_assigned_hours')
         .select(`
           *,
-          user_profile:user_id(full_name, last_name),
+          user_profile:profiles!team_assigned_hours_user_id_fkey(full_name, last_name),
           task:task_id(title)
         `)
         .eq('project_id', projectId)
@@ -168,7 +169,7 @@ export function useTeamAssignedHours(projectId?: string) {
   });
   
   // Group team assigned hours by month for easy display
-  const groupedByMonth = React.useMemo(() => {
+  const groupedByMonth = useMemo(() => {
     const groups: Record<string, TeamAssignedHour[]> = {};
     
     teamAssignedHours.forEach(entry => {
@@ -183,7 +184,7 @@ export function useTeamAssignedHours(projectId?: string) {
   }, [teamAssignedHours]);
   
   // Calculate total hours by month
-  const totalsByMonth = React.useMemo(() => {
+  const totalsByMonth = useMemo(() => {
     const totals: Record<string, number> = {};
     
     teamAssignedHours.forEach(entry => {
@@ -198,7 +199,7 @@ export function useTeamAssignedHours(projectId?: string) {
   }, [teamAssignedHours]);
   
   // Calculate total hours by user
-  const totalsByUser = React.useMemo(() => {
+  const totalsByUser = useMemo(() => {
     const totals: Record<string, number> = {};
     
     teamAssignedHours.forEach(entry => {
