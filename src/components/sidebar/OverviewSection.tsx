@@ -1,15 +1,12 @@
-
 import { LayoutDashboard, Package, Puzzle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
-
 interface OverviewSectionProps {
   totalCount: number;
   onDashboardClick: () => void;
   onExtraFeaturesClick: (e: React.MouseEvent) => void;
 }
-
 export const OverviewSection = ({
   totalCount,
   onDashboardClick,
@@ -31,10 +28,7 @@ export const OverviewSection = ({
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Extra Features" className="hover:bg-indigo-500/10 transition-colors duration-200" onClick={onExtraFeaturesClick}>
-              <Puzzle className="text-purple-500" />
-              <span>Extra Features</span>
-            </SidebarMenuButton>
+            
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
