@@ -27,17 +27,19 @@ export function useProjectsForSelector() {
           
         if (error) throw error;
         
-        if (data) {
-          const projectOptions = data.map(project => ({
-            value: project.id,
-            label: project.protocol_title 
-              ? `${project.project_number} - ${project.protocol_title}` 
-              : project.project_number
-          }));
-          setProjects(projectOptions);
-        }
+        // Ensure we always have a valid array of projects
+        const projectOptions = data ? data.map(project => ({
+          value: project.id,
+          label: project.protocol_title 
+            ? `${project.project_number} - ${project.protocol_title}` 
+            : project.project_number
+        })) : [];
+        
+        setProjects(projectOptions);
       } catch (error) {
         console.error('Error fetching projects:', error);
+        // Set empty array on error to prevent undefined
+        setProjects([]);
       } finally {
         setIsLoading(false);
       }

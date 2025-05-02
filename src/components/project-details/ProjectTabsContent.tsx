@@ -49,7 +49,14 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   refetchTasks,
   contactSearchQuery,
   setContactSearchQuery,
-  extraFeatures
+  extraFeatures = {
+    importantLinks: false,
+    siteInitiationTracker: false,
+    repository: false,
+    docPrinting: false,
+    billOfMaterials: false,
+    designSheet: false
+  }
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
   const { user } = useAuth();

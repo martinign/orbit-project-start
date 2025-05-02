@@ -1,8 +1,10 @@
 
 import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ListTodo, CalendarDays, Users, FileText, UserRound, Mail, Link, Flag, Archive, Printer, FileBarChart2, FileSpreadsheet } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface ProjectContentTabsProps {
   activeTab: string;
@@ -16,100 +18,54 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   activeTab,
   onTabChange,
   children,
-  extraFeatures,
+  extraFeatures = {
+    importantLinks: false,
+    siteInitiationTracker: false,
+    repository: false,
+    docPrinting: false,
+    billOfMaterials: false,
+    designSheet: false
+  },
   isProjectOwner
 }) => {
   return (
-    <Tabs defaultValue="tasks" value={activeTab} onValueChange={onTabChange}>
-      <div className="overflow-x-auto pb-2">
-        <TabsList className="w-full max-w-fit">
-          <TabsTrigger value="tasks" className="flex items-center gap-2">
-            <ListTodo className="h-4 w-4" />
-            <span className="hidden sm:inline">Tasks</span>
-            <span className="sm:hidden">Tasks</span>
-          </TabsTrigger>
-          
-          <TabsTrigger value="notes" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Notes</span>
-            <span className="sm:hidden">Notes</span>
-          </TabsTrigger>
-          
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" />
-            <span className="hidden sm:inline">Calendar</span>
-            <span className="sm:hidden">Cal</span>
-          </TabsTrigger>
-          
-          <TabsTrigger value="contacts" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Contacts</span>
-            <span className="sm:hidden">Contacts</span>
-          </TabsTrigger>
-          
-          <TabsTrigger value="team" className="flex items-center gap-2">
-            <UserRound className="h-4 w-4" />
-            <span className="hidden sm:inline">Team</span>
-            <span className="sm:hidden">Team</span>
-          </TabsTrigger>
-          
-          {isProjectOwner && (
-            <TabsTrigger value="invites" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Invites</span>
-              <span className="sm:hidden">Invites</span>
-            </TabsTrigger>
-          )}
+    <Tabs value={activeTab} onValueChange={onTabChange}>
+      <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12 w-full">
+        <TabsTrigger value="tasks" className="text-xs md:text-sm">Tasks</TabsTrigger>
+        <TabsTrigger value="notes" className="text-xs md:text-sm">Notes</TabsTrigger>
+        <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
+        <TabsTrigger value="contacts" className="text-xs md:text-sm">Contacts</TabsTrigger>
+        <TabsTrigger value="team" className="text-xs md:text-sm">Team</TabsTrigger>
+        
+        {isProjectOwner && (
+          <TabsTrigger value="invites" className="text-xs md:text-sm">Invites</TabsTrigger>
+        )}
+        
+        {extraFeatures?.importantLinks && (
+          <TabsTrigger value="important-links" className="text-xs md:text-sm">Links</TabsTrigger>
+        )}
+        
+        {extraFeatures?.siteInitiationTracker && (
+          <TabsTrigger value="site-initiation" className="text-xs md:text-sm">Site Tracker</TabsTrigger>
+        )}
+        
+        {extraFeatures?.repository && (
+          <TabsTrigger value="repository" className="text-xs md:text-sm">Repository</TabsTrigger>
+        )}
+        
+        {extraFeatures?.docPrinting && (
+          <TabsTrigger value="doc-printing" className="text-xs md:text-sm">Doc Printing</TabsTrigger>
+        )}
+        
+        {extraFeatures?.billOfMaterials && (
+          <TabsTrigger value="bill-of-materials" className="text-xs md:text-sm">Bill of Materials</TabsTrigger>
+        )}
+        
+        {extraFeatures?.designSheet && (
+          <TabsTrigger value="design-sheet" className="text-xs md:text-sm">Design Sheet</TabsTrigger>
+        )}
+      </TabsList>
 
-          {extraFeatures?.importantLinks && (
-            <TabsTrigger value="important-links" className="flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              <span className="hidden sm:inline">Important Links</span>
-              <span className="sm:hidden">Links</span>
-            </TabsTrigger>
-          )}
-
-          {extraFeatures?.siteInitiationTracker && (
-            <TabsTrigger value="site-initiation" className="flex items-center gap-2">
-              <Flag className="h-4 w-4" />
-              <span className="hidden sm:inline">Site Initiation</span>
-              <span className="sm:hidden">Site</span>
-            </TabsTrigger>
-          )}
-
-          {extraFeatures?.repository && (
-            <TabsTrigger value="repository" className="flex items-center gap-2">
-              <Archive className="h-4 w-4" />
-              <span className="hidden sm:inline">Repository</span>
-              <span className="sm:hidden">Repo</span>
-            </TabsTrigger>
-          )}
-          
-          {extraFeatures?.docPrinting && (
-            <TabsTrigger value="doc-printing" className="flex items-center gap-2">
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Doc Printing</span>
-              <span className="sm:hidden">Print</span>
-            </TabsTrigger>
-          )}
-          
-          {extraFeatures?.billOfMaterials && (
-            <TabsTrigger value="bill-of-materials" className="flex items-center gap-2">
-              <FileBarChart2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Bill of Materials</span>
-              <span className="sm:hidden">BOM</span>
-            </TabsTrigger>
-          )}
-          
-          {extraFeatures?.designSheet && (
-            <TabsTrigger value="design-sheet" className="flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              <span className="hidden sm:inline">Design Sheet</span>
-              <span className="sm:hidden">Design</span>
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </div>
       {children}
     </Tabs>
   );

@@ -31,7 +31,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
   const { features, setFeatures, saveProjectFeatures } = useExtraFeatures(projectId);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { projects, isLoading: projectsLoading } = useProjectsForSelector();
+  const { projects = [], isLoading: projectsLoading } = useProjectsForSelector();
   const [selectedFeatures, setSelectedFeatures] = useState({
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
@@ -167,6 +167,9 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
     return project ? project.label : projectId;
   };
 
+  // Filter available projects to exclude already selected ones
+  const availableProjects = projects.filter(p => !selectedProjects.includes(p.value));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -179,7 +182,7 @@ export function ExtraFeaturesDialog({ open, onOpenChange, projectId }: ExtraFeat
           <div className="flex items-center mb-2">
             <div className="relative w-full">
               <Combobox
-                options={projects.filter(p => !selectedProjects.includes(p.value))}
+                options={availableProjects}
                 value=""
                 onChange={handleSelectProject}
                 placeholder="Select projects..."
