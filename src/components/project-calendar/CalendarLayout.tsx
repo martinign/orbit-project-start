@@ -21,6 +21,7 @@ interface CalendarLayoutProps {
   onEditEvent: (event: Event) => void;
   isAuthenticated: boolean;
   currentUserId?: string;
+  lastUpdate?: number; // Add lastUpdate prop
 }
 
 export function CalendarLayout({
@@ -32,26 +33,31 @@ export function CalendarLayout({
   onDeleteEvent,
   onEditEvent,
   isAuthenticated,
-  currentUserId
+  currentUserId,
+  lastUpdate
 }: CalendarLayoutProps) {
+  // Using lastUpdate in a React.useMemo to force re-evaluation when it changes
+  const memoizedEvents = React.useMemo(() => events, [events, lastUpdate]);
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
       <CalendarCard
         selectedDate={selectedDate}
         onSelect={onSelectDate}
         hasEditAccess={hasEditAccess}
-        events={events}
+        events={memoizedEvents}
         isAuthenticated={isAuthenticated}
       />
       
       <EventsGrid
-        events={events}
+        events={memoizedEvents}
         selectedDate={selectedDate}
         hasEditAccess={hasEditAccess}
         onDelete={onDeleteEvent}
         onEdit={onEditEvent}
         isLoading={eventsLoading}
         currentUserId={currentUserId}
+        key={`events-grid-${lastUpdate}`} // Use key to force re-render
       />
     </div>
   );

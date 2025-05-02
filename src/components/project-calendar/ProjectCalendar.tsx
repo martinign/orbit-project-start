@@ -1,7 +1,5 @@
 
-import React, { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 import { EventDialog } from './EventDialog';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarLayout } from './CalendarLayout';
@@ -12,7 +10,6 @@ interface ProjectCalendarProps {
 }
 
 export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
-  const queryClient = useQueryClient();
   const {
     selectedDate,
     selectedUserId,
@@ -29,33 +26,12 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
-    user
+    user,
+    lastUpdate // Include the lastUpdate for forcing re-renders
   } = useCalendarEvents(projectId);
   
-  // Add a useEffect for real-time subscriptions
-  useEffect(() => {
-    // Create a channel for project events changes
-    const channel = supabase.channel(`project_events_${projectId}`)
-      .on('postgres_changes', {
-        event: '*', // Listen for all events: INSERT, UPDATE, DELETE
-        schema: 'public',
-        table: 'project_events',
-        filter: `project_id=eq.${projectId}`
-      }, (payload) => {
-        // Invalidate and refetch when any change happens
-        console.log('Project events changed, refreshing data:', payload);
-        queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-        queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
-      })
-      .subscribe();
-
-    // Cleanup function
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [projectId, queryClient]);
+  // We've moved the real-time subscription to the useCalendarEvents hook
+  // to avoid duplicate subscriptions and ensure consistent state management
 
   return (
     <div className="space-y-4">
@@ -75,6 +51,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         onEditEvent={handleEditEvent}
         isAuthenticated={!!user}
         currentUserId={user?.id}
+        lastUpdate={lastUpdate} // Pass down to force re-renders
       />
 
       <EventDialog

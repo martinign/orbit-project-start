@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,8 @@ export const useCalendarEvents = (projectId: string) => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null); // Export the state and setter
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  // Add a state to track real-time updates
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
   const queryClient = useQueryClient();
@@ -31,8 +33,9 @@ export const useCalendarEvents = (projectId: string) => {
   
   // Query for events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
-    queryKey: ['project_events', projectId],
+    queryKey: ['project_events', projectId, lastUpdate], // Add lastUpdate to the query key
     queryFn: async () => {
+      console.log(`Fetching events for project ${projectId}, update: ${lastUpdate}`);
       const { data, error } = await supabase
         .from('project_events')
         .select('*')
@@ -42,6 +45,40 @@ export const useCalendarEvents = (projectId: string) => {
       return data as Event[];
     },
   });
+
+  // Setup real-time subscription for events
+  useEffect(() => {
+    console.log(`Setting up real-time subscription for project ${projectId} events`);
+    
+    const channel = supabase.channel(`calendar_events_${projectId}_${Date.now()}`)
+      .on('postgres_changes', {
+        event: '*', // Listen for all events: INSERT, UPDATE, DELETE
+        schema: 'public',
+        table: 'project_events',
+        filter: `project_id=eq.${projectId}`
+      }, (payload) => {
+        console.log('Project events changed, refreshing data:', payload);
+        
+        // Force a refresh by updating the lastUpdate state
+        setLastUpdate(Date.now());
+        
+        // Clear any cached queries and force refetch
+        queryClient.removeQueries({ queryKey: ['project_events', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project_events', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['project_events_count', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
+        queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
+      })
+      .subscribe((status) => {
+        console.log(`Subscription status for project ${projectId} events: ${status}`);
+      });
+
+    // Cleanup function
+    return () => {
+      console.log(`Removing real-time subscription for project ${projectId} events`);
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
 
   // Query for team members
   const { data: teamMembers = [] } = useQuery({
@@ -107,6 +144,7 @@ export const useCalendarEvents = (projectId: string) => {
     deleteEvent.mutate(id, {
       onSuccess: () => {
         // Re-invalidate these queries specifically to ensure UI refresh
+        setLastUpdate(Date.now()); // Force UI update
         queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
         queryClient.invalidateQueries({ queryKey: ['new_events_count'] });
       }
@@ -127,24 +165,36 @@ export const useCalendarEvents = (projectId: string) => {
       return;
     }
 
-    if (editingEvent) {
-      await updateEvent.mutateAsync({
-        id: editingEvent.id,
-        title: data.title,
-        description: data.description,
-        project_id: projectId,
-        event_date: data.event_date?.toISOString(),
-      });
-    } else {
-      await createEvent.mutateAsync({
-        title: data.title,
-        description: data.description,
-        project_id: projectId,
-        event_date: selectedDate?.toISOString(),
+    try {
+      if (editingEvent) {
+        await updateEvent.mutateAsync({
+          id: editingEvent.id,
+          title: data.title,
+          description: data.description,
+          project_id: projectId,
+          event_date: data.event_date?.toISOString(),
+        });
+      } else {
+        await createEvent.mutateAsync({
+          title: data.title,
+          description: data.description,
+          project_id: projectId,
+          event_date: selectedDate?.toISOString(),
+        });
+      }
+      setIsEventDialogOpen(false);
+      setEditingEvent(null);
+      
+      // Force UI update after mutation
+      setLastUpdate(Date.now());
+    } catch (error) {
+      console.error("Event submission error:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save the event. Please try again.',
+        variant: 'destructive',
       });
     }
-    setIsEventDialogOpen(false);
-    setEditingEvent(null);
   };
 
   const filteredEvents = events.filter(event => {
@@ -169,6 +219,7 @@ export const useCalendarEvents = (projectId: string) => {
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
-    user
+    user,
+    lastUpdate // Expose lastUpdate to force re-renders
   };
 };

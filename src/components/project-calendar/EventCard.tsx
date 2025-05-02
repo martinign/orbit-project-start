@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useEffect } from "react";
 
 interface Event {
   id: string;
@@ -31,6 +32,11 @@ export function EventCard({
   
   // Check if the current user is the creator of the event
   const isEventCreator = currentUserId === event.user_id;
+
+  // Debug logging to track permission state
+  useEffect(() => {
+    console.log(`EventCard for ${event.title} - creator: ${event.user_id}, current user: ${currentUserId}, can edit: ${isEventCreator}`);
+  }, [event.id, event.title, event.user_id, currentUserId, isEventCreator]);
 
   const getCreatorName = () => {
     if (isLoading) return 'Loading...';
@@ -61,15 +67,17 @@ export function EventCard({
             variant="ghost"
             size="icon"
             onClick={onEdit}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
           >
-            <Edit className="h-4 w-4 text-blue-500" />
+            <Edit className="h-4 w-4 text-white" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={onDelete}
+            className="bg-red-500 hover:bg-red-600 text-white"
           >
-            <Trash2 className="h-4 w-4 text-red-500" />
+            <Trash2 className="h-4 w-4 text-white" />
           </Button>
         </div>
       )}
