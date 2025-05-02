@@ -195,6 +195,7 @@ export type Database = {
           doc_delivery_address: string | null
           doc_description: string | null
           doc_due_date: string | null
+          doc_process_number_range: string | null
           doc_project_id: string
           doc_request_type: string
           doc_status: string
@@ -212,6 +213,7 @@ export type Database = {
           doc_delivery_address?: string | null
           doc_description?: string | null
           doc_due_date?: string | null
+          doc_process_number_range?: string | null
           doc_project_id: string
           doc_request_type: string
           doc_status?: string
@@ -229,6 +231,7 @@ export type Database = {
           doc_delivery_address?: string | null
           doc_description?: string | null
           doc_due_date?: string | null
+          doc_process_number_range?: string | null
           doc_project_id?: string
           doc_request_type?: string
           doc_status?: string

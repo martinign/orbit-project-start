@@ -21,6 +21,7 @@ export interface DocRequest {
   doc_due_date?: string | null;
   doc_comments?: string | null;
   doc_status: DocStatus;
+  doc_process_number_range?: string | null;
   user_id: string;
   created_at: string;
   updated_at: string;

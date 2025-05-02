@@ -66,6 +66,7 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
             <TableRow>
               <TableHead>Title</TableHead>
               <TableHead>Request Type</TableHead>
+              <TableHead>Process Range</TableHead>
               <TableHead>Delivery Address</TableHead>
               <TableHead>Due Date</TableHead>
               <TableHead>Status</TableHead>
@@ -75,7 +76,7 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
           <TableBody>
             {requests.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={7} className="h-24 text-center">
                   No document requests found
                 </TableCell>
               </TableRow>
@@ -93,6 +94,7 @@ export const DocPrintingRequests: React.FC<DocPrintingRequestsProps> = ({
                   <TableCell>
                     {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
                   </TableCell>
+                  <TableCell>{request.doc_process_number_range || '-'}</TableCell>
                   <TableCell>{request.doc_delivery_address || '-'}</TableCell>
                   <TableCell>
                     {request.doc_due_date

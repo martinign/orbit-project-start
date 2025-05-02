@@ -27,6 +27,7 @@ const formSchema = z.object({
   doc_assigned_to: z.string().optional().nullable(),
   doc_due_date: z.date().optional().nullable(),
   doc_comments: z.string().optional(),
+  doc_process_number_range: z.string().optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -58,6 +59,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       doc_assigned_to: initialData?.doc_assigned_to || null,
       doc_due_date: initialData?.doc_due_date ? new Date(initialData.doc_due_date) : null,
       doc_comments: initialData?.doc_comments || '',
+      doc_process_number_range: initialData?.doc_process_number_range || '',
     }
   });
 
@@ -79,6 +81,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       // Convert date object to string if it exists
       doc_due_date: values.doc_due_date ? values.doc_due_date.toISOString() : null,
       doc_comments: values.doc_comments || null,
+      doc_process_number_range: values.doc_process_number_range || null,
     };
     
     onSubmit(docRequestData);
@@ -162,14 +165,46 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
         />
 
         {docType === 'SLB' && (
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="doc_version"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SLB Version</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter SLB version" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="doc_process_number_range"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Process Number Range</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 1-100" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {docType === 'general' && (
           <FormField
             control={form.control}
-            name="doc_version"
+            name="doc_process_number_range"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SLB Version</FormLabel>
+                <FormLabel>Process Number Range</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter SLB version" {...field} disabled={isSubmitting} />
+                  <Input placeholder="e.g., 1-100" {...field} disabled={isSubmitting} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
