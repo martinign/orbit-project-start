@@ -1,88 +1,49 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LoaderIcon } from "lucide-react";
 
-interface ProjectSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  required?: boolean;
+interface Project {
+  id: string;
+  project_number: string;
+  Sponsor?: string;
 }
 
-const ProjectSelector = ({ 
-  value, 
-  onChange, 
-  disabled = false,
-  required = false 
-}: ProjectSelectorProps) => {
-  const { toast } = useToast();
-  const [projects, setProjects] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+interface ProjectSelectorProps {
+  projects: Project[] | undefined;
+  selectedProject: string;
+  onProjectChange: (value: string) => void;
+  isLoading: boolean;
+}
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("projects")
-          .select("id, project_number, Sponsor, project_type")
-          .order("project_number", { ascending: true });
-        
-        if (error) throw error;
-        setProjects(data || []);
-      } catch (error: any) {
-        console.error("Error fetching projects:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load projects",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, [toast]);
-
+export function ProjectSelector({ 
+  projects, 
+  selectedProject, 
+  onProjectChange, 
+  isLoading 
+}: ProjectSelectorProps) {
   return (
-    <Select
-      value={value}
-      onValueChange={onChange}
-      disabled={isLoading || disabled}
-    >
-      <SelectTrigger className="mt-1">
-        <SelectValue placeholder={`Select a project${required ? ' *' : ''}`} />
+    <Select value={selectedProject} onValueChange={onProjectChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select a project *" />
       </SelectTrigger>
       <SelectContent>
         {isLoading ? (
-          <SelectItem value="loading">
-            Loading projects...
-          </SelectItem>
-        ) : projects.length > 0 ? (
-          projects.map((project) => (
+          <div className="flex items-center justify-center p-2">
+            <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
+            Loading...
+          </div>
+        ) : projects?.length === 0 ? (
+          <div className="p-2 text-center text-sm text-muted-foreground">
+            No projects found
+          </div>
+        ) : (
+          projects?.map((project) => (
             <SelectItem key={project.id} value={project.id}>
-              {project.project_type === 'non-billable' 
-                ? project.project_number 
-                : `${project.project_number} - ${project.Sponsor}`}
+              {project.project_number} {project.Sponsor ? `- ${project.Sponsor}` : ''}
             </SelectItem>
           ))
-        ) : (
-          <SelectItem value="none">
-            No projects found
-          </SelectItem>
         )}
       </SelectContent>
     </Select>
   );
-};
-
-export default ProjectSelector;
+}
