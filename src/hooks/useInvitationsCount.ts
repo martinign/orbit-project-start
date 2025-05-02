@@ -34,6 +34,7 @@ export const useInvitationsCount = () => {
           event: "*",
           schema: "public",
           table: "member_invitations",
+          filter: `invitation_recipient_id=eq.${supabase.auth.getUser().then(({ data }) => data.user?.id)}`,
         },
         () => {
           refetch();
