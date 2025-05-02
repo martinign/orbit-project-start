@@ -44,7 +44,6 @@ const MemberInvitationsList = ({ projectId }: MemberInvitationsListProps) => {
       const { data, error } = await supabase
         .from("member_invitations")
         .select(`
-
           member_invitation_id,
           invitation_recipient_id,
           member_role,

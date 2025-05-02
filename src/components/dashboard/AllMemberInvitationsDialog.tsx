@@ -28,6 +28,7 @@ interface MemberInvitationData {
   projects: {
     project_number: string;
     Sponsor: string;
+    project_type: string;
   } | null;
   profiles_sender: {
     full_name: string | null;
@@ -56,7 +57,8 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           invitation_recipient_id,
           projects:member_project_id (
             project_number,
-            Sponsor
+            Sponsor,
+            project_type
           ),
           profiles_sender:invitation_sender_id (
             full_name,
@@ -122,6 +124,17 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
     }
   };
 
+  // Helper function to display project information based on project_type
+  const getProjectDisplay = (project: { project_number: string; Sponsor: string; project_type: string } | null) => {
+    if (!project) return "Unknown Project";
+    
+    if (project.project_type === "billable") {
+      return `${project.project_number} - ${project.Sponsor || "No Sponsor"}`;
+    } else {
+      return `Project Title: ${project.project_number}`;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
@@ -150,7 +163,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <h3 className="font-medium">
-                        {invitation.projects?.project_number} - {invitation.projects?.Sponsor}
+                        {getProjectDisplay(invitation.projects)}
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         Invitee: {formatName(invitation.profiles_recipient)}

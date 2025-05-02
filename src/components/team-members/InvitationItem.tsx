@@ -35,6 +35,18 @@ export const InvitationItem = ({
     return [profile.full_name, profile.last_name].filter(Boolean).join(" ") || "Unknown";
   };
 
+  const getProjectDisplay = () => {
+    if (!invitation.projects) return "Unknown Project";
+    
+    // Check the project_type to determine the display format
+    if (invitation.projects.project_type === "billable") {
+      return `${invitation.projects.project_number} - ${invitation.projects.Sponsor || ""}`;
+    } else {
+      // For non-billable projects, show project_number as "Project Title"
+      return `Project Title: ${invitation.projects.project_number}`;
+    }
+  };
+
   return (
     <div
       key={invitation.member_invitation_id}
@@ -43,7 +55,7 @@ export const InvitationItem = ({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-medium">
-            {invitation.projects?.project_number} - {invitation.projects?.Sponsor || invitation.projects?.protocol_number}
+            {getProjectDisplay()}
           </h3>
           <p className="text-sm text-muted-foreground">
             From: {formatName(invitation.profiles)}

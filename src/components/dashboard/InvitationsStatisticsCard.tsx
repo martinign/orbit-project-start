@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { Eye, Users, Contact } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { AllInvitationsDialog } from "./AllInvitationsDialog";
+
 interface InvitationsStatisticsCardProps {
   filters?: {
     projectId?: string;
@@ -15,6 +17,7 @@ interface InvitationsStatisticsCardProps {
     projectType?: string;
   };
 }
+
 export function InvitationsStatisticsCard({
   filters = {}
 }: InvitationsStatisticsCardProps) {
@@ -31,32 +34,35 @@ export function InvitationsStatisticsCard({
       // Query for contacts
       let contactsQuery = supabase.from("project_contacts").select("id, project:project_id(project_type)");
 
-      // Base queries for invitations
-      let pendingQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "pending");
-      let acceptedQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "accepted");
-      let rejectedQuery = supabase.from("member_invitations").select("id, project:project_id(project_type)").eq("status", "rejected");
+      // Base queries for invitations - using member_project_id not project_id
+      let pendingQuery = supabase.from("member_invitations").select("member_invitation_id").eq("invitation_status", "pending");
+      let acceptedQuery = supabase.from("member_invitations").select("member_invitation_id").eq("invitation_status", "accepted");
+      let rejectedQuery = supabase.from("member_invitations").select("member_invitation_id").eq("invitation_status", "rejected");
 
       // Apply project filter if provided
       if (filters.projectId && filters.projectId !== "all") {
-        pendingQuery = pendingQuery.eq("project_id", filters.projectId);
-        acceptedQuery = acceptedQuery.eq("project_id", filters.projectId);
-        rejectedQuery = rejectedQuery.eq("project_id", filters.projectId);
+        pendingQuery = pendingQuery.eq("member_project_id", filters.projectId);
+        acceptedQuery = acceptedQuery.eq("member_project_id", filters.projectId);
+        rejectedQuery = rejectedQuery.eq("member_project_id", filters.projectId);
         teamMembersQuery = teamMembersQuery.eq("project_id", filters.projectId);
         contactsQuery = contactsQuery.eq("project_id", filters.projectId);
       }
 
       // Apply date filters if provided
       if (filters.startDate) {
-        pendingQuery = pendingQuery.gte("updated_at", filters.startDate.toISOString());
-        acceptedQuery = acceptedQuery.gte("updated_at", filters.startDate.toISOString());
-        rejectedQuery = rejectedQuery.gte("updated_at", filters.startDate.toISOString());
+        pendingQuery = pendingQuery.gte("invitation_updated_at", filters.startDate.toISOString());
+        acceptedQuery = acceptedQuery.gte("invitation_updated_at", filters.startDate.toISOString());
+        rejectedQuery = rejectedQuery.gte("invitation_updated_at", filters.startDate.toISOString());
       }
+      
       if (filters.endDate) {
-        pendingQuery = pendingQuery.lte("updated_at", filters.endDate.toISOString());
-        acceptedQuery = acceptedQuery.lte("updated_at", filters.endDate.toISOString());
-        rejectedQuery = rejectedQuery.lte("updated_at", filters.endDate.toISOString());
+        pendingQuery = pendingQuery.lte("invitation_updated_at", filters.endDate.toISOString());
+        acceptedQuery = acceptedQuery.lte("invitation_updated_at", filters.endDate.toISOString());
+        rejectedQuery = rejectedQuery.lte("invitation_updated_at", filters.endDate.toISOString());
       }
+      
       const [pendingResult, acceptedResult, rejectedResult, teamMembersResult, contactsResult] = await Promise.all([pendingQuery, acceptedQuery, rejectedQuery, teamMembersQuery, contactsQuery]);
+      
       if (pendingResult.error || acceptedResult.error || rejectedResult.error || teamMembersResult.error || contactsResult.error) {
         throw new Error("Failed to fetch statistics");
       }
@@ -67,13 +73,12 @@ export function InvitationsStatisticsCard({
       let rejectedData = rejectedResult.data;
       let teamMembersData = teamMembersResult.data;
       let contactsData = contactsResult.data;
+
       if (filters.projectType && filters.projectType !== "all") {
-        pendingData = pendingData.filter(item => item.project?.project_type === filters.projectType);
-        acceptedData = acceptedData.filter(item => item.project?.project_type === filters.projectType);
-        rejectedData = rejectedData.filter(item => item.project?.project_type === filters.projectType);
         teamMembersData = teamMembersData.filter(item => item.project?.project_type === filters.projectType);
         contactsData = contactsData.filter(item => item.project?.project_type === filters.projectType);
       }
+
       return {
         pending: pendingData.length,
         accepted: acceptedData.length,
@@ -85,7 +90,9 @@ export function InvitationsStatisticsCard({
     },
     refetchOnWindowFocus: false
   });
-  return <Card>
+
+  return (
+    <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
@@ -95,11 +102,14 @@ export function InvitationsStatisticsCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading ? <div className="space-y-2">
+        {isLoading ? (
+          <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-4/5" />
-          </div> : <div className="space-y-4">
+          </div>
+        ) : (
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-blue-500" />
@@ -107,6 +117,7 @@ export function InvitationsStatisticsCard({
               </div>
               <span className="text-xl font-bold">{combinedStats?.teamMembers || 0}</span>
             </div>
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Contact className="h-5 w-5 text-green-500" />
@@ -115,9 +126,21 @@ export function InvitationsStatisticsCard({
               <span className="text-xl font-bold">{combinedStats?.contacts || 0}</span>
             </div>
             
-            {combinedStats?.total > 0}
-          </div>}
+            {combinedStats?.total > 0 && (
+              <Button 
+                variant="outline" 
+                className="w-full mt-2" 
+                size="sm"
+                onClick={() => setShowDialog(true)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Invitations ({combinedStats.total})
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
       <AllInvitationsDialog open={showDialog} onClose={() => setShowDialog(false)} filters={filters} />
-    </Card>;
+    </Card>
+  );
 }

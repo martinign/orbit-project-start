@@ -14,6 +14,7 @@ export interface MemberInvitationWithProject {
     project_number: string;
     Sponsor: string | null;
     protocol_number: string | null;
+    project_type: string;
   } | null;
   profiles: {
     id: string;
@@ -78,7 +79,7 @@ export const usePendingInvitations = (open: boolean) => {
       // 4. Fetch project details
       const { data: projectsData, error: projectsError } = await supabase
         .from("projects")
-        .select("id, project_number, Sponsor, protocol_number")
+        .select("id, project_number, Sponsor, protocol_number, project_type")
         .in("id", projectIds);
         
       if (projectsError) {
