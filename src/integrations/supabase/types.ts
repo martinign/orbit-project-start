@@ -67,6 +67,7 @@ export type Database = {
           member_invitation_id: string
           member_project_id: string
           member_role: string
+          updated_at: string | null
         }
         Insert: {
           invitation_created_at?: string
@@ -77,6 +78,7 @@ export type Database = {
           member_invitation_id?: string
           member_project_id: string
           member_role: string
+          updated_at?: string | null
         }
         Update: {
           invitation_created_at?: string
@@ -87,6 +89,7 @@ export type Database = {
           member_invitation_id?: string
           member_project_id?: string
           member_role?: string
+          updated_at?: string | null
         }
         Relationships: [
           {

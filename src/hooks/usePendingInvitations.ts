@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -132,49 +131,16 @@ export const usePendingInvitations = (open: boolean) => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("User not authenticated");
       
-      // 1. First update the invitation status
-      const { data: invitation, error: getError } = await supabase
-        .from("member_invitations")
-        .select("member_project_id, member_role")
-        .eq("member_invitation_id", invitationId)
-        .single();
-        
-      if (getError) throw getError;
-      
-      // 2. Update the invitation status using the correct field name
+      // Simply update the invitation status to accepted
+      // Our database trigger will handle adding the user to the team members
       const { error: updateError } = await supabase
         .from("member_invitations")
         .update({ 
           invitation_status: "accepted"
-          // No need to include updated_at as it doesn't exist in this table
         })
         .eq("member_invitation_id", invitationId);
         
       if (updateError) throw updateError;
-      
-      // 3. Add the user to project team members
-      if (invitation) {
-        // Get user profile info
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, last_name")
-          .eq("id", user.user.id)
-          .single();
-          
-        if (profileError) throw profileError;
-        
-        const { error: insertError } = await supabase
-          .from("project_team_members")
-          .insert({
-            project_id: invitation.member_project_id,
-            user_id: user.user.id,
-            full_name: profile?.full_name || user.user.email?.split('@')[0] || "Team Member",
-            last_name: profile?.last_name || "",
-            role: invitation.member_role,
-          });
-          
-        if (insertError) throw insertError;
-      }
     },
     onSuccess: () => {
       toast({
@@ -200,7 +166,6 @@ export const usePendingInvitations = (open: boolean) => {
         .from("member_invitations")
         .update({ 
           invitation_status: "rejected"
-          // No need to include updated_at as it doesn't exist in this table
         })
         .eq("member_invitation_id", invitationId);
         
