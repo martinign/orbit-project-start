@@ -41,7 +41,7 @@ const CreateNoteDialog = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: initialData.title,
-      content: initialData.content,
+      content: initialData.content || '',
     },
   });
 
@@ -49,7 +49,7 @@ const CreateNoteDialog = ({
     if (open) {
       form.reset({
         title: initialData.title,
-        content: initialData.content,
+        content: initialData.content || '',
       });
     }
   }, [open, initialData, form]);
@@ -112,7 +112,7 @@ const CreateNoteDialog = ({
               </Button>
               <Button 
                 type="submit" 
-                className="bg-blue-500 hover:bg-blue-600"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
                 disabled={!form.formState.isValid}
               >
                 Create Note

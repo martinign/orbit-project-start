@@ -50,6 +50,20 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleSaveNote = (data: { title: string; content: string }) => {
+    saveNewNote(data);
+  };
+
+  const handleUpdateNote = (data: { title: string; content: string }) => {
+    if (selectedNote) {
+      updateNote({
+        id: selectedNote.id,
+        title: data.title,
+        content: data.content
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -83,14 +97,14 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
       <CreateNoteDialog 
         open={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSave={saveNewNote}
+        onSave={handleSaveNote}
         initialData={{ title, content }}
       />
       
       <EditNoteDialog 
         open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
-        onUpdate={updateNote}
+        onUpdate={handleUpdateNote}
         title={title}
         setTitle={setTitle}
         content={content}

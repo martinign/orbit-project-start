@@ -16,7 +16,7 @@ export function useNoteOperations(projectId: string) {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const saveNewNote = async () => {
+  const saveNewNote = async (data: { title: string; content: string }) => {
     if (!projectId || !user) {
       toast({
         title: 'Error',
@@ -27,12 +27,12 @@ export function useNoteOperations(projectId: string) {
     }
     
     try {
-      const { data, error } = await supabase
+      const { data: savedData, error } = await supabase
         .from('project_notes')
         .insert({
           project_id: projectId,
-          title,
-          content,
+          title: data.title,
+          content: data.content,
           user_id: user.id,
         })
         .select();
@@ -50,7 +50,7 @@ export function useNoteOperations(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
       queryClient.invalidateQueries({ queryKey: ['new_items_count', projectId] });
-      return data;
+      return savedData;
     } catch (error) {
       console.error('Error creating note:', error);
       toast({
