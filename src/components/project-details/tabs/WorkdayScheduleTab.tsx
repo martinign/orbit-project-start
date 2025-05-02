@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, Clock, Edit, Trash2, Filter } from 'lucide-react';
+import { CalendarIcon, Plus, Clock, Edit, Trash2, Filter, Search } from 'lucide-react';
 import { getStatusBadge } from '@/utils/statusBadge';
 import {
   Select,
@@ -46,6 +46,7 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchFilter, setSearchFilter] = useState<string>('');
   
   const { timeEntries, isLoading: timeEntriesLoading, addTimeEntry, updateTimeEntry, deleteTimeEntry } = useWorkdayTimeEntries(projectId);
   
@@ -77,16 +78,21 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
     enabled: !!projectId && !!user
   });
 
-  // Filter tasks by status
+  // Filter tasks by status and search text
   const filteredTasks = React.useMemo(() => {
     if (!tasksWithWorkdayCodes) return [];
     
-    if (statusFilter === 'all') {
-      return tasksWithWorkdayCodes;
-    }
-    
-    return tasksWithWorkdayCodes.filter(task => task.status === statusFilter);
-  }, [tasksWithWorkdayCodes, statusFilter]);
+    return tasksWithWorkdayCodes.filter(task => {
+      // Apply status filter
+      const statusMatches = statusFilter === 'all' || task.status === statusFilter;
+      
+      // Apply search filter (case insensitive)
+      const searchMatches = !searchFilter || 
+        task.title.toLowerCase().includes(searchFilter.toLowerCase());
+      
+      return statusMatches && searchMatches;
+    });
+  }, [tasksWithWorkdayCodes, statusFilter, searchFilter]);
   
   // Extract unique statuses for filter
   const availableStatuses = React.useMemo(() => {
@@ -209,24 +215,35 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
                 Track time spent on tasks with workday codes
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {availableStatuses.map(status => (
-                    <SelectItem key={status} value={status}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tasks..."
+                  className="pl-8 w-full sm:w-[200px]"
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    {availableStatuses.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -243,6 +260,14 @@ export const WorkdayScheduleTab: React.FC<WorkdayScheduleTabProps> = ({ projectI
                 onDeleteEntry={deleteTimeEntry}
               />
             ))}
+            
+            {filteredTasks.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Clock className="h-12 w-12 mb-2 opacity-20" />
+                <p className="text-lg font-medium">No matching tasks found</p>
+                <p className="text-sm text-muted-foreground">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
