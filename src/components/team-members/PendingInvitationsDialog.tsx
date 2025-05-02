@@ -4,6 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { InvitationItem } from "./InvitationItem";
 import { usePendingInvitations } from "@/hooks/usePendingInvitations";
 import { useState } from "react";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PendingInvitationsDialogProps {
   open: boolean;

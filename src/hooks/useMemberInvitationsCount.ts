@@ -10,6 +10,9 @@ export const useMemberInvitationsCount = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return 0;
 
+      // Log the current user ID for debugging
+      console.log("Fetching invitation count for user:", user.user.id);
+
       const { count, error } = await supabase
         .from("member_invitations")
         .select("*", { count: "exact", head: true })
@@ -36,6 +39,7 @@ export const useMemberInvitationsCount = () => {
           table: "member_invitations",
         },
         () => {
+          console.log("Member invitations changed, refetching count");
           refetch();
         }
       )

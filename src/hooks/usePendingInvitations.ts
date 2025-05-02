@@ -36,6 +36,9 @@ export const usePendingInvitations = (open: boolean) => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return [];
       
+      // Debug the user ID
+      console.log("Current user ID:", user.user.id);
+      
       const { data, error } = await supabase
         .from("member_invitations")
         .select(`
@@ -56,10 +59,16 @@ export const usePendingInvitations = (open: boolean) => {
           )
         `)
         .eq("invitation_recipient_id", user.user.id)
-        .eq("invitation_status", "pending")
-        .order("invitation_created_at", { ascending: false });
+        .eq("invitation_status", "pending");
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching member invitations:", error);
+        return [];
+      }
+      
+      // Debug the returned data
+      console.log("Fetched invitations data:", data);
+      
       // Type cast to handle potential type mismatches
       return data as unknown as MemberInvitationWithProject[];
     },
