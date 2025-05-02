@@ -20,7 +20,6 @@ type CreateNoteDialogProps = {
   setTitle: (title: string) => void;
   content: string;
   setContent: (content: string) => void;
-  isUserIdAvailable: boolean;
 };
 
 const CreateNoteDialog = ({
@@ -31,7 +30,6 @@ const CreateNoteDialog = ({
   setTitle,
   content,
   setContent,
-  isUserIdAvailable,
 }: CreateNoteDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -73,7 +71,7 @@ const CreateNoteDialog = ({
           </Button>
           <Button 
             onClick={onSave} 
-            disabled={!title.trim() || !isUserIdAvailable} 
+            disabled={!title.trim()} 
             className="bg-blue-500 hover:bg-blue-600"
           >
             Create Note

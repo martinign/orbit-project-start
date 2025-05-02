@@ -20,9 +20,10 @@ type NotesListProps = {
   notes: ProjectNote[];
   onEditNote: (note: ProjectNote) => void;
   onDeleteConfirmation: (note: ProjectNote) => void;
+  hasEditAccess: boolean;
 };
 
-const NotesList = ({ notes, onEditNote, onDeleteConfirmation }: NotesListProps) => {
+const NotesList = ({ notes, onEditNote, onDeleteConfirmation, hasEditAccess }: NotesListProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {notes.map((note) => (
@@ -32,7 +33,8 @@ const NotesList = ({ notes, onEditNote, onDeleteConfirmation }: NotesListProps) 
               <NoteItem 
                 note={note} 
                 onEdit={onEditNote} 
-                onDelete={onDeleteConfirmation} 
+                onDelete={onDeleteConfirmation}
+                hasEditAccess={hasEditAccess}
               />
             </div>
           </HoverCardTrigger>
@@ -73,4 +75,3 @@ const NoteCreator = ({ userId }: { userId: string }) => {
 };
 
 export default NotesList;
-

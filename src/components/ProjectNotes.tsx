@@ -1,6 +1,5 @@
 
-import React, { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NotesList from './project-notes/NotesList';
@@ -10,10 +9,11 @@ import DeleteNoteDialog from './project-notes/DeleteNoteDialog';
 import NotesEmptyState from './project-notes/NotesEmptyState';
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteOperations } from '@/hooks/useNoteOperations';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProjectNotes({ projectId }: { projectId: string }) {
-  const [userId, setUserId] = React.useState<string | null>(null);
-  const { notes, isLoading } = useProjectNotes(projectId);
+  const { user } = useAuth();
+  const { notes, isLoading, hasEditAccess } = useProjectNotes(projectId);
   const {
     isCreateDialogOpen,
     setIsCreateDialogOpen,
@@ -31,20 +31,6 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     updateNote,
     deleteNote,
   } = useNoteOperations(projectId);
-
-  // Fetch user ID on component mount
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUserId(user?.id || null);
-      } catch (error) {
-        console.error('Error fetching user ID:', error);
-      }
-    };
-
-    fetchUserId();
-  }, []);
 
   const handleCreateNote = () => {
     setTitle('');
@@ -68,10 +54,16 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-semibold">Project Notes</h3>
-        <Button onClick={handleCreateNote} className="bg-blue-500 hover:bg-blue-600">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Note
-        </Button>
+        {hasEditAccess && (
+          <Button 
+            onClick={handleCreateNote} 
+            className="bg-blue-500 hover:bg-blue-600"
+            disabled={!user}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Note
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -80,22 +72,22 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
         <NotesList 
           notes={notes} 
           onEditNote={handleEditNote} 
-          onDeleteConfirmation={handleDeleteConfirmation} 
+          onDeleteConfirmation={handleDeleteConfirmation}
+          hasEditAccess={!!hasEditAccess}
         />
       ) : (
-        <NotesEmptyState onCreateNote={handleCreateNote} />
+        <NotesEmptyState onCreateNote={hasEditAccess ? handleCreateNote : undefined} />
       )}
 
       {/* Dialog components */}
       <CreateNoteDialog 
         open={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
-        onSave={() => userId && saveNewNote(userId)}
+        onSave={saveNewNote}
         title={title}
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        isUserIdAvailable={!!userId}
       />
       
       <EditNoteDialog 

@@ -33,7 +33,10 @@ export function useProjectNotes(projectId: string) {
           .eq('project_id', projectId)
           .order('created_at', { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching project notes:', error);
+          throw error;
+        }
         return data || [];
       } catch (error) {
         console.error('Error fetching project notes:', error);
@@ -45,6 +48,27 @@ export function useProjectNotes(projectId: string) {
         return [];
       } finally {
         setIsLoading(false);
+      }
+    },
+    enabled: !!projectId,
+  });
+
+  // Query to check if the current user has edit access to the project
+  const { data: hasEditAccess } = useQuery({
+    queryKey: ["project_edit_access", projectId],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .rpc('has_project_edit_access', { project_id: projectId });
+        
+        if (error) {
+          console.error("Error checking project edit access:", error);
+          return false;
+        }
+        return !!data;
+      } catch (error) {
+        console.error("Error checking edit access:", error);
+        return false;
       }
     },
     enabled: !!projectId,
@@ -87,6 +111,7 @@ export function useProjectNotes(projectId: string) {
   return {
     notes,
     isLoading: isLoading || notesLoading,
+    hasEditAccess,
     setNotes,
   };
 }
