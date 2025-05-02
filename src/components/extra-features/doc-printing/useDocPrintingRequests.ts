@@ -64,6 +64,11 @@ export const useDocPrintingRequests = (projectId: string) => {
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request created successfully');
+    },
+    onError: (error: Error) => {
+      console.error("Error creating document request:", error);
+      toast.error(`Failed to create request: ${error.message}`);
     }
   });
 
@@ -73,6 +78,10 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequest(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update request: ${error.message}`);
     }
   });
 
@@ -81,6 +90,10 @@ export const useDocPrintingRequests = (projectId: string) => {
     mutationFn: (id: string) => deleteDocRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document request deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete request: ${error.message}`);
     }
   });
 
@@ -90,6 +103,10 @@ export const useDocPrintingRequests = (projectId: string) => {
       updateDocRequestStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
+      toast.success('Document status updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update status: ${error.message}`);
     }
   });
 
