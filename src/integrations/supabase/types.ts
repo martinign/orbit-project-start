@@ -231,33 +231,33 @@ export type Database = {
       project_important_links: {
         Row: {
           created_at: string
-          created_by: string
           description: string | null
           id: string
           project_id: string
           title: string
           updated_at: string
           url: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          created_by: string
           description?: string | null
           id?: string
           project_id: string
           title: string
           updated_at?: string
           url: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          created_by?: string
           description?: string | null
           id?: string
           project_id?: string
           title?: string
           updated_at?: string
           url?: string
+          user_id?: string
         }
         Relationships: [
           {

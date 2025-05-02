@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -81,7 +80,7 @@ export const useImportantLinks = (projectId?: string) => {
           title: values.title,
           url: values.url,
           description: values.description || null,
-          created_by: user.id,
+          user_id: user.id,
         });
 
       if (error) throw error;

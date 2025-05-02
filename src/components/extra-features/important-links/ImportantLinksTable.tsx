@@ -17,7 +17,7 @@ export interface ImportantLink {
   title: string;
   url: string;
   description: string | null;
-  created_by: string;
+  user_id: string;
   created_at: string;
   updated_at: string;
 }
