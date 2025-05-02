@@ -57,47 +57,6 @@ export type Database = {
           },
         ]
       }
-      member_invitations: {
-        Row: {
-          invitation_created_at: string
-          invitation_recipient_id: string
-          invitation_sender_id: string
-          invitation_status: string
-          invitation_updated_at: string
-          member_invitation_id: string
-          member_project_id: string
-          member_role: string
-        }
-        Insert: {
-          invitation_created_at?: string
-          invitation_recipient_id: string
-          invitation_sender_id: string
-          invitation_status?: string
-          invitation_updated_at?: string
-          member_invitation_id?: string
-          member_project_id: string
-          member_role: string
-        }
-        Update: {
-          invitation_created_at?: string
-          invitation_recipient_id?: string
-          invitation_sender_id?: string
-          invitation_status?: string
-          invitation_updated_at?: string
-          member_invitation_id?: string
-          member_project_id?: string
-          member_role?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "member_invitations_member_project_id_fkey"
-            columns: ["member_project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string

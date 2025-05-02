@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, UserRound } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LoaderIcon } from "lucide-react";
 
@@ -21,13 +20,6 @@ interface Profile {
   id: string;
   full_name: string | null;
   last_name: string | null;
-  created_at: string;
-  avatar_url?: string | null;
-}
-
-interface SelectedProfile {
-  id: string;
-  role: "owner" | "admin";
 }
 
 interface Project {
@@ -36,204 +28,198 @@ interface Project {
   Sponsor?: string;
 }
 
-const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
-  const [projectId, setProjectId] = useState("");
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [selectedProfiles, setSelectedProfiles] = useState<Record<string, SelectedProfile>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+type PermissionLevel = "owner" | "admin";
+
+export const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
   const { toast } = useToast();
-  const { user } = useAuth();
-
-  // Fetch profiles when dialog opens
+  const queryClient = useQueryClient();
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>("admin");
+  const [loading, setLoading] = useState<boolean>(false);
+  
+  // Reset state when dialog opens/closes
   useEffect(() => {
-    if (open) {
-      fetchProfiles();
-      fetchProjects();
-    } else {
-      // Reset state when dialog closes
-      setSelectedProfiles({});
-      setProjectId("");
+    if (!open) {
+      setSelectedProject("");
       setSearchQuery("");
+      setSelectedUsers([]);
+      setPermissionLevel("admin");
     }
-  }, [open, user]);
+  }, [open]);
 
-  const fetchProjects = async () => {
-    if (!user) return;
-    
-    setIsLoadingProjects(true);
-    try {
+  // Fetch all projects for the current user
+  const { data: projects, isLoading: projectsLoading } = useQuery({
+    queryKey: ["user_projects"],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
       const { data, error } = await supabase
         .from("projects")
         .select("id, project_number, Sponsor")
-        .eq("user_id", user.id)
+        .eq("user_id", user.user.id)
         .order("project_number");
 
       if (error) throw error;
-      setProjects(data || []);
-    } catch (error: any) {
-      console.error("Error fetching projects:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch projects.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  };
+      return data as Project[];
+    },
+    enabled: open,
+  });
 
-  const fetchProfiles = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
+  // Fetch all profiles except current user
+  const { data: profiles, isLoading: profilesLoading } = useQuery({
+    queryKey: ["invite_profiles"],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .neq("id", user.id);
-      
-      if (error) throw error;
-      setProfiles(data || []);
-    } catch (error: any) {
-      console.error("Error fetching profiles:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch user profiles.",
-        variant: "destructive",
-      });
-      setProfiles([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        .select("id, full_name, last_name")
+        .neq("id", user.user.id)
+        .order("full_name");
 
-  const handleProfileToggle = (profileId: string) => {
-    setSelectedProfiles(prev => {
-      if (prev[profileId]) {
-        const { [profileId]: removed, ...rest } = prev;
-        return rest;
+      if (error) throw error;
+      return data as Profile[];
+    },
+    enabled: open,
+  });
+
+  // Filter profiles based on search query
+  const filteredProfiles = profiles?.filter(profile => {
+    const searchTerm = searchQuery.toLowerCase();
+    const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.toLowerCase();
+    return fullName.includes(searchTerm);
+  });
+
+  const handleUserSelect = (userId: string) => {
+    setSelectedUsers(prev => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId);
+      } else {
+        return [...prev, userId];
       }
-      return {
-        ...prev,
-        [profileId]: { id: profileId, role: "admin" }
-      };
     });
   };
 
-  const handleRoleChange = (profileId: string, role: "owner" | "admin") => {
-    setSelectedProfiles(prev => ({
-      ...prev,
-      [profileId]: { ...prev[profileId], role }
-    }));
-  };
-
   const handleInvite = async () => {
-    if (!projectId) {
+    if (!selectedProject) {
       toast({
-        title: "Error",
-        description: "Please select a project",
+        title: "Project Required",
+        description: "Please select a project to invite users to.",
         variant: "destructive",
       });
       return;
     }
 
-    const selectedProfileIds = Object.values(selectedProfiles);
-    
-    if (selectedProfileIds.length === 0) {
+    if (selectedUsers.length === 0) {
       toast({
-        title: "Error",
-        description: "Please select at least one user",
+        title: "No Users Selected",
+        description: "Please select at least one user to invite.",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      setIsSending(true);
-      
-      if (!user) throw new Error("User not authenticated");
+      setLoading(true);
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error("Not authenticated");
 
-      const invitations = selectedProfileIds.map(profile => ({
-        member_project_id: projectId,
-        invitation_sender_id: user.id,
-        invitation_recipient_id: profile.id,
-        member_role: profile.role,
-        invitation_status: 'pending'
+      // Create project invitations for each selected user
+      const invitations = selectedUsers.map(userId => ({
+        project_id: selectedProject,
+        inviter_id: user.user.id,
+        invitee_id: userId,
+        status: "pending",
+        permission_level: permissionLevel, // This now has the correct type
       }));
 
       const { error } = await supabase
-        .from('member_invitations')
+        .from("project_invitations")
         .insert(invitations);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Invitations sent to ${selectedProfileIds.length} users`,
+        description: `Invitations sent to ${selectedUsers.length} user(s).`,
       });
+
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ["project_invitations"] });
       
+      // Close dialog and reset state
       onClose();
+      
     } catch (error: any) {
-      console.error('Error sending invitations:', error);
+      console.error("Error sending invitations:", error);
       toast({
         title: "Error",
-        description: "Failed to send invitations. Please try again.",
+        description: error.message || "Failed to send invitations",
         variant: "destructive",
       });
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   };
 
-  const getInitials = (name: string | null): string => {
-    if (!name) return "?";
-    return name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+  // Generate initials for avatar
+  const getInitials = (profile: Profile) => {
+    const firstName = profile.full_name || '';
+    const lastName = profile.last_name || '';
+    
+    const firstInitial = firstName.charAt(0).toUpperCase();
+    const lastInitial = lastName.charAt(0).toUpperCase();
+    
+    return firstInitial + (lastInitial || '');
   };
 
-  // Filter profiles based on search query
-  const filteredProfiles = profiles.filter(profile => {
-    const fullName = `${profile.full_name || ''} ${profile.last_name || ''}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  // Generate random pastel color based on user id
+  const getAvatarColor = (userId: string) => {
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Generate pastel color
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 80%)`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Project Invites</DialogTitle>
+          <DialogTitle>Invite Members</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Project</label>
+        
+        <div className="space-y-4 py-4">
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Select Project</h3>
             <Select 
-              value={projectId} 
-              onValueChange={setProjectId}
-              disabled={isLoadingProjects}
+              value={selectedProject} 
+              onValueChange={setSelectedProject}
+              disabled={projectsLoading || projects?.length === 0}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a project *" />
               </SelectTrigger>
               <SelectContent>
-                {isLoadingProjects ? (
+                {projectsLoading ? (
                   <div className="flex items-center justify-center p-2">
                     <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
                     Loading...
                   </div>
-                ) : projects.length === 0 ? (
+                ) : projects?.length === 0 ? (
                   <div className="p-2 text-center text-sm text-muted-foreground">
                     No projects found
                   </div>
                 ) : (
-                  projects.map((project) => (
+                  projects?.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.project_number} {project.Sponsor ? `- ${project.Sponsor}` : ''}
                     </SelectItem>
@@ -242,91 +228,92 @@ const ProjectInvitesDialog = ({ open, onClose }: ProjectInvitesDialogProps) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Users</label>
-            <div className="relative mb-4">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search users..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            {isLoading ? (
-              <div className="py-4 text-center text-sm text-gray-500">Loading users...</div>
-            ) : filteredProfiles.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto space-y-2 border rounded-md p-2">
-                {filteredProfiles
-                  .sort((a, b) => {
-                    const nameA = `${a.full_name} ${a.last_name}`.toLowerCase();
-                    const nameB = `${b.full_name} ${b.last_name}`.toLowerCase();
-                    return nameA.localeCompare(nameB);
-                  })
-                  .map((profile) => (
+          
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Select Permission Level</h3>
+            <Select 
+              value={permissionLevel} 
+              onValueChange={(value: PermissionLevel) => setPermissionLevel(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select permission level *" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              <strong>Owner:</strong> Full control over the project, including deletion.
+              <br />
+              <strong>Admin:</strong> Can manage tasks and team members, but cannot delete the project.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-sm font-medium">Select Users</h3>
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="mb-2"
+            />
+            
+            <div className="border rounded-md max-h-60 overflow-y-auto">
+              {profilesLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <LoaderIcon className="h-4 w-4 animate-spin mr-2" />
+                  Loading users...
+                </div>
+              ) : filteredProfiles?.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No users found
+                </div>
+              ) : (
+                <div className="p-1">
+                  {filteredProfiles?.map((profile) => (
                     <div 
                       key={profile.id} 
-                      className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-md"
+                      className="flex items-center p-2 hover:bg-slate-100 rounded-sm"
                     >
-                      <Checkbox 
-                        id={`profile-${profile.id}`} 
-                        checked={!!selectedProfiles[profile.id]}
-                        onCheckedChange={() => handleProfileToggle(profile.id)}
+                      <Checkbox
+                        checked={selectedUsers.includes(profile.id)}
+                        onCheckedChange={() => handleUserSelect(profile.id)}
+                        id={`user-${profile.id}`}
+                        className="mr-2"
                       />
-                      <label 
-                        htmlFor={`profile-${profile.id}`} 
-                        className="flex items-center cursor-pointer flex-1 gap-2"
+                      <div 
+                        className="w-8 h-8 rounded-full flex items-center justify-center mr-2" 
+                        style={{ backgroundColor: getAvatarColor(profile.id) }}
                       >
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-purple-100 text-purple-600">
-                            {getInitials(`${profile.full_name} ${profile.last_name}`)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">
-                            {profile.full_name && profile.last_name ? `${profile.full_name} ${profile.last_name}` : 'Unnamed User'}
-                          </span>
-                        </div>
+                        <span className="text-xs font-medium">{getInitials(profile)}</span>
+                      </div>
+                      <label 
+                        htmlFor={`user-${profile.id}`} 
+                        className="text-sm cursor-pointer flex-grow"
+                      >
+                        {profile.full_name} {profile.last_name}
                       </label>
-    
-                      {selectedProfiles[profile.id] && (
-                        <Select
-                          value={selectedProfiles[profile.id].role}
-                          onValueChange={(value: "owner" | "admin") => 
-                            handleRoleChange(profile.id, value)
-                          }
-                        >
-                          <SelectTrigger className="w-[130px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="owner">Owner</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
                     </div>
                   ))}
-              </div>
-            ) : (
-              <div className="py-4 text-center text-sm text-gray-500">
-                {searchQuery ? "No users found matching your search." : "No users found in the profiles table."}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleInvite} 
+              disabled={loading || selectedUsers.length === 0 || !selectedProject}
+            >
+              {loading && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
+              Invite
+            </Button>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="mt-2 sm:mt-0" disabled={isSending}>Cancel</Button>
-          <Button 
-            onClick={handleInvite}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            disabled={isSending || !projectId || Object.keys(selectedProfiles).length === 0}
-          >
-            {isSending && <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />}
-            Invite
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

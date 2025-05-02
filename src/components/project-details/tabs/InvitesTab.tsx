@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import MemberInvitationsList from '@/components/project-invitations/MemberInvitationsList';
+import ProjectInvitationsList from '@/components/project-invitations/ProjectInvitationsList';
 
 interface InvitesTabProps {
   projectId: string;
@@ -13,15 +13,17 @@ export const InvitesTab: React.FC<InvitesTabProps> = ({ projectId }) => {
       <CardHeader>
         <CardTitle>Project Invitations</CardTitle>
         <CardDescription>
-          View and manage project invitations. You can assign roles:
+          View and manage project invitations. You can assign permissions:
           <ul className="mt-2 ml-4 list-disc text-sm">
             <li>Owner - Full project control and ownership</li>
             <li>Admin - Can manage team members and most settings</li>
+            <li>Can Edit - Can edit project content</li>
+            <li>Read Only - Can only view project content</li>
           </ul>
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <MemberInvitationsList projectId={projectId} />
+        <ProjectInvitationsList projectId={projectId} />
       </CardContent>
     </Card>
   );
