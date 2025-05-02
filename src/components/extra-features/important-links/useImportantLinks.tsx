@@ -73,7 +73,7 @@ export const useImportantLinks = (projectId?: string) => {
     
     setIsSubmitting(true);
     try {
-      // Use explicit column references to avoid ambiguity
+      // Make sure to explicitly use the link_ prefixed column names
       const { error } = await supabase
         .from('project_important_links')
         .insert({
@@ -84,7 +84,10 @@ export const useImportantLinks = (projectId?: string) => {
           user_id: user.id,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error details:', error);
+        throw error;
+      }
       
       toast({
         title: 'Success',
