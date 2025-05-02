@@ -41,7 +41,10 @@ export const TeamHoursComparisonView: React.FC<TeamHoursComparisonViewProps> = (
   // Group by team member
   const teamMemberHours: Record<string, { name: string; hours: number; }> = {};
   teamAssignedHours.forEach(entry => {
-    const fullName = `${entry.full_name} ${entry.last_name || ''}`.trim();
+    // Fixed: Access user profile information through the user_profile property
+    const fullName = entry.user_profile ? 
+      `${entry.user_profile.full_name} ${entry.user_profile.last_name || ''}`.trim() : 
+      "Unknown User";
     
     if (!teamMemberHours[entry.user_id]) {
       teamMemberHours[entry.user_id] = {
@@ -56,7 +59,7 @@ export const TeamHoursComparisonView: React.FC<TeamHoursComparisonViewProps> = (
   // Convert to array for rendering
   const teamMembersList = Object.values(teamMemberHours).sort((a, b) => b.hours - a.hours);
 
-  // Calculate workload percentage for each team member
+  // Calculate workload status for each team member
   const getWorkloadStatus = (hours: number) => {
     if (hours < 20) return { text: 'Low', color: 'bg-green-500' };
     if (hours < 40) return { text: 'Medium', color: 'bg-yellow-500' };
