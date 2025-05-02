@@ -18,6 +18,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     selectedUserId,
     setSelectedUserId,
     editingEvent,
+    setEditingEvent, // Make sure we use the setter function
     isEventDialogOpen,
     setIsEventDialogOpen,
     events,
@@ -80,7 +81,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
         open={isEventDialogOpen}
         onClose={() => {
           setIsEventDialogOpen(false);
-          editingEvent = null;
+          setEditingEvent(null); // Use the setter function instead of direct assignment
         }}
         onSubmit={handleEventSubmit}
         mode={editingEvent ? 'edit' : 'create'}

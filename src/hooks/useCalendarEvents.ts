@@ -22,7 +22,7 @@ interface TeamMember {
 export const useCalendarEvents = (projectId: string) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null); // Export the state and setter
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
@@ -158,6 +158,7 @@ export const useCalendarEvents = (projectId: string) => {
     selectedUserId,
     setSelectedUserId,
     editingEvent,
+    setEditingEvent, // Make sure to expose this setter
     isEventDialogOpen,
     setIsEventDialogOpen,
     events: filteredEvents,
