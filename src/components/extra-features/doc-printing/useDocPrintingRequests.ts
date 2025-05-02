@@ -52,7 +52,10 @@ export const useDocPrintingRequests = (projectId: string) => {
 
   // Create request mutation
   const createMutation = useMutation({
-    mutationFn: (newRequest: NewDocRequest) => createDocRequest(newRequest),
+    mutationFn: async (newRequest: NewDocRequest) => {
+      console.log("Submitting new doc request with data:", newRequest);
+      return await createDocRequest(newRequest);
+    },
     onSuccess: (data) => {
       console.log("Document request created successfully:", data);
       queryClient.invalidateQueries({ queryKey });
@@ -60,7 +63,7 @@ export const useDocPrintingRequests = (projectId: string) => {
     },
     onError: (error) => {
       console.error('Error creating doc request:', error);
-      toast.error('Failed to create document request');
+      toast.error(`Failed to create document request: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   });
 

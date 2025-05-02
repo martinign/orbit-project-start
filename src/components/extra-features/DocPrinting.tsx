@@ -83,7 +83,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
       setIsDialogOpen(false);
     } catch (error) {
       console.error('Error submitting request:', error);
-      toast.error('Failed to submit request');
+      toast.error(`Failed to submit request: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

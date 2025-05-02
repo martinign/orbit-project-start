@@ -43,6 +43,7 @@ export const fetchDocRequests = async (projectId: string) => {
     throw error;
   }
 
+  console.log("Fetched document requests:", requests);
   return requests as unknown as DocRequest[];
 };
 
@@ -55,12 +56,14 @@ export const createDocRequest = async (request: NewDocRequest) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.error("No authenticated user found");
       const error = new Error('User not authenticated');
       toast.error('You must be logged in to create requests');
       throw error;
     }
 
     const userId = session.user.id;
+    console.log("Current user ID:", userId);
     
     // Only include doc_process_number_range if doc_type is SLB
     const requestData = {

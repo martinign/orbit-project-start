@@ -27,15 +27,15 @@ export const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Project Timeline</CardTitle>
-        <CardDescription className="space-y-1">
-          <div>Project created on {formatDate(createdAt)}</div>
-          {creatorProfile && (
-            <div className="flex items-center text-sm gap-1 text-muted-foreground">
-              <User className="h-3.5 w-3.5" />
-              <span>Created by {creatorProfile.displayName}</span>
-            </div>
-          )}
+        <CardDescription>
+          Project created on {formatDate(createdAt)}
         </CardDescription>
+        {creatorProfile && (
+          <div className="flex items-center text-sm gap-1 text-muted-foreground">
+            <User className="h-3.5 w-3.5" />
+            <span>Created by {creatorProfile.displayName}</span>
+          </div>
+        )}
       </CardHeader>
     </Card>
   );
