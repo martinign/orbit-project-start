@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarIcon } from 'lucide-react';
@@ -15,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useProjectEvents } from '@/hooks/useProjectEvents';
 import { CalendarCard } from './CalendarCard';
 import { EventsGrid } from './EventsGrid';
-import { useAuth } from '@/contexts/AuthContext'; // Added import for useAuth
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -42,7 +41,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const { toast } = useToast();
   const { hasEditAccess, createEvent, deleteEvent, updateEvent } = useProjectEvents(projectId);
   const queryClient = useQueryClient();
-  const { user } = useAuth(); // Added to check user authentication
+  const { user } = useAuth();
   
   // Add a useEffect for real-time subscriptions
   useEffect(() => {
@@ -98,7 +97,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
-    // Check if user is authenticated instead of checking edit access
+    // Check if user is authenticated
     if (!user) {
       toast({
         title: "Authentication required",
@@ -114,11 +113,11 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   };
 
   const handleEditEvent = (event: Event) => {
-    // Only users with edit access can edit events
-    if (!hasEditAccess) {
+    // Check if the current user is the creator of the event
+    if (user?.id !== event.user_id) {
       toast({
         title: "Permission denied",
-        description: "You don't have permission to edit events.",
+        description: "You can only edit events that you created.",
         variant: "destructive",
       });
       return;
@@ -129,11 +128,14 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
   };
 
   const handleDeleteEvent = (id: string) => {
-    // Only users with edit access can delete events
-    if (!hasEditAccess) {
+    // Find the event to check ownership
+    const eventToDelete = events.find(event => event.id === id);
+    
+    // Check if the current user is the creator of the event
+    if (eventToDelete && user?.id !== eventToDelete.user_id) {
       toast({
         title: "Permission denied",
-        description: "You don't have permission to delete events.",
+        description: "You can only delete events that you created.",
         variant: "destructive",
       });
       return;
@@ -187,7 +189,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           onSelect={handleDateSelect}
           hasEditAccess={hasEditAccess}
           events={filteredEvents}
-          isAuthenticated={!!user} // Added to indicate if user is authenticated
+          isAuthenticated={!!user}
         />
         
         <EventsGrid
@@ -197,6 +199,7 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
           onDelete={handleDeleteEvent}
           onEdit={handleEditEvent}
           isLoading={eventsLoading}
+          currentUserId={user?.id}
         />
       </div>
 

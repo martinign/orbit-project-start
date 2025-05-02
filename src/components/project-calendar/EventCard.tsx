@@ -17,15 +17,20 @@ interface EventCardProps {
   onDelete: () => void;
   onEdit: () => void;
   hasEditAccess: boolean;
+  currentUserId: string | undefined; // Add the current user ID prop
 }
 
 export function EventCard({ 
   event, 
   onDelete, 
   onEdit, 
-  hasEditAccess 
+  hasEditAccess,
+  currentUserId
 }: EventCardProps) {
   const { data: userProfile, isLoading } = useUserProfile(event.user_id);
+  
+  // Check if the current user is the creator of the event
+  const isEventCreator = currentUserId === event.user_id;
 
   const getCreatorName = () => {
     if (isLoading) return 'Loading...';
@@ -49,7 +54,8 @@ export function EventCard({
           Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}
         </p>
       </div>
-      {hasEditAccess && (
+      {/* Only show edit/delete buttons if the user is the creator of the event */}
+      {isEventCreator && (
         <div className="flex justify-end gap-2 mt-4">
           <Button
             variant="ghost"

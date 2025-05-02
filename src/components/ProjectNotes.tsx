@@ -47,6 +47,7 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
 
   const handleDeleteConfirmation = (note: any) => {
     setSelectedNote(note);
+    // Fix: Remove the boolean parameter as it's not expected by the function
     setIsDeleteDialogOpen(true);
   };
 
