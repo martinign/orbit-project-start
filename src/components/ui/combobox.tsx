@@ -31,6 +31,7 @@ interface ComboboxProps {
   className?: string
   allowCustomValue?: boolean
   isLoading?: boolean
+  onDropdownOpenChange?: (open: boolean) => void
 }
 
 export function Combobox({
@@ -42,6 +43,7 @@ export function Combobox({
   className,
   allowCustomValue = false,
   isLoading = false,
+  onDropdownOpenChange,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || "")
@@ -83,8 +85,16 @@ export function Combobox({
     setOpen(false)
   }
 
+  // Handle open state with callback if provided
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (onDropdownOpenChange) {
+      onDropdownOpenChange(newOpen);
+    }
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
