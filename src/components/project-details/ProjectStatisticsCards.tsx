@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, UserRound, ListTodo, CalendarDays, FileText } from 'lucide-react';
 import { useNewItems } from '@/hooks/useNewItems';
 import { StatisticCard } from './statistics/StatisticCard';
 import { TaskStatisticCard } from './statistics/TaskStatisticCard';
 import { RealtimeUpdatesManager } from './statistics/RealtimeUpdatesManager';
 import { ExtraFeaturesCard } from './ExtraFeaturesCard';
+import { ExtraFeaturesDialog } from '@/components/dashboard/ExtraFeaturesDialog';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -31,6 +32,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
   projectId,
 }) => {
   const { newItemsCount } = useNewItems(projectId);
+  const [featuresDialogOpen, setFeaturesDialogOpen] = useState(false);
 
   return (
     <>
@@ -39,7 +41,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <ExtraFeaturesCard 
           projectId={projectId} 
-          onClick={() => onTabChange('extraFeatures')}
+          onClick={() => setFeaturesDialogOpen(true)}
         />
 
         <TaskStatisticCard
@@ -83,6 +85,12 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
           onClick={() => onTabChange('team')}
         />
       </div>
+
+      <ExtraFeaturesDialog 
+        open={featuresDialogOpen}
+        onOpenChange={setFeaturesDialogOpen}
+        projectId={projectId}
+      />
     </>
   );
 };
