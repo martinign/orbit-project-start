@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Plus, X, RefreshCw } from 'lucide-react';
+import { Edit, Trash2, Plus, X, RefreshCw, Search } from 'lucide-react';
 import { WorkdayCode, Project, ProjectAssociations } from '@/utils/workdayCodeUtils';
 
 interface WorkdayCodesTableProps {
@@ -29,24 +30,53 @@ const WorkdayCodesTable: React.FC<WorkdayCodesTableProps> = ({
   onAddProject,
   onRemoveProject
 }) => {
+  // Add search filter state
+  const [searchFilter, setSearchFilter] = useState<string>('');
+  
   // Check if user is the creator of the code
   const isUserOwner = (code: WorkdayCode) => {
     return userId && userId === code.user_id;
   };
 
+  // Filter workday codes based on search text
+  const filteredWorkdayCodes = workdayCodes.filter(code => {
+    if (!searchFilter) return true;
+    
+    const searchTerm = searchFilter.toLowerCase();
+    return (
+      code.task.toLowerCase().includes(searchTerm) ||
+      code.activity.toLowerCase().includes(searchTerm)
+    );
+  });
+
   return (
     <div className="border rounded-md p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-medium">Workday Codes</h3>
-        <Button variant="outline" size="icon" onClick={onRefresh} title="Refresh">
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col gap-3 mb-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Workday Codes</h3>
+          <Button variant="outline" size="icon" onClick={onRefresh} title="Refresh">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Add search filter input */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tasks or activities..."
+            className="pl-8 w-full"
+            value={searchFilter}
+            onChange={(e) => setSearchFilter(e.target.value)}
+          />
+        </div>
       </div>
       
       {loading ? (
         <div className="text-center py-4">Loading...</div>
-      ) : workdayCodes.length === 0 ? (
-        <div className="text-center py-4 text-muted-foreground">No codes found</div>
+      ) : filteredWorkdayCodes.length === 0 ? (
+        <div className="text-center py-4 text-muted-foreground">
+          {workdayCodes.length === 0 ? "No codes found" : "No codes match your search"}
+        </div>
       ) : (
         <div className="max-h-[400px] overflow-auto">
           <Table>
@@ -59,7 +89,7 @@ const WorkdayCodesTable: React.FC<WorkdayCodesTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workdayCodes.map((code) => (
+              {filteredWorkdayCodes.map((code) => (
                 <TableRow key={code.id}>
                   <TableCell className="font-medium">{code.task}</TableCell>
                   <TableCell>{code.activity}</TableCell>
