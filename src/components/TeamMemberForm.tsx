@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { UserCog } from "lucide-react";
-import ProjectSelector from "./team-members/ProjectSelector";
+import { ProjectSelector } from "./team-members/ProjectSelector";
 import FormField from "./team-members/FormField";
 import FormActions from "./team-members/FormActions";
 
