@@ -5,10 +5,16 @@ import Papa from 'papaparse';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { SiteData, useSiteInitiationData } from '@/hooks/useSiteInitiationData';
-import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle } from 'lucide-react';
+import { SiteData, useSiteInitiationData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
+import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle, InfoIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SiteInitiationCSVUploaderProps {
   projectId?: string;
@@ -40,23 +46,35 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
 
   // Map CSV columns to database fields
   const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
-    return csvData.map(row => ({
-      pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
-      pi_name: row['PI Name'] || row['pi_name'] || '',
-      site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
-      role: row['Role'] || row['role'] || '',
-      site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
-      site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
-      site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
-      institution: row['Institution'] || row['institution'] || '',
-      address: row['Address'] || row['address'] || '',
-      city_town: row['City/Town'] || row['city_town'] || '',
-      province_state: row['Province/State'] || row['province_state'] || '',
-      zip_code: row['Zip Code'] || row['zip_code'] || '',
-      country: row['Country'] || row['country'] || '',
-      project_id: projectId || '',
-      starter_pack: false
-    }));
+    return csvData.map(row => {
+      const mappedData = {
+        pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
+        pi_name: row['PI Name'] || row['pi_name'] || '',
+        site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
+        role: row['Role'] || row['role'] || '',
+        site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
+        site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
+        site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
+        institution: row['Institution'] || row['institution'] || '',
+        address: row['Address'] || row['address'] || '',
+        city_town: row['City/Town'] || row['city_town'] || '',
+        province_state: row['Province/State'] || row['province_state'] || '',
+        zip_code: row['Zip Code'] || row['zip_code'] || '',
+        country: row['Country'] || row['country'] || '',
+        project_id: projectId || '',
+      };
+      
+      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
+      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
+      const isStarterPackTrue = typeof starterPack === 'string'
+        ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true'
+        : Boolean(starterPack);
+        
+      return {
+        ...mappedData,
+        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
+      };
+    });
   };
 
   // Handle CSV file drop
@@ -171,10 +189,11 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   
   // Generate a template CSV file for download
   const handleDownloadTemplate = () => {
-    const csvHeader = 'Country,PXL Site Reference Number,PI Name,Site Personnel Name,Role,Site Personnel Email Address,Site Personnel Telephone,Site Personnel Fax,Institution,Address,City/Town,Province/State,Zip Code\n';
-    const csvRow = 'Canada,PXL-123,Dr. John Doe,Jane Smith,Study Coordinator,jane@example.com,555-123-4567,555-123-4568,General Hospital,123 Main St,Toronto,Ontario,M5V 2K7\n';
+    const csvHeader = 'Country,PXL Site Reference Number,PI Name,Site Personnel Name,Role,Site Personnel Email Address,Site Personnel Telephone,Site Personnel Fax,Institution,Address,City/Town,Province/State,Zip Code,Starter Pack\n';
+    const csvRow1 = 'Canada,PXL-123,Dr. John Doe,Jane Smith,LABP,jane@example.com,555-123-4567,555-123-4568,General Hospital,123 Main St,Toronto,Ontario,M5V 2K7,Yes\n';
+    const csvRow2 = 'USA,PXL-124,Dr. Sarah Brown,Mike Johnson,CRA,mike@example.com,555-987-6543,555-987-6544,Research Center,456 Oak Ave,Boston,Massachusetts,02108,No\n';
     
-    const blob = new Blob([csvHeader + csvRow], { type: 'text/csv' });
+    const blob = new Blob([csvHeader + csvRow1 + csvRow2], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -183,6 +202,23 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     link.click();
     document.body.removeChild(link);
   };
+
+  // Calculate statistics about the import data
+  const getImportStatistics = () => {
+    if (!parsedData.length) return null;
+    
+    const labpSites = parsedData.filter(site => site.role === 'LABP');
+    const starterPacksInData = parsedData.filter(site => site.starter_pack).length;
+    
+    return {
+      totalSites: parsedData.length,
+      labpSites: labpSites.length,
+      eligibleWithStarterPack: labpSites.filter(site => site.starter_pack).length,
+      ineligibleWithStarterPack: starterPacksInData - labpSites.filter(site => site.starter_pack).length,
+    };
+  };
+
+  const stats = getImportStatistics();
 
   return (
     <Card className="w-full">
@@ -200,6 +236,10 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         </CardTitle>
         <CardDescription>
           Upload a CSV file with site information to import into the tracker.
+          <div className="mt-1 flex items-center text-amber-600">
+            <AlertCircle className="h-4 w-4 mr-1" />
+            <span className="text-xs">Starter packs are only applicable to LABP roles</span>
+          </div>
         </CardDescription>
       </CardHeader>
       
@@ -244,14 +284,36 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
                 </div>
               </div>
             ) : parsedData.length > 0 ? (
-              <div className="bg-green-50 p-4 rounded-md flex items-start space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div>
-                  <p className="font-medium text-green-800">CSV Validated Successfully</p>
-                  <p className="text-sm text-green-700">
-                    Found {parsedData.length} records ready to be imported.
-                  </p>
+              <div className="space-y-4">
+                <div className="bg-green-50 p-4 rounded-md flex items-start space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-green-800">CSV Validated Successfully</p>
+                    <p className="text-sm text-green-700">
+                      Found {parsedData.length} records ready to be imported.
+                    </p>
+                  </div>
                 </div>
+                
+                {stats && (
+                  <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-md">
+                    <h3 className="text-sm font-semibold mb-2 flex items-center">
+                      <InfoIcon className="h-4 w-4 mr-1 text-blue-500" />
+                      Import Statistics
+                    </h3>
+                    <ul className="text-xs space-y-1 text-blue-800">
+                      <li>Total sites: {stats.totalSites}</li>
+                      <li>LABP sites (eligible for starter packs): {stats.labpSites}</li>
+                      <li>LABP sites with starter packs: {stats.eligibleWithStarterPack}</li>
+                      {stats.ineligibleWithStarterPack > 0 && (
+                        <li className="text-amber-600 font-medium">
+                          Note: {stats.ineligibleWithStarterPack} non-LABP sites had starter packs marked. 
+                          These will be imported with starter pack set to false.
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex justify-center">

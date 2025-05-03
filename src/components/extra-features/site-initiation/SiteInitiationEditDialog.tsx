@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { SiteData, useSiteInitiationData } from '@/hooks/useSiteInitiationData';
+import { SiteData, useSiteInitiationData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
+import { AlertCircle } from 'lucide-react';
 
 interface SiteInitiationEditDialogProps {
   site: SiteData;
@@ -40,8 +41,24 @@ export const SiteInitiationEditDialog: React.FC<SiteInitiationEditDialogProps> =
     }
   });
 
+  // Watch for changes in the role field to update starter pack availability
+  const currentRole = form.watch('role');
+  const isStarterPackEligible = currentRole === 'LABP';
+  
+  // Update the form when role changes
+  useEffect(() => {
+    if (!isStarterPackEligible) {
+      form.setValue('starter_pack', false);
+    }
+  }, [currentRole, form]);
+
   const onSubmit = async (data: SiteData) => {
     if (!site.id) return;
+    
+    // Ensure starter pack is only set when role is LABP
+    if (!isEligibleForStarterPack(data)) {
+      data.starter_pack = false;
+    }
     
     const success = await updateSite(site.id, data);
     if (success) {
@@ -250,15 +267,28 @@ export const SiteInitiationEditDialog: React.FC<SiteInitiationEditDialogProps> =
                 control={form.control}
                 name="starter_pack"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center gap-2 space-y-0 pt-6">
+                  <FormItem className="flex flex-row items-start gap-2 space-y-0 pt-6">
                     <FormControl>
-                      <Checkbox 
-                        checked={field.value} 
-                        onCheckedChange={field.onChange} 
-                      />
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          checked={field.value} 
+                          onCheckedChange={field.onChange} 
+                          disabled={!isStarterPackEligible}
+                        />
+                        {!isStarterPackEligible && (
+                          <AlertCircle className="h-4 w-4 text-amber-500" />
+                        )}
+                      </div>
                     </FormControl>
-                    <FormLabel className="font-normal">Starter Pack Sent</FormLabel>
-                    <FormMessage />
+                    <div>
+                      <FormLabel className="font-normal">Starter Pack Sent</FormLabel>
+                      {!isStarterPackEligible && (
+                        <FormDescription className="text-xs text-amber-600">
+                          Only LABP roles are eligible for starter packs
+                        </FormDescription>
+                      )}
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 )}
               />

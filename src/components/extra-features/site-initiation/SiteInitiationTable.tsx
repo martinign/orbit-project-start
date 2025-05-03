@@ -1,12 +1,13 @@
+
 import React, { useState, useMemo } from 'react';
-import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
+import { useSiteInitiationData, SiteData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Trash2, Search, Download, Check, X, Filter } from 'lucide-react';
+import { Edit, Trash2, Search, Download, Check, X, Filter, AlertCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SiteInitiationTableProps {
   projectId?: string;
@@ -49,9 +56,10 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [siteToEdit, setSiteToEdit] = useState<SiteData | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<string>('all'); // Changed from '' to 'all'
-  const [countryFilter, setCountryFilter] = useState<string>('all'); // Changed from '' to 'all'
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
   const [siteRefFilter, setSiteRefFilter] = useState('');
+  const [starterPackFilter, setStarterPackFilter] = useState<string>('all'); // Added starter pack filter
 
   // Extract unique roles, countries, and site references
   const uniqueRoles = useMemo(() => {
@@ -75,20 +83,27 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
         site.institution?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         site.role?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Role filter - Changed to check for 'all' instead of ''
+      // Role filter
       const matchesRole = roleFilter === 'all' || site.role === roleFilter;
       
-      // Country filter - Changed to check for 'all' instead of ''
+      // Country filter
       const matchesCountry = countryFilter === 'all' || site.country === countryFilter;
       
       // Site reference filter
       const matchesSiteRef = siteRefFilter === '' || 
         (site.pxl_site_reference_number && 
          site.pxl_site_reference_number.toLowerCase().includes(siteRefFilter.toLowerCase()));
+      
+      // Starter pack filter
+      const matchesStarterPack = starterPackFilter === 'all' 
+        ? true 
+        : starterPackFilter === 'eligible' 
+          ? isEligibleForStarterPack(site)
+          : starterPackFilter === 'sent' && site.starter_pack === true;
 
-      return matchesSearch && matchesRole && matchesCountry && matchesSiteRef;
+      return matchesSearch && matchesRole && matchesCountry && matchesSiteRef && matchesStarterPack;
     });
-  }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter]);
+  }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter, starterPackFilter]);
 
   const handleDeleteClick = (id: string) => {
     setSiteToDelete(id);
@@ -176,9 +191,10 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
   };
 
   const resetFilters = () => {
-    setRoleFilter('all'); // Changed from '' to 'all'
-    setCountryFilter('all'); // Changed from '' to 'all'
+    setRoleFilter('all');
+    setCountryFilter('all');
     setSiteRefFilter('');
+    setStarterPackFilter('all');
     setFiltersOpen(false);
   };
 
@@ -219,12 +235,13 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                 <Button variant="outline" className="flex items-center gap-1">
                   <Filter className="h-4 w-4 mr-1" />
                   Filters
-                  {(roleFilter !== 'all' || countryFilter !== 'all' || siteRefFilter) && (
+                  {(roleFilter !== 'all' || countryFilter !== 'all' || siteRefFilter || starterPackFilter !== 'all') && (
                     <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
                       {[
                         roleFilter !== 'all' ? 1 : 0, 
                         countryFilter !== 'all' ? 1 : 0, 
-                        siteRefFilter ? 1 : 0
+                        siteRefFilter ? 1 : 0,
+                        starterPackFilter !== 'all' ? 1 : 0
                       ].reduce((a, b) => a + b, 0)}
                     </Badge>
                   )}
@@ -279,6 +296,22 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="starter-pack-filter" className="text-sm font-medium">
+                      Starter Pack
+                    </label>
+                    <Select value={starterPackFilter} onValueChange={setStarterPackFilter}>
+                      <SelectTrigger id="starter-pack-filter">
+                        <SelectValue placeholder="Select starter pack status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sites</SelectItem>
+                        <SelectItem value="eligible">LABP Sites (Eligible)</SelectItem>
+                        <SelectItem value="sent">Starter Pack Sent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
                   <div className="flex justify-between pt-2">
                     <Button variant="outline" size="sm" onClick={resetFilters}>
@@ -318,13 +351,27 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                     <TableHead>Role</TableHead>
                     <TableHead>Institution</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead>Starter Pack</TableHead>
+                    <TableHead>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center gap-1">
+                              Starter Pack
+                              <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Starter packs are only sent to sites with LABP role</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredSites.map((site) => (
-                    <TableRow key={site.id}>
+                    <TableRow key={site.id} className={!isEligibleForStarterPack(site) ? "opacity-80" : undefined}>
                       <TableCell className="font-medium">
                         <HoverCard>
                           <HoverCardTrigger className="hover:underline cursor-help">
@@ -390,7 +437,24 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                           </HoverCardContent>
                         </HoverCard>
                       </TableCell>
-                      <TableCell>{site.role}</TableCell>
+                      <TableCell>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Badge 
+                                className={site.role === 'LABP' ? 'bg-blue-500' : undefined}
+                              >
+                                {site.role}
+                              </Badge>
+                            </TooltipTrigger>
+                            {site.role === 'LABP' && (
+                              <TooltipContent>
+                                <p>This role is eligible for a starter pack</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
                       <TableCell>
                         <HoverCard>
                           <HoverCardTrigger className="hover:underline cursor-help">
@@ -427,15 +491,34 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                         </div>
                       </TableCell>
                       <TableCell>
-                        {site.starter_pack ? (
-                          <Badge className="flex items-center gap-1 bg-green-100 text-green-800">
-                            <Check className="h-3 w-3" /> Yes
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            <X className="h-3 w-3" /> No
-                          </Badge>
-                        )}
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              {isEligibleForStarterPack(site) ? (
+                                site.starter_pack ? (
+                                  <Badge className="flex items-center gap-1 bg-green-100 text-green-800">
+                                    <Check className="h-3 w-3" /> Sent
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                    <X className="h-3 w-3" /> Not sent
+                                  </Badge>
+                                )
+                              ) : (
+                                <Badge variant="secondary" className="flex items-center gap-1 opacity-70">
+                                  <X className="h-3 w-3" /> N/A
+                                </Badge>
+                              )}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {isEligibleForStarterPack(site) 
+                                ? site.starter_pack 
+                                  ? "Starter pack has been sent" 
+                                  : "Starter pack needs to be sent" 
+                                : "This role is not eligible for a starter pack"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">

@@ -1,9 +1,9 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSiteInitiationData } from '@/hooks/useSiteInitiationData';
+import { useSiteInitiationData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Users, MapPin, Building } from 'lucide-react';
+import { Globe, Users, MapPin, Building, PackageCheck } from 'lucide-react';
 
 interface SiteInitiationDisplayProps {
   projectId?: string;
@@ -19,7 +19,8 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
       countries: [],
       institutions: [],
       personnel: 0,
-      starterPackSent: 0
+      starterPackSent: 0,
+      labpSites: 0
     };
     
     // Count unique sites by reference number
@@ -31,15 +32,19 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
     // Count unique institutions
     const institutions = new Set(sites.filter(s => s.institution).map(s => s.institution));
     
-    // Count personnel and starter packs
-    const starterPackSent = sites.filter(s => s.starter_pack).length;
+    // LABP sites count (eligible for starter packs)
+    const labpSites = sites.filter(s => isEligibleForStarterPack(s)).length;
+    
+    // Count starter packs sent (only valid for LABP roles)
+    const starterPackSent = sites.filter(s => isEligibleForStarterPack(s) && s.starter_pack).length;
     
     return {
       totalSites: uniqueSites.size,
       countries: Array.from(countries),
       institutions: Array.from(institutions),
       personnel: sites.length,
-      starterPackSent
+      starterPackSent,
+      labpSites
     };
   }, [sites]);
   
@@ -59,7 +64,7 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
   
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Sites</CardTitle>
@@ -123,6 +128,22 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
             </div>
           </CardContent>
         </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">LABP Sites</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center">
+              <div className="mr-2 rounded-full bg-indigo-100 p-2">
+                <PackageCheck className="h-4 w-4 text-indigo-600" />
+              </div>
+              <div className="text-2xl font-bold">
+                {loading ? '...' : summary.labpSites}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       <Card>
@@ -142,20 +163,36 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
             </div>
           ) : (
             <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Starter Pack Status</h3>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
-                    <div 
-                      className="bg-blue-500 h-full rounded-full" 
-                      style={{ width: `${(summary.starterPackSent / sites.length) * 100}%` }}
-                    ></div>
+              {summary.labpSites > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <PackageCheck className="h-4 w-4 mr-1 text-indigo-600" />
+                    LABP Starter Pack Status 
+                    <span className="text-xs ml-2 text-muted-foreground font-normal">
+                      (only LABP sites are eligible)
+                    </span>
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
+                      <div 
+                        className="bg-blue-500 h-full rounded-full" 
+                        style={{ 
+                          width: summary.labpSites > 0 
+                            ? `${(summary.starterPackSent / summary.labpSites) * 100}%` 
+                            : '0%' 
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium">
+                      {summary.starterPackSent} of {summary.labpSites} ({
+                        summary.labpSites > 0 
+                          ? Math.round((summary.starterPackSent / summary.labpSites) * 100) 
+                          : 0
+                      }%)
+                    </span>
                   </div>
-                  <span className="text-sm font-medium">
-                    {summary.starterPackSent} of {sites.length} ({Math.round((summary.starterPackSent / sites.length) * 100)}%)
-                  </span>
                 </div>
-              </div>
+              )}
               
               <Tabs defaultValue="countries">
                 <TabsList className="w-full md:w-auto">

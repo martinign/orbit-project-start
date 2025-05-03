@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +22,11 @@ export interface SiteData {
   starter_pack?: boolean;
   project_id: string;
 }
+
+// Helper function to check if a site is eligible for starter pack (LABP roles only)
+export const isEligibleForStarterPack = (site: SiteData): boolean => {
+  return site.role === 'LABP';
+};
 
 export const useSiteInitiationData = (projectId?: string) => {
   const [sites, setSites] = useState<SiteData[]>([]);
@@ -76,9 +80,15 @@ export const useSiteInitiationData = (projectId?: string) => {
     if (!user || !projectId) return null;
 
     try {
+      // Ensure starter pack is false for non-LABP roles
+      const updatedSiteData = {
+        ...siteData,
+        starter_pack: siteData.role === 'LABP' ? siteData.starter_pack : false
+      };
+
       const { data, error } = await supabase
         .from('project_csam_site')
-        .insert([{ ...siteData, user_id: user.id, project_id: projectId }])
+        .insert([{ ...updatedSiteData, user_id: user.id, project_id: projectId }])
         .select()
         .single();
 
@@ -106,9 +116,28 @@ export const useSiteInitiationData = (projectId?: string) => {
     if (!user || !projectId) return false;
 
     try {
+      // Get current site data to check role
+      const { data: currentSite } = await supabase
+        .from('project_csam_site')
+        .select('role')
+        .eq('id', id)
+        .single();
+
+      // Ensure starter pack is false for non-LABP roles
+      const updatedData = { ...updates };
+      
+      // If role is being changed, check if we need to reset starter pack
+      if (updates.role && updates.role !== 'LABP') {
+        updatedData.starter_pack = false;
+      } 
+      // If site was not LABP and starter_pack is being set, check role
+      else if (updates.starter_pack && currentSite && currentSite.role !== 'LABP') {
+        updatedData.starter_pack = false;
+      }
+
       const { error } = await supabase
         .from('project_csam_site')
-        .update(updates)
+        .update(updatedData)
         .eq('id', id)
         .eq('project_id', projectId);
 
@@ -161,9 +190,15 @@ export const useSiteInitiationData = (projectId?: string) => {
     }
   };
 
-  // Process CSV data with upsert logic - now with proper conflict detection due to unique constraint
+  // Process CSV data with upsert logic
   const processCSVData = async (records: SiteData[]) => {
     if (!user || !projectId || !records.length) return { success: 0, error: 0 };
+
+    // Update records to ensure starter_pack is false for non-LABP roles
+    const processedRecords = records.map(record => ({
+      ...record,
+      starter_pack: record.role === 'LABP' ? Boolean(record.starter_pack) : false
+    }));
 
     let successCount = 0;
     let errorCount = 0;
@@ -171,12 +206,12 @@ export const useSiteInitiationData = (projectId?: string) => {
     try {
       // Process records in batches to avoid overwhelming the database
       const batchSize = 50;
-      const batchCount = Math.ceil(records.length / batchSize);
+      const batchCount = Math.ceil(processedRecords.length / batchSize);
 
       for (let i = 0; i < batchCount; i++) {
         const batchStart = i * batchSize;
-        const batchEnd = Math.min((i + 1) * batchSize, records.length);
-        const batch = records.slice(batchStart, batchEnd);
+        const batchEnd = Math.min((i + 1) * batchSize, processedRecords.length);
+        const batch = processedRecords.slice(batchStart, batchEnd);
 
         // Prepare batch with user_id and project_id
         const batchWithIds = batch.map(record => ({
@@ -224,6 +259,11 @@ export const useSiteInitiationData = (projectId?: string) => {
     }
   };
 
+  // Get all LABP sites
+  const getLABPSites = () => {
+    return sites.filter(site => site.role === 'LABP');
+  };
+
   return {
     sites,
     loading,
@@ -232,6 +272,8 @@ export const useSiteInitiationData = (projectId?: string) => {
     updateSite,
     deleteSite,
     processCSVData,
-    refetch: fetchSites
+    refetch: fetchSites,
+    getLABPSites,
+    isEligibleForStarterPack
   };
 };
