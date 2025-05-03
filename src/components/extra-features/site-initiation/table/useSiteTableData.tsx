@@ -1,7 +1,11 @@
-
 import { useState, useMemo } from 'react';
 import { useSiteInitiationData, SiteData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
 import { toast } from '@/hooks/use-toast';
+import { 
+  getMissingRoles, 
+  isMissingLabpRole, 
+  getUniqueSiteReferences 
+} from '@/hooks/site-initiation/siteUtils';
 
 export const useSiteTableData = (projectId?: string) => {
   const { sites, loading, error, deleteSite, refetch } = useSiteInitiationData(projectId);
@@ -15,6 +19,7 @@ export const useSiteTableData = (projectId?: string) => {
   const [countryFilter, setCountryFilter] = useState<string>('all');
   const [siteRefFilter, setSiteRefFilter] = useState('');
   const [starterPackFilter, setStarterPackFilter] = useState<string>('all');
+  const [missingRolesFilter, setMissingRolesFilter] = useState<string>('all');
 
   // Extract unique roles, countries, and site references
   const uniqueRoles = useMemo(() => {
@@ -25,6 +30,24 @@ export const useSiteTableData = (projectId?: string) => {
   const uniqueCountries = useMemo(() => {
     const countries = new Set(sites.filter(site => site.country).map(site => site.country as string));
     return Array.from(countries).sort();
+  }, [sites]);
+
+  // Get site reference numbers with their missing roles status
+  const siteReferencesMissingRolesMap = useMemo(() => {
+    const uniqueReferences = getUniqueSiteReferences(sites);
+    const result: Record<string, { missingAny: boolean, missingLabp: boolean }> = {};
+    
+    uniqueReferences.forEach(ref => {
+      const missingRoles = getMissingRoles(sites, ref);
+      const missingLabp = isMissingLabpRole(sites, ref);
+      
+      result[ref] = {
+        missingAny: missingRoles.length > 0,
+        missingLabp
+      };
+    });
+    
+    return result;
   }, [sites]);
 
   // Filter sites based on search query and filters
@@ -55,10 +78,25 @@ export const useSiteTableData = (projectId?: string) => {
         : starterPackFilter === 'eligible' 
           ? isEligibleForStarterPack(site)
           : starterPackFilter === 'sent' && site.starter_pack === true;
+      
+      // Missing roles filter
+      let matchesMissingRoles = true;
+      const siteRef = site.pxl_site_reference_number;
+      const siteMissingStatus = siteReferencesMissingRolesMap[siteRef];
+      
+      if (missingRolesFilter !== 'all' && siteMissingStatus) {
+        if (missingRolesFilter === 'missing-any') {
+          matchesMissingRoles = siteMissingStatus.missingAny;
+        } else if (missingRolesFilter === 'missing-labp') {
+          matchesMissingRoles = siteMissingStatus.missingLabp;
+        } else if (missingRolesFilter === 'complete') {
+          matchesMissingRoles = !siteMissingStatus.missingAny;
+        }
+      }
 
-      return matchesSearch && matchesRole && matchesCountry && matchesSiteRef && matchesStarterPack;
+      return matchesSearch && matchesRole && matchesCountry && matchesSiteRef && matchesStarterPack && matchesMissingRoles;
     });
-  }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter, starterPackFilter]);
+  }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter, starterPackFilter, missingRolesFilter, siteReferencesMissingRolesMap]);
 
   const handleDeleteClick = (id: string) => {
     setSiteToDelete(id);
@@ -150,18 +188,20 @@ export const useSiteTableData = (projectId?: string) => {
     setCountryFilter('all');
     setSiteRefFilter('');
     setStarterPackFilter('all');
+    setMissingRolesFilter('all');
     setFiltersOpen(false);
   };
 
   // Calculate if there are any active filters
-  const hasActiveFilters = roleFilter !== 'all' || countryFilter !== 'all' || siteRefFilter !== '' || starterPackFilter !== 'all';
+  const hasActiveFilters = roleFilter !== 'all' || countryFilter !== 'all' || siteRefFilter !== '' || starterPackFilter !== 'all' || missingRolesFilter !== 'all';
   
   // Count the number of active filters
   const activeFilterCount = [
     roleFilter !== 'all' ? 1 : 0, 
     countryFilter !== 'all' ? 1 : 0, 
     siteRefFilter ? 1 : 0,
-    starterPackFilter !== 'all' ? 1 : 0
+    starterPackFilter !== 'all' ? 1 : 0,
+    missingRolesFilter !== 'all' ? 1 : 0
   ].reduce((a, b) => a + b, 0);
 
   return {
@@ -188,6 +228,8 @@ export const useSiteTableData = (projectId?: string) => {
     setSiteRefFilter,
     starterPackFilter,
     setStarterPackFilter,
+    missingRolesFilter,
+    setMissingRolesFilter,
     uniqueRoles,
     uniqueCountries,
     handleDeleteClick,
@@ -197,6 +239,7 @@ export const useSiteTableData = (projectId?: string) => {
     resetFilters,
     refetch,
     hasActiveFilters,
-    activeFilterCount
+    activeFilterCount,
+    siteReferencesMissingRolesMap
   };
 };

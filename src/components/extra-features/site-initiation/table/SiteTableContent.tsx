@@ -67,7 +67,7 @@ export const SiteTableContent: React.FC<SiteTableContentProps> = ({
           {sites.map((site) => (
             <TableRow key={site.id} className={!isEligibleForStarterPack(site) ? "opacity-80" : undefined}>
               <TableCell className="font-medium">
-                <SiteReferenceCell site={site} />
+                <SiteReferenceCell site={site} allSites={sites} />
               </TableCell>
               <TableCell>
                 <SitePersonnelCell site={site} />

@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { SiteData, isEligibleForStarterPack } from '@/hooks/site-initiation';
+import { SiteData, isEligibleForStarterPack, getSitesWithMissingRoles, getSitesMissingLabpRole, getUniqueSiteReferences } from '@/hooks/site-initiation';
 
 export interface SiteSummary {
   totalSites: number;
@@ -9,6 +9,8 @@ export interface SiteSummary {
   personnel: number;
   starterPackSent: number;
   labpSites: number;
+  sitesMissingLabpRole: string[];
+  sitesWithMissingRoles: Record<string, string[]>;
 }
 
 export function useSiteSummary(sites: SiteData[]): SiteSummary {
@@ -19,11 +21,13 @@ export function useSiteSummary(sites: SiteData[]): SiteSummary {
       institutions: [],
       personnel: 0,
       starterPackSent: 0,
-      labpSites: 0
+      labpSites: 0,
+      sitesMissingLabpRole: [],
+      sitesWithMissingRoles: {}
     };
     
     // Count unique sites by reference number
-    const uniqueSites = new Set(sites.map(s => s.pxl_site_reference_number));
+    const uniqueReferences = getUniqueSiteReferences(sites);
     
     // Count unique countries
     const countries = new Set(sites.filter(s => s.country).map(s => s.country));
@@ -37,13 +41,21 @@ export function useSiteSummary(sites: SiteData[]): SiteSummary {
     // Count starter packs sent (only valid for LABP roles)
     const starterPackSent = sites.filter(s => isEligibleForStarterPack(s) && s.starter_pack).length;
     
+    // Get sites missing LABP role
+    const sitesMissingLabpRole = getSitesMissingLabpRole(sites);
+    
+    // Get all sites with missing roles
+    const sitesWithMissingRoles = getSitesWithMissingRoles(sites);
+    
     return {
-      totalSites: uniqueSites.size,
+      totalSites: uniqueReferences.length,
       countries: Array.from(countries),
       institutions: Array.from(institutions),
       personnel: sites.length,
       starterPackSent,
-      labpSites
+      labpSites,
+      sitesMissingLabpRole,
+      sitesWithMissingRoles
     };
   }, [sites]);
 }

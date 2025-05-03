@@ -14,6 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { AlertTriangle } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 interface FiltersPopoverProps {
   open: boolean;
@@ -26,6 +29,8 @@ interface FiltersPopoverProps {
   setSiteRefFilter: (ref: string) => void;
   starterPackFilter: string;
   setStarterPackFilter: (status: string) => void;
+  missingRolesFilter: string;
+  setMissingRolesFilter: (value: string) => void;
   uniqueRoles: string[];
   uniqueCountries: string[];
   onResetFilters: () => void;
@@ -43,6 +48,8 @@ export const FiltersPopover: React.FC<FiltersPopoverProps> = ({
   setSiteRefFilter,
   starterPackFilter,
   setStarterPackFilter,
+  missingRolesFilter,
+  setMissingRolesFilter,
   uniqueRoles,
   uniqueCountries,
   onResetFilters,
@@ -115,6 +122,31 @@ export const FiltersPopover: React.FC<FiltersPopoverProps> = ({
                 <SelectItem value="all">All Sites</SelectItem>
                 <SelectItem value="eligible">LABP Sites (Eligible)</SelectItem>
                 <SelectItem value="sent">Starter Pack Sent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
+          
+          <div className="space-y-2">
+            <label htmlFor="missing-roles-filter" className="text-sm font-medium flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+              Missing Roles
+            </label>
+            <Select value={missingRolesFilter} onValueChange={setMissingRolesFilter}>
+              <SelectTrigger id="missing-roles-filter">
+                <SelectValue placeholder="Filter by missing roles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sites</SelectItem>
+                <SelectItem value="missing-any">Missing Any Role</SelectItem>
+                <SelectItem value="missing-labp">
+                  <div className="flex items-center">
+                    Missing LABP
+                    <Badge variant="warning" className="ml-1.5 text-xs">Critical</Badge>
+                  </div>
+                </SelectItem>
+                <SelectItem value="complete">Complete (All Roles)</SelectItem>
               </SelectContent>
             </Select>
           </div>
