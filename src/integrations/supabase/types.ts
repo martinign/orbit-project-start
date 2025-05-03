@@ -187,6 +187,80 @@ export type Database = {
           },
         ]
       }
+      project_csam_site: {
+        Row: {
+          address: string | null
+          city_town: string | null
+          country: string | null
+          created_at: string
+          id: string
+          institution: string | null
+          pi_name: string | null
+          project_id: string
+          province_state: string | null
+          pxl_site_reference_number: string | null
+          role: string | null
+          site_personnel_email_address: string | null
+          site_personnel_fax: string | null
+          site_personnel_name: string | null
+          site_personnel_telephone: string | null
+          starter_pack: boolean | null
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city_town?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          institution?: string | null
+          pi_name?: string | null
+          project_id: string
+          province_state?: string | null
+          pxl_site_reference_number?: string | null
+          role?: string | null
+          site_personnel_email_address?: string | null
+          site_personnel_fax?: string | null
+          site_personnel_name?: string | null
+          site_personnel_telephone?: string | null
+          starter_pack?: boolean | null
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city_town?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          institution?: string | null
+          pi_name?: string | null
+          project_id?: string
+          province_state?: string | null
+          pxl_site_reference_number?: string | null
+          role?: string | null
+          site_personnel_email_address?: string | null
+          site_personnel_fax?: string | null
+          site_personnel_name?: string | null
+          site_personnel_telephone?: string | null
+          starter_pack?: boolean | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_csam_site_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_doc_requests: {
         Row: {
           created_at: string
