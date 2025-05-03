@@ -21,7 +21,8 @@ type TableName =
   | 'survey_responses'
   | 'project_doc_requests'
   | 'workday_time_entries'
-  | 'team_assigned_hours';
+  | 'team_assigned_hours'
+  | 'project_csam_site'; // Added 'project_csam_site' to the valid table names
 
 interface SubscriptionOptions {
   table: TableName;
