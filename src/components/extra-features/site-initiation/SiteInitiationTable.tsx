@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Edit, Trash2, Search, Download, Check, X } from 'lucide-react';
+import { Edit, Trash2, Search, Download, Check, X, Filter } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +20,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SiteInitiationEditDialog } from './SiteInitiationEditDialog';
 import { toast } from '@/hooks/use-toast';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface SiteInitiationTableProps {
   projectId?: string;
@@ -32,20 +49,47 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
   const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [siteToEdit, setSiteToEdit] = useState<SiteData | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<string>('');
+  const [countryFilter, setCountryFilter] = useState<string>('');
+  const [siteRefFilter, setSiteRefFilter] = useState('');
 
-  // Filter sites based on search query
+  // Extract unique roles, countries, and site references
+  const uniqueRoles = useMemo(() => {
+    const roles = new Set(sites.map(site => site.role));
+    return Array.from(roles).sort();
+  }, [sites]);
+
+  const uniqueCountries = useMemo(() => {
+    const countries = new Set(sites.filter(site => site.country).map(site => site.country as string));
+    return Array.from(countries).sort();
+  }, [sites]);
+
+  // Filter sites based on search query and filters
   const filteredSites = useMemo(() => {
-    if (!searchQuery.trim()) return sites;
-    
-    const query = searchQuery.toLowerCase();
-    return sites.filter(site => 
-      site.pxl_site_reference_number?.toLowerCase().includes(query) ||
-      site.pi_name?.toLowerCase().includes(query) ||
-      site.site_personnel_name?.toLowerCase().includes(query) ||
-      site.institution?.toLowerCase().includes(query) ||
-      site.role?.toLowerCase().includes(query)
-    );
-  }, [sites, searchQuery]);
+    return sites.filter(site => {
+      // Text search
+      const matchesSearch = searchQuery.trim() === '' || 
+        site.pxl_site_reference_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        site.pi_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        site.site_personnel_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        site.institution?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        site.role?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Role filter
+      const matchesRole = roleFilter === '' || site.role === roleFilter;
+      
+      // Country filter
+      const matchesCountry = countryFilter === '' || site.country === countryFilter;
+      
+      // Site reference filter
+      const matchesSiteRef = siteRefFilter === '' || 
+        (site.pxl_site_reference_number && 
+         site.pxl_site_reference_number.toLowerCase().includes(siteRefFilter.toLowerCase()));
+
+      return matchesSearch && matchesRole && matchesCountry && matchesSiteRef;
+    });
+  }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter]);
 
   const handleDeleteClick = (id: string) => {
     setSiteToDelete(id);
@@ -132,6 +176,13 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
     });
   };
 
+  const resetFilters = () => {
+    setRoleFilter('');
+    setCountryFilter('');
+    setSiteRefFilter('');
+    setFiltersOpen(false);
+  };
+
   if (error) {
     return (
       <Card>
@@ -155,7 +206,7 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
             <CardDescription>Manage site initiation data</CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search sites..."
@@ -164,6 +215,83 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-1">
+                  <Filter className="h-4 w-4 mr-1" />
+                  Filters
+                  {(roleFilter || countryFilter || siteRefFilter) && (
+                    <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
+                      {[roleFilter, countryFilter, siteRefFilter].filter(Boolean).length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4 p-2">
+                  <h3 className="font-medium">Filter Sites</h3>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="site-ref-filter" className="text-sm font-medium">
+                      Site Reference
+                    </label>
+                    <Input
+                      id="site-ref-filter"
+                      placeholder="Filter by site reference..."
+                      value={siteRefFilter}
+                      onChange={(e) => setSiteRefFilter(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="role-filter" className="text-sm font-medium">
+                      Role
+                    </label>
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger id="role-filter">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Roles</SelectItem>
+                        {uniqueRoles.map(role => (
+                          <SelectItem key={role} value={role}>{role}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="country-filter" className="text-sm font-medium">
+                      Country
+                    </label>
+                    <Select value={countryFilter} onValueChange={setCountryFilter}>
+                      <SelectTrigger id="country-filter">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Countries</SelectItem>
+                        {uniqueCountries.map(country => (
+                          <SelectItem key={country} value={country}>{country}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex justify-between pt-2">
+                    <Button variant="outline" size="sm" onClick={resetFilters}>
+                      Reset Filters
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                      onClick={() => setFiltersOpen(false)}
+                    >
+                      Apply Filters
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button onClick={handleExportCSV} className="bg-blue-500 hover:bg-blue-600 text-white">
               <Download className="h-4 w-4 mr-2" />
               Export CSV
@@ -194,19 +322,101 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                 <TableBody>
                   {filteredSites.map((site) => (
                     <TableRow key={site.id}>
-                      <TableCell className="font-medium">{site.pxl_site_reference_number}</TableCell>
+                      <TableCell className="font-medium">
+                        <HoverCard>
+                          <HoverCardTrigger className="hover:underline cursor-help">
+                            {site.pxl_site_reference_number}
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-medium">Site Details</h4>
+                              <div className="grid grid-cols-2 gap-1 text-sm">
+                                <div className="font-medium">Site Reference:</div>
+                                <div>{site.pxl_site_reference_number}</div>
+                                
+                                <div className="font-medium">Country:</div>
+                                <div>{site.country || 'N/A'}</div>
+                                
+                                <div className="font-medium">Address:</div>
+                                <div>{site.address || 'N/A'}</div>
+                                
+                                <div className="font-medium">City:</div>
+                                <div>{site.city_town || 'N/A'}</div>
+                                
+                                <div className="font-medium">State/Province:</div>
+                                <div>{site.province_state || 'N/A'}</div>
+                                
+                                <div className="font-medium">Zip Code:</div>
+                                <div>{site.zip_code || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </TableCell>
                       <TableCell>
-                        <div>
-                          <div>{site.site_personnel_name}</div>
-                          <div className="text-xs text-muted-foreground">PI: {site.pi_name || 'N/A'}</div>
-                        </div>
+                        <HoverCard>
+                          <HoverCardTrigger className="hover:underline cursor-help">
+                            <div>
+                              <div>{site.site_personnel_name}</div>
+                              <div className="text-xs text-muted-foreground">PI: {site.pi_name || 'N/A'}</div>
+                            </div>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            <div className="space-y-3">
+                              <h4 className="text-sm font-medium">Personnel Details</h4>
+                              <div className="grid grid-cols-2 gap-1 text-sm">
+                                <div className="font-medium">Name:</div>
+                                <div>{site.site_personnel_name}</div>
+                                
+                                <div className="font-medium">Role:</div>
+                                <div>{site.role}</div>
+                                
+                                <div className="font-medium">PI Name:</div>
+                                <div>{site.pi_name || 'N/A'}</div>
+                                
+                                <div className="font-medium">Email:</div>
+                                <div className="break-all">{site.site_personnel_email_address || 'N/A'}</div>
+                                
+                                <div className="font-medium">Phone:</div>
+                                <div>{site.site_personnel_telephone || 'N/A'}</div>
+                                
+                                <div className="font-medium">Fax:</div>
+                                <div>{site.site_personnel_fax || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
                       </TableCell>
                       <TableCell>{site.role}</TableCell>
-                      <TableCell>{site.institution || 'N/A'}</TableCell>
+                      <TableCell>
+                        <HoverCard>
+                          <HoverCardTrigger className="hover:underline cursor-help">
+                            {site.institution || 'N/A'}
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-medium">Institution Details</h4>
+                              <div className="grid grid-cols-2 gap-1 text-sm">
+                                <div className="font-medium">Name:</div>
+                                <div>{site.institution || 'N/A'}</div>
+                                
+                                <div className="font-medium">Country:</div>
+                                <div>{site.country || 'N/A'}</div>
+                                
+                                <div className="font-medium">Address:</div>
+                                <div>{site.address || 'N/A'}</div>
+                                
+                                <div className="font-medium">City:</div>
+                                <div>{site.city_town || 'N/A'}</div>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </TableCell>
                       <TableCell>
                         <div className="text-xs">
                           {site.site_personnel_email_address && (
-                            <div>{site.site_personnel_email_address}</div>
+                            <div className="truncate max-w-[150px]">{site.site_personnel_email_address}</div>
                           )}
                           {site.site_personnel_telephone && (
                             <div>{site.site_personnel_telephone}</div>
