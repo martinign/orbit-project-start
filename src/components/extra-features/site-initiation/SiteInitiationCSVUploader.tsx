@@ -283,6 +283,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         <Button
           onClick={handleUpload}
           disabled={!parsedData.length || processing || !projectId}
+          className="bg-blue-500 hover:bg-blue-600 text-white"
         >
           {processing ? 'Processing...' : 'Import Data'}
         </Button>

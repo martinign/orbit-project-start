@@ -198,11 +198,11 @@ export type Database = {
           pi_name: string | null
           project_id: string
           province_state: string | null
-          pxl_site_reference_number: string | null
-          role: string | null
+          pxl_site_reference_number: string
+          role: string
           site_personnel_email_address: string | null
           site_personnel_fax: string | null
-          site_personnel_name: string | null
+          site_personnel_name: string
           site_personnel_telephone: string | null
           starter_pack: boolean | null
           updated_at: string
@@ -219,11 +219,11 @@ export type Database = {
           pi_name?: string | null
           project_id: string
           province_state?: string | null
-          pxl_site_reference_number?: string | null
-          role?: string | null
+          pxl_site_reference_number: string
+          role: string
           site_personnel_email_address?: string | null
           site_personnel_fax?: string | null
-          site_personnel_name?: string | null
+          site_personnel_name: string
           site_personnel_telephone?: string | null
           starter_pack?: boolean | null
           updated_at?: string
@@ -240,11 +240,11 @@ export type Database = {
           pi_name?: string | null
           project_id?: string
           province_state?: string | null
-          pxl_site_reference_number?: string | null
-          role?: string | null
+          pxl_site_reference_number?: string
+          role?: string
           site_personnel_email_address?: string | null
           site_personnel_fax?: string | null
-          site_personnel_name?: string | null
+          site_personnel_name?: string
           site_personnel_telephone?: string | null
           starter_pack?: boolean | null
           updated_at?: string

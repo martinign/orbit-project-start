@@ -161,7 +161,7 @@ export const useSiteInitiationData = (projectId?: string) => {
     }
   };
 
-  // Process CSV data with upsert logic
+  // Process CSV data with upsert logic - now with proper conflict detection due to unique constraint
   const processCSVData = async (records: SiteData[]) => {
     if (!user || !projectId || !records.length) return { success: 0, error: 0 };
 
@@ -185,7 +185,7 @@ export const useSiteInitiationData = (projectId?: string) => {
           project_id: projectId
         }));
 
-        // Use upsert operation
+        // Use upsert operation - now with proper conflict detection
         const { data, error } = await supabase
           .from('project_csam_site')
           .upsert(batchWithIds, {

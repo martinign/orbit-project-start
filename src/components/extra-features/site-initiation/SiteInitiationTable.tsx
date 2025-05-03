@@ -164,7 +164,7 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button onClick={handleExportCSV}>
+            <Button onClick={handleExportCSV} className="bg-blue-500 hover:bg-blue-600 text-white">
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>

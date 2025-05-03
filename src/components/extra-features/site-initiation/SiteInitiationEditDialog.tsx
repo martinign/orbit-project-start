@@ -268,7 +268,7 @@ export const SiteInitiationEditDialog: React.FC<SiteInitiationEditDialogProps> =
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">Save Changes</Button>
             </DialogFooter>
           </form>
         </Form>
