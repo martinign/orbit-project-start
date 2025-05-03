@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,8 +49,8 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [siteToEdit, setSiteToEdit] = useState<SiteData | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<string>('');
-  const [countryFilter, setCountryFilter] = useState<string>('');
+  const [roleFilter, setRoleFilter] = useState<string>('all'); // Changed from '' to 'all'
+  const [countryFilter, setCountryFilter] = useState<string>('all'); // Changed from '' to 'all'
   const [siteRefFilter, setSiteRefFilter] = useState('');
 
   // Extract unique roles, countries, and site references
@@ -76,11 +75,11 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
         site.institution?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         site.role?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Role filter
-      const matchesRole = roleFilter === '' || site.role === roleFilter;
+      // Role filter - Changed to check for 'all' instead of ''
+      const matchesRole = roleFilter === 'all' || site.role === roleFilter;
       
-      // Country filter
-      const matchesCountry = countryFilter === '' || site.country === countryFilter;
+      // Country filter - Changed to check for 'all' instead of ''
+      const matchesCountry = countryFilter === 'all' || site.country === countryFilter;
       
       // Site reference filter
       const matchesSiteRef = siteRefFilter === '' || 
@@ -177,8 +176,8 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
   };
 
   const resetFilters = () => {
-    setRoleFilter('');
-    setCountryFilter('');
+    setRoleFilter('all'); // Changed from '' to 'all'
+    setCountryFilter('all'); // Changed from '' to 'all'
     setSiteRefFilter('');
     setFiltersOpen(false);
   };
@@ -220,9 +219,13 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                 <Button variant="outline" className="flex items-center gap-1">
                   <Filter className="h-4 w-4 mr-1" />
                   Filters
-                  {(roleFilter || countryFilter || siteRefFilter) && (
+                  {(roleFilter !== 'all' || countryFilter !== 'all' || siteRefFilter) && (
                     <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
-                      {[roleFilter, countryFilter, siteRefFilter].filter(Boolean).length}
+                      {[
+                        roleFilter !== 'all' ? 1 : 0, 
+                        countryFilter !== 'all' ? 1 : 0, 
+                        siteRefFilter ? 1 : 0
+                      ].reduce((a, b) => a + b, 0)}
                     </Badge>
                   )}
                 </Button>
@@ -252,7 +255,7 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Roles</SelectItem>
+                        <SelectItem value="all">All Roles</SelectItem>
                         {uniqueRoles.map(role => (
                           <SelectItem key={role} value={role}>{role}</SelectItem>
                         ))}
@@ -269,7 +272,7 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
                         <SelectValue placeholder="Select country" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Countries</SelectItem>
+                        <SelectItem value="all">All Countries</SelectItem>
                         {uniqueCountries.map(country => (
                           <SelectItem key={country} value={country}>{country}</SelectItem>
                         ))}
