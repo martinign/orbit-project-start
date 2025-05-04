@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -122,7 +121,7 @@ const ProjectDetailsView = () => {
         projectType={project.project_type}
       />
 
-      <div className="flex-1 overflow-y-auto pt-4 px-6 pb-8">
+      <div className="flex-1 overflow-y-auto pt-6 px-6 pb-8 space-y-8">
         <ProjectDescription description={project.description} />
 
         <ProjectStatisticsCards
