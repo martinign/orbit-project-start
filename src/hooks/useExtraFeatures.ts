@@ -35,7 +35,8 @@ export function useExtraFeatures(projectId?: string) {
   // Fetch project-specific features when projectId changes
   useEffect(() => {
     const fetchProjectFeatures = async () => {
-      if (!projectId || !user) return;
+      // Only fetch if we have both a valid project ID and a user
+      if (!projectId || !user || projectId === 'default') return;
       
       setIsLoading(true);
       try {
@@ -70,7 +71,7 @@ export function useExtraFeatures(projectId?: string) {
     fetchProjectFeatures();
     
     // Set up real-time subscription for project features
-    if (projectId) {
+    if (projectId && projectId !== 'default') {
       const channel = supabase
         .channel('project_features_changes')
         .on('postgres_changes', {

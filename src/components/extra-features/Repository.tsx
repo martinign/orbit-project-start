@@ -7,5 +7,6 @@ interface RepositoryProps {
 }
 
 export const Repository: React.FC<RepositoryProps> = ({ projectId }) => {
+  // Simple passthrough component to maintain backwards compatibility
   return <RepositoryDisplay projectId={projectId} />;
 };
