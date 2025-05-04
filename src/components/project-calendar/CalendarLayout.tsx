@@ -1,8 +1,11 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { EventsGrid } from './EventsGrid';
+import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { CalendarPlus } from 'lucide-react';
 
 interface CalendarLayoutProps {
   selectedDate: Date | undefined;
@@ -16,6 +19,9 @@ interface CalendarLayoutProps {
   currentUserId: string | undefined;
   lastUpdate: number;
   searchQuery?: string;
+  showingDateEvents?: boolean;
+  selectedDateEvents?: any[];
+  onCreateEvent?: () => void;
 }
 
 export function CalendarLayout({
@@ -29,7 +35,10 @@ export function CalendarLayout({
   isAuthenticated,
   currentUserId,
   lastUpdate,
-  searchQuery = ''
+  searchQuery = '',
+  showingDateEvents = false,
+  selectedDateEvents = [],
+  onCreateEvent
 }: CalendarLayoutProps) {
   // Process event dates for highlighting in the calendar
   const eventDates = events
@@ -41,6 +50,9 @@ export function CalendarLayout({
       }
       return acc;
     }, {});
+
+  // Display either all events or just the selected date's events
+  const displayEvents = showingDateEvents ? selectedDateEvents : events;
 
   return <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
       <Card className="p-3 md:col-span-2 py-[20px] px-[48px]">
@@ -63,7 +75,35 @@ export function CalendarLayout({
       </Card>
       
       <div className="md:col-span-5">
-        <EventsGrid events={events} isLoading={eventsLoading} onDeleteEvent={onDeleteEvent} onEditEvent={onEditEvent} hasEditAccess={hasEditAccess} isAuthenticated={isAuthenticated} currentUserId={currentUserId} lastUpdate={lastUpdate} searchQuery={searchQuery} />
+        {showingDateEvents && selectedDate && (
+          <Card className="mb-4">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-6">
+              <CardTitle className="text-lg">
+                Events for {format(selectedDate, 'MMMM d, yyyy')}
+              </CardTitle>
+              {isAuthenticated && (
+                <Button 
+                  onClick={onCreateEvent}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                  Add Event
+                </Button>
+              )}
+            </CardHeader>
+          </Card>
+        )}
+        <EventsGrid 
+          events={displayEvents} 
+          isLoading={eventsLoading} 
+          onDeleteEvent={onDeleteEvent} 
+          onEditEvent={onEditEvent} 
+          hasEditAccess={hasEditAccess} 
+          isAuthenticated={isAuthenticated} 
+          currentUserId={currentUserId} 
+          lastUpdate={lastUpdate} 
+          searchQuery={searchQuery} 
+        />
       </div>
     </div>;
 }
