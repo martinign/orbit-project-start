@@ -5,21 +5,40 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSubscription } from '../useRealtimeSubscription';
 import { SiteData } from './types';
 import { isEligibleForStarterPack } from './siteUtils';
+import { usePagination } from '../usePagination';
 
 /**
  * Hook to fetch all site data for overview pages (non-paginated)
  * Used specifically for components that need to display summaries of all sites
  */
-export const useAllSitesData = (projectId?: string, maxLimit = 500) => {
-  const [sites, setSites] = useState<SiteData[]>([]);
+export const useAllSitesData = (
+  projectId?: string, 
+  pageSize = 10,
+  initialPage = 1,
+  maxLimit = 500
+) => {
+  const [allSites, setAllSites] = useState<SiteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
+  // Set up pagination
+  const pagination = usePagination({
+    initialPage,
+    initialPageSize: pageSize,
+    totalItems: allSites.length
+  });
+
+  // Paginate the sites data client-side
+  const sites = allSites.slice(
+    (pagination.currentPage - 1) * pagination.pageSize,
+    pagination.currentPage * pagination.pageSize
+  );
+
   // Fetch all sites data with a high limit but no pagination
   const fetchAllSites = async () => {
     if (!projectId) {
-      setSites([]);
+      setAllSites([]);
       setLoading(false);
       return;
     }
@@ -35,7 +54,10 @@ export const useAllSitesData = (projectId?: string, maxLimit = 500) => {
         .limit(maxLimit); // Using a high limit instead of pagination
 
       if (error) throw error;
-      setSites(data || []);
+      
+      const sitesData = data || [];
+      setAllSites(sitesData);
+      pagination.setTotalItems(sitesData.length);
     } catch (error) {
       console.error('Error fetching all site data:', error);
       setError(error as Error);
@@ -61,11 +83,14 @@ export const useAllSitesData = (projectId?: string, maxLimit = 500) => {
 
   // Get all LABP sites
   const getLABPSites = () => {
-    return sites.filter(site => site.role === 'LABP');
+    return allSites.filter(site => site.role === 'LABP');
   };
 
   return {
+    // Return both the full dataset and the paginated subset
+    allSites,
     sites,
+    pagination,
     loading,
     error,
     refetch: fetchAllSites,

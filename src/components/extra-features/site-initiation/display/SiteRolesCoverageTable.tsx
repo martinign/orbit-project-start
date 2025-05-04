@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Check, X, Filter } from 'lucide-react';
 import { SiteData, REQUIRED_ROLES, getSitesWithSameReference, getMissingRoles, getUniqueSiteReferences } from '@/hooks/site-initiation';
 import { 
@@ -19,6 +19,8 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { usePagination } from '@/hooks/usePagination';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface SiteRolesCoverageTableProps {
   sites: SiteData[];
@@ -26,6 +28,12 @@ interface SiteRolesCoverageTableProps {
 
 export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ sites }) => {
   const [countryFilter, setCountryFilter] = useState<string>("all");
+  
+  // Set up pagination (10 items per page)
+  const pagination = usePagination({
+    initialPageSize: 10,
+    totalItems: 0 // Will be updated after filtering
+  });
   
   // Get all unique countries from sites
   const uniqueCountries = useMemo(() => {
@@ -65,6 +73,19 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
     }
     return siteData.filter(site => site.country === countryFilter);
   }, [siteData, countryFilter]);
+  
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    pagination.setTotalItems(filteredSiteData.length);
+  }, [filteredSiteData]);
+  
+  // Calculate paginated data
+  const paginatedSiteData = useMemo(() => {
+    return filteredSiteData.slice(
+      (pagination.currentPage - 1) * pagination.pageSize,
+      pagination.currentPage * pagination.pageSize
+    );
+  }, [filteredSiteData, pagination.currentPage, pagination.pageSize]);
 
   return (
     <div className="mt-6">
@@ -107,7 +128,7 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredSiteData.map(site => (
+            {paginatedSiteData.map(site => (
               <TableRow key={site.referenceNumber}>
                 <TableCell className="font-medium">{site.referenceNumber}</TableCell>
                 <TableCell>{site.institution}</TableCell>
@@ -135,7 +156,7 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
                 })}
               </TableRow>
             ))}
-            {filteredSiteData.length === 0 && (
+            {paginatedSiteData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={2 + REQUIRED_ROLES.length} className="h-24 text-center text-muted-foreground">
                   No sites found for the selected country
@@ -145,6 +166,17 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
           </TableBody>
         </Table>
       </div>
+      
+      {/* Pagination Controls */}
+      {filteredSiteData.length > 0 && (
+        <div className="flex justify-center mt-4">
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.goToPage}
+          />
+        </div>
+      )}
     </div>
   );
 };

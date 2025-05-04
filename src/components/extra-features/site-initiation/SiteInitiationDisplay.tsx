@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { SummaryStats } from './display/SummaryStats';
 import { SiteOverviewCard } from './display/SiteOverviewCard';
@@ -12,9 +11,10 @@ interface SiteInitiationDisplayProps {
 }
 
 export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ projectId }) => {
-  // Use the new hook that fetches all sites for the overview
-  const { sites, loading, error } = useAllSitesData(projectId);
-  const summary = useSiteSummary(sites);
+  // Use the updated hook with pagination capabilities
+  // We still fetch all sites but will apply pagination in the components that display lists
+  const { allSites, loading, error, pagination } = useAllSitesData(projectId);
+  const summary = useSiteSummary(allSites);
   
   if (error) {
     return <ErrorState error={error} />;
@@ -26,8 +26,8 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
       <SiteOverviewCard 
         summary={summary} 
         loading={loading} 
-        sitesExist={sites.length > 0}
-        sites={sites}
+        sitesExist={allSites.length > 0}
+        sites={allSites}
       />
     </div>
   );

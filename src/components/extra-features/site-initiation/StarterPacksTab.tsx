@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table, 
@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { getUniqueSiteReferences, isMissingLabpRole } from '@/hooks/site-initiation/siteUtils';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { supabase } from '@/integrations/supabase/client';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -37,12 +38,13 @@ interface StarterPacksTabProps {
 export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) => {
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const { 
-    sites, 
+    allSites: sites, // Use allSites to get the full dataset for calculations
     loading, 
     error, 
     isEligibleForStarterPack,
-    refetch
-  } = useAllSitesData(projectId);
+    refetch,
+    pagination
+  } = useAllSitesData(projectId, 10); // Set page size to 10
   
   // Get an updateSite function from useSiteOperations hook
   const updateSite = async (siteId: string, updates: Partial<SiteData>) => {
@@ -118,6 +120,19 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     return siteReferenceData.filter(site => site.country === countryFilter);
   }, [siteReferenceData, countryFilter]);
 
+  // Update pagination when filtered data changes
+  useEffect(() => {
+    pagination.setTotalItems(filteredSiteReferences.length);
+  }, [filteredSiteReferences]);
+  
+  // Calculate paginated data
+  const paginatedSiteReferences = useMemo(() => {
+    return filteredSiteReferences.slice(
+      (pagination.currentPage - 1) * pagination.pageSize,
+      pagination.currentPage * pagination.pageSize
+    );
+  }, [filteredSiteReferences, pagination.currentPage, pagination.pageSize]);
+  
   // Calculate statistics (for all unique site references)
   const stats = useMemo(() => {
     // Total is all unique site references
@@ -243,7 +258,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSiteReferences.map(siteRef => (
+                  {paginatedSiteReferences.map(siteRef => (
                     <TableRow key={siteRef.reference}>
                       <TableCell className="font-medium">{siteRef.reference}</TableCell>
                       <TableCell>{siteRef.institution || 'Unknown'}</TableCell>
@@ -273,6 +288,17 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          )}
+          
+          {/* Pagination Controls */}
+          {filteredSiteReferences.length > 0 && (
+            <div className="flex justify-center mt-4">
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.goToPage}
+              />
             </div>
           )}
         </CardContent>
