@@ -250,7 +250,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
                   <SelectContent>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {teamMembers?.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
+                      <SelectItem key={member.id} value={member.user_id}>
                         {member.display_name || `${member.full_name} ${member.last_name || ''}`.trim()}
                       </SelectItem>
                     ))}
