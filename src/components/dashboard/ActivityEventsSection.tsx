@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
 import { DashboardEvents } from "@/components/dashboard/DashboardEvents";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 interface ActivityEventsSectionProps {
   activitiesFilters: {
     projectId?: string;
@@ -29,7 +27,6 @@ interface ActivityEventsSectionProps {
   setIsRecentActivitiesOpen: (isOpen: boolean) => void;
   setIsUpcomingEventsOpen: (isOpen: boolean) => void;
 }
-
 export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
   activitiesFilters,
   eventsFilters,
@@ -39,13 +36,9 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
   setIsRecentActivitiesOpen,
   setIsUpcomingEventsOpen
 }) => {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  return <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Recent Activities Section */}
-      <Collapsible 
-        open={isRecentActivitiesOpen}
-        onOpenChange={setIsRecentActivitiesOpen}
-      >
+      <Collapsible open={isRecentActivitiesOpen} onOpenChange={setIsRecentActivitiesOpen}>
         <Card>
           <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
@@ -53,12 +46,7 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
               <CardDescription>Latest actions across all projects</CardDescription>
             </div>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isRecentActivitiesOpen ? 
-                  <ChevronUp className="h-4 w-4" /> : 
-                  <ChevronDown className="h-4 w-4" />
-                }
-              </Button>
+              
             </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
@@ -70,10 +58,7 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
       </Collapsible>
 
       {/* Dashboard Events Section */}
-      <Collapsible 
-        open={isUpcomingEventsOpen}
-        onOpenChange={setIsUpcomingEventsOpen}
-      >
+      <Collapsible open={isUpcomingEventsOpen} onOpenChange={setIsUpcomingEventsOpen}>
         <Card>
           <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
             <div>
@@ -81,12 +66,7 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
               <CardDescription>Events happening soon</CardDescription>
             </div>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                {isUpcomingEventsOpen ? 
-                  <ChevronUp className="h-4 w-4" /> : 
-                  <ChevronDown className="h-4 w-4" />
-                }
-              </Button>
+              
             </CollapsibleTrigger>
           </CardHeader>
           <CollapsibleContent>
@@ -96,6 +76,5 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
           </CollapsibleContent>
         </Card>
       </Collapsible>
-    </div>
-  );
+    </div>;
 };
