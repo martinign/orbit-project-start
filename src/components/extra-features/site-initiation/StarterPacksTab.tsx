@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Filter } from 'lucide-react';
-import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
+import { SiteData } from '@/hooks/site-initiation/types';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ErrorState } from './display/ErrorState';
@@ -27,6 +27,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { getUniqueSiteReferences, isMissingLabpRole } from '@/hooks/site-initiation/siteUtils';
+import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -38,10 +40,27 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     sites, 
     loading, 
     error, 
-    updateSite,
-    refetch,
-    isEligibleForStarterPack
-  } = useSiteInitiationData(projectId);
+    isEligibleForStarterPack,
+    refetch
+  } = useAllSitesData(projectId);
+  
+  // Get an updateSite function from useSiteOperations hook
+  const updateSite = async (siteId: string, updates: Partial<SiteData>) => {
+    try {
+      const { error } = await supabase
+        .from('project_csam_site')
+        .update(updates)
+        .eq('id', siteId);
+      
+      if (error) {
+        throw error;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error updating site:', error);
+      return false;
+    }
+  };
 
   // Get all unique site references
   const uniqueSiteReferences = useMemo(() => {
