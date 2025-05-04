@@ -40,6 +40,8 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
     setSiteRefFilter,
     starterPackFilter,
     setStarterPackFilter,
+    missingRolesFilter,
+    setMissingRolesFilter,
     uniqueRoles,
     uniqueCountries,
     handleConfirmDelete,
@@ -98,6 +100,8 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
         setSiteRefFilter={setSiteRefFilter}
         starterPackFilter={starterPackFilter}
         setStarterPackFilter={setStarterPackFilter}
+        missingRolesFilter={missingRolesFilter}
+        setMissingRolesFilter={setMissingRolesFilter}
         uniqueRoles={uniqueRoles}
         uniqueCountries={uniqueCountries}
         onResetFilters={resetFilters}
