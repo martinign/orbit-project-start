@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { SiteInitiationDisplay } from './site-initiation/SiteInitiationDisplay';
 import { SiteInitiationCSVUploader } from './site-initiation/SiteInitiationCSVUploader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SiteInitiationTable } from './site-initiation/SiteInitiationTable';
 import { StarterPacksTab } from './site-initiation/StarterPacksTab';
 
 interface SiteInitiationTrackerProps {
@@ -19,7 +18,6 @@ export const SiteInitiationTracker: React.FC<SiteInitiationTrackerProps> = ({ pr
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="starter-packs">Starter Packs</TabsTrigger>
-          <TabsTrigger value="sites">Sites</TabsTrigger>
           <TabsTrigger value="import">Import CSV</TabsTrigger>
         </TabsList>
         
@@ -29,10 +27,6 @@ export const SiteInitiationTracker: React.FC<SiteInitiationTrackerProps> = ({ pr
         
         <TabsContent value="starter-packs">
           <StarterPacksTab projectId={projectId} />
-        </TabsContent>
-        
-        <TabsContent value="sites">
-          <SiteInitiationTable projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="import">
