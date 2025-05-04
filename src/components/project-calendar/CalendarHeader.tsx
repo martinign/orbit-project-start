@@ -26,7 +26,7 @@ export function CalendarHeader({
   teamMembers
 }: CalendarHeaderProps) {
   return (
-    <div className="flex justify-between items-center">
+    <div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="h-9 text-sm">

@@ -1,18 +1,27 @@
 
 import React from 'react';
-import { EventDialog } from './EventDialog';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarLayout } from './CalendarLayout';
+import { EventDialog } from './EventDialog';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { EventsGrid } from './EventsGrid';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 interface ProjectCalendarProps {
   projectId: string;
-  searchQuery?: string;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
-export function ProjectCalendar({ projectId, searchQuery = '' }: ProjectCalendarProps) {
+export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({ 
+  projectId,
+  searchQuery,
+  setSearchQuery
+}) => {
   const {
     selectedDate,
+    setSelectedDate,
     selectedUserId,
     setSelectedUserId,
     editingEvent,
@@ -30,54 +39,63 @@ export function ProjectCalendar({ projectId, searchQuery = '' }: ProjectCalendar
     user,
     lastUpdate
   } = useCalendarEvents(projectId);
-  
+
   // Filter events based on search query
-  const filteredEvents = events.filter(event => 
-    searchQuery === '' || 
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredEvents = events.filter(event => {
+    if (!searchQuery) return true;
+    return (
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
-    <div className="space-y-4">
-      <CalendarHeader 
-        selectedUserId={selectedUserId}
-        setSelectedUserId={setSelectedUserId}
-        teamMembers={teamMembers}
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <CalendarHeader 
+          selectedUserId={selectedUserId} 
+          setSelectedUserId={setSelectedUserId}
+          teamMembers={teamMembers}
+        />
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search events..."
+            className="pl-8 h-9 text-sm w-64"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <CalendarLayout 
+        selectedDate={selectedDate}
+        onDateSelect={handleDateSelect}
+        events={filteredEvents}
       />
 
-      <CalendarLayout
-        selectedDate={selectedDate}
-        onSelectDate={handleDateSelect}
-        events={filteredEvents}
-        hasEditAccess={hasEditAccess}
-        eventsLoading={eventsLoading}
-        onDeleteEvent={handleDeleteEvent}
-        onEditEvent={handleEditEvent}
-        isAuthenticated={!!user}
-        currentUserId={user?.id}
-        lastUpdate={lastUpdate}
-        searchQuery={searchQuery}
-      />
+      <div className="mt-6">
+        <EventsGrid
+          events={filteredEvents}
+          isLoading={eventsLoading}
+          onDeleteEvent={handleDeleteEvent}
+          onEditEvent={handleEditEvent}
+          hasEditAccess={hasEditAccess}
+          isAuthenticated={!!user}
+          currentUserId={user?.id}
+          lastUpdate={lastUpdate}
+          searchQuery={searchQuery}
+        />
+      </div>
 
       <EventDialog
-        open={isEventDialogOpen}
-        onClose={() => {
-          setIsEventDialogOpen(false);
-          setEditingEvent(null);
-        }}
+        isOpen={isEventDialogOpen}
+        onClose={() => setIsEventDialogOpen(false)}
         onSubmit={handleEventSubmit}
-        mode={editingEvent ? 'edit' : 'create'}
-        defaultValues={editingEvent ? {
-          title: editingEvent.title,
-          description: editingEvent.description || '',
-          event_date: editingEvent.event_date ? new Date(editingEvent.event_date) : undefined,
-        } : {
-          title: '',
-          description: '',
-          event_date: selectedDate
-        }}
+        editingEvent={editingEvent}
+        selectedDate={selectedDate}
       />
     </div>
   );
-}
+};
