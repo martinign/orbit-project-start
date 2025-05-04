@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProjectNotes from '@/components/ProjectNotes';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Plus, Search } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NotesTabProps {
   projectId: string;
@@ -11,29 +13,43 @@ interface NotesTabProps {
 
 export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
   
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Project Notes</CardTitle>
-            <CardDescription>View and manage project notes</CardDescription>
-          </div>
-          <div className="relative w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search notes..."
-              className="pl-8 h-9 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="flex justify-between items-center">
+          <CardTitle>Project Notes</CardTitle>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search notes..."
+                className="pl-8 h-9 text-sm w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            {user && (
+              <Button 
+                onClick={() => {}} 
+                className="bg-blue-500 hover:bg-blue-600 text-white h-9"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Note
+              </Button>
+            )}
           </div>
         </div>
+        <CardDescription>View and manage project notes</CardDescription>
       </CardHeader>
       <CardContent>
-        <ProjectNotes projectId={projectId} searchQuery={searchQuery} />
+        <ProjectNotes 
+          projectId={projectId} 
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery} 
+        />
       </CardContent>
     </Card>
   );

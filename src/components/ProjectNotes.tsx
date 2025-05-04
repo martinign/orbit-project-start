@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import NotesList from './project-notes/NotesList';
 import CreateNoteDialog from './project-notes/CreateNoteDialog';
 import EditNoteDialog from './project-notes/EditNoteDialog';
@@ -14,9 +15,10 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProjectNotesProps {
   projectId: string;
   searchQuery?: string;
+  setSearchQuery?: (query: string) => void;
 }
 
-export default function ProjectNotes({ projectId, searchQuery = '' }: ProjectNotesProps) {
+export default function ProjectNotes({ projectId, searchQuery = '', setSearchQuery }: ProjectNotesProps) {
   const { user } = useAuth();
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
@@ -74,20 +76,8 @@ export default function ProjectNotes({ projectId, searchQuery = '' }: ProjectNot
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-semibold">Project Notes</h3>
-        {/* Always show Create Note button for authenticated users */}
-        {user && (
-          <Button 
-            onClick={handleCreateNote} 
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Note
-          </Button>
-        )}
-      </div>
-
+      {/* Search functionality handled in parent component (NotesTab) */}
+      
       {isLoading ? (
         <div className="flex justify-center py-10">Loading notes...</div>
       ) : filteredNotes.length > 0 ? (
