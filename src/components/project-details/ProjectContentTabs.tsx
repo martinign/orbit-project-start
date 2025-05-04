@@ -2,7 +2,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
-import { useAuth } from '@/contexts/AuthContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -105,15 +104,15 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   }, []);
   
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange}>
-      <div className="relative flex items-center">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+      <div className="relative flex items-center border-b border-border">
         {/* Left scroll button */}
         <Button
           onClick={scrollLeft}
-          variant="outline"
+          variant="ghost"
           size="icon"
           className={cn(
-            "absolute left-0 z-10 rounded-full shadow-md transition-opacity",
+            "absolute left-0 z-10 transition-opacity bg-blue-500 hover:bg-blue-600 text-white rounded-full",
             !canScrollLeft ? "opacity-0 pointer-events-none" : "opacity-100"
           )}
           aria-label="Scroll tabs left"
@@ -126,7 +125,7 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
           className="flex-1 overflow-x-scroll no-scrollbar mx-10"
           ref={tabsListRef}
         >
-          <TabsList className="inline-flex min-w-max">
+          <TabsList className="inline-flex w-max border-0">
             <TabsTrigger value="tasks" className="text-xs md:text-sm">Tasks</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs md:text-sm">Notes</TabsTrigger>
             <TabsTrigger value="calendar" className="text-xs md:text-sm">Calendar</TabsTrigger>
@@ -170,10 +169,10 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
         {/* Right scroll button */}
         <Button
           onClick={scrollRight}
-          variant="outline"
+          variant="ghost"
           size="icon"
           className={cn(
-            "absolute right-0 z-10 rounded-full shadow-md transition-opacity",
+            "absolute right-0 z-10 transition-opacity bg-blue-500 hover:bg-blue-600 text-white rounded-full",
             !canScrollRight ? "opacity-0 pointer-events-none" : "opacity-100"
           )}
           aria-label="Scroll tabs right"
