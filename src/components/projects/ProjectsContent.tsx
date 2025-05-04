@@ -1,7 +1,8 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import ProjectsTable from "./ProjectsTable";
 import ProjectsCardGrid from "./ProjectsCardGrid";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface ProjectsContentProps {
   title: string;
@@ -16,6 +17,12 @@ interface ProjectsContentProps {
   searchQuery: string;
   statusFilter: string;
   projectType?: "all" | "billable" | "non-billable";
+  // Add pagination props
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    setPage: (page: number) => void;
+  };
 }
 
 const ProjectsContent = ({
@@ -30,7 +37,8 @@ const ProjectsContent = ({
   onUpdate,
   searchQuery,
   statusFilter,
-  projectType = "all"
+  projectType = "all",
+  pagination
 }: ProjectsContentProps) => {
   const getEmptyStateMessage = () => {
     if (searchQuery) return "No projects match your search criteria";
@@ -80,6 +88,16 @@ const ProjectsContent = ({
           </div>
         )}
       </CardContent>
+      
+      {pagination && !isLoading && projects && projects.length > 0 && (
+        <CardFooter className="flex justify-center border-t pt-4">
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={pagination.setPage}
+          />
+        </CardFooter>
+      )}
     </Card>
   );
 };
