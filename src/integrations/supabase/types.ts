@@ -134,56 +134,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_attachments: {
-        Row: {
-          created_at: string
-          created_by: string
-          file_name: string
-          file_path: string
-          file_size: number | null
-          file_type: string | null
-          id: string
-          project_id: string
-          related_id: string
-          related_type: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          file_name: string
-          file_path: string
-          file_size?: number | null
-          file_type?: string | null
-          id?: string
-          project_id: string
-          related_id: string
-          related_type: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          file_name?: string
-          file_path?: string
-          file_size?: number | null
-          file_type?: string | null
-          id?: string
-          project_id?: string
-          related_id?: string
-          related_type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_attachments_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_contacts: {
         Row: {
           company: string | null
