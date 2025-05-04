@@ -1,20 +1,16 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Filter, AlertTriangle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { useDocPrintingRequests } from './doc-printing/useDocPrintingRequests';
-import { DocPrintingRequests } from './doc-printing/DocPrintingRequests';
 import { DocPrintingRequestDialog } from './doc-printing/DocPrintingRequestDialog';
 import { DocRequest, DocStatus, DocType, NewDocRequest } from './doc-printing/api/docRequestsApi';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { DocPrintingHeader } from './doc-printing/components/DocPrintingHeader';
+import { DocPrintingStats } from './doc-printing/components/DocPrintingStats';
+import { DocPrintingFilters } from './doc-printing/components/DocPrintingFilters';
+import { DocPrintingContent } from './doc-printing/components/DocPrintingContent';
+import { ProjectWarning } from './doc-printing/components/ProjectWarning';
 
 interface DocPrintingProps {
   projectId?: string;
@@ -95,9 +91,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
       }
     } catch (error) {
       console.error('Error submitting request:', error);
-      // Show detailed error message
       toast.error(`Error submitting request: ${error instanceof Error ? error.message : String(error)}`);
-      // Keep dialog open on error
     } finally {
       setIsSubmitting(false);
     }
@@ -111,102 +105,36 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-medium">Document Printing</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button 
-              onClick={handleNewRequest}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={!projectId || !user}
-            >
-              <Plus className="h-4 w-4 mr-1" /> New Request
-            </Button>
-          </div>
-        </CardHeader>
+        <DocPrintingHeader 
+          onNewRequest={handleNewRequest}
+          isDisabled={!projectId || !user}
+        />
         <CardContent>
           <div className="mb-4 flex items-center justify-between">
             {/* Summary Stats */}
-            <div className="flex gap-4">
-              <div className="text-sm">
-                <span className="text-gray-500">Total: </span>
-                <span className="font-medium">{statusCounts.total}</span>
-              </div>
-              <div className="text-sm">
-                <span className="text-yellow-500">Pending: </span>
-                <span className="font-medium">{statusCounts.pending}</span>
-              </div>
-              <div className="text-sm">
-                <span className="text-blue-500">Approved: </span>
-                <span className="font-medium">{statusCounts.approved}</span>
-              </div>
-              <div className="text-sm">
-                <span className="text-green-500">Completed: </span>
-                <span className="font-medium">{statusCounts.completed}</span>
-              </div>
-            </div>
+            <DocPrintingStats statusCounts={statusCounts} />
             
             {/* Filters */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <Select
-                value={activeDocType}
-                onValueChange={(value) => setActiveDocType(value as DocType | 'all')}
-              >
-                <SelectTrigger className="h-8 w-[150px]">
-                  <SelectValue placeholder="Document Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="SLB">SLB</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select
-                value={filterStatus}
-                onValueChange={(value) => setFilterStatus(value as DocStatus | 'all')}
-              >
-                <SelectTrigger className="h-8 w-[150px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <DocPrintingFilters
+              activeDocType={activeDocType}
+              setActiveDocType={setActiveDocType}
+              filterStatus={filterStatus}
+              setFilterStatus={setFilterStatus}
+            />
           </div>
           
-          {!user && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              <p className="text-yellow-700 text-sm">Please sign in to create and manage document requests</p>
-            </div>
-          )}
-          
-          {isLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <p>Loading document requests...</p>
-            </div>
-          ) : (
-            <DocPrintingRequests
-              requests={filteredRequests}
-              onEdit={handleEditRequest}
-              onDelete={handleDeleteRequest}
-              onStatusChange={handleStatusChange}
-            />
-          )}
+          <DocPrintingContent
+            isAuthenticated={!!user}
+            isLoading={isLoading}
+            filteredRequests={filteredRequests}
+            onEdit={handleEditRequest}
+            onDelete={handleDeleteRequest}
+            onStatusChange={handleStatusChange}
+          />
         </CardContent>
       </Card>
       
-      {!projectId && (
-        <div className="bg-yellow-50 text-yellow-800 p-4 rounded-md text-sm">
-          Note: For full functionality, please select a project.
-        </div>
-      )}
+      <ProjectWarning hasProject={!!projectId} />
       
       {projectId && user && (
         <DocPrintingRequestDialog
