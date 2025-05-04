@@ -11,6 +11,7 @@ import { ProjectDescription } from './project-details/ProjectDescription';
 import { ProjectTimeline } from './project-details/ProjectTimeline';
 import { useProjectDetails } from './project-details/useProjectDetails';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const ProjectDetailsView = () => {
   const { id } = useParams<{ id: string }>();
@@ -111,7 +112,7 @@ const ProjectDetailsView = () => {
   }
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
       <ProjectHeader
         projectNumber={project.project_number}
         protocolTitle={project.protocol_title}
@@ -121,7 +122,7 @@ const ProjectDetailsView = () => {
         projectType={project.project_type}
       />
 
-      <div className="pt-2">
+      <div className="flex-1 overflow-y-auto pt-4 px-6 pb-8">
         <ProjectDescription description={project.description} />
 
         <ProjectStatisticsCards

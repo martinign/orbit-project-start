@@ -24,8 +24,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const isBillableProject = projectType === 'billable';
 
   return (
-    <div className="sticky top-4 z-10 mx-4 bg-muted py-4 border-b border rounded-lg shadow-sm mb-4">
-      <div className="flex items-center justify-between px-4">
+    <div className="sticky top-0 z-30 bg-muted py-4 border-b shadow-md after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[1px] after:bg-border">
+      <div className="flex items-center justify-between px-6">
         <div className="flex items-center space-x-4">
           <Link to="/projects">
             <Button variant="outline" size="icon">
