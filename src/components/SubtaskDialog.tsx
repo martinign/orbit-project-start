@@ -44,11 +44,8 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
 }) => {
   const formProps = useSubtaskForm(parentTask, subtask, mode, onSuccess);
   
-  // Use the updated useTeamMembers hook that only returns authenticated users
-  const { data: teamMembers, isLoading } = useTeamMembers();
-  
-  // Note: We don't need to process team members anymore as the display_name
-  // property is now added in the useTeamMembers hook
+  // Use the project_id from parentTask to filter team members
+  const { data: teamMembers, isLoading } = useTeamMembers(parentTask?.project_id);
   
   return (
     <Dialog open={open} onOpenChange={onClose}>

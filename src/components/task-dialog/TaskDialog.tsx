@@ -46,8 +46,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const { toast } = useToast();
   
-  // Use the updated useTeamMembers hook that only returns authenticated users
-  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
+  // Pass the projectId to useTeamMembers to filter by project
+  const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers(projectId);
   
   const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
 
