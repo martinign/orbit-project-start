@@ -69,7 +69,8 @@ export const useTeamMemberName = (memberId?: string | null) => {
 
   if (!memberId) return { memberName: null, isLoading };
 
-  const member = teamMembers?.find((m) => m.id === memberId);
+  // Try to find team member by either id or user_id
+  const member = teamMembers?.find((m) => m.id === memberId || m.user_id === memberId);
   return { 
     memberName: member?.display_name || member?.full_name || null, 
     isLoading 
