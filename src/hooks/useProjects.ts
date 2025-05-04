@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { usePagination } from "@/hooks/usePagination";
 
 export const useProjects = () => {
   const { toast } = useToast();
@@ -12,40 +11,21 @@ export const useProjects = () => {
   const [activeTab, setActiveTab] = useState<"all" | "billable" | "non-billable">("all");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
-  const [totalProjects, setTotalProjects] = useState(0);
   
-  // Initialize pagination with default values
-  const pagination = usePagination({ pageSize: 10 });
-  
-  // Fetch projects with pagination
   const {
     data: projects,
     isLoading,
     refetch
   } = useQuery({
-    queryKey: ["projects", pagination.currentPage, pagination.pageSize],
+    queryKey: ["projects"],
     queryFn: async () => {
-      // First get total count for pagination
-      const { count, error: countError } = await supabase
-        .from("projects")
-        .select("*", { count: "exact", head: true });
-      
-      if (countError) throw countError;
-      
-      if (count !== null) {
-        setTotalProjects(count);
-        pagination.updateTotalPages(count);
-      }
-      
-      // Then fetch data with pagination
       const { data, error } = await supabase
         .from("projects")
         .select("*")
-        .order("created_at", { ascending: false })
-        .range(pagination.range.from, pagination.range.to);
+        .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      return data;
     }
   });
 
@@ -85,8 +65,6 @@ export const useProjects = () => {
   // Reset status filter when changing tabs
   useEffect(() => {
     setStatusFilter("");
-    // Reset pagination to first page when changing tabs
-    pagination.setPage(1);
   }, [activeTab]);
 
   const handleDeleteProject = async (projectId: string) => {
@@ -134,9 +112,6 @@ export const useProjects = () => {
     statusFilter,
     setStatusFilter,
     handleDeleteProject,
-    refetch,
-    // Pagination
-    pagination,
-    totalProjects
+    refetch
   };
 };

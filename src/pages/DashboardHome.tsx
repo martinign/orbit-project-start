@@ -9,12 +9,8 @@ import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { useDashboardSections } from "@/hooks/useDashboardSections";
-import { useQueryClient } from "@tanstack/react-query";
 
 const DashboardHome = () => {
-  // Query client for manual cache management
-  const queryClient = useQueryClient();
-  
   // Custom hooks
   const { features, setFeatures } = useExtraFeatures();
   const { newTasksCount, newEventsCount, hideBadge } = useTotalNewItemsCount();
@@ -35,7 +31,7 @@ const DashboardHome = () => {
     setIsUpcomingEventsOpen
   } = useDashboardSections();
   
-  // Setup realtime subscriptions using our optimized hook
+  // Setup realtime subscriptions
   useDashboardRealtime();
 
   // Hide badge when first load the dashboard
@@ -62,28 +58,6 @@ const DashboardHome = () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [setFeatures]);
-
-  // Pre-fetch critical data
-  useEffect(() => {
-    // Prefetch vital dashboard data with a staleTime to prevent frequent refetches
-    queryClient.prefetchQuery({
-      queryKey: ['projects_statistics'],
-      queryFn: async () => {
-        // Prefetch implementation depends on actual data fetching logic
-        return null;
-      },
-      staleTime: 30000 // 30 seconds
-    });
-    
-    queryClient.prefetchQuery({
-      queryKey: ['tasks_statistics'],
-      queryFn: async () => {
-        // Prefetch implementation depends on actual data fetching logic
-        return null;
-      },
-      staleTime: 30000 // 30 seconds
-    });
-  }, [queryClient]);
 
   // Filter setups for activities and events
   const activitiesFilters = {
