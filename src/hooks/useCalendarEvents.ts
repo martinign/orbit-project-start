@@ -18,7 +18,6 @@ interface Event {
 interface TeamMember {
   id: string;
   full_name: string;
-  last_name: string;
 }
 
 export const useCalendarEvents = (projectId: string) => {
@@ -92,7 +91,7 @@ export const useCalendarEvents = (projectId: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('project_team_members')
-        .select('id, full_name, last_name')
+        .select('id, full_name')
         .eq('project_id', projectId);
 
       if (error) throw error;

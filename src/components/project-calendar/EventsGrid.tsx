@@ -1,14 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { EventCard } from './EventCard';
-import { Card } from '@/components/ui/card';
+import { Calendar, Search } from 'lucide-react';
 
 interface EventsGridProps {
   events: any[];
   isLoading: boolean;
   onDeleteEvent: (id: string) => void;
   onEditEvent: (event: any) => void;
-  hasEditAccess?: boolean | undefined;
+  hasEditAccess: boolean | undefined;
   isAuthenticated: boolean;
   currentUserId: string | undefined;
   lastUpdate: number;
@@ -26,49 +27,52 @@ export function EventsGrid({
   lastUpdate,
   searchQuery = ''
 }: EventsGridProps) {
-  // Filter events based on search query if provided
-  const filteredEvents = searchQuery ? 
-    events.filter(event => 
-      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    ) : 
-    events;
-  
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        {[1, 2, 3].map(i => (
-          <Card key={i} className="p-3 animate-pulse h-20">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardContent className="p-6 flex justify-center items-center h-40">
+          <p>Loading events...</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (filteredEvents.length === 0) {
+  if (events.length === 0) {
     return (
-      <Card className="p-4 text-center">
-        {searchQuery ? 
-          <p className="text-muted-foreground">No events match your search</p> : 
-          <p className="text-muted-foreground">No events scheduled for this period</p>
-        }
+      <Card>
+        <CardContent className="p-6 flex flex-col items-center justify-center h-40 text-center">
+          {searchQuery ? (
+            <>
+              <Search className="h-12 w-12 text-muted-foreground opacity-20 mb-2" />
+              <p className="font-medium">No events match your search</p>
+              <p className="text-muted-foreground text-sm">Try a different search term</p>
+            </>
+          ) : (
+            <>
+              <Calendar className="h-12 w-12 text-muted-foreground opacity-20 mb-2" />
+              <p className="font-medium">No events scheduled</p>
+              <p className="text-muted-foreground text-sm">
+                {isAuthenticated
+                  ? 'Click on a date to add an event'
+                  : 'Sign in to add events'}
+              </p>
+            </>
+          )}
+        </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {filteredEvents.map((event) => (
-        <EventCard 
-          key={`${event.id}-${lastUpdate}`} 
-          event={event} 
-          onDelete={onDeleteEvent} 
-          onEdit={onEditEvent}
-          isAuthenticated={isAuthenticated}
-          isOwner={event.user_id === currentUserId}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {events.map((event) => (
+        <EventCard
+          key={`${event.id}-${lastUpdate}`}
+          event={event}
+          onDelete={() => onDeleteEvent(event.id)}
+          onEdit={() => onEditEvent(event)}
           hasEditAccess={hasEditAccess}
+          currentUserId={currentUserId}
         />
       ))}
     </div>

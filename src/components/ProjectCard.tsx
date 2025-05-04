@@ -97,8 +97,7 @@ const ProjectCard = ({
         {project.status}
       </span>
       
-      <Badge variant={isBillable ? "default" : "secondary"} 
-             className={isBillable ? "bg-blue-500" : "bg-purple-100 text-purple-800 hover:bg-purple-200"}>
+      <Badge variant={isBillable ? "default" : "secondary"} className={isBillable ? "bg-blue-500" : "bg-gray-500"}>
         {isBillable ? "Billable" : "Non-billable"}
       </Badge>
     </div>

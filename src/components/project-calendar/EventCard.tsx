@@ -15,12 +15,10 @@ interface Event {
 
 interface EventCardProps {
   event: Event;
-  onDelete: (id: string) => void; // Updated to accept the event id
-  onEdit: (event: Event) => void; // Updated to accept the event
-  hasEditAccess?: boolean;
-  isAuthenticated: boolean;
-  isOwner: boolean;
-  currentUserId?: string; // Make this optional
+  onDelete: () => void;
+  onEdit: () => void;
+  hasEditAccess: boolean;
+  currentUserId: string | undefined; // Add the current user ID prop
 }
 
 export function EventCard({ 
@@ -28,15 +26,17 @@ export function EventCard({
   onDelete, 
   onEdit, 
   hasEditAccess,
-  isAuthenticated,
-  isOwner
+  currentUserId
 }: EventCardProps) {
   const { data: userProfile, isLoading } = useUserProfile(event.user_id);
   
+  // Check if the current user is the creator of the event
+  const isEventCreator = currentUserId === event.user_id;
+
   // Debug logging to track permission state
   useEffect(() => {
-    console.log(`EventCard for ${event.title} - creator: ${event.user_id}, can edit: ${isOwner}`);
-  }, [event.id, event.title, event.user_id, isOwner]);
+    console.log(`EventCard for ${event.title} - creator: ${event.user_id}, current user: ${currentUserId}, can edit: ${isEventCreator}`);
+  }, [event.id, event.title, event.user_id, currentUserId, isEventCreator]);
 
   const getCreatorName = () => {
     if (isLoading) return 'Loading...';
@@ -61,12 +61,12 @@ export function EventCard({
         </p>
       </div>
       {/* Only show edit/delete buttons if the user is the creator of the event */}
-      {isOwner && isAuthenticated && (
+      {isEventCreator && (
         <div className="flex justify-end gap-2 mt-4">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onEdit(event)}
+            onClick={onEdit}
             className="bg-blue-500 hover:bg-blue-600 text-white"
           >
             <PenSquare className="h-4 w-4 text-white" />
@@ -74,7 +74,7 @@ export function EventCard({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDelete(event.id)}
+            onClick={onDelete}
             className="bg-red-500 hover:bg-red-600 text-white"
           >
             <Trash className="h-4 w-4 text-white" />

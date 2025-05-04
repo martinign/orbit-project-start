@@ -47,11 +47,7 @@ const ProjectsTable = ({
             
             {isProjectType === "all" && (
               <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  project.project_type === 'billable' 
-                    ? 'bg-blue-100 text-blue-800' 
-                    : 'bg-purple-50 text-purple-800'
-                }`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.project_type === 'billable' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                   {project.project_type === 'billable' ? 'Billable' : 'Non-billable'}
                 </span>
               </TableCell>

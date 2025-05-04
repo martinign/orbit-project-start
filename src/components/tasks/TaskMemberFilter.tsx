@@ -40,7 +40,7 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
         <Button variant="outline" className="w-[200px]">
           <Users className="mr-2 h-4 w-4" />
           {selectedMemberId ? 
-            selectedUser ? `${selectedUser.full_name} ${selectedUser.last_name}` : 'All Members' 
+            selectedUser ? `${selectedUser.full_name}` : 'All Members' 
             : 'All Members'}
         </Button>
       </DropdownMenuTrigger>
@@ -54,7 +54,7 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
             key={user.id}
             onClick={() => onMemberSelect(user.id)}
           >
-            {`${user.full_name} ${user.last_name}`} ({user.role})
+            {`${user.full_name}`} ({user.role})
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

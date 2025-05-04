@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 interface TeamMember {
   id: string;
   full_name: string;
-  last_name: string;
 }
 
 interface CalendarHeaderProps {
@@ -33,10 +32,7 @@ export function CalendarHeader({
           <Button variant="outline" className="h-9 text-sm">
             <CalendarIcon className="mr-2 h-4 w-4" />
             {selectedUserId ? 
-              (() => {
-                const member = teamMembers.find(m => m.id === selectedUserId);
-                return member ? `${member.full_name} ${member.last_name}` : 'All Events';
-              })() 
+              teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 
               : 'All Events'}
           </Button>
         </DropdownMenuTrigger>
@@ -49,7 +45,7 @@ export function CalendarHeader({
               key={member.id}
               onClick={() => setSelectedUserId(member.id)}
             >
-              {member.full_name} {member.last_name}
+              {member.full_name}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
