@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StarterPackProgress } from './StarterPackProgress';
@@ -44,8 +45,8 @@ export const SiteOverviewCard: React.FC<SiteOverviewCardProps> = ({
           <div className="space-y-6">
             {summary.labpSites > 0 && (
               <StarterPackProgress 
-                labpSites={summary.labpSites} 
-                starterPackSent={summary.starterPackSent} 
+                totalSites={summary.totalSites} 
+                sitesWithStarterPack={summary.starterPackSent} 
               />
             )}
 
