@@ -15,17 +15,21 @@ export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Project Notes</CardTitle>
-        <CardDescription>View and manage project notes</CardDescription>
-        <div className="relative mt-2">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search notes..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Project Notes</CardTitle>
+            <CardDescription>View and manage project notes</CardDescription>
+          </div>
+          <div className="relative w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search notes..."
+              className="pl-8 h-9 text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

@@ -72,7 +72,7 @@ export function EventsGrid({
           onDelete={() => onDeleteEvent(event.id)}
           onEdit={() => onEditEvent(event)}
           hasEditAccess={hasEditAccess}
-          isOwner={currentUserId === event.user_id}
+          // Removing the isOwner prop that's causing the TypeScript error
         />
       ))}
     </div>
