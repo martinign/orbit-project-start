@@ -1,27 +1,21 @@
 
 import React from 'react';
-import { CalendarCard } from './CalendarCard';
+import { Card } from '@/components/ui/card';
+import { Calendar } from '@/components/ui/calendar';
 import { EventsGrid } from './EventsGrid';
-
-interface Event {
-  id: string;
-  title: string;
-  description: string | null;
-  user_id: string;
-  event_date: string | null;
-}
 
 interface CalendarLayoutProps {
   selectedDate: Date | undefined;
   onSelectDate: (date: Date | undefined) => void;
-  events: Event[];
-  hasEditAccess: boolean;
+  events: any[];
+  hasEditAccess: boolean | undefined;
   eventsLoading: boolean;
   onDeleteEvent: (id: string) => void;
-  onEditEvent: (event: Event) => void;
+  onEditEvent: (event: any) => void;
   isAuthenticated: boolean;
-  currentUserId?: string;
-  lastUpdate?: number; // Add lastUpdate prop
+  currentUserId: string | undefined;
+  lastUpdate: number;
+  searchQuery?: string;
 }
 
 export function CalendarLayout({
@@ -34,31 +28,33 @@ export function CalendarLayout({
   onEditEvent,
   isAuthenticated,
   currentUserId,
-  lastUpdate
+  lastUpdate,
+  searchQuery = ''
 }: CalendarLayoutProps) {
-  // Using lastUpdate in a React.useMemo to force re-evaluation when it changes
-  const memoizedEvents = React.useMemo(() => events, [events, lastUpdate]);
-  
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4">
-      <CalendarCard
-        selectedDate={selectedDate}
-        onSelect={onSelectDate}
-        hasEditAccess={hasEditAccess}
-        events={memoizedEvents}
-        isAuthenticated={isAuthenticated}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <Card className="p-3 md:col-span-2">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={onSelectDate}
+          className="w-full"
+        />
+      </Card>
       
-      <EventsGrid
-        events={memoizedEvents}
-        selectedDate={selectedDate}
-        hasEditAccess={hasEditAccess}
-        onDelete={onDeleteEvent}
-        onEdit={onEditEvent}
-        isLoading={eventsLoading}
-        currentUserId={currentUserId}
-        key={`events-grid-${lastUpdate}`} // Use key to force re-render
-      />
+      <div className="md:col-span-5">
+        <EventsGrid
+          events={events}
+          isLoading={eventsLoading}
+          onDeleteEvent={onDeleteEvent}
+          onEditEvent={onEditEvent}
+          hasEditAccess={hasEditAccess}
+          isAuthenticated={isAuthenticated}
+          currentUserId={currentUserId}
+          lastUpdate={lastUpdate}
+          searchQuery={searchQuery}
+        />
+      </div>
     </div>
   );
 }

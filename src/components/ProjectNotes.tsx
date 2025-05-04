@@ -11,7 +11,12 @@ import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteOperations } from '@/hooks/useNoteOperations';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function ProjectNotes({ projectId }: { projectId: string }) {
+interface ProjectNotesProps {
+  projectId: string;
+  searchQuery?: string;
+}
+
+export default function ProjectNotes({ projectId, searchQuery = '' }: ProjectNotesProps) {
   const { user } = useAuth();
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
@@ -31,6 +36,13 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
     updateNote,
     deleteNote,
   } = useNoteOperations(projectId);
+
+  // Filter notes based on search query
+  const filteredNotes = notes.filter(note => 
+    searchQuery === '' || 
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (note.content && note.content.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   const handleCreateNote = () => {
     setTitle('');
@@ -78,13 +90,17 @@ export default function ProjectNotes({ projectId }: { projectId: string }) {
 
       {isLoading ? (
         <div className="flex justify-center py-10">Loading notes...</div>
-      ) : notes.length > 0 ? (
+      ) : filteredNotes.length > 0 ? (
         <NotesList 
-          notes={notes} 
+          notes={filteredNotes} 
           onEditNote={handleEditNote} 
           onDeleteConfirmation={handleDeleteConfirmation}
           hasEditAccess={!!hasProjectAccess}
         />
+      ) : notes.length > 0 && filteredNotes.length === 0 ? (
+        <div className="py-10 text-center">
+          <p className="text-muted-foreground">No notes match your search criteria</p>
+        </div>
       ) : (
         <NotesEmptyState onCreateNote={user ? handleCreateNote : undefined} />
       )}

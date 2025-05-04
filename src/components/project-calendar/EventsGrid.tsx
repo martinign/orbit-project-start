@@ -1,111 +1,80 @@
 
-import { useState } from "react";
-import { format } from "date-fns";
-import { ChevronDown, ChevronUp, Expand } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { EventCard } from "./EventCard";
-
-interface Event {
-  id: string;
-  title: string;
-  description: string | null;
-  user_id: string;
-  event_date: string | null;
-}
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { EventCard } from './EventCard';
+import { Calendar, Search } from 'lucide-react';
 
 interface EventsGridProps {
-  events: Event[];
-  selectedDate: Date | undefined;
-  hasEditAccess: boolean;
-  onDelete: (id: string) => void;
-  onEdit: (event: Event) => void;
+  events: any[];
   isLoading: boolean;
-  currentUserId: string | undefined; // Add the current user ID prop
+  onDeleteEvent: (id: string) => void;
+  onEditEvent: (event: any) => void;
+  hasEditAccess: boolean | undefined;
+  isAuthenticated: boolean;
+  currentUserId: string | undefined;
+  lastUpdate: number;
+  searchQuery?: string;
 }
 
 export function EventsGrid({
   events,
-  selectedDate,
-  hasEditAccess,
-  onDelete,
-  onEdit,
   isLoading,
-  currentUserId
+  onDeleteEvent,
+  onEditEvent,
+  hasEditAccess,
+  isAuthenticated,
+  currentUserId,
+  lastUpdate,
+  searchQuery = ''
 }: EventsGridProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const initialEvents = events.slice(0, 6);
-  const remainingEvents = events.slice(6);
-  const hasMoreEvents = remainingEvents.length > 0;
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="p-6 flex justify-center items-center h-40">
+          <p>Loading events...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 flex flex-col items-center justify-center h-40 text-center">
+          {searchQuery ? (
+            <>
+              <Search className="h-12 w-12 text-muted-foreground opacity-20 mb-2" />
+              <p className="font-medium">No events match your search</p>
+              <p className="text-muted-foreground text-sm">Try a different search term</p>
+            </>
+          ) : (
+            <>
+              <Calendar className="h-12 w-12 text-muted-foreground opacity-20 mb-2" />
+              <p className="font-medium">No events scheduled</p>
+              <p className="text-muted-foreground text-sm">
+                {isAuthenticated
+                  ? 'Click on a date to add an event'
+                  : 'Sign in to add events'}
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
-        <div>
-          <CardTitle>Events</CardTitle>
-          <CardDescription>
-            {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'All events'}
-          </CardDescription>
-        </div>
-        {hasMoreEvents && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 transition-transform"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            <Expand className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {isLoading ? (
-            <p>Loading events...</p>
-          ) : events.length === 0 ? (
-            <p className="text-muted-foreground">No events found</p>
-          ) : (
-            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {initialEvents.map(event => (
-                  <EventCard 
-                    key={event.id} 
-                    event={event} 
-                    onDelete={() => onDelete(event.id)} 
-                    onEdit={() => onEdit(event)} 
-                    hasEditAccess={hasEditAccess}
-                    currentUserId={currentUserId} 
-                  />
-                ))}
-              </div>
-
-              {hasMoreEvents && (
-                <>
-                  <CollapsibleContent className="mt-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {remainingEvents.map(event => (
-                        <EventCard 
-                          key={event.id} 
-                          event={event} 
-                          onDelete={() => onDelete(event.id)} 
-                          onEdit={() => onEdit(event)} 
-                          hasEditAccess={hasEditAccess}
-                          currentUserId={currentUserId} 
-                        />
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-
-                  <CollapsibleTrigger asChild>
-                    
-                  </CollapsibleTrigger>
-                </>
-              )}
-            </Collapsible>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {events.map((event) => (
+        <EventCard
+          key={`${event.id}-${lastUpdate}`}
+          event={event}
+          onDelete={() => onDeleteEvent(event.id)}
+          onEdit={() => onEditEvent(event)}
+          hasEditAccess={hasEditAccess}
+          isOwner={currentUserId === event.user_id}
+        />
+      ))}
+    </div>
   );
 }

@@ -7,15 +7,16 @@ import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 
 interface ProjectCalendarProps {
   projectId: string;
+  searchQuery?: string;
 }
 
-export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
+export function ProjectCalendar({ projectId, searchQuery = '' }: ProjectCalendarProps) {
   const {
     selectedDate,
     selectedUserId,
     setSelectedUserId,
     editingEvent,
-    setEditingEvent, // Make sure we use the setter function
+    setEditingEvent,
     isEventDialogOpen,
     setIsEventDialogOpen,
     events,
@@ -27,11 +28,15 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
     handleDeleteEvent,
     handleEventSubmit,
     user,
-    lastUpdate // Include the lastUpdate for forcing re-renders
+    lastUpdate
   } = useCalendarEvents(projectId);
   
-  // We've moved the real-time subscription to the useCalendarEvents hook
-  // to avoid duplicate subscriptions and ensure consistent state management
+  // Filter events based on search query
+  const filteredEvents = events.filter(event => 
+    searchQuery === '' || 
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="space-y-4">
@@ -44,21 +49,22 @@ export function ProjectCalendar({ projectId }: ProjectCalendarProps) {
       <CalendarLayout
         selectedDate={selectedDate}
         onSelectDate={handleDateSelect}
-        events={events}
+        events={filteredEvents}
         hasEditAccess={hasEditAccess}
         eventsLoading={eventsLoading}
         onDeleteEvent={handleDeleteEvent}
         onEditEvent={handleEditEvent}
         isAuthenticated={!!user}
         currentUserId={user?.id}
-        lastUpdate={lastUpdate} // Pass down to force re-renders
+        lastUpdate={lastUpdate}
+        searchQuery={searchQuery}
       />
 
       <EventDialog
         open={isEventDialogOpen}
         onClose={() => {
           setIsEventDialogOpen(false);
-          setEditingEvent(null); // Use the setter function instead of direct assignment
+          setEditingEvent(null);
         }}
         onSubmit={handleEventSubmit}
         mode={editingEvent ? 'edit' : 'create'}
