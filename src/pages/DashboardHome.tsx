@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFilters } from "@/components/dashboard/DashboardFilters";
 import { StatisticsSection } from "@/components/dashboard/StatisticsSection";
 import { ActivityEventsSection } from "@/components/dashboard/ActivityEventsSection";
+import { ExtraFeaturesSections } from "@/components/dashboard/ExtraFeaturesSections";
 import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
@@ -27,8 +28,16 @@ const DashboardHome = () => {
   const {
     isRecentActivitiesOpen,
     isUpcomingEventsOpen,
+    isImportantLinksOpen,
+    isSiteTrackerOpen,
+    isRepositoryOpen,
+    isDocPrintingOpen,
     setIsRecentActivitiesOpen,
-    setIsUpcomingEventsOpen
+    setIsUpcomingEventsOpen,
+    setIsImportantLinksOpen,
+    setIsSiteTrackerOpen,
+    setIsRepositoryOpen,
+    setIsDocPrintingOpen
   } = useDashboardSections();
   
   // Setup realtime subscriptions
@@ -94,6 +103,21 @@ const DashboardHome = () => {
         newEventsCount={newEventsCount}
         setIsRecentActivitiesOpen={setIsRecentActivitiesOpen}
         setIsUpcomingEventsOpen={setIsUpcomingEventsOpen}
+      />
+
+      {/* Extra Features Section */}
+      <ExtraFeaturesSections 
+        features={features}
+        projectId={filters.projectId}
+        isImportantLinksOpen={isImportantLinksOpen}
+        isSiteTrackerOpen={isSiteTrackerOpen}
+        isRepositoryOpen={isRepositoryOpen}
+        isDocPrintingOpen={isDocPrintingOpen}
+        setIsImportantLinksOpen={setIsImportantLinksOpen}
+        setIsSiteTrackerOpen={setIsSiteTrackerOpen}
+        setIsRepositoryOpen={setIsRepositoryOpen}
+        setIsDocPrintingOpen={setIsDocPrintingOpen}
+        key={`extra-features-${JSON.stringify(features)}`}
       />
     </div>
   );
