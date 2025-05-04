@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { EventsGrid } from './EventsGrid';
-
 interface CalendarLayoutProps {
   selectedDate: Date | undefined;
   onSelectDate: (date: Date | undefined) => void;
@@ -17,7 +15,6 @@ interface CalendarLayoutProps {
   lastUpdate: number;
   searchQuery?: string;
 }
-
 export function CalendarLayout({
   selectedDate,
   onSelectDate,
@@ -31,30 +28,13 @@ export function CalendarLayout({
   lastUpdate,
   searchQuery = ''
 }: CalendarLayoutProps) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-      <Card className="p-3 md:col-span-2">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={onSelectDate}
-          className="w-full"
-        />
+  return <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <Card className="p-3 md:col-span-2 py-[20px] px-[48px]">
+        <Calendar mode="single" selected={selectedDate} onSelect={onSelectDate} className="w-full" />
       </Card>
       
       <div className="md:col-span-5">
-        <EventsGrid
-          events={events}
-          isLoading={eventsLoading}
-          onDeleteEvent={onDeleteEvent}
-          onEditEvent={onEditEvent}
-          hasEditAccess={hasEditAccess}
-          isAuthenticated={isAuthenticated}
-          currentUserId={currentUserId}
-          lastUpdate={lastUpdate}
-          searchQuery={searchQuery}
-        />
+        <EventsGrid events={events} isLoading={eventsLoading} onDeleteEvent={onDeleteEvent} onEditEvent={onEditEvent} hasEditAccess={hasEditAccess} isAuthenticated={isAuthenticated} currentUserId={currentUserId} lastUpdate={lastUpdate} searchQuery={searchQuery} />
       </div>
-    </div>
-  );
+    </div>;
 }
