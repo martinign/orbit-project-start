@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Check, X } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Check, X, Filter } from 'lucide-react';
 import { SiteData, REQUIRED_ROLES, getSitesWithSameReference, getMissingRoles, getUniqueSiteReferences } from '@/hooks/site-initiation';
 import { 
   Table, 
@@ -11,35 +11,90 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface SiteRolesCoverageTableProps {
   sites: SiteData[];
 }
 
 export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ sites }) => {
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  
+  // Get all unique countries from sites
+  const uniqueCountries = useMemo(() => {
+    const countries = new Set(sites.filter(site => site.country).map(site => site.country as string));
+    return Array.from(countries).sort();
+  }, [sites]);
+  
   // Get all unique site references
   const uniqueReferences = getUniqueSiteReferences(sites);
   
   // Prepare site data by reference number
-  const siteData = uniqueReferences.map(refNumber => {
-    const sitesWithSameRef = getSitesWithSameReference(sites, refNumber);
-    const missingRoles = getMissingRoles(sites, refNumber);
-    const existingRoles = REQUIRED_ROLES.filter(role => !missingRoles.includes(role));
-    
-    // Get institution name (use the first one if multiple exist for the same reference)
-    const institution = sitesWithSameRef.find(site => site.institution)?.institution || 'Unknown';
-    
-    return {
-      referenceNumber: refNumber,
-      institution,
-      existingRoles,
-      missingRoles
-    };
-  });
+  const siteData = useMemo(() => {
+    return uniqueReferences.map(refNumber => {
+      const sitesWithSameRef = getSitesWithSameReference(sites, refNumber);
+      const missingRoles = getMissingRoles(sites, refNumber);
+      const existingRoles = REQUIRED_ROLES.filter(role => !missingRoles.includes(role));
+      
+      // Get institution name and country (use the first one if multiple exist for the same reference)
+      const firstSite = sitesWithSameRef.find(site => site.institution);
+      const institution = firstSite?.institution || 'Unknown';
+      const country = firstSite?.country || 'Unknown';
+      
+      return {
+        referenceNumber: refNumber,
+        institution,
+        country,
+        existingRoles,
+        missingRoles
+      };
+    });
+  }, [sites, uniqueReferences]);
+
+  // Filter sites by country if a country filter is selected
+  const filteredSiteData = useMemo(() => {
+    if (countryFilter === "all") {
+      return siteData;
+    }
+    return siteData.filter(site => site.country === countryFilter);
+  }, [siteData, countryFilter]);
 
   return (
     <div className="mt-6">
-      <h3 className="font-semibold text-base mb-3">Site Role Coverage</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-semibold text-base">Site Role Coverage</h3>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={countryFilter} onValueChange={setCountryFilter}>
+            <SelectTrigger className="w-[180px] h-8 text-xs">
+              <SelectValue placeholder="Filter by country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Countries</SelectItem>
+              {uniqueCountries.map(country => (
+                <SelectItem key={country} value={country}>{country}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {countryFilter !== "all" && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 px-2 text-xs"
+              onClick={() => setCountryFilter("all")}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
       <div className="border rounded-md overflow-auto">
         <Table>
           <TableHeader>
@@ -52,7 +107,7 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {siteData.map(site => (
+            {filteredSiteData.map(site => (
               <TableRow key={site.referenceNumber}>
                 <TableCell className="font-medium">{site.referenceNumber}</TableCell>
                 <TableCell>{site.institution}</TableCell>
@@ -80,6 +135,13 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
                 })}
               </TableRow>
             ))}
+            {filteredSiteData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={2 + REQUIRED_ROLES.length} className="h-24 text-center text-muted-foreground">
+                  No sites found for the selected country
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
