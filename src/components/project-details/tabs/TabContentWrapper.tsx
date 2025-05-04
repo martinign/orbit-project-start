@@ -15,10 +15,11 @@ export const TabContentWrapper: React.FC<TabContentWrapperProps> = ({
 }) => {
   return (
     <TabsContent value={value} className="space-y-4">
-      <div className="bg-white p-4 rounded-lg shadow-sm">
+      <div className="bg-muted p-4 rounded-lg shadow-sm">
         <h3 className="text-lg font-medium mb-4">{title}</h3>
         {children}
       </div>
     </TabsContent>
   );
 };
+

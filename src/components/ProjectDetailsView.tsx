@@ -111,7 +111,7 @@ const ProjectDetailsView = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <ProjectHeader
         projectNumber={project.project_number}
         protocolTitle={project.protocol_title}
@@ -121,42 +121,44 @@ const ProjectDetailsView = () => {
         projectType={project.project_type}
       />
 
-      <ProjectDescription description={project.description} />
+      <div className="pt-2">
+        <ProjectDescription description={project.description} />
 
-      <ProjectStatisticsCards
-        contactsCount={contactsCount}
-        teamMembersCount={teamMembersCount}
-        tasksStats={tasksStats}
-        eventsCount={eventsCount}
-        notesCount={notesCount}
-        onTabChange={setActiveTab}
-        projectId={id || ''}
-      />
-
-      <ProjectTimeline
-        createdAt={project.created_at}
-        creatorProfile={creatorProfile}
-      />
-
-      <ProjectContentTabs 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab}
-        extraFeatures={safeFeatures}
-        isProjectOwner={isProjectOwner}
-        key={`tabs-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}`}
-      >
-        <ProjectTabsContent
-          activeTab={activeTab}
+        <ProjectStatisticsCards
+          contactsCount={contactsCount}
+          teamMembersCount={teamMembersCount}
+          tasksStats={tasksStats}
+          eventsCount={eventsCount}
+          notesCount={notesCount}
+          onTabChange={setActiveTab}
           projectId={id || ''}
-          tasks={tasks}
-          tasksLoading={tasksLoading}
-          refetchTasks={refetchTasks}
-          contactSearchQuery={contactSearchQuery}
-          setContactSearchQuery={setContactSearchQuery}
-          extraFeatures={safeFeatures}
-          key={`content-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}-${id}`}
         />
-      </ProjectContentTabs>
+
+        <ProjectTimeline
+          createdAt={project.created_at}
+          creatorProfile={creatorProfile}
+        />
+
+        <ProjectContentTabs 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          extraFeatures={safeFeatures}
+          isProjectOwner={isProjectOwner}
+          key={`tabs-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}`}
+        >
+          <ProjectTabsContent
+            activeTab={activeTab}
+            projectId={id || ''}
+            tasks={tasks}
+            tasksLoading={tasksLoading}
+            refetchTasks={refetchTasks}
+            contactSearchQuery={contactSearchQuery}
+            setContactSearchQuery={setContactSearchQuery}
+            extraFeatures={safeFeatures}
+            key={`content-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}-${id}`}
+          />
+        </ProjectContentTabs>
+      </div>
     </div>
   );
 };
