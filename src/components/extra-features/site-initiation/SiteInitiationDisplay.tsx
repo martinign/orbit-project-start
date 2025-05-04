@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useSiteInitiationData } from '@/hooks/useSiteInitiationData';
+import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
 import { SummaryStats } from './display/SummaryStats';
 import { SiteOverviewCard } from './display/SiteOverviewCard';
 import { ErrorState } from './display/ErrorState';
@@ -25,6 +25,7 @@ export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ pr
         summary={summary} 
         loading={loading} 
         sitesExist={sites.length > 0}
+        sites={sites}
       />
     </div>
   );
