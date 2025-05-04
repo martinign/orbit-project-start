@@ -10,11 +10,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Check, X, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { StarterPackProgress } from './display/StarterPackProgress';
 import { ErrorState } from './display/ErrorState';
 import { LoadingState } from './display/LoadingState';
 import { 
@@ -100,11 +99,15 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     return siteReferenceData.filter(site => site.country === countryFilter);
   }, [siteReferenceData, countryFilter]);
 
-  // Calculate statistics (only for LABP sites)
+  // Calculate statistics (for all unique site references)
   const stats = useMemo(() => {
-    const labpSites = sites.filter(site => isEligibleForStarterPack(site));
-    const totalSites = labpSites.length;
-    const sentCount = labpSites.filter(site => site.starter_pack).length;
+    // Total is all unique site references
+    const totalSites = uniqueSiteReferences.length;
+    
+    // Count how many site references have a LABP site with a starter pack
+    const sentCount = siteReferenceData.filter(site => site.hasStarterPack).length;
+    
+    // Calculate percentage
     const percentage = totalSites > 0 ? (sentCount / totalSites) * 100 : 0;
     
     return {
@@ -112,7 +115,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       sent: sentCount,
       percentage: Math.round(percentage)
     };
-  }, [sites, isEligibleForStarterPack]);
+  }, [uniqueSiteReferences, siteReferenceData]);
 
   // Handle starter pack toggle
   const handleStarterPackToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
@@ -142,11 +145,11 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
               <h3 className="text-lg font-semibold mb-2">Starter Pack Progress</h3>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-white p-4 rounded-md shadow-sm">
-                  <p className="text-sm text-muted-foreground">Total LABP Sites</p>
+                  <p className="text-sm text-muted-foreground">Total Unique Sites</p>
                   <p className="text-2xl font-semibold">{stats.total}</p>
                 </div>
                 <div className="bg-white p-4 rounded-md shadow-sm">
-                  <p className="text-sm text-muted-foreground">Starter Packs Sent</p>
+                  <p className="text-sm text-muted-foreground">Sites with Starter Packs</p>
                   <p className="text-2xl font-semibold">{stats.sent}</p>
                 </div>
               </div>
