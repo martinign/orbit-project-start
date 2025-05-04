@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getUniqueSiteReferences, isMissingLabpRole } from '@/hooks/site-initiation/siteUtils';
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -43,6 +44,24 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     isEligibleForStarterPack
   } = useSiteInitiationData(projectId);
 
+  // Get all unique site references
+  const uniqueSiteReferences = useMemo(() => {
+    return getUniqueSiteReferences(sites);
+  }, [sites]);
+
+  // Group sites by reference number
+  const sitesByReference = useMemo(() => {
+    const groupedSites: Record<string, SiteData[]> = {};
+    
+    uniqueSiteReferences.forEach(reference => {
+      groupedSites[reference] = sites.filter(site => 
+        site.pxl_site_reference_number === reference
+      );
+    });
+    
+    return groupedSites;
+  }, [sites, uniqueSiteReferences]);
+  
   // Get all unique countries from sites
   const uniqueCountries = useMemo(() => {
     const countries = new Set(sites
@@ -51,13 +70,35 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     return Array.from(countries).sort();
   }, [sites]);
 
-  // Apply country filter
-  const filteredSites = useMemo(() => {
+  // For each site reference, find if it has a LABP role site and if that site has a starter pack
+  const siteReferenceData = useMemo(() => {
+    return uniqueSiteReferences.map(reference => {
+      const sitesForReference = sitesByReference[reference];
+      const missingLabp = isMissingLabpRole(sites, reference);
+      const labpSite = sitesForReference.find(site => site.role === 'LABP');
+      
+      // Find a representative site for display (prefer LABP if available)
+      const representativeSite = labpSite || sitesForReference[0];
+      
+      return {
+        reference,
+        missingLabp,
+        labpSite,
+        hasStarterPack: labpSite ? !!labpSite.starter_pack : false,
+        country: representativeSite.country || '',
+        institution: representativeSite.institution || '',
+        personnel: representativeSite.site_personnel_name || ''
+      };
+    });
+  }, [uniqueSiteReferences, sitesByReference, sites]);
+
+  // Apply country filter to site references
+  const filteredSiteReferences = useMemo(() => {
     if (countryFilter === "all") {
-      return sites;
+      return siteReferenceData;
     }
-    return sites.filter(site => site.country === countryFilter);
-  }, [sites, countryFilter]);
+    return siteReferenceData.filter(site => site.country === countryFilter);
+  }, [siteReferenceData, countryFilter]);
 
   // Calculate statistics (only for LABP sites)
   const stats = useMemo(() => {
@@ -74,13 +115,13 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   }, [sites, isEligibleForStarterPack]);
 
   // Handle starter pack toggle
-  const handleStarterPackToggle = async (site: SiteData, newValue: boolean) => {
-    if (site.id && isEligibleForStarterPack(site)) {
-      const success = await updateSite(site.id, { starter_pack: newValue });
+  const handleStarterPackToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
+    if (labpSite && labpSite.id) {
+      const success = await updateSite(labpSite.id, { starter_pack: newValue });
       if (success) {
         toast({
           title: newValue ? "Starter pack marked as sent" : "Starter pack marked as not sent",
-          description: `Updated status for ${site.pxl_site_reference_number}`,
+          description: `Updated status for ${labpSite.pxl_site_reference_number}`,
         });
         refetch();
       }
@@ -153,14 +194,14 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         <CardContent>
           {loading ? (
             <LoadingState />
-          ) : sites.length === 0 ? (
+          ) : uniqueSiteReferences.length === 0 ? (
             <div className="text-center py-10">
               <h3 className="text-lg font-medium mb-2">No sites found</h3>
               <p className="text-muted-foreground text-sm">
                 Add sites to track starter pack status
               </p>
             </div>
-          ) : filteredSites.length === 0 ? (
+          ) : filteredSiteReferences.length === 0 ? (
             <div className="text-center py-10">
               <h3 className="text-lg font-medium mb-2">No sites found for this country</h3>
               <p className="text-muted-foreground text-sm">
@@ -175,44 +216,39 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                     <TableHead>Site Reference</TableHead>
                     <TableHead>Institution</TableHead>
                     <TableHead>Country</TableHead>
-                    <TableHead>Role</TableHead>
                     <TableHead>Personnel Name</TableHead>
                     <TableHead className="text-center">Starter Pack</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSites.map(site => {
-                    const isEligible = isEligibleForStarterPack(site);
-                    return (
-                      <TableRow key={site.id}>
-                        <TableCell className="font-medium">{site.pxl_site_reference_number}</TableCell>
-                        <TableCell>{site.institution || 'Unknown'}</TableCell>
-                        <TableCell>{site.country || 'Unknown'}</TableCell>
-                        <TableCell>{site.role}</TableCell>
-                        <TableCell>{site.site_personnel_name}</TableCell>
-                        <TableCell className="text-center">
-                          {isEligible ? (
-                            <div className="flex justify-center items-center gap-2">
-                              <Switch 
-                                checked={!!site.starter_pack} 
-                                onCheckedChange={(checked) => handleStarterPackToggle(site, checked)}
-                              />
-                              <span className={cn(
-                                "text-xs",
-                                site.starter_pack ? "text-green-600" : "text-muted-foreground"
-                              )}>
-                                {site.starter_pack ? "Sent" : "Not sent"}
-                              </span>
-                            </div>
-                          ) : (
-                            <Badge variant="outline" className="bg-gray-100">
-                              Missing Role
-                            </Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {filteredSiteReferences.map(siteRef => (
+                    <TableRow key={siteRef.reference}>
+                      <TableCell className="font-medium">{siteRef.reference}</TableCell>
+                      <TableCell>{siteRef.institution || 'Unknown'}</TableCell>
+                      <TableCell>{siteRef.country || 'Unknown'}</TableCell>
+                      <TableCell>{siteRef.personnel}</TableCell>
+                      <TableCell className="text-center">
+                        {siteRef.missingLabp ? (
+                          <Badge variant="outline" className="bg-gray-100">
+                            Missing LABP Role
+                          </Badge>
+                        ) : (
+                          <div className="flex justify-center items-center gap-2">
+                            <Switch 
+                              checked={siteRef.hasStarterPack} 
+                              onCheckedChange={(checked) => handleStarterPackToggle(siteRef.labpSite, checked)}
+                            />
+                            <span className={cn(
+                              "text-xs",
+                              siteRef.hasStarterPack ? "text-green-600" : "text-muted-foreground"
+                            )}>
+                              {siteRef.hasStarterPack ? "Sent" : "Not sent"}
+                            </span>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
