@@ -6,7 +6,9 @@ import { useFeatureEvents } from "./extra-features/useFeatureEvents";
 import { useProjectFeatures } from "./extra-features/useProjectFeatures";
 import { saveProjectFeaturesToDB, dispatchFeatureEvents } from "./extra-features/featureUtils";
 
-export { ExtraFeaturesState, defaultFeatures } from "./extra-features/types";
+// Change to export type for TypeScript isolatedModules compatibility
+export type { ExtraFeaturesState } from "./extra-features/types";
+export { defaultFeatures } from "./extra-features/types";
 
 export function useExtraFeatures(projectId?: string): UseExtraFeaturesResult {
   const { user } = useAuth();
