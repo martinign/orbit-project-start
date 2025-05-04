@@ -52,7 +52,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
     <>
       <RealtimeUpdatesManager projectId={projectId} />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="flex flex-nowrap gap-4 pb-2 overflow-x-auto">
         <ExtraFeaturesCard 
           projectId={projectId} 
           onClick={() => setFeaturesDialogOpen(true)}

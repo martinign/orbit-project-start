@@ -50,7 +50,7 @@ export const StatisticCard: React.FC<StatisticCardProps> = ({
 
   return (
     <Card 
-      className={`cursor-pointer transition-colors hover:bg-accent relative ${onClick ? 'cursor-pointer' : ''}`}
+      className={`cursor-pointer transition-colors hover:bg-accent relative flex-shrink-0 w-[200px] ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       {renderBadge()}
