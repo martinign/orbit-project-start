@@ -29,7 +29,7 @@ export function useRepositoryFiles(projectId?: string) {
       const { data, error } = await supabase
         .from('project_attachments')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('related_id', projectId) // Changed from 'project_id' to 'related_id'
         .eq('related_type', 'repository')
         .order('created_at', { ascending: false });
         
@@ -52,7 +52,7 @@ export function useRepositoryFiles(projectId?: string) {
   // Set up realtime subscription
   useRealtimeSubscription({
     table: 'project_attachments',
-    filter: 'project_id',
+    filter: 'related_id', // Changed from 'project_id' to 'related_id'
     filterValue: projectId,
     onRecordChange: () => {
       fetchFiles();
