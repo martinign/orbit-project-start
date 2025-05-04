@@ -2,6 +2,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProjectsTableProps {
   projects: any[];
@@ -18,6 +19,7 @@ const ProjectsTable = ({
   onProjectClick, 
   isProjectType = "all" 
 }: ProjectsTableProps) => {
+  const { user } = useAuth();
   const isBillableTab = isProjectType === "billable";
   const isNonBillableTab = isProjectType === "non-billable";
   
@@ -75,18 +77,22 @@ const ProjectsTable = ({
             
             <TableCell className="text-right">
               <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" onClick={e => onEdit(project, e)} title="Edit project">
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50" 
-                  onClick={e => onDelete(project, e)} 
-                  title="Delete project"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {user && user.id === project.user_id && (
+                  <>
+                    <Button variant="ghost" size="icon" onClick={e => onEdit(project, e)} title="Edit project">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50" 
+                      onClick={e => onDelete(project, e)} 
+                      title="Delete project"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </TableCell>
           </TableRow>

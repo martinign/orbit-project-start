@@ -1,8 +1,10 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import ProjectsTable from "./ProjectsTable";
 import ProjectsCardGrid from "./ProjectsCardGrid";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Button } from "@/components/ui/button";
+import { List } from "lucide-react";
 
 interface ProjectsContentProps {
   title: string;
@@ -22,6 +24,8 @@ interface ProjectsContentProps {
     totalPages: number;
     goToPage: (page: number) => void;
   };
+  showAll?: boolean;
+  setShowAll?: (value: boolean) => void;
 }
 
 const ProjectsContent = ({
@@ -37,7 +41,9 @@ const ProjectsContent = ({
   searchQuery,
   statusFilter,
   projectType = "all",
-  pagination
+  pagination,
+  showAll = false,
+  setShowAll
 }: ProjectsContentProps) => {
   const getEmptyStateMessage = () => {
     if (searchQuery) return "No projects match your search criteria";
@@ -80,16 +86,6 @@ const ProjectsContent = ({
                 onProjectClick={onProjectClick}
               />
             )}
-            
-            {pagination && (
-              <div className="flex justify-center items-center pt-4 mt-4 border-t">
-                <PaginationControls
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={pagination.goToPage}
-                />
-              </div>
-            )}
           </div>
         ) : (
           <div className="text-center p-4">
@@ -99,6 +95,31 @@ const ProjectsContent = ({
           </div>
         )}
       </CardContent>
+      {pagination && projects.length > 0 && (
+        <CardFooter className="flex justify-between border-t pt-6">
+          {setShowAll && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAll(!showAll)}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <List className="h-4 w-4 mr-2" />
+              {showAll ? "Show Paged" : "Show All"}
+            </Button>
+          )}
+          
+          {!showAll && (
+            <div className={setShowAll ? "ml-auto" : ""}>
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.goToPage}
+              />
+            </div>
+          )}
+        </CardFooter>
+      )}
     </Card>
   );
 };

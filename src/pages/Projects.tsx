@@ -37,7 +37,9 @@ const Projects = () => {
     setStatusFilter,
     handleDeleteProject,
     refetch,
-    pagination
+    pagination,
+    showAll,
+    setShowAll
   } = useProjects();
   
   // Set initial status filter from location state
@@ -129,6 +131,8 @@ const Projects = () => {
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           pagination={pagination}
+          showAll={showAll}
+          setShowAll={setShowAll}
         />
 
         <ProjectsTabContent
@@ -145,6 +149,8 @@ const Projects = () => {
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           pagination={pagination}
+          showAll={showAll}
+          setShowAll={setShowAll}
         />
 
         <ProjectsTabContent
@@ -161,6 +167,8 @@ const Projects = () => {
           searchQuery={searchQuery}
           statusFilter={statusFilter}
           pagination={pagination}
+          showAll={showAll}
+          setShowAll={setShowAll}
         />
       </Tabs>
 

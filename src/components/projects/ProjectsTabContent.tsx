@@ -20,6 +20,8 @@ interface ProjectsTabContentProps {
     totalPages: number;
     goToPage: (page: number) => void;
   };
+  showAll?: boolean;
+  setShowAll?: (value: boolean) => void;
 }
 
 const ProjectsTabContent = ({
@@ -35,7 +37,9 @@ const ProjectsTabContent = ({
   onUpdate,
   searchQuery,
   statusFilter,
-  pagination
+  pagination,
+  showAll,
+  setShowAll
 }: ProjectsTabContentProps) => {
   return (
     <TabsContent value={value}>
@@ -53,6 +57,8 @@ const ProjectsTabContent = ({
         statusFilter={statusFilter}
         projectType={value as "all" | "billable" | "non-billable"}
         pagination={pagination}
+        showAll={showAll}
+        setShowAll={setShowAll}
       />
     </TabsContent>
   );

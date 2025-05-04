@@ -8,10 +8,12 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import ProjectDialog from "@/components/ProjectDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProjectCardProps {
   project: {
     id: string;
+    user_id: string;
     Sponsor: string | null;
     project_number: string;
     protocol_number: string | null;
@@ -32,6 +34,7 @@ const ProjectCard = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -65,6 +68,7 @@ const ProjectCard = ({
   };
   
   const isBillable = !project.project_type || project.project_type === 'billable';
+  const isProjectOwner = user && user.id === project.user_id;
 
   // Content to display in the card
   const renderCardContent = () => (
@@ -141,32 +145,34 @@ const ProjectCard = ({
 
   return (
     <div className="relative">
-      {/* Dropdown Menu - Now positioned absolutely in the corner, outside of HoverCard */}
-      <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenu>
-          <DropdownMenuTrigger 
-            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100" 
-            data-dropdown-trigger="true" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <MoreHorizontal className="h-5 w-5 text-gray-500" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            data-dropdown-content="true" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <DropdownMenuItem className="cursor-pointer" onClick={handleEdit}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {/* Dropdown Menu - Only show for project owner */}
+      {isProjectOwner && (
+        <div className="absolute top-3 right-3 z-10" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger 
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-100" 
+              data-dropdown-trigger="true" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-5 w-5 text-gray-500" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              data-dropdown-content="true" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem className="cursor-pointer" onClick={handleEdit}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleDelete}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
       {/* HoverCard Component - No longer contains the dropdown */}
       <HoverCard>

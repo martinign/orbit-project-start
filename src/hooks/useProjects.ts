@@ -12,6 +12,7 @@ export const useProjects = () => {
   const [activeTab, setActiveTab] = useState<"all" | "billable" | "non-billable">("all");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [showAll, setShowAll] = useState(false);
   
   // Initialize pagination
   const pagination = usePagination({
@@ -138,6 +139,9 @@ export const useProjects = () => {
     handleDeleteProject,
     refetch,
     // Add pagination properties
-    pagination
+    pagination,
+    // Add show all toggle
+    showAll,
+    setShowAll
   };
 };
