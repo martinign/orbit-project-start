@@ -208,7 +208,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
             <SelectItem value="none">Not assigned</SelectItem>
             {teamMembers?.map((member) => (
               <SelectItem key={member.id} value={member.id}>
-                {member.full_name}
+                {member.display_name || `${member.full_name}`}
               </SelectItem>
             ))}
           </SelectContent>

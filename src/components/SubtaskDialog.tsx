@@ -47,14 +47,9 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
   // Use the updated useTeamMembers hook that only returns authenticated users
   const { data: teamMembers, isLoading } = useTeamMembers();
   
-  // Process team members to include display_name property
-  const processedTeamMembers = React.useMemo(() => {
-    return teamMembers?.map(member => ({
-      ...member,
-      display_name: member.full_name
-    })) || [];
-  }, [teamMembers]);
-
+  // Note: We don't need to process team members anymore as the display_name
+  // property is now added in the useTeamMembers hook
+  
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
@@ -69,7 +64,7 @@ const SubtaskDialog: React.FC<SubtaskDialogProps> = ({
 
         <SubtaskForm
           {...formProps}
-          teamMembers={processedTeamMembers}
+          teamMembers={teamMembers || []}
           workdayCodes={formProps.workdayCodes}
           selectedWorkdayCode={formProps.selectedWorkdayCode}
           setSelectedWorkdayCode={formProps.setSelectedWorkdayCode}

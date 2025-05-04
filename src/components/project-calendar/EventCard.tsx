@@ -1,86 +1,74 @@
 
-import { format } from "date-fns";
-import { PenSquare, Trash } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useUserProfile } from "@/hooks/useUserProfile";
-import { useEffect } from "react";
-
-interface Event {
-  id: string;
-  title: string;
-  description: string | null;
-  user_id: string;
-  event_date: string | null;
-}
+import React from 'react';
+import { format } from 'date-fns';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon, Edit2Icon, Trash2Icon } from 'lucide-react';
 
 interface EventCardProps {
-  event: Event;
+  event: {
+    id: string;
+    title: string;
+    description?: string;
+    event_date?: string;
+    user_id: string;
+  };
   onDelete: () => void;
   onEdit: () => void;
-  hasEditAccess: boolean;
-  currentUserId: string | undefined; // Add the current user ID prop
+  hasEditAccess?: boolean;
+  currentUserId?: string;
 }
 
-export function EventCard({ 
-  event, 
-  onDelete, 
-  onEdit, 
-  hasEditAccess,
-  currentUserId
+export function EventCard({
+  event,
+  onDelete,
+  onEdit,
+  hasEditAccess = false,
+  currentUserId,
 }: EventCardProps) {
-  const { data: userProfile, isLoading } = useUserProfile(event.user_id);
-  
   // Check if the current user is the creator of the event
-  const isEventCreator = currentUserId === event.user_id;
-
-  // Debug logging to track permission state
-  useEffect(() => {
-    console.log(`EventCard for ${event.title} - creator: ${event.user_id}, current user: ${currentUserId}, can edit: ${isEventCreator}`);
-  }, [event.id, event.title, event.user_id, currentUserId, isEventCreator]);
-
-  const getCreatorName = () => {
-    if (isLoading) return 'Loading...';
-    if (!userProfile) return 'Unknown User';
-    return `${userProfile.full_name}${userProfile.last_name ? ' ' + userProfile.last_name : ''}`;
-  };
+  const isOwner = currentUserId === event.user_id;
+  // User can edit or delete if they have edit access or they are the owner of the event
+  const canModify = hasEditAccess || isOwner;
 
   return (
-    <div className="flex flex-col justify-between h-full p-4 border rounded-lg bg-card">
-      <div>
-        <h4 className="font-medium mb-2">{event.title}</h4>
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <h3 className="font-semibold text-lg mb-1 line-clamp-2">{event.title}</h3>
         {event.description && (
-          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+          <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
             {event.description}
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Created by: {getCreatorName()}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Date: {event.event_date ? format(new Date(event.event_date), "MMMM d, yyyy") : "No date set"}
-        </p>
-      </div>
-      {/* Only show edit/delete buttons if the user is the creator of the event */}
-      {isEventCreator && (
-        <div className="flex justify-end gap-2 mt-4">
+        {event.event_date && (
+          <div className="flex items-center text-xs text-muted-foreground mt-2">
+            <CalendarIcon className="h-3 w-3 mr-1" />
+            <span>{format(new Date(event.event_date), 'PPP')}</span>
+          </div>
+        )}
+      </CardContent>
+      {canModify && (
+        <CardFooter className="p-2 pt-0 flex justify-end gap-2">
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
+            className="h-8 w-8 p-0"
             onClick={onEdit}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
           >
-            <PenSquare className="h-4 w-4 text-white" />
+            <Edit2Icon className="h-4 w-4" />
+            <span className="sr-only">Edit</span>
           </Button>
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
+            className="h-8 w-8 p-0"
             onClick={onDelete}
-            className="bg-red-500 hover:bg-red-600 text-white"
           >
-            <Trash className="h-4 w-4 text-white" />
+            <Trash2Icon className="h-4 w-4" />
+            <span className="sr-only">Delete</span>
           </Button>
-        </div>
+        </CardFooter>
       )}
-    </div>
+    </Card>
   );
 }

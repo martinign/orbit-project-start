@@ -16,6 +16,7 @@ interface User {
   last_name: string;
   role: string;
   user_id?: string; // Add user_id to filter authenticated users
+  display_name?: string; // Add display_name property
 }
 
 interface TaskMemberFilterProps {
@@ -40,7 +41,7 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
         <Button variant="outline" className="w-[200px]">
           <Users className="mr-2 h-4 w-4" />
           {selectedMemberId ? 
-            selectedUser ? `${selectedUser.full_name}` : 'All Members' 
+            selectedUser ? (selectedUser.display_name || `${selectedUser.full_name}`) : 'All Members' 
             : 'All Members'}
         </Button>
       </DropdownMenuTrigger>
@@ -54,7 +55,7 @@ export const TaskMemberFilter: React.FC<TaskMemberFilterProps> = ({
             key={user.id}
             onClick={() => onMemberSelect(user.id)}
           >
-            {`${user.full_name}`} ({user.role})
+            {user.display_name || `${user.full_name}`} ({user.role})
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

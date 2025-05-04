@@ -13,6 +13,8 @@ export interface TeamMember {
     project_number: string;
     Sponsor: string;
   };
+  // Add a display_name property to format the name consistently
+  display_name?: string;
 }
 
 export const useTeamMembers = (projectId?: string) => {
@@ -46,7 +48,14 @@ export const useTeamMembers = (projectId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data || []) as TeamMember[];
+      
+      // Process the data to add display_name property
+      const processedData = (data || []).map(member => ({
+        ...member,
+        display_name: `${member.full_name} ${member.last_name || ''}`.trim()
+      }));
+      
+      return processedData as TeamMember[];
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: true,
@@ -61,5 +70,8 @@ export const useTeamMemberName = (memberId?: string | null) => {
   if (!memberId) return { memberName: null, isLoading };
 
   const member = teamMembers?.find((m) => m.id === memberId);
-  return { memberName: member?.full_name || null, isLoading };
+  return { 
+    memberName: member?.display_name || member?.full_name || null, 
+    isLoading 
+  };
 };
