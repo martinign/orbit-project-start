@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useSiteInitiationData, SiteData } from '@/hooks/useSiteInitiationData';
+import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { SummaryStats } from './display/SummaryStats';
 import { SiteOverviewCard } from './display/SiteOverviewCard';
 import { ErrorState } from './display/ErrorState';
@@ -11,7 +12,8 @@ interface SiteInitiationDisplayProps {
 }
 
 export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ projectId }) => {
-  const { sites, loading, error } = useSiteInitiationData(projectId);
+  // Use the new hook that fetches all sites for the overview
+  const { sites, loading, error } = useAllSitesData(projectId);
   const summary = useSiteSummary(sites);
   
   if (error) {
