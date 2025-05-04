@@ -13,7 +13,7 @@ interface SiteInitiationDisplayProps {
 export const SiteInitiationDisplay: React.FC<SiteInitiationDisplayProps> = ({ projectId }) => {
   // Use the updated hook with pagination capabilities
   // We still fetch all sites but will apply pagination in the components that display lists
-  const { allSites, loading, error, pagination } = useAllSitesData(projectId);
+  const { allSites, loading, error } = useAllSitesData(projectId);
   const summary = useSiteSummary(allSites);
   
   if (error) {

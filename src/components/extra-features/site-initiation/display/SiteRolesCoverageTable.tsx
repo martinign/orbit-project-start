@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Check, X, Filter } from 'lucide-react';
+import { Check, X, Filter, List } from 'lucide-react';
 import { SiteData, REQUIRED_ROLES, getSitesWithSameReference, getMissingRoles, getUniqueSiteReferences } from '@/hooks/site-initiation';
 import { 
   Table, 
@@ -28,6 +28,7 @@ interface SiteRolesCoverageTableProps {
 
 export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ sites }) => {
   const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [showAll, setShowAll] = useState(false);
   
   // Set up pagination (10 items per page)
   const pagination = usePagination({
@@ -79,13 +80,16 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
     pagination.setTotalItems(filteredSiteData.length);
   }, [filteredSiteData]);
   
-  // Calculate paginated data
-  const paginatedSiteData = useMemo(() => {
+  // Calculate paginated data or show all data
+  const displaySiteData = useMemo(() => {
+    if (showAll) {
+      return filteredSiteData;
+    }
     return filteredSiteData.slice(
       (pagination.currentPage - 1) * pagination.pageSize,
       pagination.currentPage * pagination.pageSize
     );
-  }, [filteredSiteData, pagination.currentPage, pagination.pageSize]);
+  }, [filteredSiteData, pagination.currentPage, pagination.pageSize, showAll]);
 
   return (
     <div className="mt-6">
@@ -128,7 +132,7 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedSiteData.map(site => (
+            {displaySiteData.map(site => (
               <TableRow key={site.referenceNumber}>
                 <TableCell className="font-medium">{site.referenceNumber}</TableCell>
                 <TableCell>{site.institution}</TableCell>
@@ -156,7 +160,7 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
                 })}
               </TableRow>
             ))}
-            {paginatedSiteData.length === 0 && (
+            {displaySiteData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={2 + REQUIRED_ROLES.length} className="h-24 text-center text-muted-foreground">
                   No sites found for the selected country
@@ -167,14 +171,26 @@ export const SiteRolesCoverageTable: React.FC<SiteRolesCoverageTableProps> = ({ 
         </Table>
       </div>
       
-      {/* Pagination Controls */}
+      {/* Pagination Controls with Show All button */}
       {filteredSiteData.length > 0 && (
-        <div className="flex justify-center mt-4">
-          <PaginationControls
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={pagination.goToPage}
-          />
+        <div className="flex justify-between items-center mt-4">
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            <List className="h-4 w-4 mr-2" />
+            {showAll ? "Show Paged" : "Show All"}
+          </Button>
+          
+          {!showAll && (
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.goToPage}
+            />
+          )}
         </div>
       )}
     </div>
