@@ -132,6 +132,7 @@ const ProjectDetailsView = () => {
           notesCount={notesCount}
           onTabChange={setActiveTab}
           projectId={id || ''}
+          extraFeatures={safeFeatures}
         />
 
         <ProjectTimeline
