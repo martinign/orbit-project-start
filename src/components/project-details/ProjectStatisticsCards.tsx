@@ -9,6 +9,7 @@ import { RealtimeUpdatesManager } from './statistics/RealtimeUpdatesManager';
 import { ExtraFeaturesCard } from './ExtraFeaturesCard';
 import { ExtraFeaturesDialog } from '@/components/dashboard/ExtraFeaturesDialog';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
+import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -22,10 +23,7 @@ interface ProjectStatisticsCardsProps {
   notesCount: number;
   onTabChange: (tab: string) => void;
   projectId: string;
-  extraFeatures?: {
-    siteInitiationTracker: boolean;
-    [key: string]: boolean;
-  };
+  extraFeatures?: ExtraFeaturesState;
 }
 
 export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
