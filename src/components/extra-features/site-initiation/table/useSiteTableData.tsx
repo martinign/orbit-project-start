@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from 'react';
 import { useSiteInitiationData, SiteData, isEligibleForStarterPack } from '@/hooks/useSiteInitiationData';
 import { toast } from '@/hooks/use-toast';
@@ -6,9 +7,9 @@ import {
   isMissingLabpRole, 
   getUniqueSiteReferences 
 } from '@/hooks/site-initiation/siteUtils';
+import { usePagination } from '@/hooks/usePagination';
 
 export const useSiteTableData = (projectId?: string) => {
-  const { sites, loading, error, deleteSite, refetch } = useSiteInitiationData(projectId);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState<string | null>(null);
@@ -20,6 +21,29 @@ export const useSiteTableData = (projectId?: string) => {
   const [siteRefFilter, setSiteRefFilter] = useState('');
   const [starterPackFilter, setStarterPackFilter] = useState<string>('all');
   const [missingRolesFilter, setMissingRolesFilter] = useState<string>('all');
+
+  // Initialize pagination
+  const pagination = usePagination({
+    initialPage: 1,
+    initialPageSize: 10
+  });
+
+  // Use the pagination values in the data fetch
+  const { 
+    sites, 
+    loading, 
+    error, 
+    deleteSite, 
+    refetch, 
+    totalCount 
+  } = useSiteInitiationData(projectId, pagination.pageSize, pagination.currentPage);
+
+  // Update the total items count when it changes
+  useMemo(() => {
+    if (totalCount !== undefined) {
+      pagination.setTotalItems(totalCount);
+    }
+  }, [totalCount]);
 
   // Extract unique roles, countries, and site references
   const uniqueRoles = useMemo(() => {
@@ -50,7 +74,8 @@ export const useSiteTableData = (projectId?: string) => {
     return result;
   }, [sites]);
 
-  // Filter sites based on search query and filters
+  // Apply client-side filtering only to the current page of data
+  // Note: In a production app, ideally filtering would be done server-side
   const filteredSites = useMemo(() => {
     return sites.filter(site => {
       // Text search
@@ -97,6 +122,11 @@ export const useSiteTableData = (projectId?: string) => {
       return matchesSearch && matchesRole && matchesCountry && matchesSiteRef && matchesStarterPack && matchesMissingRoles;
     });
   }, [sites, searchQuery, roleFilter, countryFilter, siteRefFilter, starterPackFilter, missingRolesFilter, siteReferencesMissingRolesMap]);
+
+  // Reset to first page when filters change
+  useMemo(() => {
+    pagination.goToPage(1);
+  }, [searchQuery, roleFilter, countryFilter, siteRefFilter, starterPackFilter, missingRolesFilter]);
 
   const handleDeleteClick = (id: string) => {
     setSiteToDelete(id);
@@ -240,6 +270,7 @@ export const useSiteTableData = (projectId?: string) => {
     refetch,
     hasActiveFilters,
     activeFilterCount,
-    siteReferencesMissingRolesMap
+    siteReferencesMissingRolesMap,
+    pagination
   };
 };

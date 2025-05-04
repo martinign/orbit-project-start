@@ -5,6 +5,6 @@ import { useSitesData, isEligibleForStarterPack, SiteData } from './site-initiat
 export { isEligibleForStarterPack, type SiteData };
 
 // This hook maintains the original API for backward compatibility
-export const useSiteInitiationData = (projectId?: string) => {
-  return useSitesData(projectId);
+export const useSiteInitiationData = (projectId?: string, pageSize?: number, page?: number) => {
+  return useSitesData(projectId, pageSize, page);
 };

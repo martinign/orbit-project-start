@@ -8,30 +8,47 @@ import { useSiteOperations } from './useSiteOperations';
 import { useSiteCsvImport } from './useSiteCsvImport';
 import { isEligibleForStarterPack } from './siteUtils';
 
-export const useSitesData = (projectId?: string) => {
+export const useSitesData = (projectId?: string, pageSize = 10, page = 1) => {
   const [sites, setSites] = useState<SiteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   const { user } = useAuth();
   
   const { addSite, updateSite, deleteSite } = useSiteOperations(projectId, user?.id);
   const { processCSVData, processing } = useSiteCsvImport(projectId, user?.id);
+
+  // Calculate offset for pagination
+  const offset = (page - 1) * pageSize;
 
   // Fetch sites data
   const fetchSites = async () => {
     if (!projectId) {
       setSites([]);
       setLoading(false);
+      setTotalCount(0);
       return;
     }
 
     try {
       setLoading(true);
+
+      // First get the total count
+      const { count, error: countError } = await supabase
+        .from('project_csam_site')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', projectId);
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Then fetch the paginated data
       const { data, error } = await supabase
         .from('project_csam_site')
         .select('*')
         .eq('project_id', projectId)
-        .order('pxl_site_reference_number', { ascending: true });
+        .order('pxl_site_reference_number', { ascending: true })
+        .range(offset, offset + pageSize - 1);
 
       if (error) throw error;
       setSites(data || []);
@@ -46,7 +63,7 @@ export const useSitesData = (projectId?: string) => {
   // Initial fetch
   useEffect(() => {
     fetchSites();
-  }, [projectId]);
+  }, [projectId, pageSize, page]);
 
   // Set up real-time subscription
   useRealtimeSubscription({
@@ -67,6 +84,7 @@ export const useSitesData = (projectId?: string) => {
     sites,
     loading,
     error,
+    totalCount,
     addSite,
     updateSite,
     deleteSite,

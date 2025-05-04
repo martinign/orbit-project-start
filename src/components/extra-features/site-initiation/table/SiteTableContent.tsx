@@ -36,7 +36,7 @@ export const SiteTableContent: React.FC<SiteTableContentProps> = ({
   onDeleteSite 
 }) => {
   return (
-    <div className="max-h-[600px] overflow-auto">
+    <div className="w-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>

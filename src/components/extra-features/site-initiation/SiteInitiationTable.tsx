@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { SiteInitiationEditDialog } from './SiteInitiationEditDialog';
 import { 
   TableHeader,
@@ -12,6 +12,7 @@ import {
   LoadingSiteState,
   useSiteTableData
 } from './table';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 interface SiteInitiationTableProps {
   projectId?: string;
@@ -52,7 +53,8 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
     refetch,
     hasActiveFilters,
     activeFilterCount,
-    siteToDelete
+    siteToDelete,
+    pagination
   } = useSiteTableData(projectId);
 
   if (error) {
@@ -86,6 +88,15 @@ export const SiteInitiationTable: React.FC<SiteInitiationTableProps> = ({ projec
             />
           )}
         </CardContent>
+        {!loading && filteredSites.length > 0 && (
+          <CardFooter className="flex justify-center border-t pt-4">
+            <PaginationControls
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={(page) => pagination.goToPage(page)}
+            />
+          </CardFooter>
+        )}
       </Card>
 
       {/* Filters Popover */}
