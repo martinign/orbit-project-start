@@ -26,11 +26,19 @@ export const LocationTabs: React.FC<LocationTabsProps> = ({
       </TabsList>
       
       <TabsContent value="countries">
-        <LocationsList title="Countries" items={countries} />
+        <LocationsList 
+          type="countries" 
+          items={countries} 
+          noDataMessage="No countries available" 
+        />
       </TabsContent>
       
       <TabsContent value="institutions">
-        <LocationsList title="Institutions" items={institutions} />
+        <LocationsList 
+          type="institutions" 
+          items={institutions} 
+          noDataMessage="No institutions available" 
+        />
       </TabsContent>
     </Tabs>
   );
