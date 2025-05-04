@@ -135,12 +135,12 @@ export const TimelineTaskBar: React.FC<TimelineTaskBarProps> = ({
                 </p>
               )}
               
-              {/* Created by information */}
+              {/* Created by information - now showing full_name and last_name separately */}
               {userProfile && (
                 <p className="col-span-2 flex items-center">
                   <User className="inline h-3 w-3 mr-1" />
                   <span className="text-muted-foreground">Created by:</span>{' '}
-                  <span className="ml-1">{userProfile.displayName}</span>
+                  <span className="ml-1">{userProfile.full_name} {userProfile.last_name}</span>
                 </p>
               )}
               

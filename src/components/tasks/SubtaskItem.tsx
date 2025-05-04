@@ -197,13 +197,13 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({
               </div>
             )}
             
-            {/* Created by information */}
+            {/* Created by information - now showing full_name and last_name separately */}
             {userProfile && (
               <div>
                 <h5 className="text-xs font-medium text-gray-500 mb-1">Created By</h5>
                 <div className="flex items-center">
                   <User className="h-3.5 w-3.5 mr-1.5 text-gray-500" />
-                  <span className="text-sm">{userProfile.displayName}</span>
+                  <span className="text-sm">{userProfile.full_name} {userProfile.last_name}</span>
                 </div>
               </div>
             )}

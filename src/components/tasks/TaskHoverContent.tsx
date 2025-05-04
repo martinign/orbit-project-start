@@ -99,13 +99,13 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
         </div>
       )}
       
-      {/* Creator information */}
+      {/* Creator information - now showing full_name and last_name separately */}
       {userProfile && (
         <div>
           <h5 className="text-xs font-medium text-gray-500">Created By</h5>
           <p className="text-sm flex items-center">
             <User className="h-3 w-3 mr-1 flex-shrink-0" />
-            {userProfile.displayName}
+            {userProfile.full_name} {userProfile.last_name}
           </p>
         </div>
       )}
