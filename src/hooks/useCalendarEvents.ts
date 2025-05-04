@@ -12,6 +12,7 @@ interface Event {
   description: string | null;
   user_id: string;
   event_date: string | null;
+  created_at: string;
 }
 
 interface TeamMember {
@@ -42,7 +43,11 @@ export const useCalendarEvents = (projectId: string) => {
         .eq('project_id', projectId);
 
       if (error) throw error;
-      return data as Event[];
+      
+      // Sort events by creation date (newest first)
+      return (data as Event[]).sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     },
   });
 

@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -150,7 +151,7 @@ export function EventDialog({
                 Cancel
               </Button>
               {!readOnly && (
-                <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+                <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white">
                   {mode === 'create' ? 'Create Event' : 'Update Event'}
                 </Button>
               )}

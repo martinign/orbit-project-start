@@ -5,8 +5,6 @@ import { CalendarLayout } from './CalendarLayout';
 import { EventDialog } from './EventDialog';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { EventsGrid } from './EventsGrid';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -57,44 +55,32 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           setSelectedUserId={setSelectedUserId}
           teamMembers={teamMembers}
         />
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search events..."
-            className="pl-8 h-9 text-sm w-64"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
       </div>
       
       <CalendarLayout 
         selectedDate={selectedDate}
-        onDateSelect={handleDateSelect}
+        onSelectDate={handleDateSelect}
         events={filteredEvents}
+        hasEditAccess={hasEditAccess}
+        eventsLoading={eventsLoading}
+        onDeleteEvent={handleDeleteEvent}
+        onEditEvent={handleEditEvent}
+        isAuthenticated={!!user}
+        currentUserId={user?.id}
+        lastUpdate={lastUpdate}
+        searchQuery={searchQuery}
       />
 
-      <div className="mt-6">
-        <EventsGrid
-          events={filteredEvents}
-          isLoading={eventsLoading}
-          onDeleteEvent={handleDeleteEvent}
-          onEditEvent={handleEditEvent}
-          hasEditAccess={hasEditAccess}
-          isAuthenticated={!!user}
-          currentUserId={user?.id}
-          lastUpdate={lastUpdate}
-          searchQuery={searchQuery}
-        />
-      </div>
-
       <EventDialog
-        isOpen={isEventDialogOpen}
+        open={isEventDialogOpen}
         onClose={() => setIsEventDialogOpen(false)}
         onSubmit={handleEventSubmit}
-        editingEvent={editingEvent}
-        selectedDate={selectedDate}
+        defaultValues={editingEvent ? {
+          title: editingEvent.title,
+          description: editingEvent.description || '',
+          event_date: editingEvent.event_date ? new Date(editingEvent.event_date) : undefined
+        } : undefined}
+        mode={editingEvent ? 'edit' : 'create'}
       />
     </div>
   );
