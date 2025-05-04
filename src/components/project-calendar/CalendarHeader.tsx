@@ -29,7 +29,7 @@ export function CalendarHeader({
     <div className="flex justify-between items-center">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline">
+          <Button variant="outline" className="h-9 text-sm">
             <CalendarIcon className="mr-2 h-4 w-4" />
             {selectedUserId ? 
               teamMembers.find(m => m.id === selectedUserId)?.full_name || 'All Events' 

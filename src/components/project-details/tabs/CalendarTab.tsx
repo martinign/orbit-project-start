@@ -15,18 +15,20 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Project Calendar</CardTitle>
-        <CardDescription>View and manage project events</CardDescription>
-        <div className="relative mt-2">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search events..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex justify-between items-center">
+          <CardTitle>Project Calendar</CardTitle>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search events..."
+              className="pl-8 h-9 text-sm w-64"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
+        <CardDescription>View and manage project events</CardDescription>
       </CardHeader>
       <CardContent>
         <ProjectCalendar projectId={projectId} searchQuery={searchQuery} />
