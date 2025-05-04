@@ -15,6 +15,11 @@ interface ProjectsTabContentProps {
   onUpdate: () => void;
   searchQuery: string;
   statusFilter: string;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    goToPage: (page: number) => void;
+  };
 }
 
 const ProjectsTabContent = ({
@@ -29,7 +34,8 @@ const ProjectsTabContent = ({
   onProjectClick,
   onUpdate,
   searchQuery,
-  statusFilter
+  statusFilter,
+  pagination
 }: ProjectsTabContentProps) => {
   return (
     <TabsContent value={value}>
@@ -46,6 +52,7 @@ const ProjectsTabContent = ({
         searchQuery={searchQuery}
         statusFilter={statusFilter}
         projectType={value as "all" | "billable" | "non-billable"}
+        pagination={pagination}
       />
     </TabsContent>
   );

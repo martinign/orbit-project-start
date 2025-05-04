@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ProjectsTable from "./ProjectsTable";
 import ProjectsCardGrid from "./ProjectsCardGrid";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface ProjectsContentProps {
   title: string;
@@ -16,6 +17,11 @@ interface ProjectsContentProps {
   searchQuery: string;
   statusFilter: string;
   projectType?: "all" | "billable" | "non-billable";
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    goToPage: (page: number) => void;
+  };
 }
 
 const ProjectsContent = ({
@@ -30,7 +36,8 @@ const ProjectsContent = ({
   onUpdate,
   searchQuery,
   statusFilter,
-  projectType = "all"
+  projectType = "all",
+  pagination
 }: ProjectsContentProps) => {
   const getEmptyStateMessage = () => {
     if (searchQuery) return "No projects match your search criteria";
@@ -52,26 +59,38 @@ const ProjectsContent = ({
         {isLoading ? (
           <div className="flex justify-center p-4">Loading projects...</div>
         ) : projects && projects.length > 0 ? (
-          viewMode === "table" ? (
-            <ProjectsTable 
-              projects={projects}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onProjectClick={onProjectClick}
-              isProjectType={projectType}
-            />
-          ) : (
-            <ProjectsCardGrid
-              projects={projects}
-              onDelete={id => {
-                const project = projects.find(p => p.id === id);
-                if (project) onDelete(project);
-                return false;
-              }}
-              onUpdate={onUpdate}
-              onProjectClick={onProjectClick}
-            />
-          )
+          <div className="space-y-4">
+            {viewMode === "table" ? (
+              <ProjectsTable 
+                projects={projects}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onProjectClick={onProjectClick}
+                isProjectType={projectType}
+              />
+            ) : (
+              <ProjectsCardGrid
+                projects={projects}
+                onDelete={id => {
+                  const project = projects.find(p => p.id === id);
+                  if (project) onDelete(project);
+                  return false;
+                }}
+                onUpdate={onUpdate}
+                onProjectClick={onProjectClick}
+              />
+            )}
+            
+            {pagination && (
+              <div className="flex justify-center items-center pt-4 mt-4 border-t">
+                <PaginationControls
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={pagination.goToPage}
+                />
+              </div>
+            )}
+          </div>
         ) : (
           <div className="text-center p-4">
             <p className="text-muted-foreground">
