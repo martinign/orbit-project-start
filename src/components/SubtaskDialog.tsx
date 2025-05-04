@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { SubtaskForm } from './subtasks/SubtaskForm';
 import { useSubtaskForm } from '@/hooks/useSubtaskForm';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -10,7 +8,7 @@ import { useTeamMembers } from '@/hooks/useTeamMembers';
 interface Task {
   id: string;
   title: string;
-  project_id: string; // Added project_id property to match the interface in useSubtaskForm
+  project_id: string;
 }
 
 interface Subtask {

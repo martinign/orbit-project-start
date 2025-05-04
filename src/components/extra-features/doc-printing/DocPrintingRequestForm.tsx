@@ -3,19 +3,21 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format } from 'date-fns';
-import { CalendarIcon, User } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { Form } from '@/components/ui/form';
 import { DocRequest, DocType, DocRequestType, NewDocRequest } from './api/docRequestsApi';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+
+// Import refactored form components
+import { DocTypeSelect } from './form/DocTypeSelect';
+import { RequestTypeSelect } from './form/RequestTypeSelect';
+import { DocumentTitle } from './form/DocumentTitle';
+import { SlbFields } from './form/SlbFields';
+import { DeliveryAndAssignment } from './form/DeliveryAndAssignment';
+import { VendorSelect } from './form/VendorSelect';
+import { DocumentDescription } from './form/DocumentDescription';
+import { DueDatePicker } from './form/DueDatePicker';
+import { CommentsField } from './form/CommentsField';
+import { FormActions } from './form/FormActions';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -99,286 +101,38 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="doc_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Type</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  disabled={isSubmitting}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="SLB">Subject Laboratory Booklet</SelectItem>
-                    <SelectItem value="general">General Document</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="doc_request_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Request Type</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                  disabled={isSubmitting}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select request type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="printing">Printing</SelectItem>
-                    <SelectItem value="proposal">Proposal</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <DocTypeSelect form={form} isSubmitting={isSubmitting} />
+          <RequestTypeSelect form={form} isSubmitting={isSubmitting} />
         </div>
 
-        <FormField
-          control={form.control}
-          name="doc_title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {docType === 'SLB' ? 'SLB Name' : 'Document Title'}
-              </FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder={docType === 'SLB' ? 'Enter SLB name' : 'Enter document title'} 
-                  {...field} 
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <DocumentTitle form={form} isSubmitting={isSubmitting} docType={docType} />
 
         {docType === 'SLB' && (
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="doc_version"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SLB Version</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter SLB version" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="doc_process_number_range"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Process Number Range</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 1-100" {...field} disabled={isSubmitting} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <SlbFields form={form} isSubmitting={isSubmitting} />
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="doc_delivery_address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Delivery Address</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value || undefined}
-                  disabled={isSubmitting}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select delivery address" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="EUDC">EUDC</SelectItem>
-                    <SelectItem value="NADC">NADC</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="doc_assigned_to"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Assigned To</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  value={field.value || undefined}
-                  disabled={isSubmitting || isLoadingTeamMembers}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select team member" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {teamMembers?.map((member) => (
-                      <SelectItem key={member.id} value={member.user_id}>
-                        {member.display_name || `${member.full_name} ${member.last_name || ''}`.trim()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="doc_selected_vendor"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Selected Vendor</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value || undefined}
-                disabled={isSubmitting}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select vendor" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="OPTION 1">OPTION 1</SelectItem>
-                  <SelectItem value="OPTION 2">OPTION 2</SelectItem>
-                  <SelectItem value="OPTION 3">OPTION 3</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+        <DeliveryAndAssignment 
+          form={form} 
+          isSubmitting={isSubmitting} 
+          teamMembers={teamMembers} 
+          isLoadingTeamMembers={isLoadingTeamMembers} 
         />
+
+        <VendorSelect form={form} isSubmitting={isSubmitting} />
 
         {docType === 'general' && (
-          <FormField
-            control={form.control}
-            name="doc_description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document Description</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    placeholder="Enter document description" 
-                    className="min-h-24" 
-                    {...field}
-                    disabled={isSubmitting}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <DocumentDescription form={form} isSubmitting={isSubmitting} />
         )}
 
-        <FormField
-          control={form.control}
-          name="doc_due_date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Due Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                      disabled={isSubmitting}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value || undefined}
-                    onSelect={field.onChange}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <DueDatePicker form={form} isSubmitting={isSubmitting} />
 
-        <FormField
-          control={form.control}
-          name="doc_comments"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Comments</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="Add any additional comments" 
-                  className="min-h-24" 
-                  {...field}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <CommentsField form={form} isSubmitting={isSubmitting} />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : initialData ? 'Update Request' : 'Create Request'}
-          </Button>
-        </div>
+        <FormActions 
+          onCancel={onCancel} 
+          isSubmitting={isSubmitting} 
+          isEdit={!!initialData} 
+        />
       </form>
     </Form>
   );
