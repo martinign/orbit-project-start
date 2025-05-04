@@ -23,10 +23,8 @@ interface TeamMember {
 export const useCalendarEvents = (projectId: string) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null); // Export the state and setter
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
-  // State to track whether we're viewing events for a specific date
-  const [showingDateEvents, setShowingDateEvents] = useState(false);
   // Add a state to track real-time updates
   const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
   const { toast } = useToast();
@@ -104,14 +102,6 @@ export const useCalendarEvents = (projectId: string) => {
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
     
-    setSelectedDate(date);
-    
-    // When a date is clicked, set showingDateEvents to true instead of opening the dialog
-    setShowingDateEvents(true);
-  };
-
-  // New function to handle creating a new event after selecting a date
-  const handleCreateNewEvent = () => {
     // Check if user is authenticated
     if (!user) {
       toast({
@@ -122,6 +112,7 @@ export const useCalendarEvents = (projectId: string) => {
       return;
     }
 
+    setSelectedDate(date);
     setEditingEvent(null);
     setIsEventDialogOpen(true);
   };
@@ -211,22 +202,6 @@ export const useCalendarEvents = (projectId: string) => {
     }
   };
 
-  // Get events for the selected date
-  const getEventsForSelectedDate = () => {
-    if (!selectedDate) return [];
-    
-    const selectedDateString = selectedDate.toISOString().split('T')[0];
-    
-    return events.filter(event => {
-      if (!event.event_date) return false;
-      const eventDateString = new Date(event.event_date).toISOString().split('T')[0];
-      return eventDateString === selectedDateString;
-    });
-  };
-
-  const selectedDateEvents = getEventsForSelectedDate();
-
-  // Apply user filter, but only for the complete list, not for the date filtered list
   const filteredEvents = events.filter(event => {
     if (!selectedUserId) return true;
     return event.user_id === selectedUserId;
@@ -238,22 +213,18 @@ export const useCalendarEvents = (projectId: string) => {
     selectedUserId,
     setSelectedUserId,
     editingEvent,
-    setEditingEvent,
+    setEditingEvent, // Make sure to expose this setter
     isEventDialogOpen,
     setIsEventDialogOpen,
-    showingDateEvents,
-    setShowingDateEvents,
-    selectedDateEvents,
     events: filteredEvents,
     teamMembers,
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
-    handleCreateNewEvent,
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
     user,
-    lastUpdate
+    lastUpdate // Expose lastUpdate to force re-renders
   };
 };

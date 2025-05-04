@@ -26,15 +26,11 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     setEditingEvent,
     isEventDialogOpen,
     setIsEventDialogOpen,
-    showingDateEvents,
-    setShowingDateEvents,
-    selectedDateEvents,
     events,
     teamMembers,
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
-    handleCreateNewEvent,
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
@@ -44,14 +40,6 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 
   // Filter events based on search query
   const filteredEvents = events.filter(event => {
-    if (!searchQuery) return true;
-    return (
-      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
-
-  const filteredSelectedDateEvents = selectedDateEvents.filter(event => {
     if (!searchQuery) return true;
     return (
       event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -81,25 +69,17 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         currentUserId={user?.id}
         lastUpdate={lastUpdate}
         searchQuery={searchQuery}
-        showingDateEvents={showingDateEvents}
-        selectedDateEvents={filteredSelectedDateEvents}
-        onCreateEvent={handleCreateNewEvent}
       />
 
       <EventDialog
         open={isEventDialogOpen}
-        onClose={() => {
-          setIsEventDialogOpen(false);
-          // Don't reset showingDateEvents when closing dialog
-        }}
+        onClose={() => setIsEventDialogOpen(false)}
         onSubmit={handleEventSubmit}
         defaultValues={editingEvent ? {
           title: editingEvent.title,
           description: editingEvent.description || '',
           event_date: editingEvent.event_date ? new Date(editingEvent.event_date) : undefined
-        } : {
-          event_date: selectedDate
-        }}
+        } : undefined}
         mode={editingEvent ? 'edit' : 'create'}
       />
     </div>
