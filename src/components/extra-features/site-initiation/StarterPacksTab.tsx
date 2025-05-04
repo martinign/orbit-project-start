@@ -39,32 +39,29 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     loading, 
     error, 
     updateSite,
-    refetch
+    refetch,
+    isEligibleForStarterPack
   } = useSiteInitiationData(projectId);
 
-  // Filter only LABP sites
-  const labpSites = useMemo(() => {
-    return sites.filter(site => site.role === 'LABP');
-  }, [sites]);
-
-  // Get all unique countries from LABP sites
+  // Get all unique countries from sites
   const uniqueCountries = useMemo(() => {
-    const countries = new Set(labpSites
+    const countries = new Set(sites
       .filter(site => site.country)
       .map(site => site.country as string));
     return Array.from(countries).sort();
-  }, [labpSites]);
+  }, [sites]);
 
   // Apply country filter
   const filteredSites = useMemo(() => {
     if (countryFilter === "all") {
-      return labpSites;
+      return sites;
     }
-    return labpSites.filter(site => site.country === countryFilter);
-  }, [labpSites, countryFilter]);
+    return sites.filter(site => site.country === countryFilter);
+  }, [sites, countryFilter]);
 
-  // Calculate statistics
+  // Calculate statistics (only for LABP sites)
   const stats = useMemo(() => {
+    const labpSites = sites.filter(site => isEligibleForStarterPack(site));
     const totalSites = labpSites.length;
     const sentCount = labpSites.filter(site => site.starter_pack).length;
     const percentage = totalSites > 0 ? (sentCount / totalSites) * 100 : 0;
@@ -74,11 +71,11 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       sent: sentCount,
       percentage: Math.round(percentage)
     };
-  }, [labpSites]);
+  }, [sites, isEligibleForStarterPack]);
 
   // Handle starter pack toggle
   const handleStarterPackToggle = async (site: SiteData, newValue: boolean) => {
-    if (site.id) {
+    if (site.id && isEligibleForStarterPack(site)) {
       const success = await updateSite(site.id, { starter_pack: newValue });
       if (success) {
         toast({
@@ -127,7 +124,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       {/* Sites Table */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">LABP Sites</CardTitle>
+          <CardTitle className="text-base">Sites</CardTitle>
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={countryFilter} onValueChange={setCountryFilter}>
@@ -156,16 +153,16 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         <CardContent>
           {loading ? (
             <LoadingState />
-          ) : labpSites.length === 0 ? (
+          ) : sites.length === 0 ? (
             <div className="text-center py-10">
-              <h3 className="text-lg font-medium mb-2">No LABP sites found</h3>
+              <h3 className="text-lg font-medium mb-2">No sites found</h3>
               <p className="text-muted-foreground text-sm">
-                Add sites with the LABP role to track starter pack status
+                Add sites to track starter pack status
               </p>
             </div>
           ) : filteredSites.length === 0 ? (
             <div className="text-center py-10">
-              <h3 className="text-lg font-medium mb-2">No LABP sites found for this country</h3>
+              <h3 className="text-lg font-medium mb-2">No sites found for this country</h3>
               <p className="text-muted-foreground text-sm">
                 Try selecting a different country filter or add more sites
               </p>
@@ -178,33 +175,44 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                     <TableHead>Site Reference</TableHead>
                     <TableHead>Institution</TableHead>
                     <TableHead>Country</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Personnel Name</TableHead>
                     <TableHead className="text-center">Starter Pack</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSites.map(site => (
-                    <TableRow key={site.id}>
-                      <TableCell className="font-medium">{site.pxl_site_reference_number}</TableCell>
-                      <TableCell>{site.institution || 'Unknown'}</TableCell>
-                      <TableCell>{site.country || 'Unknown'}</TableCell>
-                      <TableCell>{site.site_personnel_name}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center items-center gap-2">
-                          <Switch 
-                            checked={!!site.starter_pack} 
-                            onCheckedChange={(checked) => handleStarterPackToggle(site, checked)}
-                          />
-                          <span className={cn(
-                            "text-xs",
-                            site.starter_pack ? "text-green-600" : "text-muted-foreground"
-                          )}>
-                            {site.starter_pack ? "Sent" : "Not sent"}
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredSites.map(site => {
+                    const isEligible = isEligibleForStarterPack(site);
+                    return (
+                      <TableRow key={site.id}>
+                        <TableCell className="font-medium">{site.pxl_site_reference_number}</TableCell>
+                        <TableCell>{site.institution || 'Unknown'}</TableCell>
+                        <TableCell>{site.country || 'Unknown'}</TableCell>
+                        <TableCell>{site.role}</TableCell>
+                        <TableCell>{site.site_personnel_name}</TableCell>
+                        <TableCell className="text-center">
+                          {isEligible ? (
+                            <div className="flex justify-center items-center gap-2">
+                              <Switch 
+                                checked={!!site.starter_pack} 
+                                onCheckedChange={(checked) => handleStarterPackToggle(site, checked)}
+                              />
+                              <span className={cn(
+                                "text-xs",
+                                site.starter_pack ? "text-green-600" : "text-muted-foreground"
+                              )}>
+                                {site.starter_pack ? "Sent" : "Not sent"}
+                              </span>
+                            </div>
+                          ) : (
+                            <Badge variant="outline" className="bg-gray-100">
+                              Missing Role
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
