@@ -62,7 +62,7 @@ export const SiteReferenceCell: React.FC<SiteReferenceCellProps> = ({ site, allS
                     {missingRoles.map(role => (
                       <Badge 
                         key={role} 
-                        variant={role === 'LABP' ? 'warning' : 'outline'} 
+                        variant={role === 'LABP' ? 'destructive' : 'outline'} 
                         className="text-xs"
                       >
                         {role}

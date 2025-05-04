@@ -23,7 +23,7 @@ export const StarterPackCell: React.FC<StarterPackCellProps> = ({ site }) => {
         <TooltipTrigger>
           {isEligible ? (
             site.starter_pack ? (
-              <Badge className="flex items-center gap-1 bg-green-100 text-green-800">
+              <Badge className="flex items-center gap-1 bg-green-100 text-green-800" variant="secondary">
                 <Check className="h-3 w-3" /> Sent
               </Badge>
             ) : (

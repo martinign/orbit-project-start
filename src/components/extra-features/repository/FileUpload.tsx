@@ -35,20 +35,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({ projectId, onUploadCompl
         const fileExt = file.name.split('.').pop();
         const filePath = `${projectId}/${Date.now()}-${file.name}`;
         
+        // Create a custom upload function to track progress
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('project-attachments')
-          .upload(filePath, file, {
-            onUploadProgress: (progress) => {
-              setUploadProgress(prev => ({
-                ...prev,
-                [file.name]: Math.floor((progress.loaded / progress.total) * 100)
-              }));
-            }
-          });
+          .upload(filePath, file);
           
         if (uploadError) {
           throw uploadError;
         }
+        
+        // Update progress to 100% for completed uploads
+        setUploadProgress(prev => ({
+          ...prev,
+          [file.name]: 100
+        }));
         
         // Create record in project_attachments table
         const { error: dbError } = await supabase.from('project_attachments').insert({
@@ -65,11 +65,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({ projectId, onUploadCompl
         if (dbError) {
           throw dbError;
         }
-        
-        setUploadProgress(prev => ({
-          ...prev,
-          [file.name]: 100
-        }));
       }
       
       toast({

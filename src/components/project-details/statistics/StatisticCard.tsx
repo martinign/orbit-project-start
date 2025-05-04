@@ -34,8 +34,8 @@ export const StatisticCard: React.FC<StatisticCardProps> = ({
         <Tooltip>
           <TooltipTrigger>
             <Badge 
-              variant="success" 
-              className="absolute top-2 right-2 animate-in fade-in"
+              variant="secondary" 
+              className="absolute top-2 right-2 animate-in fade-in bg-green-100 text-green-800"
             >
               {newItemsCount} new
             </Badge>

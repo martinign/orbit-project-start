@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,13 +98,13 @@ export function AllInvitationsDialog({ open, onClose, filters = {} }: AllInvitat
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "warning";
+        return "default";
       case "accepted":
-        return "success";
+        return "secondary";
       case "rejected":
         return "destructive";
       default:
-        return "secondary";
+        return "outline";
     }
   };
 

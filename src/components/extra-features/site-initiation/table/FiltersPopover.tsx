@@ -143,7 +143,7 @@ export const FiltersPopover: React.FC<FiltersPopoverProps> = ({
                 <SelectItem value="missing-labp">
                   <div className="flex items-center">
                     Missing LABP
-                    <Badge variant="warning" className="ml-1.5 text-xs">Critical</Badge>
+                    <Badge variant="destructive" className="ml-1.5 text-xs">Critical</Badge>
                   </div>
                 </SelectItem>
                 <SelectItem value="complete">Complete (All Roles)</SelectItem>

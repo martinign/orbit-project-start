@@ -23,7 +23,7 @@ export const MissingRolesCard: React.FC<MissingRolesCardProps> = ({ summary, foc
           <AlertTriangle className="h-4 w-4 mr-1 text-amber-600" />
           Sites Missing LABP Role
           {sitesMissingLabpRole.length > 0 && (
-            <Badge variant="warning" className="ml-2">
+            <Badge variant="default" className="ml-2 bg-amber-500 hover:bg-amber-600">
               {sitesMissingLabpRole.length} sites
             </Badge>
           )}
@@ -73,7 +73,7 @@ export const MissingRolesCard: React.FC<MissingRolesCardProps> = ({ summary, foc
         <AlertTriangle className="h-4 w-4 mr-1 text-amber-600" />
         Sites With Missing Roles
         {siteRefWithMissingRoles.length > 0 && (
-          <Badge variant="warning" className="ml-2">
+          <Badge variant="default" className="ml-2 bg-amber-500 hover:bg-amber-600">
             {siteRefWithMissingRoles.length} sites
           </Badge>
         )}
@@ -90,7 +90,7 @@ export const MissingRolesCard: React.FC<MissingRolesCardProps> = ({ summary, foc
                 <span className="font-medium">{ref}:</span>
                 <span>Missing</span>
                 {sitesWithMissingRoles[ref].map(role => (
-                  <Badge key={role} variant={role === 'LABP' ? 'warning' : 'outline'} className="text-xs">
+                  <Badge key={role} variant={role === 'LABP' ? 'destructive' : 'outline'} className="text-xs">
                     {role}
                   </Badge>
                 ))}
