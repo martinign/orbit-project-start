@@ -30,9 +30,9 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
           />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6">
         <ProjectCalendar projectId={projectId} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </CardContent>
     </Card>
   );
-};
+}
