@@ -4,6 +4,7 @@ import { SiteInitiationDisplay } from './site-initiation/SiteInitiationDisplay';
 import { SiteInitiationCSVUploader } from './site-initiation/SiteInitiationCSVUploader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SiteInitiationTable } from './site-initiation/SiteInitiationTable';
+import { StarterPacksTab } from './site-initiation/StarterPacksTab';
 
 interface SiteInitiationTrackerProps {
   projectId?: string;
@@ -17,12 +18,17 @@ export const SiteInitiationTracker: React.FC<SiteInitiationTrackerProps> = ({ pr
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="starter-packs">Starter Packs</TabsTrigger>
           <TabsTrigger value="sites">Sites</TabsTrigger>
           <TabsTrigger value="import">Import CSV</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview">
           <SiteInitiationDisplay projectId={projectId} />
+        </TabsContent>
+        
+        <TabsContent value="starter-packs">
+          <StarterPacksTab projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="sites">
