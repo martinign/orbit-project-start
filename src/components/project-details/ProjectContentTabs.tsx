@@ -48,7 +48,7 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
       <div className="relative mb-4">
-        <TabsList className="w-full overflow-hidden">
+        <TabsList className="w-full overflow-x-auto">
           <Carousel opts={{ align: "start", containScroll: "trimSnaps" }}>
             <CarouselContent className="-ml-2">
               {/* Core tabs that are always shown */}
@@ -117,10 +117,15 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
                 </CarouselItem>
               )}
             </CarouselContent>
+            
+            <div className="absolute top-0 left-0 h-full flex items-center">
+              <CarouselPrevious className="relative -left-0 bg-blue-500 hover:bg-blue-600 text-white" />
+            </div>
+            
+            <div className="absolute top-0 right-0 h-full flex items-center">
+              <CarouselNext className="relative -right-0 bg-blue-500 hover:bg-blue-600 text-white" />
+            </div>
           </Carousel>
-          
-          <CarouselPrevious className="left-0 bg-blue-500 hover:bg-blue-600 text-white" />
-          <CarouselNext className="right-0 bg-blue-500 hover:bg-blue-600 text-white" />
         </TabsList>
       </div>
 
