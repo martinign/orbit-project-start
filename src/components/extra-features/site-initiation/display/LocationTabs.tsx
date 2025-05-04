@@ -21,10 +21,10 @@ export const LocationTabs: React.FC<LocationTabsProps> = ({
           <TabsTrigger value="institutions">Institutions ({institutions.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="countries">
-          <LocationsList items={countries} />
+          <LocationsList items={countries} type="countries" />
         </TabsContent>
         <TabsContent value="institutions">
-          <LocationsList items={institutions} />
+          <LocationsList items={institutions} type="institutions" />
         </TabsContent>
       </Tabs>
     </div>
