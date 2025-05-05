@@ -18,7 +18,7 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   const [assignedTo, setAssignedTo] = useState('none');
   const [isPrivate, setIsPrivate] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
-
+  
   // Initialize form data
   useEffect(() => {
     if (!didInitialFormSet) {

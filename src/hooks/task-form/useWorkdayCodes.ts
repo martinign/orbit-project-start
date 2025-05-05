@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { fetchWorkdayCodes, fetchProjectWorkdayCodes, WorkdayCodeOption } from '@/utils/workdayCombinedUtils';
 
-export const useWorkdayCodes = (projectId?: string, taskProjectId?: string) => {
+export const useWorkdayCodes = (projectId?: string, taskProjectId?: string, initialWorkdayCodeId?: string) => {
   const [workdayCodes, setWorkdayCodes] = useState<WorkdayCodeOption[]>([]);
-  const [selectedWorkdayCode, setSelectedWorkdayCode] = useState<string>('none');
+  const [selectedWorkdayCode, setSelectedWorkdayCode] = useState<string>(initialWorkdayCodeId || 'none');
 
   // Load workday codes based on project context
   const loadWorkdayCodes = async (projectIdToUse?: string) => {
@@ -27,13 +27,13 @@ export const useWorkdayCodes = (projectId?: string, taskProjectId?: string) => {
 
   // Reset selected workday code when codes change
   useEffect(() => {
-    if (workdayCodes.length > 0 && selectedWorkdayCode !== 'none') {
+    if (workdayCodes.length > 0 && selectedWorkdayCode !== 'none' && initialWorkdayCodeId) {
       const codeExists = workdayCodes.some(code => code.id === selectedWorkdayCode);
       if (!codeExists) {
         setSelectedWorkdayCode('none');
       }
     }
-  }, [workdayCodes, selectedWorkdayCode]);
+  }, [workdayCodes, selectedWorkdayCode, initialWorkdayCodeId]);
 
   return {
     workdayCodes,

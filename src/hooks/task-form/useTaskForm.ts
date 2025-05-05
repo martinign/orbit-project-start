@@ -30,7 +30,8 @@ export const useTaskForm = (
   
   const workdayCodes = useWorkdayCodes(
     projectSelect.selectedProject,
-    task?.project_id
+    task?.project_id,
+    task?.workday_code_id
   );
   
   const submission = useTaskSubmission({ 
