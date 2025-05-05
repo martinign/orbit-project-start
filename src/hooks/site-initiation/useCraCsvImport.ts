@@ -57,7 +57,7 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
       setProcessing(true);
       
       // Process records in batches to avoid overwhelming the database
-      const batchSize = 50;
+      const batchSize = 10;
       const batchCount = Math.ceil(processedRecords.length / batchSize);
 
       for (let i = 0; i < batchCount; i++) {
@@ -66,30 +66,45 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
         const batch = processedRecords.slice(batchStart, batchEnd);
 
         console.log('Processing batch of CRA records:', batch);
-
-        // Use upsert operation with conflict detection on the combination of fields
-        // that should be unique for a CRA in a project
+        
+        // Try inserting without upsert first to debug
         const { data, error } = await supabase
           .from('project_cra_list')
-          .upsert(batch, {
-            onConflict: 'full_name,project_id',
-            ignoreDuplicates: false
-          })
+          .insert(batch)
           .select();
 
         if (error) {
           console.error('Batch error:', error);
-          errorCount += batch.length;
+          
+          // If insert fails, try with upsert operation as a fallback
+          const upsertResult = await supabase
+            .from('project_cra_list')
+            .upsert(batch, {
+              onConflict: 'full_name,project_id',
+              ignoreDuplicates: false
+            })
+            .select();
+            
+          if (upsertResult.error) {
+            console.error('Upsert error:', upsertResult.error);
+            errorCount += batch.length;
+          } else {
+            console.log('Successful upsert:', upsertResult.data);
+            successCount += (upsertResult.data?.length || 0);
+            errorCount += batch.length - (upsertResult.data?.length || 0);
+          }
         } else {
+          console.log('Successful insert:', data);
           successCount += (data?.length || 0);
           errorCount += batch.length - (data?.length || 0);
         }
       }
 
+      const variant = errorCount > 0 ? "default" : "default";
       toast({
         title: "CRA CSV Import Completed",
         description: `Successfully processed ${successCount} records. ${errorCount > 0 ? `Failed to process ${errorCount} records.` : ''}`,
-        variant: errorCount > 0 ? "default" : "default",
+        variant,
       });
 
       return { success: successCount, error: errorCount };

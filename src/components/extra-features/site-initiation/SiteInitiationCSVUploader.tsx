@@ -73,6 +73,44 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     };
   };
 
+  // Map CSV columns to CRA data fields - enhanced to handle column name variations
+  const mapCSVToCRAData = (csvData: any[]): CRAData[] => {
+    return csvData.map(row => {
+      // For debugging
+      console.log('Raw CSV Row:', row);
+      
+      // Normalize field names by checking multiple possible variations
+      const getField = (fieldOptions: string[]): string => {
+        for (const option of fieldOptions) {
+          if (row[option] !== undefined && row[option] !== null && row[option] !== '') {
+            return row[option];
+          }
+        }
+        return '';
+      };
+      
+      // Build the CRA data object with normalized field access
+      const craData: CRAData = {
+        full_name: getField(['Full Name', 'full_name', 'FullName', 'Name', 'name']),
+        first_name: getField(['First Name', 'first_name', 'FirstName', 'Given Name', 'given_name']),
+        last_name: getField(['Last Name', 'last_name', 'LastName', 'Family Name', 'family_name']),
+        study_site: getField(['Study Site', 'study_site', 'Site', 'site']),
+        status: getField(['Status', 'status']) || 'active',
+        email: getField(['Email', 'email', 'Email Address', 'email_address']),
+        study_country: getField(['Study Country', 'study_country', 'Country', 'country']),
+        study_team_role: getField(['Study Team Role', 'study_team_role', 'Team Role', 'role']),
+        user_type: getField(['User Type', 'user_type', 'Type']),
+        user_reference: getField(['User Reference', 'user_reference', 'Reference', 'ref']),
+        project_id: projectId || '',
+      };
+      
+      // Log the mapped data for debugging
+      console.log('Mapped CRA Data:', craData);
+      
+      return craData;
+    });
+  };
+
   // Map CSV columns to site data fields
   const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
     return csvData.map(row => {
@@ -106,26 +144,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     });
   };
 
-  // Map CSV columns to CRA data fields
-  const mapCSVToCRAData = (csvData: any[]): CRAData[] => {
-    return csvData.map(row => {
-      return {
-        full_name: row['Full Name'] || row['full_name'] || '',
-        first_name: row['First Name'] || row['first_name'] || '',
-        last_name: row['Last Name'] || row['last_name'] || '',
-        study_site: row['Study Site'] || row['study_site'] || '',
-        status: row['Status'] || row['status'] || 'active',
-        email: row['Email'] || row['email'] || '',
-        study_country: row['Study Country'] || row['study_country'] || '',
-        study_team_role: row['Study Team Role'] || row['study_team_role'] || '',
-        user_type: row['User Type'] || row['user_type'] || '',
-        user_reference: row['User Reference'] || row['user_reference'] || '',
-        project_id: projectId || '',
-      };
-    });
-  };
-
-  // Handle CSV file drop
+  // Handle CSV file drop with improved error handling
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setParseError(null);
     setParsedSiteData([]);
@@ -141,9 +160,13 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
       skipEmptyLines: true,
       complete: (results) => {
         if (results.errors.length > 0) {
+          console.error('CSV parsing errors:', results.errors);
           setParseError(`CSV parsing error: ${results.errors[0].message}`);
           return;
         }
+        
+        // Debug the parsed data
+        console.log('Parsed CSV data:', results.data);
         
         try {
           if (importType === 'site-data') {
@@ -166,8 +189,14 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
               description: `Found ${mappedData.length} records ready to be imported.`,
             });
           } else {
-            // Handle CRA list data
+            // Handle CRA list data with improved mapping and validation
             const mappedData = mapCSVToCRAData(results.data as any[]);
+            
+            // Check if we have valid data after mapping
+            if (mappedData.length === 0) {
+              setParseError('No valid CRA data found in the CSV file.');
+              return;
+            }
             
             // Validate all records
             const invalidRecords = mappedData.filter(record => {
@@ -176,6 +205,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
             });
             
             if (invalidRecords.length > 0) {
+              console.error('Invalid CRA records:', invalidRecords);
               setParseError(`Found ${invalidRecords.length} records with missing required fields. Please check your CSV file.`);
               return;
             }
@@ -187,10 +217,12 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
             });
           }
         } catch (error) {
+          console.error('Error processing CSV data:', error);
           setParseError(`Error processing CSV data: ${(error as Error).message}`);
         }
       },
       error: (error) => {
+        console.error('Error reading CSV file:', error);
         setParseError(`Error reading CSV file: ${error.message}`);
       }
     });
@@ -246,27 +278,13 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
           description: `Successfully processed ${parsedSiteData.length} records.`,
         });
       } else {
-        // Process CRA list data
-        const batchSize = 10;
-        const totalBatches = Math.ceil(parsedCRAData.length / batchSize);
+        // Process CRA list data with improved error handling
+        console.log('Starting CRA import with data:', parsedCRAData);
         
-        let processedCount = 0;
+        const result = await processCRACSVData(parsedCRAData);
+        console.log('CRA import result:', result);
         
-        for (let i = 0; i < parsedCRAData.length; i += batchSize) {
-          const batch = parsedCRAData.slice(i, i + batchSize);
-          await processCRACSVData(batch);
-          
-          processedCount += batch.length;
-          setUploadProgress(Math.floor((processedCount / parsedCRAData.length) * 100));
-          
-          // Small delay to prevent overwhelming the database
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-        
-        toast({
-          title: "CRA list CSV import completed",
-          description: `Successfully processed ${parsedCRAData.length} records.`,
-        });
+        setUploadProgress(100);
       }
       
       // Reset the state
@@ -274,6 +292,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
       setParsedSiteData([]);
       setParsedCRAData([]);
     } catch (error) {
+      console.error(`Error processing ${importType} data:`, error);
       toast({
         title: `Error processing ${importType === 'site-data' ? 'site data' : 'CRA list'} CSV data`,
         description: (error as Error).message,
