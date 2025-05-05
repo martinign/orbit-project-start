@@ -9,48 +9,24 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { usePagination } from '@/hooks/usePagination';
+import { useCraData } from '@/hooks/cra-list/useCraData';
 
 interface CRAListTabProps {
   projectId?: string;
 }
 
-interface CRAEntry {
-  id: string;
-  full_name: string;
-  first_name: string;
-  last_name: string;
-  study_site: string | null;
-  status: string | null;
-  email: string | null;
-  study_country: string | null;
-  study_team_role: string | null;
-  user_type: string | null;
-  user_reference: string | null;
-}
-
 export const CRAListTab: React.FC<CRAListTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 10;
+  const { 
+    craList, 
+    isLoading, 
+    error 
+  } = useCraData(projectId);
+  
   const { currentPage, totalPages, goToPage } = usePagination({ 
     pageSize, 
-    totalItems: 0 // Use totalItems instead of totalCount for compatibility
-  });
-
-  // Fetch CRA list data
-  const { data: craEntries, isLoading, error } = useQuery({
-    queryKey: ['cra_list', projectId],
-    queryFn: async () => {
-      if (!projectId) return [];
-      
-      const { data, error } = await supabase
-        .from('project_cra_list')
-        .select('*')
-        .eq('project_id', projectId);
-        
-      if (error) throw error;
-      return data as CRAEntry[];
-    },
-    enabled: !!projectId,
+    totalItems: craList?.length || 0
   });
 
   // Fetch admin access for permission checks
@@ -74,7 +50,7 @@ export const CRAListTab: React.FC<CRAListTabProps> = ({ projectId }) => {
   });
 
   // Filter CRA entries based on search query
-  const filteredEntries = craEntries?.filter(entry => {
+  const filteredEntries = craList?.filter(entry => {
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
