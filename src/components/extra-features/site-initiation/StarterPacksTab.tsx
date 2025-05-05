@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -234,59 +233,73 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     return <ErrorState error={error} />;
   }
 
-  // Render enhanced hover card content for a site
+  // Render enhanced hover card content for a site - focusing only on LABP role data
   const renderSiteHoverContent = (siteRef: typeof siteReferenceData[0]) => {
-    // Get all sites with this reference number
-    const allSites = siteRef.allSitesForReference;
+    // Get the LABP site if it exists
+    const labpSite = siteRef.labpSite;
     
-    // Get the representative site (prefer LABP)
-    const representativeSite = siteRef.labpSite || allSites[0];
+    // Get all sites with this reference number excluding LABP (for Personnel tab)
+    const otherSites = siteRef.allSitesForReference.filter(site => site.role !== 'LABP');
     
     // Get all roles for this site reference
-    const presentRoles = allSites.map(site => site.role);
+    const presentRoles = siteRef.allSitesForReference.map(site => site.role);
     
     return (
       <div className="space-y-6 max-w-md">
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Site Details</TabsTrigger>
-            <TabsTrigger value="personnel">Personnel</TabsTrigger>
+            <TabsTrigger value="personnel">Other Personnel</TabsTrigger>
             <TabsTrigger value="roles">Roles</TabsTrigger>
           </TabsList>
           
-          {/* Site Details Tab */}
+          {/* Site Details Tab - Only showing data not visible in the table */}
           <TabsContent value="details" className="space-y-4">
-            <div>
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <Info className="h-4 w-4 text-blue-500" />
-                Basic Information
-              </h4>
-              <div className="grid grid-cols-2 gap-1 text-sm mt-2">
-                <div className="font-medium">Reference:</div>
-                <div>{siteRef.reference}</div>
-                <div className="font-medium">Institution:</div>
-                <div>{representativeSite.institution || 'Not specified'}</div>
-                <div className="font-medium">Country:</div>
-                <div>{representativeSite.country || 'Not specified'}</div>
+            {labpSite ? (
+              <>
+                <div>
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-500" />
+                    LABP Address
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                    <div className="font-medium">Address:</div>
+                    <div>{labpSite.address || 'Not specified'}</div>
+                    <div className="font-medium">City/Town:</div>
+                    <div>{labpSite.city_town || 'Not specified'}</div>
+                    <div className="font-medium">Province/State:</div>
+                    <div>{labpSite.province_state || 'Not specified'}</div>
+                    <div className="font-medium">Zip/Postal Code:</div>
+                    <div>{labpSite.zip_code || 'Not specified'}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-blue-500" />
+                    LABP Contact Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                    <div className="font-medium">Email:</div>
+                    <div className="break-all">{labpSite.site_personnel_email_address || 'Not specified'}</div>
+                    <div className="font-medium">Telephone:</div>
+                    <div>{labpSite.site_personnel_telephone || 'Not specified'}</div>
+                    <div className="font-medium">Fax:</div>
+                    <div>{labpSite.site_personnel_fax || 'Not specified'}</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <div className="rounded-full bg-amber-100 p-3 mb-2">
+                  <User className="h-6 w-6 text-amber-600" />
+                </div>
+                <h3 className="font-medium mb-1">No LABP Role Found</h3>
+                <p className="text-sm text-muted-foreground">
+                  This site reference does not have a LABP role assigned.
+                </p>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-blue-500" />
-                Address Details
-              </h4>
-              <div className="grid grid-cols-2 gap-1 text-sm mt-2">
-                <div className="font-medium">Address:</div>
-                <div>{representativeSite.address || 'Not specified'}</div>
-                <div className="font-medium">City/Town:</div>
-                <div>{representativeSite.city_town || 'Not specified'}</div>
-                <div className="font-medium">Province/State:</div>
-                <div>{representativeSite.province_state || 'Not specified'}</div>
-                <div className="font-medium">Zip/Postal Code:</div>
-                <div>{representativeSite.zip_code || 'Not specified'}</div>
-              </div>
-            </div>
+            )}
             
             <div>
               <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -322,55 +335,41 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
             </div>
           </TabsContent>
           
-          {/* Personnel Tab */}
+          {/* Personnel Tab - Only showing other personnel (not LABP) */}
           <TabsContent value="personnel" className="space-y-4">
-            {allSites.map(site => (
-              <div key={site.id} className="border-b pb-3 last:border-b-0">
-                <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <User className="h-4 w-4 text-blue-500" />
-                  {site.role}: {site.site_personnel_name}
-                </h4>
-                <div className="grid grid-cols-2 gap-1 text-sm mt-2">
-                  {site.pi_name && (
-                    <>
-                      <div className="font-medium">PI Name:</div>
-                      <div>{site.pi_name}</div>
-                    </>
-                  )}
-                  
-                  {site.site_personnel_email_address && (
-                    <>
-                      <div className="font-medium">Email:</div>
-                      <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3" />
-                        <span className="break-all">{site.site_personnel_email_address}</span>
-                      </div>
-                    </>
-                  )}
-                  
-                  {site.site_personnel_telephone && (
-                    <>
-                      <div className="font-medium">Phone:</div>
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        <span>{site.site_personnel_telephone}</span>
-                      </div>
-                    </>
-                  )}
-                  
-                  {site.site_personnel_fax && (
-                    <>
-                      <div className="font-medium">Fax:</div>
-                      <div>{site.site_personnel_fax}</div>
-                    </>
-                  )}
+            {otherSites.length > 0 ? (
+              otherSites.map(site => (
+                <div key={site.id} className="border-b pb-3 last:border-b-0">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-500" />
+                    {site.role}: {site.site_personnel_name}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                    {site.site_personnel_email_address && (
+                      <>
+                        <div className="font-medium">Email:</div>
+                        <div className="flex items-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          <span className="break-all">{site.site_personnel_email_address}</span>
+                        </div>
+                      </>
+                    )}
+                    
+                    {site.site_personnel_telephone && (
+                      <>
+                        <div className="font-medium">Phone:</div>
+                        <div className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          <span>{site.site_personnel_telephone}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            
-            {allSites.length === 0 && (
+              ))
+            ) : (
               <div className="text-center text-muted-foreground text-sm py-4">
-                No personnel information available
+                No other personnel found for this site reference
               </div>
             )}
           </TabsContent>
