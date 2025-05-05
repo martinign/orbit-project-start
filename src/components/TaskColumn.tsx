@@ -16,6 +16,7 @@ interface Task {
   due_date?: string;
   project_id: string;
   assigned_to?: string;
+  is_private?: boolean;
 }
 
 interface ColumnConfig {

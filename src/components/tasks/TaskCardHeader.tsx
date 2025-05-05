@@ -1,12 +1,14 @@
 
 import React from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TaskCardHeaderProps {
   title: string;
   hasSubtasks: boolean;
   isExpanded: boolean;
   toggleExpand: (e: React.MouseEvent) => void;
+  isPrivate?: boolean;
 }
 
 export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
@@ -14,23 +16,36 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   hasSubtasks,
   isExpanded,
   toggleExpand,
+  isPrivate
 }) => {
   return (
-    <div className="flex items-start gap-2 min-w-0 flex-grow">
+    <div className="flex-1 pr-2">
+      <div className="flex items-center gap-1">
+        {isPrivate && (
+          <Lock className="h-3 w-3 text-gray-500 flex-shrink-0" />
+        )}
+        <h3 className={cn("font-medium", isPrivate && "text-gray-700")}>
+          {title}
+        </h3>
+      </div>
       {hasSubtasks && (
-        <button 
-          className="mt-1 flex-shrink-0" 
+        <button
           onClick={toggleExpand}
-          aria-label={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
+          className="flex items-center text-xs text-gray-500 mt-1 hover:text-gray-800"
         >
           {isExpanded ? (
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+            <>
+              <ChevronUp className="h-3 w-3 mr-1" />
+              Hide subtasks
+            </>
           ) : (
-            <ChevronRight className="h-4 w-4 text-gray-500" />
+            <>
+              <ChevronDown className="h-3 w-3 mr-1" />
+              Show subtasks
+            </>
           )}
         </button>
       )}
-      <h4 className="font-medium truncate">{title}</h4>
     </div>
   );
 };

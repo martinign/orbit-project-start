@@ -15,6 +15,7 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  is_private?: boolean;
 }
 
 interface ColumnConfig {

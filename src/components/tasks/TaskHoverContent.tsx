@@ -1,20 +1,20 @@
 
 import React from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User, Clock } from 'lucide-react';
-import { format } from 'date-fns';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { CalendarIcon, Users, MessageSquare, Lock } from 'lucide-react';
 import { useWorkdayCodeDetails } from '@/hooks/useWorkdayCodeDetails';
 
 interface TaskHoverContentProps {
   title: string;
   description?: string;
-  priority?: string;
+  priority: string;
   dueDate?: string;
   assignedToName?: string;
   createdAt?: string;
   userId?: string;
   workdayCodeId?: string;
+  isPrivate?: boolean;
 }
 
 export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
@@ -26,100 +26,77 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
   createdAt,
   userId,
   workdayCodeId,
+  isPrivate
 }) => {
-  const { data: userProfile } = useUserProfile(userId);
-  const { data: workdayCodeDetails } = useWorkdayCodeDetails(workdayCodeId);
+  const { code } = useWorkdayCodeDetails(workdayCodeId);
   
-  const getPriorityColor = (priority: string) => {
-    switch(priority?.toLowerCase()) {
+  const getPriorityBadge = () => {
+    switch (priority) {
       case 'high':
-        return 'bg-red-200 text-red-800';
+        return <Badge variant="destructive">High Priority</Badge>;
       case 'medium':
-        return 'bg-orange-200 text-orange-800';
+        return <Badge variant="default">Medium Priority</Badge>;
       case 'low':
-        return 'bg-green-200 text-green-800';
+        return <Badge variant="secondary">Low Priority</Badge>;
       default:
-        return 'bg-gray-200 text-gray-800';
+        return null;
     }
   };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return null;
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch {
-      return null;
-    }
-  };
-
+  
   return (
     <div className="space-y-2">
-      <h4 className="font-semibold">{title}</h4>
+      <h4 className="font-semibold text-base">{title}</h4>
       
-      {description && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-500">Description</h5>
-          <p className="text-sm">{description}</p>
-        </div>
-      )}
-      
-      <div className="flex flex-wrap gap-2 pt-1">
-        {priority && (
-          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(priority)}`}>
-            {priority}
-          </span>
-        )}
+      <div className="flex flex-wrap gap-2 items-center">
+        {getPriorityBadge()}
         
-        {dueDate && formatDate(dueDate) && (
-          <span className="text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-800 flex items-center">
-            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-            {formatDate(dueDate)}
-          </span>
+        {isPrivate && (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            Private Task
+          </Badge>
         )}
       </div>
       
-      {assignedToName && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-500">Assigned To</h5>
-          <p className="text-sm flex items-center">
-            <User className="h-3 w-3 mr-1 flex-shrink-0" />
+      {description && (
+        <p className="text-sm text-muted-foreground">
+          {description.length > 150 
+            ? `${description.substring(0, 150)}...` 
+            : description}
+        </p>
+      )}
+      
+      <div className="grid grid-cols-1 gap-1 text-xs">
+        {dueDate && (
+          <div className="flex items-center">
+            <CalendarIcon className="h-3 w-3 mr-1" />
+            <span className="text-muted-foreground mr-1">Due:</span>
+            {new Date(dueDate).toLocaleDateString()}
+          </div>
+        )}
+        
+        {assignedToName && (
+          <div className="flex items-center">
+            <Users className="h-3 w-3 mr-1" />
+            <span className="text-muted-foreground mr-1">Assigned to:</span>
             {assignedToName}
-          </p>
-        </div>
-      )}
-      
-      {/* Workday code information */}
-      {workdayCodeDetails && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-500">Workday Code</h5>
-          <p className="text-sm flex items-center">
-            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-            {workdayCodeDetails.label}
-          </p>
-        </div>
-      )}
-      
-      {/* Creator information - now showing full_name and last_name separately */}
-      {userProfile && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-500">Created By</h5>
-          <p className="text-sm flex items-center">
-            <User className="h-3 w-3 mr-1 flex-shrink-0" />
-            {userProfile.full_name} {userProfile.last_name}
-          </p>
-        </div>
-      )}
-      
-      {/* Creation date */}
-      {createdAt && formatDate(createdAt) && (
-        <div>
-          <h5 className="text-xs font-medium text-gray-500">Created On</h5>
-          <p className="text-sm flex items-center">
-            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-            {formatDate(createdAt)}
-          </p>
-        </div>
-      )}
+          </div>
+        )}
+        
+        {code && (
+          <div className="flex items-center">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            <span className="text-muted-foreground mr-1">Workday code:</span>
+            {code.code} - {code.description}
+          </div>
+        )}
+        
+        {createdAt && (
+          <div className="text-xs text-muted-foreground mt-1">
+            Created {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

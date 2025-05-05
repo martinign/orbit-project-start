@@ -19,6 +19,7 @@ interface Task {
   project_id: string;
   assigned_to?: string;
   is_gantt_task?: boolean;
+  is_private?: boolean;
   user_id?: string;
   created_at?: string;
   workday_code_id?: string;
@@ -53,6 +54,17 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
 }) => {
   const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
 
+  // Determine the background color based on task properties
+  const getBackgroundColor = () => {
+    if (task.is_private) {
+      return 'bg-[#F1F0FB]'; // Light purple background for private tasks
+    }
+    if (task.is_gantt_task) {
+      return 'bg-[#F2FCE2]'; // Keep existing green background for Gantt tasks
+    }
+    return ''; // Default background
+  };
+
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided) => (
@@ -62,9 +74,7 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
               ref={provided.innerRef}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
-              className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${
-                task.is_gantt_task ? 'bg-[#F2FCE2]' : ''
-              }`}
+              className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${getBackgroundColor()}`}
             >
               <CardContent className="p-3">
                 <div className="flex justify-between items-start w-full">
@@ -73,6 +83,7 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
                     hasSubtasks={subtasksCount > 0}
                     isExpanded={isExpanded}
                     toggleExpand={toggleExpand}
+                    isPrivate={task.is_private}
                   />
                   
                   <TaskActions
@@ -90,6 +101,7 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
                   assignedToName={assignedToName}
                   subtasksCount={subtasksCount}
                   updateCount={updateCount}
+                  isPrivate={task.is_private}
                 />
               </CardContent>
             </Card>
@@ -104,6 +116,7 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
               createdAt={task.created_at}
               userId={task.user_id}
               workdayCodeId={task.workday_code_id}
+              isPrivate={task.is_private}
             />
           </HoverCardContent>
         </HoverCard>
