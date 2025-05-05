@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -46,13 +47,16 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   const { 
     allSites: sites, // Use allSites to get the full dataset for calculations
     loading, 
-    error, 
+    error,
     isEligibleForStarterPack,
     refetch,
     pagination
   } = useAllSitesData(projectId, 10); // Set page size to 10
+
+  // State to track optimistic UI updates
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, boolean>>({});
   
-  // Get an updateSite function from useSiteOperations hook
+  // Update site function
   const updateSite = async (siteId: string, updates: Partial<SiteData>) => {
     try {
       const { error } = await supabase
@@ -103,6 +107,12 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       const missingLabp = isMissingLabpRole(sites, reference);
       const labpSite = sitesForReference.find(site => site.role === 'LABP');
       
+      // Apply optimistic updates if they exist for this site
+      const hasOptimisticUpdate = labpSite && labpSite.id && optimisticUpdates[labpSite.id] !== undefined;
+      const starterPackStatus = hasOptimisticUpdate 
+        ? optimisticUpdates[labpSite!.id!] 
+        : (labpSite ? !!labpSite.starter_pack : false);
+      
       // Find a representative site for display (prefer LABP if available)
       const representativeSite = labpSite || sitesForReference[0];
       
@@ -110,14 +120,14 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         reference,
         missingLabp,
         labpSite,
-        hasStarterPack: labpSite ? !!labpSite.starter_pack : false,
-        starterPackUpdatedAt: labpSite?.updated_at, // This is now an optional property
+        hasStarterPack: starterPackStatus,
+        starterPackUpdatedAt: labpSite?.updated_at,
         country: representativeSite.country || '',
         institution: representativeSite.institution || '',
         personnel: representativeSite.site_personnel_name || ''
       };
     });
-  }, [uniqueSiteReferences, sitesByReference, sites]);
+  }, [uniqueSiteReferences, sitesByReference, sites, optimisticUpdates]);
 
   // Apply country filter to site references
   const filteredSiteReferences = useMemo(() => {
@@ -161,19 +171,55 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     };
   }, [uniqueSiteReferences, siteReferenceData]);
 
-  // Handle starter pack toggle
+  // Handle starter pack toggle with optimistic UI update
   const handleStarterPackToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
     if (labpSite && labpSite.id) {
-      const success = await updateSite(labpSite.id, { starter_pack: newValue });
+      // Apply optimistic update
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [labpSite.id!]: newValue
+      }));
+      
+      // Show optimistic toast
+      toast({
+        title: newValue ? "Marking starter pack as sent..." : "Marking starter pack as not sent...",
+        description: `Updating status for ${labpSite.pxl_site_reference_number}`,
+      });
+      
+      // Make the actual update
+      const success = await updateSite(labpSite.id, { 
+        starter_pack: newValue,
+        updated_at: new Date().toISOString() // Update the timestamp
+      });
+      
       if (success) {
         toast({
           title: newValue ? "Starter pack marked as sent" : "Starter pack marked as not sent",
           description: `Updated status for ${labpSite.pxl_site_reference_number}`,
         });
-        refetch();
+        
+        // No need to call refetch() as the real-time subscription will handle the update
+      } else {
+        // Revert optimistic update on failure
+        setOptimisticUpdates(prev => {
+          const newUpdates = { ...prev };
+          delete newUpdates[labpSite.id!];
+          return newUpdates;
+        });
+        
+        toast({
+          title: "Failed to update starter pack status",
+          description: "Please try again",
+          variant: "destructive"
+        });
       }
     }
   };
+
+  // Clear optimistic updates when sites data is refreshed
+  useEffect(() => {
+    setOptimisticUpdates({});
+  }, [sites]);
 
   if (error) {
     return <ErrorState error={error} />;
