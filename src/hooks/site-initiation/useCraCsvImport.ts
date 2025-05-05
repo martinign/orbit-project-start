@@ -27,7 +27,17 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
 
   // Process CSV data with upsert logic
   const processCRACSVData = async (records: CRAData[]): Promise<CRAOperationsResult> => {
-    if (!userId || !projectId || !records.length) return { success: 0, error: 0 };
+    if (!userId) {
+      console.error('User ID is required for CRA CSV import');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to import CRA data.",
+        variant: "destructive",
+      });
+      return { success: 0, error: records.length };
+    }
+    
+    if (!projectId || !records.length) return { success: 0, error: 0 };
 
     // Process the CRA records
     const processedRecords = records.map(record => ({
@@ -54,6 +64,8 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
         const batchStart = i * batchSize;
         const batchEnd = Math.min((i + 1) * batchSize, processedRecords.length);
         const batch = processedRecords.slice(batchStart, batchEnd);
+
+        console.log('Processing batch of CRA records:', batch);
 
         // Use upsert operation with conflict detection on the combination of fields
         // that should be unique for a CRA in a project

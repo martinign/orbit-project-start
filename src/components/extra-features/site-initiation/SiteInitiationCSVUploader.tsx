@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
@@ -26,6 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SiteInitiationCSVUploaderProps {
   projectId?: string;
@@ -46,9 +46,10 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   const [parseError, setParseError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [importType, setImportType] = useState<ImportType>('site-data');
+  const { user } = useAuth(); // Get current user
   
   const { processCSVData } = useSiteInitiationData(projectId);
-  const { processCRACSVData } = useCraCsvImport(projectId, undefined);
+  const { processCRACSVData } = useCraCsvImport(projectId, user?.id); // Pass user ID to the hook
 
   // Validate required fields in CSV data
   const validateSiteRecord = (record: any): ValidationResult => {
@@ -207,7 +208,14 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   
   // Process the uploaded data
   const handleUpload = async () => {
-    if (!projectId) return;
+    if (!projectId || !user?.id) {
+      toast({
+        title: "Authentication error",
+        description: "You must be logged in to import data.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (importType === 'site-data' && !parsedSiteData.length) return;
     if (importType === 'cra-list' && !parsedCRAData.length) return;
