@@ -16,7 +16,7 @@ const PrivacyToggle = ({ isPrivate, setIsPrivate }: PrivacyToggleProps) => {
         checked={isPrivate}
         onCheckedChange={setIsPrivate}
       />
-      <Label htmlFor="is-private">Private task (only visible to you)</Label>
+      <Label htmlFor="is-private">Private {isPrivate ? "(only visible to you)" : ""}</Label>
     </div>
   );
 };

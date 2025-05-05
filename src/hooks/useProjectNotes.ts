@@ -13,6 +13,7 @@ interface ProjectNote {
   created_at: string;
   updated_at: string;
   user_id: string;
+  is_private: boolean;
 }
 
 export function useProjectNotes(projectId: string) {
@@ -63,7 +64,7 @@ export function useProjectNotes(projectId: string) {
 
   // Mutation to create a note
   const createNote = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+    mutationFn: async ({ title, content, is_private }: { title: string; content: string; is_private: boolean }) => {
       if (!user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
@@ -72,7 +73,8 @@ export function useProjectNotes(projectId: string) {
           title,
           content,
           project_id: projectId,
-          user_id: user.id
+          user_id: user.id,
+          is_private
         })
         .select();
       
@@ -100,12 +102,13 @@ export function useProjectNotes(projectId: string) {
 
   // Mutation to update a note
   const updateNote = useMutation({
-    mutationFn: async (note: Pick<ProjectNote, "id" | "title" | "content">) => {
+    mutationFn: async (note: Pick<ProjectNote, "id" | "title" | "content" | "is_private">) => {
       const { data, error } = await supabase
         .from("project_notes")
         .update({
           title: note.title,
           content: note.content,
+          is_private: note.is_private,
           updated_at: new Date().toISOString(),
         })
         .eq("id", note.id)

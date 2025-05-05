@@ -15,6 +15,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import PrivacyToggle from '@/components/task-dialog/form-components/PrivacyToggle';
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -29,6 +30,8 @@ type EditNoteDialogProps = {
   setTitle: (title: string) => void;
   content: string;
   setContent: (content: string) => void;
+  isPrivate: boolean;
+  setIsPrivate: (isPrivate: boolean) => void;
 };
 
 const EditNoteDialog = ({
@@ -37,6 +40,8 @@ const EditNoteDialog = ({
   onUpdate,
   title,
   content,
+  isPrivate,
+  setIsPrivate
 }: EditNoteDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -106,6 +111,9 @@ const EditNoteDialog = ({
                 </FormItem>
               )}
             />
+
+            <PrivacyToggle isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+            
             <DialogFooter>
               <Button variant="outline" onClick={onClose} type="button">
                 Cancel

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import ProjectNotes from '@/components/ProjectNotes';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Plus, Search } from 'lucide-react';
+import { Lock, Plus, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NotesTabProps {

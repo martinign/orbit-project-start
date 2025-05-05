@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Plus, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Search, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import NotesList from './project-notes/NotesList';
@@ -20,6 +20,7 @@ interface ProjectNotesProps {
 
 export default function ProjectNotes({ projectId, searchQuery = '', setSearchQuery }: ProjectNotesProps) {
   const { user } = useAuth();
+  const [showPrivateOnly, setShowPrivateOnly] = useState(false);
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
     isCreateDialogOpen,
@@ -34,21 +35,33 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
     setTitle,
     content,
     setContent,
+    isPrivate,
+    setIsPrivate,
     saveNewNote,
     updateNote,
     deleteNote,
   } = useNoteOperations(projectId);
 
-  // Filter notes based on search query
-  const filteredNotes = notes.filter(note => 
-    searchQuery === '' || 
-    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (note.content && note.content.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Filter notes based on search query and privacy setting
+  const filteredNotes = notes.filter(note => {
+    // First filter by search query
+    const matchesSearch = 
+      searchQuery === '' || 
+      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (note.content && note.content.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Then filter by privacy setting if needed
+    if (showPrivateOnly) {
+      return matchesSearch && note.is_private && note.user_id === user?.id;
+    }
+    
+    return matchesSearch;
+  });
 
   const handleCreateNote = () => {
     setTitle('');
     setContent('');
+    setIsPrivate(false);
     setIsCreateDialogOpen(true);
   };
 
@@ -56,6 +69,7 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
     setSelectedNote(note);
     setTitle(note.title);
     setContent(note.content || '');
+    setIsPrivate(note.is_private);
     setIsEditDialogOpen(true);
   };
 
@@ -81,12 +95,26 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
       {isLoading ? (
         <div className="flex justify-center py-10">Loading notes...</div>
       ) : filteredNotes.length > 0 ? (
-        <NotesList 
-          notes={filteredNotes} 
-          onEditNote={handleEditNote} 
-          onDeleteConfirmation={handleDeleteConfirmation}
-          hasEditAccess={!!hasProjectAccess}
-        />
+        <>
+          {user && (
+            <div className="flex justify-end">
+              <Button 
+                onClick={() => setShowPrivateOnly(!showPrivateOnly)}
+                variant={showPrivateOnly ? "default" : "outline"}
+                className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+              >
+                <Lock className="mr-2 h-4 w-4" />
+                {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
+              </Button>
+            </div>
+          )}
+          <NotesList 
+            notes={filteredNotes} 
+            onEditNote={handleEditNote} 
+            onDeleteConfirmation={handleDeleteConfirmation}
+            hasEditAccess={!!hasProjectAccess}
+          />
+        </>
       ) : notes.length > 0 && filteredNotes.length === 0 ? (
         <div className="py-10 text-center">
           <p className="text-muted-foreground">No notes match your search criteria</p>
@@ -101,6 +129,8 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
         onClose={() => setIsCreateDialogOpen(false)}
         onSave={handleSaveNote}
         initialData={{ title, content }}
+        isPrivate={isPrivate}
+        setIsPrivate={setIsPrivate}
       />
       
       <EditNoteDialog 
@@ -111,6 +141,8 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
         setTitle={setTitle}
         content={content}
         setContent={setContent}
+        isPrivate={isPrivate}
+        setIsPrivate={setIsPrivate}
       />
 
       <DeleteNoteDialog 

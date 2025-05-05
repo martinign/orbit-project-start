@@ -545,6 +545,7 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          is_private: boolean
           project_id: string
           title: string
           updated_at: string
@@ -554,6 +555,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_private?: boolean
           project_id: string
           title: string
           updated_at?: string
@@ -563,6 +565,7 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_private?: boolean
           project_id?: string
           title?: string
           updated_at?: string

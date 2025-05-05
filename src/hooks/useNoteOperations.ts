@@ -12,6 +12,7 @@ export function useNoteOperations(projectId: string) {
   const [selectedNote, setSelectedNote] = useState<any | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export function useNoteOperations(projectId: string) {
           title: data.title,
           content: data.content,
           user_id: user.id,
+          is_private: isPrivate,
         })
         .select();
         
@@ -70,6 +72,7 @@ export function useNoteOperations(projectId: string) {
         .update({
           title,
           content,
+          is_private: isPrivate,
           updated_at: new Date().toISOString(),
         })
         .eq('id', selectedNote.id)
@@ -145,6 +148,8 @@ export function useNoteOperations(projectId: string) {
     setTitle,
     content,
     setContent,
+    isPrivate,
+    setIsPrivate,
     saveNewNote,
     updateNote,
     deleteNote,
