@@ -14,6 +14,7 @@ type ProjectNote = {
   created_at: string;
   updated_at: string;
   user_id: string;
+  is_private: boolean;
 };
 
 type NotesListProps = {
