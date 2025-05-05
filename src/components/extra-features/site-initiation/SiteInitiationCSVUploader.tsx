@@ -9,7 +9,7 @@ import {
   useSiteInitiationData, 
   isEligibleForStarterPack 
 } from '@/hooks/useSiteInitiationData';
-import { useCraCsvImport, CRAData } from '@/hooks/cra-list';
+import { useCraCsvImport, CRAData, CRAOperationsResult } from '@/hooks/site-initiation/useCraCsvImport';
 import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle, InfoIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -26,7 +26,6 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateCRARecord, normalizeCRARecord } from '@/hooks/cra-list/craUtils';
 
 interface SiteInitiationCSVUploaderProps {
   projectId?: string;
@@ -47,10 +46,10 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   const [parseError, setParseError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [importType, setImportType] = useState<ImportType>('site-data');
-  const { user } = useAuth();
+  const { user } = useAuth(); // Get current user
   
   const { processCSVData } = useSiteInitiationData(projectId);
-  const { processCRACSVData } = useCraCsvImport(projectId, user?.id);
+  const { processCRACSVData } = useCraCsvImport(projectId, user?.id); // Pass user ID to the hook
 
   // Validate required fields in CSV data
   const validateSiteRecord = (record: any): ValidationResult => {
@@ -63,47 +62,75 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     };
   };
 
-  // Map CSV columns to site data fields
-  const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
-    return csvData.map(row => {
-      const mappedData = {
-        pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
-        pi_name: row['PI Name'] || row['pi_name'] || '',
-        site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
-        role: row['Role'] || row['role'] || '',
-        site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
-        site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
-        site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
-        institution: row['Institution'] || row['institution'] || '',
-        address: row['Address'] || row['address'] || '',
-        city_town: row['City/Town'] || row['city_town'] || '',
-        province_state: row['Province/State'] || row['province_state'] || '',
-        zip_code: row['Zip Code'] || row['zip_code'] || '',
-        country: row['Country'] || row['country'] || '',
-        project_id: projectId || '',
-      };
+  // Process CSV data with upsert logic
+  const processCRACSVDataInternal = async (records: CRAData[]): Promise<CRAOperationsResult> => {
+    if (!user?.id) {
+      console.error('User ID is required for CRA CSV import');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to import CRA data.",
+        variant: "destructive",
+      });
+      return { success: 0, error: records.length };
+    }
+    
+    if (!projectId || !records.length) {
+      console.error('Missing project ID or records', { projectId, recordCount: records.length });
+      return { success: 0, error: 0 };
+    }
+
+    // Process the CRA records
+    const processedRecords = records.map(record => ({
+      ...record,
+      status: record.status || 'active',
+      project_id: projectId,
+      user_id: user?.id,
+      created_by: user?.id,
+      created_date: new Date().toISOString()
+    }));
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      setProcessing(true);
       
-      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
-      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
-      const isStarterPackTrue = typeof starterPack === 'string'
-        ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true'
-        : Boolean(starterPack);
-        
-      return {
-        ...mappedData,
-        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
-      };
-    });
+      console.log('Processed records before import:', JSON.stringify(processedRecords, null, 2));
+      
+      const result = await processCRACSVData(processedRecords);
+      
+      if (result.error > 0) {
+        console.error('Some records failed to import');
+        toast({
+          title: "Import Partially Successful",
+          description: `Imported ${result.success} records. ${result.error} records failed.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Import Successful",
+          description: `Successfully imported ${result.success} records.`,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in CRA import:', error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import CRA data. Please check the console for details.",
+        variant: "destructive"
+      });
+      return { success: 0, error: processedRecords.length };
+    }
   };
 
   // Validate CRA records
   const validateCRARecords = (records: any[]): CRAData[] => {
-    if (!user?.id || !projectId) return [];
-    
     return records.map(record => {
-      // Map CSV fields to CRA data structure with better field handling
-      const craData = {
-        full_name: record['Full Name'] || record['full_name'] || `${record['First Name'] || record['first_name'] || ''} ${record['Last Name'] || record['last_name'] || ''}`.trim(),
+      // Map CSV fields to CRA data structure
+      return {
+        full_name: record['Full Name'] || record['full_name'] || `${record['First Name'] || record['first_name']} ${record['Last Name'] || record['last_name']}`,
         first_name: record['First Name'] || record['first_name'] || '',
         last_name: record['Last Name'] || record['last_name'] || '',
         study_site: record['Study Site'] || record['study_site'] || record['Site'] || '',
@@ -113,10 +140,8 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         study_team_role: record['Study Team Role'] || record['study_team_role'] || record['Role'] || '',
         user_type: record['User Type'] || record['user_type'] || '',
         user_reference: record['User Reference'] || record['user_reference'] || '',
-        project_id: projectId
+        project_id: projectId || ''
       };
-      
-      return normalizeCRARecord(craData, projectId, user.id);
     });
   };
 
@@ -169,7 +194,9 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
             console.log('Validated CRA records:', validatedRecords);
             
             // Validate all records
-            const invalidRecords = validatedRecords.filter(record => !validateCRARecord(record));
+            const invalidRecords = validatedRecords.filter(record => {
+              return !record.full_name || !record.first_name || !record.last_name;
+            });
             
             if (invalidRecords.length > 0) {
               setParseError(`Found ${invalidRecords.length} records with missing required fields (full name, first name, or last name). Please check your CSV file.`);
@@ -192,7 +219,40 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         setParseError(`Error reading CSV file: ${error.message}`);
       }
     });
-  }, [projectId, importType, user?.id]);
+  }, [projectId, importType]);
+
+  // Map CSV columns to site data fields
+  const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
+    return csvData.map(row => {
+      const mappedData = {
+        pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
+        pi_name: row['PI Name'] || row['pi_name'] || '',
+        site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
+        role: row['Role'] || row['role'] || '',
+        site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
+        site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
+        site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
+        institution: row['Institution'] || row['institution'] || '',
+        address: row['Address'] || row['address'] || '',
+        city_town: row['City/Town'] || row['city_town'] || '',
+        province_state: row['Province/State'] || row['province_state'] || '',
+        zip_code: row['Zip Code'] || row['zip_code'] || '',
+        country: row['Country'] || row['country'] || '',
+        project_id: projectId || '',
+      };
+      
+      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
+      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
+      const isStarterPackTrue = typeof starterPack === 'string'
+        ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true'
+        : Boolean(starterPack);
+        
+      return {
+        ...mappedData,
+        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
+      };
+    });
+  };
 
   // Configure dropzone
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
@@ -244,15 +304,13 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
           description: `Successfully processed ${parsedSiteData.length} records.`,
         });
       } else {
-        // Process CRA list data using the new hook
+        // Process CRA list data with improved error handling
         console.log('Starting CRA import with data:', parsedCRAData);
         
-        const result = await processCRACSVData(parsedCRAData);
+        const result = await processCRACSVDataInternal(parsedCRAData);
         console.log('CRA import result:', result);
         
         setUploadProgress(100);
-        
-        // Toast notification is handled inside the hook
       }
       
       // Reset the state
