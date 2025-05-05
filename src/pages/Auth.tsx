@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,12 @@ const Auth = () => {
   const { toast } = useToast();
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
-  // If user is already logged in, redirect to dashboard
-  if (user) {
-    navigate('/dashboard');
-    return null;
-  }
+  // Use useEffect for navigation to avoid rendering issues
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -111,6 +112,11 @@ const Auth = () => {
     }
   };
 
+  // If user is already logged in, don't render the form
+  if (user) {
+    return null;
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-4">
@@ -160,7 +166,7 @@ const Auth = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white" disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </CardFooter>
@@ -176,7 +182,6 @@ const Auth = () => {
               </CardHeader>
               <form onSubmit={handleSignupSubmit}>
                 <CardContent className="space-y-4">
-
                   <div className="space-y-2">
                     <Label htmlFor="signup-full-name">First Name</Label>
                     <div className="relative">
@@ -184,7 +189,7 @@ const Auth = () => {
                       <Input 
                         id="signup-full-name" 
                         type="text" 
-                        placeholder="John Doe" 
+                        placeholder="John" 
                         value={signupData.full_name}
                         onChange={(e) => setSignupData({...signupData, full_name: e.target.value})}
                         className="pl-10"
@@ -199,7 +204,7 @@ const Auth = () => {
                       <Input 
                         id="signup-last-name" 
                         type="text" 
-                        placeholder="John Doe" 
+                        placeholder="Doe" 
                         value={signupData.last_name}
                         onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
                         className="pl-10"
@@ -308,7 +313,7 @@ const Auth = () => {
                                 Please review these terms carefully before using the experimental management tool.
                               </DialogDescription>
                             </DialogHeader>
-                           <div className="text-sm space-y-4 py-4">
+                            <div className="text-sm space-y-4 py-4">
                               <p>
                                 These Terms and Conditions (“Terms”) govern Your access to and use of the experimental management tool (“Tool”) 
                                 offered by the Developer. <strong>The Tool was conceived, designed, and implemented solely by the Developer 
@@ -452,11 +457,14 @@ const Auth = () => {
                                 terrorism, strikes, civil unrest, or governmental action.</p>
                               </div>
                             </div>
-
-                           
+                          </DialogContent>
+                        </Dialog>
+                      </label>
+                    </div>
+                  </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </CardFooter>
