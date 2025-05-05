@@ -1,0 +1,32 @@
+
+export interface CRAData {
+  id?: string;
+  full_name: string;
+  first_name: string;
+  last_name: string;
+  study_site?: string | null;
+  status?: string | null;
+  email?: string | null;
+  study_country?: string | null;
+  study_team_role?: string | null;
+  user_type?: string | null;
+  user_reference?: string | null;
+  project_id: string;
+  end_date?: string | null;
+  created_date?: string;
+  created_by?: string;
+  user_id?: string;
+}
+
+export interface CRAOperationsResult {
+  success: number;
+  error: number;
+}
+
+export interface CRASummary {
+  totalCRAs: number;
+  activeCRAs: number;
+  inactiveCRAs: number;
+  byCountry: Record<string, number>;
+  byRole: Record<string, number>;
+}
