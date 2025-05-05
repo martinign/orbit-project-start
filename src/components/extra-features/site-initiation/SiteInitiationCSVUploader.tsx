@@ -9,7 +9,7 @@ import {
   useSiteInitiationData, 
   isEligibleForStarterPack 
 } from '@/hooks/useSiteInitiationData';
-import { useCraCsvImport, CRAData } from '@/hooks/site-initiation/useCraCsvImport';
+import { useCraCsvImport, CRAData, CRAOperationsResult } from '@/hooks/site-initiation/useCraCsvImport';
 import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle, InfoIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -62,54 +62,164 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     };
   };
 
-  // Validate required fields for CRA data
-  const validateCRARecord = (record: any): ValidationResult => {
-    const requiredFields = ['full_name', 'first_name', 'last_name'];
-    const missingFields = requiredFields.filter(field => !record[field]);
+  // Process CSV data with upsert logic
+  const processCRACSVDataInternal = async (records: CRAData[]): Promise<CRAOperationsResult> => {
+    if (!user?.id) {
+      console.error('User ID is required for CRA CSV import');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to import CRA data.",
+        variant: "destructive",
+      });
+      return { success: 0, error: records.length };
+    }
     
-    return {
-      isValid: missingFields.length === 0,
-      missingFields
-    };
+    if (!projectId || !records.length) {
+      console.error('Missing project ID or records', { projectId, recordCount: records.length });
+      return { success: 0, error: 0 };
+    }
+
+    // Process the CRA records
+    const processedRecords = records.map(record => ({
+      ...record,
+      status: record.status || 'active',
+      project_id: projectId,
+      user_id: user?.id,
+      created_by: user?.id,
+      created_date: new Date().toISOString()
+    }));
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      setProcessing(true);
+      
+      console.log('Processed records before import:', JSON.stringify(processedRecords, null, 2));
+      
+      const result = await processCRACSVData(processedRecords);
+      
+      if (result.error > 0) {
+        console.error('Some records failed to import');
+        toast({
+          title: "Import Partially Successful",
+          description: `Imported ${result.success} records. ${result.error} records failed.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Import Successful",
+          description: `Successfully imported ${result.success} records.`,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in CRA import:', error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import CRA data. Please check the console for details.",
+        variant: "destructive"
+      });
+      return { success: 0, error: processedRecords.length };
+    }
   };
 
-  // Map CSV columns to CRA data fields - enhanced to handle column name variations
-  const mapCSVToCRAData = (csvData: any[]): CRAData[] => {
-    return csvData.map(row => {
-      // For debugging
-      console.log('Raw CSV Row:', row);
-      
-      // Normalize field names by checking multiple possible variations
-      const getField = (fieldOptions: string[]): string => {
-        for (const option of fieldOptions) {
-          if (row[option] !== undefined && row[option] !== null && row[option] !== '') {
-            return row[option];
-          }
-        }
-        return '';
+  // Validate CRA records
+  const validateCRARecords = (records: any[]): CRAData[] => {
+    return records.map(record => {
+      // Map CSV fields to CRA data structure
+      return {
+        full_name: record['Full Name'] || record['full_name'] || `${record['First Name'] || record['first_name']} ${record['Last Name'] || record['last_name']}`,
+        first_name: record['First Name'] || record['first_name'] || '',
+        last_name: record['Last Name'] || record['last_name'] || '',
+        study_site: record['Study Site'] || record['study_site'] || record['Site'] || '',
+        status: record['Status'] || record['status'] || 'active',
+        email: record['Email'] || record['email'] || record['Email Address'] || '',
+        study_country: record['Study Country'] || record['study_country'] || record['Country'] || '',
+        study_team_role: record['Study Team Role'] || record['study_team_role'] || record['Role'] || '',
+        user_type: record['User Type'] || record['user_type'] || '',
+        user_reference: record['User Reference'] || record['user_reference'] || '',
+        project_id: projectId || ''
       };
-      
-      // Build the CRA data object with normalized field access
-      const craData: CRAData = {
-        full_name: getField(['Full Name', 'full_name', 'FullName', 'Name', 'name']),
-        first_name: getField(['First Name', 'first_name', 'FirstName', 'Given Name', 'given_name']),
-        last_name: getField(['Last Name', 'last_name', 'LastName', 'Family Name', 'family_name']),
-        study_site: getField(['Study Site', 'study_site', 'Site', 'site']),
-        status: getField(['Status', 'status']) || 'active',
-        email: getField(['Email', 'email', 'Email Address', 'email_address']),
-        study_country: getField(['Study Country', 'study_country', 'Country', 'country']),
-        study_team_role: getField(['Study Team Role', 'study_team_role', 'Team Role', 'role']),
-        user_type: getField(['User Type', 'user_type', 'Type']),
-        user_reference: getField(['User Reference', 'user_reference', 'Reference', 'ref']),
-        project_id: projectId || '',
-      };
-      
-      // Log the mapped data for debugging
-      console.log('Mapped CRA Data:', craData);
-      
-      return craData;
     });
   };
+
+  // Handle CSV file drop with improved error handling
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setParseError(null);
+    setParsedSiteData([]);
+    setParsedCRAData([]);
+    
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    setFile(file);
+    
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          console.error('CSV parsing errors:', results.errors);
+          setParseError(`CSV parsing error: ${results.errors[0].message}`);
+          return;
+        }
+        
+        try {
+          console.log('Raw parsed data:', results.data);
+          
+          if (importType === 'site-data') {
+            const mappedData = mapCSVToSiteData(results.data as any[]);
+            
+            // Validate all records
+            const invalidRecords = mappedData.filter(record => {
+              const validation = validateSiteRecord(record);
+              return !validation.isValid;
+            });
+            
+            if (invalidRecords.length > 0) {
+              setParseError(`Found ${invalidRecords.length} records with missing required fields. Please check your CSV file.`);
+              return;
+            }
+            
+            setParsedSiteData(mappedData);
+            toast({
+              title: "Site data CSV file parsed successfully",
+              description: `Found ${mappedData.length} records ready to be imported.`,
+            });
+          } else {
+            // Handle CRA list data
+            const validatedRecords = validateCRARecords(results.data as any[]);
+            console.log('Validated CRA records:', validatedRecords);
+            
+            // Validate all records
+            const invalidRecords = validatedRecords.filter(record => {
+              return !record.full_name || !record.first_name || !record.last_name;
+            });
+            
+            if (invalidRecords.length > 0) {
+              setParseError(`Found ${invalidRecords.length} records with missing required fields (full name, first name, or last name). Please check your CSV file.`);
+              return;
+            }
+            
+            setParsedCRAData(validatedRecords);
+            toast({
+              title: "CRA list CSV file parsed successfully",
+              description: `Found ${validatedRecords.length} records ready to be imported.`,
+            });
+          }
+        } catch (error) {
+          console.error('Error processing CSV data:', error);
+          setParseError(`Error processing CSV data: ${(error as Error).message}`);
+        }
+      },
+      error: (error) => {
+        console.error('Error reading CSV file:', error);
+        setParseError(`Error reading CSV file: ${error.message}`);
+      }
+    });
+  }, [projectId, importType]);
 
   // Map CSV columns to site data fields
   const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
@@ -143,90 +253,6 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
       };
     });
   };
-
-  // Handle CSV file drop with improved error handling
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setParseError(null);
-    setParsedSiteData([]);
-    setParsedCRAData([]);
-    
-    const file = acceptedFiles[0];
-    if (!file) return;
-
-    setFile(file);
-    
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors.length > 0) {
-          console.error('CSV parsing errors:', results.errors);
-          setParseError(`CSV parsing error: ${results.errors[0].message}`);
-          return;
-        }
-        
-        // Debug the parsed data
-        console.log('Parsed CSV data:', results.data);
-        
-        try {
-          if (importType === 'site-data') {
-            const mappedData = mapCSVToSiteData(results.data as any[]);
-            
-            // Validate all records
-            const invalidRecords = mappedData.filter(record => {
-              const validation = validateSiteRecord(record);
-              return !validation.isValid;
-            });
-            
-            if (invalidRecords.length > 0) {
-              setParseError(`Found ${invalidRecords.length} records with missing required fields. Please check your CSV file.`);
-              return;
-            }
-            
-            setParsedSiteData(mappedData);
-            toast({
-              title: "Site data CSV file parsed successfully",
-              description: `Found ${mappedData.length} records ready to be imported.`,
-            });
-          } else {
-            // Handle CRA list data with improved mapping and validation
-            const mappedData = mapCSVToCRAData(results.data as any[]);
-            
-            // Check if we have valid data after mapping
-            if (mappedData.length === 0) {
-              setParseError('No valid CRA data found in the CSV file.');
-              return;
-            }
-            
-            // Validate all records
-            const invalidRecords = mappedData.filter(record => {
-              const validation = validateCRARecord(record);
-              return !validation.isValid;
-            });
-            
-            if (invalidRecords.length > 0) {
-              console.error('Invalid CRA records:', invalidRecords);
-              setParseError(`Found ${invalidRecords.length} records with missing required fields. Please check your CSV file.`);
-              return;
-            }
-            
-            setParsedCRAData(mappedData);
-            toast({
-              title: "CRA list CSV file parsed successfully",
-              description: `Found ${mappedData.length} records ready to be imported.`,
-            });
-          }
-        } catch (error) {
-          console.error('Error processing CSV data:', error);
-          setParseError(`Error processing CSV data: ${(error as Error).message}`);
-        }
-      },
-      error: (error) => {
-        console.error('Error reading CSV file:', error);
-        setParseError(`Error reading CSV file: ${error.message}`);
-      }
-    });
-  }, [projectId, importType]);
 
   // Configure dropzone
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
@@ -281,7 +307,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         // Process CRA list data with improved error handling
         console.log('Starting CRA import with data:', parsedCRAData);
         
-        const result = await processCRACSVData(parsedCRAData);
+        const result = await processCRACSVDataInternal(parsedCRAData);
         console.log('CRA import result:', result);
         
         setUploadProgress(100);

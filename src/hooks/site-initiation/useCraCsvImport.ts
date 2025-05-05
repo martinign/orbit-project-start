@@ -37,17 +37,19 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
       return { success: 0, error: records.length };
     }
     
-    if (!projectId || !records.length) return { success: 0, error: 0 };
+    if (!projectId || !records.length) {
+      console.error('Missing project ID or records', { projectId, recordCount: records.length });
+      return { success: 0, error: 0 };
+    }
 
     // Process the CRA records
     const processedRecords = records.map(record => ({
       ...record,
-      // Default status to 'active' if not provided
       status: record.status || 'active',
-      // Ensure these fields are populated
       project_id: projectId,
       user_id: userId,
-      created_by: userId
+      created_by: userId,
+      created_date: new Date().toISOString()
     }));
 
     let successCount = 0;
@@ -57,7 +59,7 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
       setProcessing(true);
       
       // Process records in batches to avoid overwhelming the database
-      const batchSize = 10;
+      const batchSize = 5; // Reduced batch size for better error handling
       const batchCount = Math.ceil(processedRecords.length / batchSize);
 
       for (let i = 0; i < batchCount; i++) {
@@ -65,39 +67,34 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
         const batchEnd = Math.min((i + 1) * batchSize, processedRecords.length);
         const batch = processedRecords.slice(batchStart, batchEnd);
 
-        console.log('Processing batch of CRA records:', batch);
+        console.log('Processing batch of CRA records:', JSON.stringify(batch, null, 2));
         
-        // Try inserting without upsert first to debug
+        // Try insert with upsert to handle duplicates
         const { data, error } = await supabase
           .from('project_cra_list')
-          .insert(batch)
+          .upsert(batch, {
+            onConflict: 'full_name,project_id',
+            ignoreDuplicates: false
+          })
           .select();
 
         if (error) {
           console.error('Batch error:', error);
+          errorCount += batch.length;
           
-          // If insert fails, try with upsert operation as a fallback
-          const upsertResult = await supabase
-            .from('project_cra_list')
-            .upsert(batch, {
-              onConflict: 'full_name,project_id',
-              ignoreDuplicates: false
-            })
-            .select();
-            
-          if (upsertResult.error) {
-            console.error('Upsert error:', upsertResult.error);
-            errorCount += batch.length;
-          } else {
-            console.log('Successful upsert:', upsertResult.data);
-            successCount += (upsertResult.data?.length || 0);
-            errorCount += batch.length - (upsertResult.data?.length || 0);
-          }
+          toast({
+            title: "Error Processing Batch",
+            description: `Failed to process records: ${error.message}`,
+            variant: "destructive",
+          });
         } else {
-          console.log('Successful insert:', data);
+          console.log('Successfully processed batch:', data);
           successCount += (data?.length || 0);
           errorCount += batch.length - (data?.length || 0);
         }
+
+        // Add a small delay between batches to prevent rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       const variant = errorCount > 0 ? "default" : "default";
@@ -126,3 +123,4 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
     processCRACSVData
   };
 };
+
