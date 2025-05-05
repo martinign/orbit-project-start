@@ -13,7 +13,7 @@ export interface CRAData {
   user_reference?: string | null;
   project_id: string;
   created_by: string;  // Changed from optional to required to match database constraints
-  user_id?: string;
+  user_id: string;     // Changed from optional to required to match database constraints
   created_date?: string;
   updated_at?: string;
   end_date?: string | null;

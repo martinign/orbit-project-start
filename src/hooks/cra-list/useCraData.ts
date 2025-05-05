@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,17 +41,18 @@ export const useCraData = (projectId?: string) => {
     enabled: !!projectId,
   });
 
-  const addCra = async (craData: Omit<CRAData, 'created_by'>): Promise<boolean> => {
+  const addCra = async (craData: Omit<CRAData, 'created_by' | 'user_id'>): Promise<boolean> => {
     try {
       // Ensure we have the authenticated user's ID
       if (!user) {
         throw new Error("You must be logged in to add a CRA");
       }
       
-      // Create a complete CRA data object with required created_by field
+      // Create a complete CRA data object with required fields
       const completeData = {
         ...craData,
-        created_by: user.id
+        created_by: user.id,
+        user_id: user.id  // Ensure user_id is set to the current user's ID
       };
       
       const { error } = await supabase
