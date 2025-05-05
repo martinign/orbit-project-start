@@ -22,8 +22,8 @@ export const SiteProgressCard: React.FC<SiteProgressCardProps> = ({
   
   return (
     <StatisticCard
-      title="Site Progress"
-      value={`${totalSites}`}
+      title="Starter Pack Progress"
+      value={`${completedSites}/${totalSites}`}
       icon={<Building className="h-8 w-8" />}
       iconColor="text-indigo-500"
       onClick={onClick}
