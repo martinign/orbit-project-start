@@ -51,11 +51,11 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
 
         console.log('Processing batch of CRA records:', JSON.stringify(batch, null, 2));
         
-        // Try insert with upsert to handle duplicates
+        // Updated to use the new simplified constraint
         const { data, error } = await supabase
           .from('project_cra_list')
           .upsert(batch, {
-            onConflict: 'full_name,project_id,study_site,study_team_role',
+            onConflict: 'full_name,project_id',
             ignoreDuplicates: false
           })
           .select();
