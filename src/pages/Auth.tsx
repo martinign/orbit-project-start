@@ -350,7 +350,7 @@ const Auth = () => {
                                   <li>Any legal or regulatory fines or penalties;</li>
                                 </ul>
                                 <p>arising out of or related to Your use of—or inability to use—the Tool, even if advised of the possibility of such damages.</p>
-
+                                
                               </div>
 
                               <div>
