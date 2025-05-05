@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
@@ -9,7 +10,8 @@ import {
   useSiteInitiationData, 
   isEligibleForStarterPack 
 } from '@/hooks/useSiteInitiationData';
-import { useCraCsvImport, CRAData, CRAOperationsResult } from '@/hooks/site-initiation/useCraCsvImport';
+import { useCraCsvImport } from '@/hooks/site-initiation/useCraCsvImport';
+import { CRAData, CRAOperationsResult } from '@/hooks/cra-list/types';
 import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle, InfoIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';

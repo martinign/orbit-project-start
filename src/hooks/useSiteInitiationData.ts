@@ -1,7 +1,7 @@
 
 import { useSitesData, isEligibleForStarterPack, SiteData } from './site-initiation';
 import { CRAData, CRAOperationsResult } from './cra-list/types';
-import { useCraCsvImport } from './cra-list/useCraCsvImport';
+import { useCraCsvImport } from './site-initiation/useCraCsvImport';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Re-export the isEligibleForStarterPack function to maintain backward compatibility
