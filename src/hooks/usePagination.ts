@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 export interface PaginationState {
@@ -12,12 +11,14 @@ export interface PaginationOptions {
   initialPage?: number;
   initialPageSize?: number;
   totalItems?: number;
+  pageSize?: number;  // Added this property to fix the TypeScript error
 }
 
 export const usePagination = ({ 
   initialPage = 1,
   initialPageSize = 10,
-  totalItems = 0
+  totalItems = 0,
+  pageSize = 10     // Added pageSize parameter with default value
 }: PaginationOptions = {}) => {
   const [paginationState, setPaginationState] = useState<PaginationState>({
     currentPage: initialPage,
