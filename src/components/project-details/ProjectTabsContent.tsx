@@ -11,7 +11,6 @@ import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
 import { RepositoryTab } from './tabs/RepositoryTab';
 import { DocPrintingTab } from './tabs/DocPrintingTab';
 import { WorkdayScheduleTab } from './tabs/WorkdayScheduleTab';
-import { CRAListTab } from './tabs/CRAListTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -151,11 +150,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
 
       {activeTab === 'invites' && isProjectOwner && (
         <InvitesTab projectId={projectId} />
-      )}
-
-      {/* CRA List Tab */}
-      {activeTab === 'cra-list' && (
-        <CRAListTab projectId={projectId} />
       )}
 
       {/* Extra Features Tabs */}
