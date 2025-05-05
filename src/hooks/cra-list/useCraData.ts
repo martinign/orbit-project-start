@@ -50,6 +50,7 @@ export const useCraData = (projectId?: string) => {
       const insertData = {
         ...craData,
         created_by: user.id,  // Set created_by to the current user's ID
+        user_id: user.id      // Also set user_id to the current user's ID
       };
       
       // Make type-safe by explicitly picking only the fields we need
