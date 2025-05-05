@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -112,7 +111,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         missingLabp,
         labpSite,
         hasStarterPack: labpSite ? !!labpSite.starter_pack : false,
-        starterPackUpdatedAt: labpSite?.updated_at,
+        starterPackUpdatedAt: labpSite?.updated_at, // This is now an optional property
         country: representativeSite.country || '',
         institution: representativeSite.institution || '',
         personnel: representativeSite.site_personnel_name || ''
