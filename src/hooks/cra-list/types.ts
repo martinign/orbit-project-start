@@ -13,6 +13,7 @@ export interface CRAData {
   user_reference?: string | null;
   project_id: string;
   created_by?: string;
+  user_id?: string;
   created_date?: string;
   updated_at?: string;
   end_date?: string | null;
