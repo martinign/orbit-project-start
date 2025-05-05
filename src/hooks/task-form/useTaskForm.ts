@@ -86,7 +86,8 @@ export const useTaskForm = (
       due_date: formState.dueDate ? formState.dueDate.toISOString() : null,
       assigned_to: formState.assignedTo === 'none' ? null : formState.assignedTo,
       user_id: user.id,
-      workday_code_id: workdayCodes.selectedWorkdayCode === 'none' ? null : workdayCodes.selectedWorkdayCode
+      workday_code_id: workdayCodes.selectedWorkdayCode === 'none' ? null : workdayCodes.selectedWorkdayCode,
+      is_private: formState.isPrivate
     };
     
     await submission.submitTask(taskData);

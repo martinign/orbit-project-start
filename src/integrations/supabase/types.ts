@@ -682,6 +682,7 @@ export type Database = {
           duration_days: number | null
           id: string
           is_gantt_task: boolean | null
+          is_private: boolean
           notes: string | null
           priority: string
           project_id: string
@@ -700,6 +701,7 @@ export type Database = {
           duration_days?: number | null
           id?: string
           is_gantt_task?: boolean | null
+          is_private?: boolean
           notes?: string | null
           priority?: string
           project_id: string
@@ -718,6 +720,7 @@ export type Database = {
           duration_days?: number | null
           id?: string
           is_gantt_task?: boolean | null
+          is_private?: boolean
           notes?: string | null
           priority?: string
           project_id?: string

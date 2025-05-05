@@ -23,12 +23,7 @@ import { cn } from "@/lib/utils";
 import { DialogFooter } from "@/components/ui/dialog";
 import { TeamMember } from '@/hooks/useTeamMembers';
 import { WorkdayCodeOption } from '@/utils/workdayCombinedUtils';
-
-interface Project {
-  id: string;
-  project_number: string;
-  Sponsor: string;
-}
+import { Switch } from "@/components/ui/switch";
 
 interface TaskFormProps {
   title: string;
@@ -49,6 +44,8 @@ interface TaskFormProps {
   setAssignedTo: (memberId: string) => void;
   selectedWorkdayCode: string;
   setSelectedWorkdayCode: (codeId: string) => void;
+  isPrivate: boolean;
+  setIsPrivate: (isPrivate: boolean) => void;
   teamMembers?: TeamMember[];
   projects?: Project[];
   workdayCodes?: WorkdayCodeOption[];
@@ -58,6 +55,12 @@ interface TaskFormProps {
   onClose: () => void;
   onOpenTemplateDialog?: () => void;
   mode: 'create' | 'edit';
+}
+
+interface Project {
+  id: string;
+  project_number: string;
+  Sponsor: string;
 }
 
 export const TaskForm: React.FC<TaskFormProps> = ({
@@ -79,6 +82,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   setAssignedTo,
   selectedWorkdayCode,
   setSelectedWorkdayCode,
+  isPrivate,
+  setIsPrivate,
   teamMembers = [],
   projects = [],
   workdayCodes = [],
@@ -251,6 +256,15 @@ export const TaskForm: React.FC<TaskFormProps> = ({
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
         />
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="is-private" 
+          checked={isPrivate} 
+          onCheckedChange={setIsPrivate} 
+        />
+        <Label htmlFor="is-private">Private task (only visible to you)</Label>
       </div>
 
       <DialogFooter>

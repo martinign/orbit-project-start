@@ -16,6 +16,7 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState('');
   const [assignedTo, setAssignedTo] = useState('none');
+  const [isPrivate, setIsPrivate] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
 
   // Initialize form data
@@ -31,6 +32,7 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         setStatus(task.status || 'not started');
         setPriority(task.priority || 'medium');
         setNotes(task.notes || '');
+        setIsPrivate(task.is_private || false);
         
         if (task.assigned_to) {
           setAssignedTo(task.assigned_to);
@@ -51,6 +53,7 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         setNotes('');
         setAssignedTo('none');
         setDueDate(undefined);
+        setIsPrivate(false);
       }
 
       setDidInitialFormSet(true);
@@ -80,6 +83,8 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
     setNotes,
     assignedTo,
     setAssignedTo,
+    isPrivate,
+    setIsPrivate,
     didInitialFormSet,
     setDidInitialFormSet,
   };
