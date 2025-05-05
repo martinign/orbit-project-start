@@ -10,7 +10,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Filter, List, Calendar } from 'lucide-react';
+import { Filter, List, Calendar, Mail, Phone, MapPin, User, Users, Info } from 'lucide-react';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { getUniqueSiteReferences, isMissingLabpRole } from '@/hooks/site-initiation/siteUtils';
+import { getUniqueSiteReferences, isMissingLabpRole, REQUIRED_ROLES, getMissingRoles } from '@/hooks/site-initiation/siteUtils';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { supabase } from '@/integrations/supabase/client';
 import { PaginationControls } from '@/components/ui/pagination-controls';
@@ -36,6 +36,12 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -106,6 +112,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       const sitesForReference = sitesByReference[reference];
       const missingLabp = isMissingLabpRole(sites, reference);
       const labpSite = sitesForReference.find(site => site.role === 'LABP');
+      const missingRoles = getMissingRoles(sites, reference);
       
       // Apply optimistic updates if they exist for this site
       const hasOptimisticUpdate = labpSite && labpSite.id && optimisticUpdates[labpSite.id] !== undefined;
@@ -124,7 +131,9 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         starterPackUpdatedAt: labpSite?.updated_at,
         country: representativeSite.country || '',
         institution: representativeSite.institution || '',
-        personnel: representativeSite.site_personnel_name || ''
+        personnel: representativeSite.site_personnel_name || '',
+        allSitesForReference: sitesForReference,
+        missingRoles: missingRoles
       };
     });
   }, [uniqueSiteReferences, sitesByReference, sites, optimisticUpdates]);
@@ -140,7 +149,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   // Update pagination when filtered data changes
   useEffect(() => {
     pagination.setTotalItems(filteredSiteReferences.length);
-  }, [filteredSiteReferences]);
+  }, [filteredSiteReferences, pagination]);
   
   // Calculate paginated data or show all data based on showAll state
   const displaySiteReferences = useMemo(() => {
@@ -224,6 +233,192 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   if (error) {
     return <ErrorState error={error} />;
   }
+
+  // Render enhanced hover card content for a site
+  const renderSiteHoverContent = (siteRef: typeof siteReferenceData[0]) => {
+    // Get all sites with this reference number
+    const allSites = siteRef.allSitesForReference;
+    
+    // Get the representative site (prefer LABP)
+    const representativeSite = siteRef.labpSite || allSites[0];
+    
+    // Get all roles for this site reference
+    const presentRoles = allSites.map(site => site.role);
+    
+    return (
+      <div className="space-y-6 max-w-md">
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details">Site Details</TabsTrigger>
+            <TabsTrigger value="personnel">Personnel</TabsTrigger>
+            <TabsTrigger value="roles">Roles</TabsTrigger>
+          </TabsList>
+          
+          {/* Site Details Tab */}
+          <TabsContent value="details" className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Info className="h-4 w-4 text-blue-500" />
+                Basic Information
+              </h4>
+              <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                <div className="font-medium">Reference:</div>
+                <div>{siteRef.reference}</div>
+                <div className="font-medium">Institution:</div>
+                <div>{representativeSite.institution || 'Not specified'}</div>
+                <div className="font-medium">Country:</div>
+                <div>{representativeSite.country || 'Not specified'}</div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-500" />
+                Address Details
+              </h4>
+              <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                <div className="font-medium">Address:</div>
+                <div>{representativeSite.address || 'Not specified'}</div>
+                <div className="font-medium">City/Town:</div>
+                <div>{representativeSite.city_town || 'Not specified'}</div>
+                <div className="font-medium">Province/State:</div>
+                <div>{representativeSite.province_state || 'Not specified'}</div>
+                <div className="font-medium">Zip/Postal Code:</div>
+                <div>{representativeSite.zip_code || 'Not specified'}</div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-500" />
+                Starter Pack Status
+              </h4>
+              <div className="mt-2">
+                {siteRef.missingLabp ? (
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
+                    <span className="text-xs">Cannot send starter pack</span>
+                  </div>
+                ) : siteRef.hasStarterPack ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">Sent</Badge>
+                      <span className="text-xs">Starter pack has been sent</span>
+                    </div>
+                    {siteRef.starterPackUpdatedAt && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Sent on {format(new Date(siteRef.starterPackUpdatedAt), 'PPP')}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Not Sent</Badge>
+                    <span className="text-xs text-muted-foreground">Starter pack needs to be sent</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          {/* Personnel Tab */}
+          <TabsContent value="personnel" className="space-y-4">
+            {allSites.map(site => (
+              <div key={site.id} className="border-b pb-3 last:border-b-0">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-500" />
+                  {site.role}: {site.site_personnel_name}
+                </h4>
+                <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                  {site.pi_name && (
+                    <>
+                      <div className="font-medium">PI Name:</div>
+                      <div>{site.pi_name}</div>
+                    </>
+                  )}
+                  
+                  {site.site_personnel_email_address && (
+                    <>
+                      <div className="font-medium">Email:</div>
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        <span className="break-all">{site.site_personnel_email_address}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {site.site_personnel_telephone && (
+                    <>
+                      <div className="font-medium">Phone:</div>
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        <span>{site.site_personnel_telephone}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {site.site_personnel_fax && (
+                    <>
+                      <div className="font-medium">Fax:</div>
+                      <div>{site.site_personnel_fax}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {allSites.length === 0 && (
+              <div className="text-center text-muted-foreground text-sm py-4">
+                No personnel information available
+              </div>
+            )}
+          </TabsContent>
+          
+          {/* Roles Tab */}
+          <TabsContent value="roles" className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-500" />
+                Role Coverage
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm mt-3">
+                {REQUIRED_ROLES.map(role => {
+                  const hasRole = presentRoles.includes(role);
+                  return (
+                    <div 
+                      key={role} 
+                      className={cn(
+                        "p-1.5 rounded-md border flex justify-between items-center",
+                        hasRole ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"
+                      )}
+                    >
+                      <span>{role}</span>
+                      {hasRole ? (
+                        <Badge className="bg-green-600">Present</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-700 border-amber-700">Missing</Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {siteRef.missingRoles.length > 0 && (
+              <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm">
+                <p className="font-medium text-amber-800">Missing {siteRef.missingRoles.length} required roles</p>
+                <p className="text-xs mt-1">This site reference is missing the following roles: {siteRef.missingRoles.join(', ')}</p>
+                {siteRef.missingLabp && (
+                  <p className="text-xs font-medium mt-2 text-amber-900">LABP role is required for starter packs</p>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -344,52 +539,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                           </TableCell>
                         </TableRow>
                       </HoverCardTrigger>
-                      <HoverCardContent className="w-80">
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="text-sm font-semibold">Site Details</h4>
-                            <div className="grid grid-cols-2 gap-1 text-sm mt-2">
-                              <div className="font-medium">Reference:</div>
-                              <div>{siteRef.reference}</div>
-                              <div className="font-medium">Institution:</div>
-                              <div>{siteRef.institution || 'Unknown'}</div>
-                              <div className="font-medium">Country:</div>
-                              <div>{siteRef.country || 'Unknown'}</div>
-                              <div className="font-medium">Personnel:</div>
-                              <div>{siteRef.personnel || 'Unknown'}</div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h4 className="text-sm font-semibold">Starter Pack Status</h4>
-                            <div className="mt-2">
-                              {siteRef.missingLabp ? (
-                                <div className="flex items-center gap-2 text-amber-600">
-                                  <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
-                                  <span className="text-xs">Cannot send starter pack</span>
-                                </div>
-                              ) : siteRef.hasStarterPack ? (
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2 text-green-600">
-                                    <Badge variant="secondary" className="bg-green-100 text-green-800">Sent</Badge>
-                                    <span className="text-xs">Starter pack has been sent</span>
-                                  </div>
-                                  {siteRef.starterPackUpdatedAt && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>Sent on {format(new Date(siteRef.starterPackUpdatedAt), 'PPP')}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline">Not Sent</Badge>
-                                  <span className="text-xs text-muted-foreground">Starter pack needs to be sent</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                      <HoverCardContent className="w-[450px] p-0">
+                        {renderSiteHoverContent(siteRef)}
                       </HoverCardContent>
                     </HoverCard>
                   ))}

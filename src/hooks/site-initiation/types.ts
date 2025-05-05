@@ -18,7 +18,7 @@ export interface SiteData {
   zip_code?: string;
   starter_pack?: boolean;
   project_id: string;
-  updated_at?: string; // Add the updated_at property
+  updated_at?: string; // Used for tracking when starter packs are sent
 }
 
 export interface SiteOperationsResult {
