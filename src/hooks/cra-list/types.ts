@@ -16,7 +16,6 @@ export interface CRAData {
   created_date?: string;
   updated_at?: string;
   end_date?: string | null;
-  user_id?: string; // Added this field as it's required by the database
 }
 
 export interface CRAOperationsResult {
