@@ -16,6 +16,7 @@ export interface CRAData {
   created_date?: string;
   updated_at?: string;
   end_date?: string | null;
+  // Note: We're not including user_id as it's handled by `created_by` in our case
 }
 
 export interface CRAOperationsResult {

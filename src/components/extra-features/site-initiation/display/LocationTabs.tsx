@@ -22,11 +22,11 @@ export const LocationTabs: React.FC<LocationTabsProps> = ({
       </TabsList>
       
       <TabsContent value="countries">
-        <LocationsList items={countries} type="country" />
+        <LocationsList items={countries} type="countries" />
       </TabsContent>
       
       <TabsContent value="institutions">
-        <LocationsList items={institutions} type="institution" />
+        <LocationsList items={institutions} type="institutions" />
       </TabsContent>
     </Tabs>
   );
