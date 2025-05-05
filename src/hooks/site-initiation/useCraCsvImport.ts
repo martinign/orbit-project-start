@@ -24,7 +24,7 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
       return { success: 0, error: 0 };
     }
 
-    // Process the CRA records
+    // Process the CRA records - ensure all required fields are present
     const processedRecords = records.map(record => ({
       ...record,
       status: record.status || 'active',

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import Papa from 'papaparse';
@@ -129,6 +128,11 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
 
   // Validate CRA records
   const validateCRARecords = (records: any[]): CRAData[] => {
+    if (!user?.id) {
+      console.error('User ID is required for CRA validation');
+      return [];
+    }
+    
     return records.map(record => {
       // Map CSV fields to CRA data structure
       return {
@@ -142,7 +146,10 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         study_team_role: record['Study Team Role'] || record['study_team_role'] || record['Role'] || '',
         user_type: record['User Type'] || record['user_type'] || '',
         user_reference: record['User Reference'] || record['user_reference'] || '',
-        project_id: projectId || ''
+        project_id: projectId || '',
+        // Add the missing required fields
+        user_id: user.id,
+        created_by: user.id
       };
     });
   };
