@@ -2,25 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-
-export interface CRAData {
-  full_name: string;
-  first_name: string;
-  last_name: string;
-  study_site?: string;
-  status?: string;
-  email?: string;
-  study_country?: string;
-  study_team_role?: string;
-  user_type?: string;
-  user_reference?: string;
-  project_id: string;
-}
-
-export interface CRAOperationsResult {
-  success: number;
-  error: number;
-}
+import { CRAData, CRAOperationsResult } from '../cra-list/types';
 
 export const useCraCsvImport = (projectId?: string, userId?: string) => {
   const [processing, setProcessing] = useState(false);
@@ -69,7 +51,7 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
 
         console.log('Processing batch of CRA records:', JSON.stringify(batch, null, 2));
         
-        // Try insert with upsert to handle duplicates
+        // Updated to use the simplified constraint
         const { data, error } = await supabase
           .from('project_cra_list')
           .upsert(batch, {
@@ -123,4 +105,3 @@ export const useCraCsvImport = (projectId?: string, userId?: string) => {
     processCRACSVData
   };
 };
-

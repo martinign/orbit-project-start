@@ -84,8 +84,8 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
       ...record,
       status: record.status || 'active',
       project_id: projectId,
-      user_id: user?.id,
-      created_by: user?.id,
+      user_id: user.id,
+      created_by: user.id,
       created_date: new Date().toISOString()
     }));
 
