@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { CRAData, CRAFilterOptions } from './types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useCraData = (projectId?: string) => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<CRAFilterOptions>({});
 
@@ -41,10 +43,26 @@ export const useCraData = (projectId?: string) => {
   });
 
   const addCra = async (craData: CRAData): Promise<boolean> => {
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to add CRA data.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     try {
+      // Add required fields if not present
+      const dataToInsert = {
+        ...craData,
+        user_id: user.id,
+        created_by: craData.created_by || user.id
+      };
+
       const { error } = await supabase
         .from('project_cra_list')
-        .insert(craData);
+        .insert(dataToInsert);
       
       if (error) throw error;
       
