@@ -10,7 +10,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Filter, List } from 'lucide-react';
+import { Filter, List, Calendar } from 'lucide-react';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,12 @@ import { getUniqueSiteReferences, isMissingLabpRole } from '@/hooks/site-initiat
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { supabase } from '@/integrations/supabase/client';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { format } from 'date-fns';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -106,6 +112,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         missingLabp,
         labpSite,
         hasStarterPack: labpSite ? !!labpSite.starter_pack : false,
+        starterPackUpdatedAt: labpSite?.updated_at,
         country: representativeSite.country || '',
         institution: representativeSite.institution || '',
         personnel: representativeSite.site_personnel_name || ''
@@ -263,32 +270,83 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                 </TableHeader>
                 <TableBody>
                   {displaySiteReferences.map(siteRef => (
-                    <TableRow key={siteRef.reference}>
-                      <TableCell className="font-medium">{siteRef.reference}</TableCell>
-                      <TableCell>{siteRef.institution || 'Unknown'}</TableCell>
-                      <TableCell>{siteRef.country || 'Unknown'}</TableCell>
-                      <TableCell>{siteRef.personnel}</TableCell>
-                      <TableCell className="text-center">
-                        {siteRef.missingLabp ? (
-                          <Badge variant="outline" className="bg-gray-100">
-                            Missing LABP Role
-                          </Badge>
-                        ) : (
-                          <div className="flex justify-center items-center gap-2">
-                            <Switch 
-                              checked={siteRef.hasStarterPack} 
-                              onCheckedChange={(checked) => handleStarterPackToggle(siteRef.labpSite, checked)}
-                            />
-                            <span className={cn(
-                              "text-xs",
-                              siteRef.hasStarterPack ? "text-green-600" : "text-muted-foreground"
-                            )}>
-                              {siteRef.hasStarterPack ? "Sent" : "Not sent"}
-                            </span>
+                    <HoverCard key={siteRef.reference} openDelay={300} closeDelay={100}>
+                      <HoverCardTrigger asChild>
+                        <TableRow className="cursor-pointer">
+                          <TableCell className="font-medium">{siteRef.reference}</TableCell>
+                          <TableCell>{siteRef.institution || 'Unknown'}</TableCell>
+                          <TableCell>{siteRef.country || 'Unknown'}</TableCell>
+                          <TableCell>{siteRef.personnel}</TableCell>
+                          <TableCell className="text-center">
+                            {siteRef.missingLabp ? (
+                              <Badge variant="outline" className="bg-gray-100">
+                                Missing LABP Role
+                              </Badge>
+                            ) : (
+                              <div className="flex justify-center items-center gap-2">
+                                <Switch 
+                                  checked={siteRef.hasStarterPack} 
+                                  onCheckedChange={(checked) => handleStarterPackToggle(siteRef.labpSite, checked)}
+                                />
+                                <span className={cn(
+                                  "text-xs",
+                                  siteRef.hasStarterPack ? "text-green-600" : "text-muted-foreground"
+                                )}>
+                                  {siteRef.hasStarterPack ? "Sent" : "Not sent"}
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      </HoverCardTrigger>
+                      <HoverCardContent className="w-80">
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-sm font-semibold">Site Details</h4>
+                            <div className="grid grid-cols-2 gap-1 text-sm mt-2">
+                              <div className="font-medium">Reference:</div>
+                              <div>{siteRef.reference}</div>
+                              <div className="font-medium">Institution:</div>
+                              <div>{siteRef.institution || 'Unknown'}</div>
+                              <div className="font-medium">Country:</div>
+                              <div>{siteRef.country || 'Unknown'}</div>
+                              <div className="font-medium">Personnel:</div>
+                              <div>{siteRef.personnel || 'Unknown'}</div>
+                            </div>
                           </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
+
+                          <div>
+                            <h4 className="text-sm font-semibold">Starter Pack Status</h4>
+                            <div className="mt-2">
+                              {siteRef.missingLabp ? (
+                                <div className="flex items-center gap-2 text-amber-600">
+                                  <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
+                                  <span className="text-xs">Cannot send starter pack</span>
+                                </div>
+                              ) : siteRef.hasStarterPack ? (
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2 text-green-600">
+                                    <Badge variant="secondary" className="bg-green-100 text-green-800">Sent</Badge>
+                                    <span className="text-xs">Starter pack has been sent</span>
+                                  </div>
+                                  {siteRef.starterPackUpdatedAt && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>Sent on {format(new Date(siteRef.starterPackUpdatedAt), 'PPP')}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">Not Sent</Badge>
+                                  <span className="text-xs text-muted-foreground">Starter pack needs to be sent</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
                   ))}
                 </TableBody>
               </Table>
