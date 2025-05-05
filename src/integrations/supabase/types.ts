@@ -237,6 +237,74 @@ export type Database = {
           },
         ]
       }
+      project_cra_list: {
+        Row: {
+          created_by: string
+          created_date: string
+          email: string | null
+          end_date: string | null
+          first_name: string
+          full_name: string
+          id: string
+          last_name: string
+          project_id: string
+          status: string | null
+          study_country: string | null
+          study_site: string | null
+          study_team_role: string | null
+          updated_at: string
+          user_id: string
+          user_reference: string | null
+          user_type: string | null
+        }
+        Insert: {
+          created_by: string
+          created_date?: string
+          email?: string | null
+          end_date?: string | null
+          first_name: string
+          full_name: string
+          id?: string
+          last_name: string
+          project_id: string
+          status?: string | null
+          study_country?: string | null
+          study_site?: string | null
+          study_team_role?: string | null
+          updated_at?: string
+          user_id: string
+          user_reference?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          created_by?: string
+          created_date?: string
+          email?: string | null
+          end_date?: string | null
+          first_name?: string
+          full_name?: string
+          id?: string
+          last_name?: string
+          project_id?: string
+          status?: string | null
+          study_country?: string | null
+          study_site?: string | null
+          study_team_role?: string | null
+          updated_at?: string
+          user_id?: string
+          user_reference?: string | null
+          user_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_cra_list_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_csam_site: {
         Row: {
           address: string | null

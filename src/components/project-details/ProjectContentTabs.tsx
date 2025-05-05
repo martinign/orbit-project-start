@@ -50,6 +50,9 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
         {isProjectOwner && (
           <TabsTrigger value="invites" className="text-xs md:text-sm">Invites</TabsTrigger>
         )}
+
+        {/* New CRA List Tab */}
+        <TabsTrigger value="cra-list" className="text-xs md:text-sm">CRA List</TabsTrigger>
         
         {safeExtraFeatures.importantLinks && (
           <TabsTrigger value="important-links" className="text-xs md:text-sm">Links</TabsTrigger>
