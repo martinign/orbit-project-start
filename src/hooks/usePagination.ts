@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 
 export interface PaginationState {
@@ -12,19 +13,24 @@ export interface PaginationOptions {
   initialPageSize?: number;
   totalItems?: number;
   pageSize?: number;  // Added this property to fix the TypeScript error
+  totalCount?: number; // Added this property to fix the TypeScript error
 }
 
 export const usePagination = ({ 
   initialPage = 1,
   initialPageSize = 10,
   totalItems = 0,
+  totalCount = 0, // Added parameter with default value
   pageSize = 10     // Added pageSize parameter with default value
 }: PaginationOptions = {}) => {
+  // Use totalCount if provided, otherwise fallback to totalItems for backward compatibility
+  const actualTotalItems = totalCount > 0 ? totalCount : totalItems;
+  
   const [paginationState, setPaginationState] = useState<PaginationState>({
     currentPage: initialPage,
     pageSize: initialPageSize,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / initialPageSize))
+    totalItems: actualTotalItems,
+    totalPages: Math.max(1, Math.ceil(actualTotalItems / initialPageSize))
   });
 
   // Update total pages when items count or page size changes

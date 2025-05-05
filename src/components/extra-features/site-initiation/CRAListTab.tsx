@@ -31,7 +31,10 @@ interface CRAEntry {
 export const CRAListTab: React.FC<CRAListTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const pageSize = 10;
-  const { currentPage, totalPages, goToPage } = usePagination({ pageSize, totalCount: 0 });
+  const { currentPage, totalPages, goToPage } = usePagination({ 
+    pageSize, 
+    totalItems: 0 // Use totalItems instead of totalCount for compatibility
+  });
 
   // Fetch CRA list data
   const { data: craEntries, isLoading, error } = useQuery({
