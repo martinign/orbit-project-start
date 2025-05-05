@@ -87,7 +87,7 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
           <div className="flex items-center">
             <MessageSquare className="h-3 w-3 mr-1" />
             <span className="text-muted-foreground mr-1">Workday code:</span>
-            {codeDetails.code} - {codeDetails.description}
+            {codeDetails.task} - {codeDetails.activity}
           </div>
         )}
         
