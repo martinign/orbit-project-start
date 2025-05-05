@@ -10,6 +10,7 @@ import { ExtraFeaturesCard } from './ExtraFeaturesCard';
 import { ExtraFeaturesDialog } from '@/components/dashboard/ExtraFeaturesDialog';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
+import { getUniqueSiteReferences } from '@/hooks/site-initiation/siteUtils';
 
 interface ProjectStatisticsCardsProps {
   contactsCount: number;
@@ -44,9 +45,19 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
     extraFeatures?.siteInitiationTracker ? projectId : undefined
   );
   
-  // Count sites with starter packs
-  const sitesWithStarterPack = allSites.filter(site => site.starter_pack).length;
-  const totalSites = allSites.length;
+  // Get unique site references
+  const uniqueSiteReferences = getUniqueSiteReferences(allSites);
+  
+  // Count sites with starter packs (one per reference number)
+  const sitesWithStarterPack = uniqueSiteReferences.filter(reference => {
+    // Find if any site with this reference has a starter pack
+    return allSites.some(site => 
+      site.pxl_site_reference_number === reference && site.starter_pack
+    );
+  }).length;
+  
+  // Total unique site references
+  const totalUniqueSites = uniqueSiteReferences.length;
 
   return (
     <>
@@ -66,7 +77,7 @@ export const ProjectStatisticsCards: React.FC<ProjectStatisticsCardsProps> = ({
 
         {extraFeatures?.siteInitiationTracker && (
           <SiteProgressCard
-            totalSites={totalSites}
+            totalSites={totalUniqueSites}
             completedSites={sitesWithStarterPack}
             onClick={() => onTabChange('site-initiation')}
           />
