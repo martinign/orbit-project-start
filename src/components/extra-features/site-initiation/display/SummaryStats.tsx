@@ -24,6 +24,7 @@ export const SummaryStats: React.FC<SummaryStatsProps> = ({ summary, loading }) 
         icon={MapPin}
         iconBgColor="bg-blue-100"
         iconColor="text-blue-600"
+        highlight={true} // Highlight this card to match the image
       />
       
       <StatCard
