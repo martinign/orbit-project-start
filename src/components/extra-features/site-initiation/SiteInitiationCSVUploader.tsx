@@ -9,6 +9,7 @@ import {
   useSiteInitiationData, 
   isEligibleForStarterPack 
 } from '@/hooks/useSiteInitiationData';
+import { useCraCsvImport, CRAData, CRAOperationsResult } from '@/hooks/site-initiation/useCraCsvImport';
 import { FileUp, AlertCircle, CheckCircle, Download, RefreshCw, XCircle, InfoIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -25,7 +26,6 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { CRAData } from '@/hooks/cra-list/types';
 
 interface SiteInitiationCSVUploaderProps {
   projectId?: string;
@@ -48,7 +48,8 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   const [importType, setImportType] = useState<ImportType>('site-data');
   const { user } = useAuth(); // Get current user
   
-  const { processCSVData, processCRACSVData } = useSiteInitiationData(projectId);
+  const { processCSVData } = useSiteInitiationData(projectId);
+  const { processCRACSVData } = useCraCsvImport(projectId, user?.id); // Pass user ID to the hook
 
   // Validate required fields in CSV data
   const validateSiteRecord = (record: any): ValidationResult => {
@@ -61,37 +62,67 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     };
   };
 
-  // Map CSV columns to site data fields
-  const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
-    return csvData.map(row => {
-      const mappedData = {
-        pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
-        pi_name: row['PI Name'] || row['pi_name'] || '',
-        site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
-        role: row['Role'] || row['role'] || '',
-        site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
-        site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
-        site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
-        institution: row['Institution'] || row['institution'] || '',
-        address: row['Address'] || row['address'] || '',
-        city_town: row['City/Town'] || row['city_town'] || '',
-        province_state: row['Province/State'] || row['province_state'] || '',
-        zip_code: row['Zip Code'] || row['zip_code'] || '',
-        country: row['Country'] || row['country'] || '',
-        project_id: projectId || '',
-      };
+  // Process CSV data with upsert logic
+  const processCRACSVDataInternal = async (records: CRAData[]): Promise<CRAOperationsResult> => {
+    if (!user?.id) {
+      console.error('User ID is required for CRA CSV import');
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to import CRA data.",
+        variant: "destructive",
+      });
+      return { success: 0, error: records.length };
+    }
+    
+    if (!projectId || !records.length) {
+      console.error('Missing project ID or records', { projectId, recordCount: records.length });
+      return { success: 0, error: 0 };
+    }
+
+    // Process the CRA records
+    const processedRecords = records.map(record => ({
+      ...record,
+      status: record.status || 'active',
+      project_id: projectId,
+      user_id: user?.id,
+      created_by: user?.id,
+      created_date: new Date().toISOString()
+    }));
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      setProcessing(true);
       
-      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
-      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
-      const isStarterPackTrue = typeof starterPack === 'string'
-        ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true'
-        : Boolean(starterPack);
-        
-      return {
-        ...mappedData,
-        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
-      };
-    });
+      console.log('Processed records before import:', JSON.stringify(processedRecords, null, 2));
+      
+      const result = await processCRACSVData(processedRecords);
+      
+      if (result.error > 0) {
+        console.error('Some records failed to import');
+        toast({
+          title: "Import Partially Successful",
+          description: `Imported ${result.success} records. ${result.error} records failed.`,
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "Import Successful",
+          description: `Successfully imported ${result.success} records.`,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in CRA import:', error);
+      toast({
+        title: "Import Failed",
+        description: "Failed to import CRA data. Please check the console for details.",
+        variant: "destructive"
+      });
+      return { success: 0, error: processedRecords.length };
+    }
   };
 
   // Validate CRA records
@@ -190,6 +221,39 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     });
   }, [projectId, importType]);
 
+  // Map CSV columns to site data fields
+  const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
+    return csvData.map(row => {
+      const mappedData = {
+        pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
+        pi_name: row['PI Name'] || row['pi_name'] || '',
+        site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
+        role: row['Role'] || row['role'] || '',
+        site_personnel_email_address: row['Site Personnel Email Address'] || row['site_personnel_email_address'] || '',
+        site_personnel_telephone: row['Site Personnel Telephone'] || row['site_personnel_telephone'] || '',
+        site_personnel_fax: row['Site Personnel Fax'] || row['site_personnel_fax'] || '',
+        institution: row['Institution'] || row['institution'] || '',
+        address: row['Address'] || row['address'] || '',
+        city_town: row['City/Town'] || row['city_town'] || '',
+        province_state: row['Province/State'] || row['province_state'] || '',
+        zip_code: row['Zip Code'] || row['zip_code'] || '',
+        country: row['Country'] || row['country'] || '',
+        project_id: projectId || '',
+      };
+      
+      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
+      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
+      const isStarterPackTrue = typeof starterPack === 'string'
+        ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true'
+        : Boolean(starterPack);
+        
+      return {
+        ...mappedData,
+        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
+      };
+    });
+  };
+
   // Configure dropzone
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
@@ -243,22 +307,8 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         // Process CRA list data with improved error handling
         console.log('Starting CRA import with data:', parsedCRAData);
         
-        // Direct call to processCRACSVData from useSiteInitiationData
-        const result = await processCRACSVData(parsedCRAData);
+        const result = await processCRACSVDataInternal(parsedCRAData);
         console.log('CRA import result:', result);
-        
-        if (result.error > 0) {
-          toast({
-            title: "Import Partially Successful",
-            description: `Imported ${result.success} records. ${result.error} records failed.`,
-            variant: "default"
-          });
-        } else {
-          toast({
-            title: "Import Successful",
-            description: `Successfully imported ${result.success} records.`,
-          });
-        }
         
         setUploadProgress(100);
       }

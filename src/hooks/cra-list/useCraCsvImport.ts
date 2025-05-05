@@ -3,15 +3,13 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { CRAData, CRAOperationsResult } from './types';
-import { useAuth } from '@/contexts/AuthContext';
 
-export const useCraCsvImport = (projectId?: string) => {
+export const useCraCsvImport = (projectId?: string, userId?: string) => {
   const [processing, setProcessing] = useState(false);
-  const { user } = useAuth();
 
   // Process CSV data with upsert logic
   const processCRACSVData = async (records: CRAData[]): Promise<CRAOperationsResult> => {
-    if (!user?.id) {
+    if (!userId) {
       console.error('User ID is required for CRA CSV import');
       toast({
         title: "Authentication Error",
@@ -31,8 +29,8 @@ export const useCraCsvImport = (projectId?: string) => {
       ...record,
       status: record.status || 'active',
       project_id: projectId,
-      user_id: user.id,
-      created_by: user.id,
+      user_id: userId,
+      created_by: userId,
       created_date: new Date().toISOString()
     }));
 
