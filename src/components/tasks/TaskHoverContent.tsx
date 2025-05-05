@@ -28,7 +28,7 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
   workdayCodeId,
   isPrivate
 }) => {
-  const { code } = useWorkdayCodeDetails(workdayCodeId);
+  const { data: codeDetails } = useWorkdayCodeDetails(workdayCodeId);
   
   const getPriorityBadge = () => {
     switch (priority) {
@@ -83,11 +83,11 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
           </div>
         )}
         
-        {code && (
+        {codeDetails && (
           <div className="flex items-center">
             <MessageSquare className="h-3 w-3 mr-1" />
             <span className="text-muted-foreground mr-1">Workday code:</span>
-            {code.code} - {code.description}
+            {codeDetails.code} - {codeDetails.description}
           </div>
         )}
         
