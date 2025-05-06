@@ -8,7 +8,6 @@ import { useTotalNewItemsCount } from "@/hooks/useTotalNewItemsCount";
 import { useExtraFeatures } from "@/hooks/useExtraFeatures";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
-import { useDashboardSections } from "@/hooks/useDashboardSections";
 
 const DashboardHome = () => {
   // Custom hooks
@@ -23,15 +22,6 @@ const DashboardHome = () => {
     toggleNewEventsFilter, 
     clearNewTasksFilter 
   } = useDashboardFilters();
-  
-  const {
-    isRecentActivitiesOpen,
-    isUpcomingTasksOpen,
-    isUpcomingEventsOpen,
-    setIsRecentActivitiesOpen,
-    setIsUpcomingTasksOpen,
-    setIsUpcomingEventsOpen
-  } = useDashboardSections();
   
   // Setup realtime subscriptions
   useDashboardRealtime();
@@ -91,13 +81,7 @@ const DashboardHome = () => {
       <ActivityEventsSection 
         activitiesFilters={activitiesFilters}
         eventsFilters={eventsFilters}
-        isRecentActivitiesOpen={isRecentActivitiesOpen}
-        isUpcomingTasksOpen={isUpcomingTasksOpen}
-        isUpcomingEventsOpen={isUpcomingEventsOpen}
         newEventsCount={newEventsCount}
-        setIsRecentActivitiesOpen={setIsRecentActivitiesOpen}
-        setIsUpcomingTasksOpen={setIsUpcomingTasksOpen}
-        setIsUpcomingEventsOpen={setIsUpcomingEventsOpen}
       />
     </div>
   );
