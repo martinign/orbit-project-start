@@ -1,5 +1,5 @@
-
 import { createAdminClient } from './supabaseClient.ts';
+import { extractFileContent } from './fileContentExtractor.ts';
 
 export const getUserProfile = async (supabase: any, userId: string) => {
   try {
@@ -112,7 +112,7 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
     }
     
     // Enhance attachments with URLs and associated note context
-    const enhancedAttachments = data.map(attachment => {
+    const enhancedAttachments = await Promise.all(data.map(async (attachment) => {
       // Generate public URL for the attachment
       const publicUrl = supabase.storage
         .from('project-attachments')
@@ -124,17 +124,30 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
         associatedNote = notesMap[attachment.related_id];
       }
       
+      // Extract file content for text-based files
+      let fileContent = null;
+      if (attachment.file_type && attachment.file_size) {
+        // Only extract content for files under the size limit
+        fileContent = await extractFileContent(
+          publicUrl,
+          attachment.file_type,
+          attachment.file_name,
+          attachment.file_size
+        );
+      }
+      
       return {
         ...attachment,
         publicUrl,
+        fileContent,
         associatedNote: associatedNote ? {
           title: associatedNote.title,
           content: associatedNote.content
         } : null
       };
-    });
+    }));
     
-    console.log(`Enhanced ${enhancedAttachments.length} attachments with URLs and context`);
+    console.log(`Enhanced ${enhancedAttachments.length} attachments with URLs, content and context`);
     return enhancedAttachments;
   } catch (error) {
     console.error('Error getting project attachments:', error);

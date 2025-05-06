@@ -14,6 +14,10 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
   // Split message into paragraphs for better formatting
   const paragraphs = message.content.split('\n').filter(line => line.trim() !== '');
 
+  // Check if message contains a file content section
+  const hasFileContent = message.content.includes('Content of ') && 
+                        message.content.includes(':\n\n');
+
   return (
     <div
       className={cn(
@@ -35,7 +39,20 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
               : 'bg-muted/50 text-foreground'
           )}
         >
-          {paragraphs.length > 1 ? (
+          {hasFileContent ? (
+            <div className="space-y-3">
+              {paragraphs.map((paragraph, index) => 
+                paragraph.startsWith('Content of ') && paragraph.includes(':\n\n') ? (
+                  <div key={index} className="border-l-4 border-blue-500 pl-3 py-1 my-2 bg-slate-100 dark:bg-slate-800 rounded overflow-auto max-h-[300px]">
+                    <p className="font-medium mb-1">{paragraph.split(':\n\n')[0]}</p>
+                    <pre className="whitespace-pre-wrap text-xs font-mono">{paragraph.split(':\n\n')[1]}</pre>
+                  </div>
+                ) : (
+                  <p key={index}>{paragraph}</p>
+                )
+              )}
+            </div>
+          ) : paragraphs.length > 1 ? (
             <div className="space-y-2">
               {paragraphs.map((paragraph, index) => (
                 <p key={index}>{paragraph}</p>

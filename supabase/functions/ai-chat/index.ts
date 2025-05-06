@@ -58,7 +58,7 @@ async function getContextWithCache(supabaseAdmin: any, userId: string, forceRefr
           file_size: note.file_size,
         }));
       
-      // Extract a limited set of files for context
+      // Extract a limited set of files for context with their content
       const fileAttachments = (project.attachments || []).map(attachment => {
         const fileDetails = {
           id: attachment.id,
@@ -69,6 +69,11 @@ async function getContextWithCache(supabaseAdmin: any, userId: string, forceRefr
           created_at: attachment.created_at,
           publicUrl: attachment.publicUrl
         };
+        
+        // Add file content if available
+        if (attachment.fileContent) {
+          fileDetails.content = attachment.fileContent;
+        }
         
         // Add associated note context if available
         if (attachment.associatedNote) {
@@ -196,12 +201,13 @@ serve(async (req) => {
     - Respond quickly with short, helpful answers
     - When users ask about specific projects, tasks, team members, or files, use the context to provide accurate information
     - For questions about files, you can see metadata about them including file names, types, sizes, and URLs
-    - If a user asks about a specific protocol, clinical study, document or file, carefully search through the notes and files in the context to find information about it
+    - For many text files, you have access to the actual file content in the 'content' field - use this to provide specific answers about file contents
+    - If a user asks about a specific protocol, clinical study, document or file, carefully search through the file contents, notes and context to find the most relevant information
+    - If a file is mentioned but content isn't available (e.g., PDFs or large files), acknowledge that you can see the file exists but cannot access its contents
     - If information isn't in the context, acknowledge it's not available rather than making assumptions
     - For project management advice, give practical, actionable recommendations based on their actual project data
     - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application
-    - When a user asks about files, attachments, documents, protocols or similar items, carefully check the 'files' array in each project AND the 'notesWithFiles' array to provide relevant information including file names, sizes, types, and details
-    - If a user asks for a specific file, check both file attachments and notes with files, and provide them the file name, type, size and public URL from your context`;
+    - When a user asks about files, attachments, documents, protocols or similar items, carefully check all available file content and metadata to provide relevant information`;
 
     const messages = [
       { role: "system", content: systemPrompt },

@@ -85,7 +85,13 @@ export const useChatWidget = () => {
       'file', 'document', 'attachment', 'upload', 'download',
       'pdf', 'excel', 'image', 'picture', 'photo', 'repository',
       'protocol', 'study', 'clinical', 'spreadsheet', 'presentation',
-      'powerpoint', 'word', 'doc', 'docx', 'xlsx', 'pptx', 'csv'
+      'powerpoint', 'word', 'doc', 'docx', 'xlsx', 'pptx', 'csv',
+      // Additional keywords for document content
+      'content', 'read', 'text', 'inside', 'written', 'says', 'contain', 
+      'information in', 'details in', 'paragraph', 'section',
+      // More specific content requests
+      'what does it say', 'what is in', 'can you read', 'tell me about the content',
+      'extract', 'summarize', 'analyze'
     ];
     
     const lowerQuery = query.toLowerCase();
@@ -94,10 +100,26 @@ export const useChatWidget = () => {
     const hasFileKeyword = fileKeywords.some(keyword => lowerQuery.includes(keyword));
     
     // Match if the query looks like it's asking about a specific file
-    const possibleFilePattern = /\b\d{5,}\b|\.(pdf|doc|xlsx|ppt|jpg|png)\b/i;
+    const possibleFilePattern = /\b\d{5,}\b|\.(pdf|doc|xlsx|ppt|jpg|png|txt|csv)\b/i;
     const hasFilePattern = possibleFilePattern.test(lowerQuery);
     
-    return hasFileKeyword || hasFilePattern;
+    // Match if asking about reading or understanding a file
+    const readingPattern = /(read|open|view|show|display|understand|extract from|summarize|look at)\s+(this|the|that|these|those)\s+(file|document|attachment|spreadsheet|presentation|image|pdf|doc)/i;
+    const isReadingRequest = readingPattern.test(lowerQuery);
+    
+    return hasFileKeyword || hasFilePattern || isReadingRequest;
+  }, []);
+
+  // Check if the query is specifically asking about file content
+  const isFileContentQuery = useCallback((query: string) => {
+    const contentKeywords = [
+      'content', 'read', 'inside', 'written', 'says', 'contain', 'text in',
+      'what does it say', 'what is in', 'can you read', 'tell me about the content',
+      'extract', 'summarize', 'analyze', 'understand', 'parse'
+    ];
+    
+    const lowerQuery = query.toLowerCase();
+    return contentKeywords.some(keyword => lowerQuery.includes(keyword));
   }, []);
 
   const sendMessageInternal = useCallback(async () => {
@@ -125,18 +147,32 @@ export const useChatWidget = () => {
 
       // Check if the query might be about files or attachments
       const isFileQuery = isFileRelatedQuery(inputMessage);
+      const needsContentExtraction = isFileContentQuery(inputMessage);
 
       let forceRefreshContext = false;
       
       // If it's a file query, let the user know we're retrieving file information
       if (isFileQuery) {
         console.log('File-related query detected:', inputMessage);
+        
+        // Add temporary message if specifically asking for file content
+        if (needsContentExtraction) {
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: 'Let me read that file for you. This might take a moment...',
+              timestamp: new Date().toISOString()
+            }
+          ]);
+        }
+        
         // Force refresh context for file queries to get the latest attachments
         const now = Date.now();
         const timeSinceLastFetch = now - lastContextFetchRef.current;
         
-        // Only force refresh if it's been more than 30 seconds since last refresh
-        if (timeSinceLastFetch > 30000) {
+        // Always force refresh for content requests, otherwise only if it's been a while
+        if (needsContentExtraction || timeSinceLastFetch > 30000) {
           console.log('Forcing context refresh for file query');
           forceRefreshContext = true;
           lastContextFetchRef.current = now;
@@ -171,7 +207,12 @@ export const useChatWidget = () => {
         timestamp: new Date().toISOString()
       };
 
-      setMessages(prev => [...prev, aiResponse]);
+      // Replace the temporary message if it exists
+      if (needsContentExtraction) {
+        setMessages(prev => [...prev.slice(0, -1), aiResponse]);
+      } else {
+        setMessages(prev => [...prev, aiResponse]);
+      }
     } catch (error: any) {
       console.error('Error calling AI chat function:', error);
       
@@ -226,7 +267,7 @@ export const useChatWidget = () => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [inputMessage, messages, user, toast, retryCount, retryTimeout, simulateTyping, isFileRelatedQuery]);
+  }, [inputMessage, messages, user, toast, retryCount, retryTimeout, simulateTyping, isFileRelatedQuery, isFileContentQuery]);
 
   const sendMessage = useCallback(() => {
     debouncedSendMessage();
