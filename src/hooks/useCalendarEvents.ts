@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,6 @@ interface TeamMember {
 
 export const useCalendarEvents = (projectId: string) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   // Add a state to track real-time updates
@@ -206,21 +204,14 @@ export const useCalendarEvents = (projectId: string) => {
     }
   };
 
-  const filteredEvents = events.filter(event => {
-    if (!selectedUserId) return true;
-    return event.user_id === selectedUserId;
-  });
-
   return {
     selectedDate,
     setSelectedDate,
-    selectedUserId,
-    setSelectedUserId,
     editingEvent,
     setEditingEvent,
     isEventDialogOpen,
     setIsEventDialogOpen,
-    events: filteredEvents,
+    events,
     teamMembers,
     eventsLoading,
     hasEditAccess,

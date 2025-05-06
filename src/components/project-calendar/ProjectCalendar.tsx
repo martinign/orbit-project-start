@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CalendarHeader } from './CalendarHeader';
 import { CalendarLayout } from './CalendarLayout';
 import { EventDialog } from './EventDialog';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
@@ -19,14 +18,11 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   const {
     selectedDate,
     setSelectedDate,
-    selectedUserId,
-    setSelectedUserId,
     editingEvent,
     setEditingEvent,
     isEventDialogOpen,
     setIsEventDialogOpen,
     events,
-    teamMembers,
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
@@ -49,14 +45,6 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-end items-center mb-4">
-        <CalendarHeader 
-          selectedUserId={selectedUserId} 
-          setSelectedUserId={setSelectedUserId}
-          teamMembers={teamMembers}
-        />
-      </div>
-      
       <div className="flex-1">
         <CalendarLayout 
           selectedDate={selectedDate}
