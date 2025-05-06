@@ -26,8 +26,10 @@ const DashboardHome = () => {
   
   const {
     isRecentActivitiesOpen,
+    isUpcomingTasksOpen,
     isUpcomingEventsOpen,
     setIsRecentActivitiesOpen,
+    setIsUpcomingTasksOpen,
     setIsUpcomingEventsOpen
   } = useDashboardSections();
   
@@ -90,9 +92,11 @@ const DashboardHome = () => {
         activitiesFilters={activitiesFilters}
         eventsFilters={eventsFilters}
         isRecentActivitiesOpen={isRecentActivitiesOpen}
+        isUpcomingTasksOpen={isUpcomingTasksOpen}
         isUpcomingEventsOpen={isUpcomingEventsOpen}
         newEventsCount={newEventsCount}
         setIsRecentActivitiesOpen={setIsRecentActivitiesOpen}
+        setIsUpcomingTasksOpen={setIsUpcomingTasksOpen}
         setIsUpcomingEventsOpen={setIsUpcomingEventsOpen}
       />
     </div>
