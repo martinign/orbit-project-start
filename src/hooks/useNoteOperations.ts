@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { createStorageFilePath } from '@/utils/file-utils';
 
 export function useNoteOperations(projectId: string) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -13,11 +14,43 @@ export function useNoteOperations(projectId: string) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const saveNewNote = async (data: { title: string; content: string }) => {
+  const uploadFile = async (file: File, userId: string) => {
+    if (!file) return null;
+    
+    try {
+      const filePath = createStorageFilePath(userId, file.name);
+      
+      const { error: uploadError } = await supabase.storage
+        .from('project-attachments')
+        .upload(filePath, file);
+      
+      if (uploadError) {
+        console.error("Error uploading file:", uploadError);
+        throw uploadError;
+      }
+      
+      return {
+        filePath,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
+      };
+    } catch (error) {
+      console.error("Error in file upload:", error);
+      throw error;
+    }
+  };
+
+  const saveNewNote = async (data: { 
+    title: string; 
+    content: string; 
+    file?: File | null;
+  }) => {
     if (!projectId || !user) {
       toast({
         title: 'Error',
@@ -28,6 +61,13 @@ export function useNoteOperations(projectId: string) {
     }
     
     try {
+      let fileData = null;
+      
+      // Handle file upload if there's a file
+      if (data.file) {
+        fileData = await uploadFile(data.file, user.id);
+      }
+      
       const { data: savedData, error } = await supabase
         .from('project_notes')
         .insert({
@@ -36,6 +76,12 @@ export function useNoteOperations(projectId: string) {
           content: data.content,
           user_id: user.id,
           is_private: isPrivate,
+          ...(fileData ? {
+            file_path: fileData.filePath,
+            file_name: fileData.fileName,
+            file_type: fileData.fileType,
+            file_size: fileData.fileSize
+          } : {})
         })
         .select();
         
@@ -63,17 +109,41 @@ export function useNoteOperations(projectId: string) {
     }
   };
 
-  const updateNote = async () => {
+  const updateNote = async (data?: { file?: File | null }) => {
     if (!selectedNote || !user) return;
     
     try {
-      const { data, error } = await supabase
+      let fileData = null;
+      
+      // If a new file was uploaded
+      if (data?.file) {
+        fileData = await uploadFile(data.file, user.id);
+      }
+      
+      // Delete old file if it exists and a new one is being uploaded
+      if (fileData && selectedNote.file_path) {
+        const { error: deleteError } = await supabase.storage
+          .from('project-attachments')
+          .remove([selectedNote.file_path]);
+          
+        if (deleteError) {
+          console.warn('Error removing old file:', deleteError);
+        }
+      }
+      
+      const { data: updatedData, error } = await supabase
         .from('project_notes')
         .update({
           title,
           content,
           is_private: isPrivate,
           updated_at: new Date().toISOString(),
+          ...(fileData ? {
+            file_path: fileData.filePath,
+            file_name: fileData.fileName,
+            file_type: fileData.fileType,
+            file_size: fileData.fileSize
+          } : {})
         })
         .eq('id', selectedNote.id)
         .select();
@@ -90,7 +160,7 @@ export function useNoteOperations(projectId: string) {
       });
       queryClient.invalidateQueries({ queryKey: ['project_notes', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project_notes_count', projectId] });
-      return data;
+      return updatedData;
     } catch (error) {
       console.error('Error updating note:', error);
       toast({
@@ -105,6 +175,17 @@ export function useNoteOperations(projectId: string) {
     if (!selectedNote) return;
     
     try {
+      // Delete the associated file if there is one
+      if (selectedNote.file_path) {
+        const { error: deleteFileError } = await supabase.storage
+          .from('project-attachments')
+          .remove([selectedNote.file_path]);
+          
+        if (deleteFileError) {
+          console.warn('Error removing file:', deleteFileError);
+        }
+      }
+      
       const { data, error } = await supabase
         .from('project_notes')
         .delete()
@@ -150,6 +231,8 @@ export function useNoteOperations(projectId: string) {
     setContent,
     isPrivate,
     setIsPrivate,
+    attachmentFile,
+    setAttachmentFile,
     saveNewNote,
     updateNote,
     deleteNote,

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useNewItems } from '@/hooks/useNewItems';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import NoteAttachment from './NoteAttachment';
 
 type ProjectNote = {
   id: string;
@@ -16,6 +17,10 @@ type ProjectNote = {
   updated_at: string;
   user_id: string;
   is_private: boolean;
+  file_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
 };
 
 type NoteItemProps = {
@@ -32,6 +37,9 @@ const NoteItem = ({ note, onEdit, onDelete, hasEditAccess }: NoteItemProps) => {
   
   // Check if the current user is the creator of this note
   const isNoteOwner = user?.id === note.user_id;
+
+  // Check if the note has a file attachment
+  const hasAttachment = note.file_path && note.file_name && note.file_type;
 
   React.useEffect(() => {
     const handleViewItem = async () => {
@@ -81,6 +89,16 @@ const NoteItem = ({ note, onEdit, onDelete, hasEditAccess }: NoteItemProps) => {
           )}
         </div>
         <p className="text-sm text-muted-foreground line-clamp-2">{note.content || 'No content'}</p>
+        
+        {/* Display file attachment if present */}
+        {hasAttachment && (
+          <NoteAttachment 
+            fileName={note.file_name!}
+            filePath={note.file_path!}
+            fileType={note.file_type!}
+            fileSize={note.file_size || null}
+          />
+        )}
       </CardContent>
     </Card>
   );

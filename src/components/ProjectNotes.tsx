@@ -91,8 +91,12 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSaveNote = (data: { title: string; content: string }) => {
+  const handleSaveNote = (data: { title: string; content: string; file?: File | null }) => {
     saveNewNote(data);
+  };
+
+  const handleUpdateNote = (data?: { file?: File | null }) => {
+    updateNote(data);
   };
 
   return (
@@ -167,13 +171,19 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
       <EditNoteDialog 
         open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
-        onUpdate={() => updateNote()}
+        onUpdate={handleUpdateNote}
         title={title}
         setTitle={setTitle}
         content={content}
         setContent={setContent}
         isPrivate={isPrivate}
         setIsPrivate={setIsPrivate}
+        fileDetails={selectedNote ? {
+          fileName: selectedNote.file_name,
+          filePath: selectedNote.file_path,
+          fileType: selectedNote.file_type,
+          fileSize: selectedNote.file_size
+        } : undefined}
       />
 
       <DeleteNoteDialog 

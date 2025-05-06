@@ -16,16 +16,21 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import PrivacyToggle from '@/components/task-dialog/form-components/PrivacyToggle';
+import FileUploadField from './FileUploadField';
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().optional(),
+  file: z.any().optional(),
+  file_name: z.string().optional(),
+  file_type: z.string().optional(),
+  file_size: z.number().optional().nullable(),
 });
 
 type CreateNoteDialogProps = {
   open: boolean;
   onClose: () => void;
-  onSave: (data: { title: string; content: string }) => void;
+  onSave: (data: { title: string; content: string; file?: File | null }) => void;
   initialData?: {
     title: string;
     content: string;
@@ -47,6 +52,10 @@ const CreateNoteDialog = ({
     defaultValues: {
       title: initialData.title,
       content: initialData.content || '',
+      file: null,
+      file_name: '',
+      file_type: '',
+      file_size: null,
     },
   });
 
@@ -55,6 +64,10 @@ const CreateNoteDialog = ({
       form.reset({
         title: initialData.title,
         content: initialData.content || '',
+        file: null,
+        file_name: '',
+        file_type: '',
+        file_size: null,
       });
     }
   }, [open, initialData, form]);
@@ -63,9 +76,12 @@ const CreateNoteDialog = ({
     onSave({
       title: data.title,
       content: data.content || '',
+      file: data.file || null,
     });
     form.reset();
   };
+
+  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -112,6 +128,12 @@ const CreateNoteDialog = ({
               )}
             />
             
+            <FileUploadField 
+              form={form} 
+              name="file" 
+              isSubmitting={isSubmitting}
+            />
+            
             <PrivacyToggle isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
             
             <DialogFooter>
@@ -121,9 +143,9 @@ const CreateNoteDialog = ({
               <Button 
                 type="submit" 
                 className="bg-blue-500 hover:bg-blue-600 text-white"
-                disabled={!form.formState.isValid}
+                disabled={!form.formState.isValid || isSubmitting}
               >
-                Create Note
+                {isSubmitting ? 'Creating...' : 'Create Note'}
               </Button>
             </DialogFooter>
           </form>

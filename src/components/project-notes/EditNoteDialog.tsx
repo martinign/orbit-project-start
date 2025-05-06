@@ -16,22 +16,33 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import PrivacyToggle from '@/components/task-dialog/form-components/PrivacyToggle';
+import FileUploadField from './FileUploadField';
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().optional(),
+  file: z.any().optional(),
+  file_name: z.string().optional(),
+  file_type: z.string().optional(), 
+  file_size: z.number().optional().nullable(),
 });
 
 type EditNoteDialogProps = {
   open: boolean;
   onClose: () => void;
-  onUpdate: (data: { title: string; content: string }) => void;
+  onUpdate: (data?: { file?: File | null }) => void;
   title: string;
   setTitle: (title: string) => void;
   content: string;
   setContent: (content: string) => void;
   isPrivate: boolean;
   setIsPrivate: (isPrivate: boolean) => void;
+  fileDetails?: {
+    fileName?: string;
+    filePath?: string;
+    fileType?: string;
+    fileSize?: number | null;
+  };
 };
 
 const EditNoteDialog = ({
@@ -39,15 +50,22 @@ const EditNoteDialog = ({
   onClose,
   onUpdate,
   title,
+  setTitle,
   content,
+  setContent,
   isPrivate,
-  setIsPrivate
+  setIsPrivate,
+  fileDetails
 }: EditNoteDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title,
       content: content || '',
+      file: null,
+      file_name: fileDetails?.fileName || '',
+      file_type: fileDetails?.fileType || '',
+      file_size: fileDetails?.fileSize || null,
     },
   });
 
@@ -56,16 +74,21 @@ const EditNoteDialog = ({
       form.reset({
         title,
         content: content || '',
+        file: null,
+        file_name: fileDetails?.fileName || '',
+        file_type: fileDetails?.fileType || '',
+        file_size: fileDetails?.fileSize || null,
       });
     }
-  }, [open, title, content, form]);
+  }, [open, title, content, fileDetails, form]);
 
   const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onUpdate({
-      title: data.title,
-      content: data.content || '',
-    });
+    setTitle(data.title);
+    setContent(data.content || '');
+    onUpdate({ file: data.file });
   };
+
+  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -112,6 +135,14 @@ const EditNoteDialog = ({
               )}
             />
 
+            <FileUploadField 
+              form={form} 
+              name="file" 
+              isSubmitting={isSubmitting}
+              defaultFileName={fileDetails?.fileName}
+              defaultFileType={fileDetails?.fileType}
+            />
+
             <PrivacyToggle isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
             
             <DialogFooter>
@@ -121,9 +152,9 @@ const EditNoteDialog = ({
               <Button 
                 type="submit" 
                 className="bg-blue-500 hover:bg-blue-600 text-white"
-                disabled={!form.formState.isValid}
+                disabled={!form.formState.isValid || isSubmitting}
               >
-                Update Note
+                {isSubmitting ? 'Updating...' : 'Update Note'}
               </Button>
             </DialogFooter>
           </form>
