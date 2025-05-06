@@ -2,9 +2,16 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Search, Edit2, Trash2, Plus, CalendarX, Clock } from 'lucide-react';
+import { Calendar, Search, Edit2, Trash2, Plus, CalendarX, Clock, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface EventsListProps {
   events: any[];
@@ -12,7 +19,7 @@ interface EventsListProps {
   isLoading: boolean;
   onDeleteEvent: (id: string) => void;
   onEditEvent: (event: any) => void;
-  onCreateEvent: () => void; // New prop for handling create event
+  onCreateEvent: () => void;
   hasEditAccess: boolean | undefined;
   isAuthenticated: boolean;
   currentUserId: string | undefined;
@@ -25,7 +32,7 @@ export function EventsList({
   isLoading,
   onDeleteEvent,
   onEditEvent,
-  onCreateEvent, // New prop
+  onCreateEvent,
   hasEditAccess,
   isAuthenticated,
   currentUserId,
@@ -127,45 +134,86 @@ export function EventsList({
               
               // Extract or generate event time
               const eventTime = event.event_time || "All day";
+              
+              // Get creator info using the hook
+              const EventCreator = () => {
+                const { data: userProfile } = useUserProfile(event.user_id);
+                return (
+                  <div className="flex items-center mt-1">
+                    <User className="h-4 w-4 mr-1 text-gray-500" />
+                    <span className="text-sm text-gray-500">
+                      {userProfile?.displayName || 'Unknown User'}
+                    </span>
+                  </div>
+                );
+              };
 
               return (
                 <div key={`${event.id}-${index}`} className="group">
-                  <div className="p-4 hover:bg-gray-50">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-1">
-                          <Clock className="h-4 w-4 text-blue-500 mr-1.5" />
-                          <span className="text-sm text-gray-500">{eventTime}</span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="p-4 hover:bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center mb-1">
+                                <Clock className="h-4 w-4 text-blue-500 mr-1.5" />
+                                <span className="text-sm text-gray-500">{eventTime}</span>
+                              </div>
+                              <h3 className="font-medium text-base">{event.title}</h3>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                              )}
+                            </div>
+                            {canModify && (
+                              <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => onEditEvent(event)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                  onClick={() => onDeleteEvent(event.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <h3 className="font-medium text-base">{event.title}</h3>
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
-                        )}
-                      </div>
-                      {canModify && (
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => onEditEvent(event)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                            onClick={() => onDeleteEvent(event.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="w-80 p-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-lg">{event.title}</h4>
+                          {event.description && (
+                            <p className="text-sm">{event.description}</p>
+                          )}
+                          <div className="pt-2 border-t space-y-2">
+                            {/* Created by information */}
+                            <EventCreator />
+                            
+                            {/* Created date information */}
+                            {event.created_at && (
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-1 text-gray-500" />
+                                <span className="text-sm text-gray-500">
+                                  Created: {format(new Date(event.created_at), 'PPP')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   {index < events.length - 1 && <Separator />}
                 </div>
               );
