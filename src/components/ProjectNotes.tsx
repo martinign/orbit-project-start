@@ -19,9 +19,10 @@ interface ProjectNotesProps {
   setSearchQuery?: (query: string) => void;
 }
 
-export default function ProjectNotes({ projectId, searchQuery = '', setSearchQuery }: ProjectNotesProps) {
+export default function ProjectNotes({ projectId, searchQuery: externalSearchQuery, setSearchQuery: externalSetSearchQuery }: ProjectNotesProps) {
   const { user } = useAuth();
   const [showPrivateOnly, setShowPrivateOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
     isCreateDialogOpen,
@@ -85,18 +86,39 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
 
   return (
     <div className="space-y-6">
-      {/* User controls at the top */}
+      {/* Controls card at the top */}
       {user && (
-        <div className="flex justify-end">
-          <Button 
-            onClick={() => setShowPrivateOnly(!showPrivateOnly)}
-            variant={showPrivateOnly ? "default" : "outline"}
-            className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-          >
-            <Lock className="mr-2 h-4 w-4" />
-            {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
-          </Button>
-        </div>
+        <Card>
+          <CardContent className="flex items-center justify-between py-4">
+            <Button 
+              onClick={handleCreateNote} 
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Note
+            </Button>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search notes..."
+                  className="pl-8 h-9 text-sm w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button 
+                onClick={() => setShowPrivateOnly(!showPrivateOnly)}
+                variant={showPrivateOnly ? "default" : "outline"}
+                className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+              >
+                <Lock className="mr-2 h-4 w-4" />
+                {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
       
       {/* Notes content */}
@@ -114,22 +136,7 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
           <p className="text-muted-foreground">No notes match your search criteria</p>
         </div>
       ) : (
-        <NotesEmptyState onCreateNote={null} />
-      )}
-
-      {/* Always show create note button if user is authenticated */}
-      {user && (
-        <Card className="mt-4">
-          <CardContent className="flex justify-center py-6">
-            <Button 
-              onClick={handleCreateNote} 
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Note
-            </Button>
-          </CardContent>
-        </Card>
+        <NotesEmptyState onCreateNote={handleCreateNote} />
       )}
 
       {/* Dialog components */}
