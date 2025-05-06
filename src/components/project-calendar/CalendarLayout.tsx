@@ -66,43 +66,68 @@ export function CalendarLayout({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-      <Card className="lg:col-span-3 p-6">
-        <Calendar 
-          mode="single" 
-          selected={selectedDate} 
-          onSelect={onSelectDate} 
-          className="w-full"
-          modifiers={{
-            hasEvent: Object.keys(eventsByDate).map(d => new Date(d)),
-            today: new Date(),
-          }}
-          modifiersStyles={{
-            hasEvent: {
-              fontWeight: "bold"
-            },
-            today: {
-              backgroundColor: "#E5E7EB", // Lighter gray
-              color: "black",
-              fontWeight: "bold"
-            }
-          }}
-          components={{
-            DayContent: ({ date }) => {
-              const dateKey = date.toISOString().split('T')[0];
-              const count = eventCounts[dateKey] || 0;
-              return (
-                <div className="relative flex items-center justify-center w-full h-full">
-                  <span>{format(date, 'd')}</span>
-                  {count > 0 && (
-                    <span className="absolute bottom-1 text-xs font-medium text-blue-500">
-                      {count > 9 ? '9+' : count}
-                    </span>
-                  )}
-                </div>
-              );
-            }
-          }}
-        />
+      <Card className="lg:col-span-3 p-4 h-full">
+        <div className="calendar-container w-full h-full">
+          <Calendar 
+            mode="single" 
+            selected={selectedDate} 
+            onSelect={onSelectDate} 
+            className="w-full h-full"
+            modifiers={{
+              hasEvent: Object.keys(eventsByDate).map(d => new Date(d)),
+              today: new Date(),
+              selected: selectedDate ? [selectedDate] : []
+            }}
+            modifiersStyles={{
+              hasEvent: {
+                fontWeight: "bold"
+              },
+              today: {
+                backgroundColor: "#E5E7EB", // Lighter gray
+                color: "black",
+                fontWeight: "bold"
+              },
+              selected: {
+                backgroundColor: "#833D89", // Purple color for selected date
+                color: "white",
+                fontWeight: "bold"
+              }
+            }}
+            classNames={{
+              months: "flex flex-col space-y-4 w-full",
+              month: "space-y-4 w-full",
+              caption: "flex justify-center pt-2 relative items-center text-lg font-semibold",
+              caption_label: "text-base font-medium",
+              table: "w-full border-collapse",
+              head_row: "flex w-full",
+              head_cell: "text-muted-foreground rounded-md w-full py-2 font-medium text-sm",
+              row: "flex w-full mt-2",
+              cell: "relative h-14 w-full text-center text-sm p-0 rounded-md focus-within:relative focus-within:z-20",
+              day: "h-14 w-full p-0 font-normal text-base aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+              day_today: "bg-accent text-accent-foreground",
+              day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white",
+              day_outside: "text-muted-foreground opacity-50",
+              day_disabled: "text-muted-foreground opacity-50",
+              day_hidden: "invisible"
+            }}
+            components={{
+              DayContent: ({ date }) => {
+                const dateKey = date.toISOString().split('T')[0];
+                const count = eventCounts[dateKey] || 0;
+                return (
+                  <div className="relative flex flex-col items-center justify-center w-full h-full p-2">
+                    <span className="text-lg">{format(date, 'd')}</span>
+                    {count > 0 && (
+                      <span className="absolute bottom-1 text-xs font-medium bg-blue-500 text-white px-1.5 py-0.5 rounded-full min-w-[20px]">
+                        +{count > 99 ? '99' : count}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+            }}
+          />
+        </div>
       </Card>
       
       <div className="lg:col-span-2">

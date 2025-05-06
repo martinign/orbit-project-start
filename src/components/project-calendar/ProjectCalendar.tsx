@@ -47,7 +47,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
   });
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <div className="flex justify-end items-center mb-4">
         <CalendarHeader 
           selectedUserId={selectedUserId} 
@@ -56,19 +56,21 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
         />
       </div>
       
-      <CalendarLayout 
-        selectedDate={selectedDate}
-        onSelectDate={handleDateSelect}
-        events={filteredEvents}
-        hasEditAccess={hasEditAccess}
-        eventsLoading={eventsLoading}
-        onDeleteEvent={handleDeleteEvent}
-        onEditEvent={handleEditEvent}
-        isAuthenticated={!!user}
-        currentUserId={user?.id}
-        lastUpdate={lastUpdate}
-        searchQuery={searchQuery}
-      />
+      <div className="flex-1">
+        <CalendarLayout 
+          selectedDate={selectedDate}
+          onSelectDate={handleDateSelect}
+          events={filteredEvents}
+          hasEditAccess={hasEditAccess}
+          eventsLoading={eventsLoading}
+          onDeleteEvent={handleDeleteEvent}
+          onEditEvent={handleEditEvent}
+          isAuthenticated={!!user}
+          currentUserId={user?.id}
+          lastUpdate={lastUpdate}
+          searchQuery={searchQuery}
+        />
+      </div>
 
       <EventDialog
         open={isEventDialogOpen}

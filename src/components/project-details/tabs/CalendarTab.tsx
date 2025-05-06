@@ -13,30 +13,31 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   return (
-    <Card>
-      <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <div>
-          <CardTitle>Project Calendar</CardTitle>
-          <CardDescription>View and manage project events</CardDescription>
+          <h2 className="text-2xl font-semibold">Project Calendar</h2>
+          <p className="text-muted-foreground">View and manage project events</p>
         </div>
-        <div className="relative w-full sm:w-64 mt-2 sm:mt-0">
+        <div className="relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search events..."
-            className="pl-8 h-9 text-sm"
+            className="pl-8 h-10 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-      </CardHeader>
-      <CardContent className="pt-6 px-6">
+      </div>
+      
+      <div className="h-[calc(100vh-230px)]">
         <ProjectCalendar 
           projectId={projectId} 
           searchQuery={searchQuery} 
           setSearchQuery={setSearchQuery} 
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
