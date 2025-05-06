@@ -18,7 +18,7 @@ export const SiteInitiationTracker: React.FC<SiteInitiationTrackerProps> = ({
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
+        <TabsList className="w-full md:w-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cra-list">CRA List</TabsTrigger>
           <TabsTrigger value="starter-packs">Starter Packs</TabsTrigger>
