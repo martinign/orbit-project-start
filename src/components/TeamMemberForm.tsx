@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { UserCog } from "lucide-react";
+import { UserCog, Briefcase } from "lucide-react";
 import { ProjectSelector } from "./team-members/ProjectSelector";
 import FormField from "./team-members/FormField";
 import FormActions from "./team-members/FormActions";
@@ -20,12 +20,19 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
   const [formData, setFormData] = useState({
     project_id: teamMember?.project_id || initialProjectId || "",
     full_name: teamMember?.full_name || "",
+    last_name: teamMember?.last_name || "",
     role: teamMember?.role || "",
+    job_title: teamMember?.job_title || "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    // Convert job_title to uppercase
+    if (name === 'job_title') {
+      setFormData(prev => ({ ...prev, [name]: value.toUpperCase() }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleProjectChange = (value: string) => {
@@ -72,7 +79,9 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
       const userData = {
         project_id: formData.project_id,
         full_name: formData.full_name,
+        last_name: formData.last_name || null,
         role: formData.role || null,
+        job_title: formData.job_title || null,
         user_id: user.data.user.id,
       };
 
@@ -83,7 +92,9 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
           .update({
             project_id: formData.project_id,
             full_name: formData.full_name,
+            last_name: formData.last_name || null,
             role: formData.role || null,
+            job_title: formData.job_title || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", teamMember.id);
@@ -136,17 +147,38 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
       <FormField
         id="full_name"
         name="full_name"
-        label="Full Name"
+        label="First Name"
         value={formData.full_name}
         onChange={handleChange}
-        placeholder="Enter full name"
+        placeholder="Enter first name"
         required
+      />
+
+      <FormField
+        id="last_name"
+        name="last_name"
+        label="Last Name"
+        value={formData.last_name}
+        onChange={handleChange}
+        placeholder="Enter last name"
+      />
+      
+      <FormField
+        id="job_title"
+        name="job_title"
+        label="Job Title"
+        value={formData.job_title}
+        onChange={handleChange}
+        placeholder="E.g., PROJECT MANAGER, CLINICAL RESEARCH ASSOCIATE"
+        hint="Enter the team member's job title"
+        icon={Briefcase}
+        className="uppercase"
       />
       
       <FormField
         id="role"
         name="role"
-        label="Role"
+        label="Role in Project"
         value={formData.role}
         onChange={handleChange}
         placeholder="E.g., Project Manager, Developer"

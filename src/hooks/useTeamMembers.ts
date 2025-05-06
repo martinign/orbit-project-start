@@ -8,6 +8,7 @@ export interface TeamMember {
   full_name: string;
   last_name: string;
   role?: string;
+  job_title?: string;
   project_id: string;
   projects?: {
     project_number: string;
@@ -29,6 +30,7 @@ export const useTeamMembers = (projectId?: string) => {
           full_name, 
           last_name,
           role, 
+          job_title,
           project_id,
           projects:project_id(
             project_number,

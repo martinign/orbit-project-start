@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Edit, Trash2, User } from 'lucide-react';
+import { Edit, Trash2, User, Briefcase } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -60,15 +60,23 @@ const TeamMembersCardView: React.FC<TeamMembersCardViewProps> = ({
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-lg truncate">{`${member.full_name} ${member.last_name}`}</CardTitle>
-            {member.role && (
+            {member.job_title && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
-                <User className="h-3 w-3" />
-                {member.role}
+                <Briefcase className="h-3 w-3" />
+                {member.job_title}
               </p>
             )}
           </CardHeader>
           <CardContent className="pb-2 flex-grow">
             <div className="space-y-2 text-sm">
+              {/* Display role as secondary info if available */}
+              {member.role && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <User className="h-3 w-3" />
+                  Role: {member.role}
+                </p>
+              )}
+              
               {/* Only show project badge if not filtered by project */}
               {!projectId && member.projects && (
                 <p className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full inline-block mt-1">

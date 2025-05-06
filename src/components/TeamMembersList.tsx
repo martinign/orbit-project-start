@@ -47,7 +47,7 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
       }
 
       if (searchQuery) {
-        query = query.or(`full_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
+        query = query.or(`full_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,job_title.ilike.%${searchQuery}%`);
       }
 
       const { data, error } = await query;

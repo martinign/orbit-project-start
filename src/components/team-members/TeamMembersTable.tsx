@@ -36,7 +36,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
             <TableRow className="sticky top-0 z-20 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">First Name</TableHead>
               <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Last Name</TableHead>
-              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Role</TableHead>
+              <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Job Title</TableHead>
               {!projectId && <TableHead className="h-11 px-4 text-left align-middle font-medium text-muted-foreground">Project</TableHead>}
               <TableHead className="h-11 px-4 text-right align-middle font-medium text-muted-foreground">Actions</TableHead>
             </TableRow>
@@ -46,7 +46,7 @@ const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
               <TableRow key={member.id}>
                 <TableCell className="font-medium">{member.full_name}</TableCell>
                 <TableCell className="font-medium">{member.last_name}</TableCell>
-                <TableCell>{member.role || '-'}</TableCell>
+                <TableCell>{member.job_title || '-'}</TableCell>
                 {!projectId && <TableCell>{member.projects ? `${member.projects.project_number} - ${member.projects.Sponsor}` : '-'}</TableCell>}
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
