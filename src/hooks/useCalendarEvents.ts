@@ -183,11 +183,12 @@ export const useCalendarEvents = (projectId: string) => {
           event_date: data.event_date?.toISOString(),
         });
       } else {
+        // For new events, use the selected date if it exists
         await createEvent.mutateAsync({
           title: data.title,
           description: data.description,
           project_id: projectId,
-          event_date: selectedDate?.toISOString(),
+          event_date: data.event_date?.toISOString() || selectedDate?.toISOString(),
         });
       }
       setIsEventDialogOpen(false);
@@ -224,7 +225,7 @@ export const useCalendarEvents = (projectId: string) => {
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
-    handleCreateEvent, // Expose the new function
+    handleCreateEvent, 
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,

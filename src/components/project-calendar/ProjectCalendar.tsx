@@ -84,6 +84,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           event_date: editingEvent.event_date ? new Date(editingEvent.event_date) : undefined
         } : undefined}
         mode={editingEvent ? 'edit' : 'create'}
+        selectedDate={selectedDate}
       />
     </div>
   );

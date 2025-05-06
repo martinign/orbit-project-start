@@ -34,6 +34,7 @@ interface EventDialogProps {
   defaultValues?: Partial<z.infer<typeof formSchema>>;
   mode: 'create' | 'edit';
   readOnly?: boolean;
+  selectedDate?: Date;
 }
 
 export function EventDialog({
@@ -43,28 +44,33 @@ export function EventDialog({
   defaultValues,
   mode,
   readOnly = false,
+  selectedDate,
 }: EventDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
       title: "",
       description: "",
-      event_date: undefined,
+      event_date: selectedDate,
     },
   });
 
   React.useEffect(() => {
     if (open) {
-      form.reset(defaultValues || {
-        title: "",
-        description: "",
-        event_date: undefined,
+      form.reset({
+        title: defaultValues?.title || "",
+        description: defaultValues?.description || "",
+        event_date: defaultValues?.event_date || selectedDate,
       });
     }
-  }, [open, defaultValues, form]);
+  }, [open, defaultValues, form, selectedDate]);
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
+      // For new events, use the selected date if no specific date is provided
+      if (mode === 'create' && !data.event_date && selectedDate) {
+        data.event_date = selectedDate;
+      }
       await onSubmit(data);
       form.reset();
     } catch (error) {
@@ -106,46 +112,61 @@ export function EventDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="event_date"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                          disabled={readOnly}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Pick a date</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
+            {/* Only show date picker for edit mode */}
+            {mode === 'edit' && (
+              <FormField
+                control={form.control}
+                name="event_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                            disabled={readOnly}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {/* For create mode, display the selected date as text */}
+            {mode === 'create' && selectedDate && (
+              <FormItem>
+                <FormLabel>Date</FormLabel>
+                <div className="p-2 border rounded bg-muted/20">
+                  {format(selectedDate, "PPP")}
+                </div>
+              </FormItem>
+            )}
+            
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
