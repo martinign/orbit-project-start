@@ -44,6 +44,7 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
   const { data: invitations, isLoading, refetch, error } = useMemberInvitations(projectId);
   const [updatingInvitationId, setUpdatingInvitationId] = useState<string | null>(null);
   const [removingInvitationId, setRemovingInvitationId] = useState<string | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
   const queryClient = useQueryClient();
 
   const handleRoleChange = async (invitationId: string, newRole: string) => {
@@ -87,6 +88,7 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
 
   const handleRemoveMember = async (invitationId: string) => {
     try {
+      setIsRemoving(true);
       setRemovingInvitationId(invitationId);
       
       // Get the invitation details to find the user_id
@@ -96,13 +98,15 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
       }
       
       // First, remove the user from the project_team_members table
-      const { error: teamMemberError } = await supabase
-        .from('project_team_members')
-        .delete()
-        .eq('project_id', projectId)
-        .eq('user_id', invitation.invitation_recipient_id);
-        
-      if (teamMemberError) throw teamMemberError;
+      if (invitation.invitation_status === 'accepted') {
+        const { error: teamMemberError } = await supabase
+          .from('project_team_members')
+          .delete()
+          .eq('project_id', projectId)
+          .eq('user_id', invitation.invitation_recipient_id);
+          
+        if (teamMemberError) throw teamMemberError;
+      }
       
       // Then, update the invitation status to 'revoked'
       const { error: invitationError } = await supabase
@@ -115,13 +119,16 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
       toast.success("Team member removed successfully");
       
       // Refetch invitations and invalidate team members query
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['team_members', projectId] });
-      queryClient.invalidateQueries({ queryKey: ['project_team_members', projectId] });
-    } catch (error) {
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['team_members', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['project_team_members', projectId] })
+      ]);
+    } catch (error: any) {
       console.error("Error removing team member:", error);
-      toast.error("Failed to remove team member");
+      toast.error(error.message || "Failed to remove team member");
     } finally {
+      setIsRemoving(false);
       setRemovingInvitationId(null);
     }
   };
@@ -216,8 +223,13 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
                         variant="outline" 
                         size="sm" 
                         className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                        disabled={isRemoving}
                       >
-                        <UserMinus className="h-4 w-4 mr-1" />
+                        {removingInvitationId === invitation.member_invitation_id && isRemoving ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <UserMinus className="h-4 w-4 mr-1" />
+                        )}
                         Remove
                       </Button>
                     </AlertDialogTrigger>
@@ -234,13 +246,11 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                         <AlertDialogAction 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleRemoveMember(invitation.member_invitation_id);
-                          }}
+                          onClick={() => handleRemoveMember(invitation.member_invitation_id)}
                           className="bg-red-500 hover:bg-red-600"
+                          disabled={isRemoving}
                         >
-                          {removingInvitationId === invitation.member_invitation_id ? (
+                          {isRemoving && removingInvitationId === invitation.member_invitation_id ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           ) : null}
                           Remove
