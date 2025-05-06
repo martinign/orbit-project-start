@@ -1,3 +1,4 @@
+
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createAdminClient } from './supabaseClient.ts';
@@ -44,30 +45,43 @@ async function getContextWithCache(supabaseAdmin: any, userId: string) {
   
   if (projectsContext?.length > 0) {
     // Only include essential project data to reduce token usage
-    const essentialProjectData = projectsContext.map(project => ({
-      id: project.id,
-      project_number: project.project_number,
-      protocol_title: project.protocol_title,
-      protocol_number: project.protocol_number,
-      Sponsor: project.Sponsor,
-      status: project.status,
-      description: project.description,
-      // Include only active tasks and recent updates to reduce context size
-      tasks: (project.tasks || []).filter(task => task.status !== 'completed').slice(0, 10),
-      notes: (project.notes || []).slice(0, 5),
-      teamMembers: project.teamMembers,
-      // Only include recent or upcoming events
-      events: (project.events || []).filter(event => {
-        const eventDate = new Date(event.event_date);
-        const now = new Date();
-        const oneMonthAgo = new Date();
-        oneMonthAgo.setMonth(now.getMonth() - 1);
-        const oneMonthAhead = new Date();
-        oneMonthAhead.setMonth(now.getMonth() + 1);
-        return eventDate >= oneMonthAgo && eventDate <= oneMonthAhead;
-      }),
-      contacts: project.contacts
-    }));
+    const essentialProjectData = projectsContext.map(project => {
+      // Extract a limited set of files for context
+      const fileAttachments = (project.attachments || []).map(attachment => ({
+        id: attachment.id,
+        file_name: attachment.file_name,
+        file_type: attachment.file_type,
+        file_size: attachment.file_size,
+        created_at: attachment.created_at,
+        publicUrl: attachment.publicUrl
+      })).slice(0, 10); // Limit to 10 files per project
+      
+      return {
+        id: project.id,
+        project_number: project.project_number,
+        protocol_title: project.protocol_title,
+        protocol_number: project.protocol_number,
+        Sponsor: project.Sponsor,
+        status: project.status,
+        description: project.description,
+        // Include only active tasks and recent updates to reduce context size
+        tasks: (project.tasks || []).filter(task => task.status !== 'completed').slice(0, 10),
+        notes: (project.notes || []).slice(0, 5),
+        teamMembers: project.teamMembers,
+        // Only include recent or upcoming events
+        events: (project.events || []).filter(event => {
+          const eventDate = new Date(event.event_date);
+          const now = new Date();
+          const oneMonthAgo = new Date();
+          oneMonthAgo.setMonth(now.getMonth() - 1);
+          const oneMonthAhead = new Date();
+          oneMonthAhead.setMonth(now.getMonth() + 1);
+          return eventDate >= oneMonthAgo && eventDate <= oneMonthAhead;
+        }),
+        contacts: project.contacts,
+        files: fileAttachments
+      };
+    });
     
     contextText += `Projects information (${essentialProjectData.length} projects with their detailed information):\n`;
     contextText += JSON.stringify(essentialProjectData, null, 2);
@@ -146,7 +160,7 @@ serve(async (req) => {
     const recentHistory = history.slice(-10);
     
     // Prepare messages for OpenAI
-    const systemPrompt = `You are an AI project management assistant that helps users manage their projects, tasks, and teams. You have access to detailed information about the user's projects, tasks, team members, notes, events, and contacts.
+    const systemPrompt = `You are an AI project management assistant that helps users manage their projects, tasks, and teams. You have access to detailed information about the user's projects, tasks, team members, notes, events, contacts, and project files.
     
     Use this context information to provide helpful responses:
     
@@ -155,10 +169,12 @@ serve(async (req) => {
     When answering:
     - Be professional, friendly and concise
     - Respond quickly with short, helpful answers
-    - When users ask about specific projects, tasks, or team members, use the context to provide accurate information
+    - When users ask about specific projects, tasks, team members, or files, use the context to provide accurate information
+    - For questions about files, you can see metadata about them including file names, types, sizes, and URLs
     - If information isn't in the context, acknowledge it's not available rather than making assumptions
     - For project management advice, give practical, actionable recommendations based on their actual project data
-    - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application`;
+    - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application
+    - If a user asks for a specific file, you can provide them the file name, type, and public URL from your context`;
 
     const messages = [
       { role: "system", content: systemPrompt },

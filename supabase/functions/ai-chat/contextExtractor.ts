@@ -49,6 +49,55 @@ export const getUserTemplates = async (supabase: any, userId: string) => {
   }
 };
 
+export const getProjectAttachments = async (supabase: any, projectIds: string[]) => {
+  if (!projectIds || projectIds.length === 0) {
+    return [];
+  }
+  
+  try {
+    // Get repository files (attachments with related_type = 'repository')
+    const { data, error } = await supabase
+      .from('project_attachments')
+      .select(`
+        id, 
+        file_name, 
+        file_path, 
+        file_type, 
+        file_size, 
+        created_at, 
+        created_by,
+        project_id
+      `)
+      .in('project_id', projectIds)
+      .order('created_at', { ascending: false })
+      .limit(30); // Limit to most recent/important files
+    
+    if (error) {
+      console.error('Error fetching project attachments:', error);
+      throw error;
+    }
+    
+    console.log(`Fetched ${data?.length || 0} attachments for ${projectIds.length} projects`);
+    
+    // Enhance attachments with URLs
+    const enhancedAttachments = data.map(attachment => {
+      const publicUrl = supabase.storage
+        .from('project-attachments')
+        .getPublicUrl(attachment.file_path).data.publicUrl;
+      
+      return {
+        ...attachment,
+        publicUrl
+      };
+    });
+    
+    return enhancedAttachments;
+  } catch (error) {
+    console.error('Error getting project attachments:', error);
+    return [];
+  }
+};
+
 export const extractProjectInfo = async (supabase: any, userId: string) => {
   try {
     // Get projects where user is the owner
@@ -138,6 +187,22 @@ export const extractProjectInfo = async (supabase: any, userId: string) => {
       return [];
     }
 
+    // Get all project IDs for attachment fetching
+    const projectIds = uniqueProjects.map((project: any) => project.id);
+    
+    // Fetch attachments for all projects in a single query
+    const projectAttachments = await getProjectAttachments(supabase, projectIds);
+    
+    // Group attachments by project ID for easier assignment
+    const attachmentsByProject = projectAttachments.reduce((acc: {[key: string]: any[]}, attachment) => {
+      const projectId = attachment.project_id;
+      if (!acc[projectId]) {
+        acc[projectId] = [];
+      }
+      acc[projectId].push(attachment);
+      return acc;
+    }, {});
+
     // For each project, get related data in parallel for better performance
     const projectsWithData = await Promise.all(
       uniqueProjects.map(async (project: any) => {
@@ -211,7 +276,10 @@ export const extractProjectInfo = async (supabase: any, userId: string) => {
         const contacts = contactsResult.error ? [] : contactsResult.data || [];
         const invitations = invitationsResult.error ? [] : invitationsResult.data || [];
         
-        console.log(`Fetched data for project ${project.id}: ${tasks.length} tasks, ${notes.length} notes, ${teamMembers.length} team members, ${events.length} events, ${contacts.length} contacts, ${invitations.length} invitations`);
+        // Add attachments to the project
+        const attachments = attachmentsByProject[project.id] || [];
+        
+        console.log(`Fetched data for project ${project.id}: ${tasks.length} tasks, ${notes.length} notes, ${teamMembers.length} team members, ${events.length} events, ${contacts.length} contacts, ${invitations.length} invitations, ${attachments.length} attachments`);
 
         // For active tasks, get their updates (but limit them to save tokens)
         let taskUpdates = [];
@@ -255,7 +323,8 @@ export const extractProjectInfo = async (supabase: any, userId: string) => {
           contacts,
           invitations,
           taskUpdates,
-          subtasks
+          subtasks,
+          attachments
         };
       })
     );

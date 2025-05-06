@@ -1263,6 +1263,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_project_attachment_access: {
+        Args: { object_id: string }
+        Returns: boolean
+      }
       get_task_project_id: {
         Args: { task_id: string }
         Returns: string

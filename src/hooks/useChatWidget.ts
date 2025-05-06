@@ -102,6 +102,15 @@ export const useChatWidget = () => {
         userId: user.id
       });
 
+      // Check if the query might be about files or attachments
+      const isFileQuery = /file|document|attachment|upload|download|pdf|excel|image|picture|photo|repository/i.test(inputMessage.toLowerCase());
+
+      // If it's a file query, let the user know we're retrieving file information
+      if (isFileQuery) {
+        console.log('File-related query detected:', inputMessage);
+        // We don't need to do anything special here as the context already includes file information
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,
