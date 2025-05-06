@@ -633,6 +633,10 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
           id: string
           is_private: boolean
           project_id: string
@@ -643,6 +647,10 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: string
           is_private?: boolean
           project_id: string
@@ -653,6 +661,10 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           id?: string
           is_private?: boolean
           project_id?: string
