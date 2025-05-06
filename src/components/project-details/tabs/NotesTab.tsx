@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Lock, Plus, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNoteOperations } from '@/hooks/useNoteOperations';
 
 interface NotesTabProps {
   projectId: string;
@@ -14,6 +15,11 @@ interface NotesTabProps {
 export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
+  const { setIsCreateDialogOpen } = useNoteOperations(projectId);
+  
+  const handleCreateNote = () => {
+    setIsCreateDialogOpen(true);
+  };
   
   return (
     <Card>
@@ -33,7 +39,7 @@ export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
             </div>
             {user && (
               <Button 
-                onClick={() => {}} 
+                onClick={handleCreateNote} 
                 className="bg-blue-500 hover:bg-blue-600 text-white h-9"
               >
                 <Plus className="mr-2 h-4 w-4" />
