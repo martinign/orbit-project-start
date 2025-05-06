@@ -25,6 +25,7 @@ interface TaskDialogsProps {
   isSubtaskDialogOpen: boolean;
   isCreateTaskDialogOpen: boolean;
   isUpdatesDisplayOpen: boolean;
+  isDeleting?: boolean;
   setIsDialogOpen: (open: boolean) => void;
   setIsDeleteConfirmOpen: (open: boolean) => void;
   setIsUpdateDialogOpen: (open: boolean) => void;
@@ -45,6 +46,7 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
   isSubtaskDialogOpen,
   isCreateTaskDialogOpen,
   isUpdatesDisplayOpen,
+  isDeleting = false,
   setIsDialogOpen,
   setIsDeleteConfirmOpen,
   setIsUpdateDialogOpen,
@@ -88,6 +90,7 @@ export const TaskDialogs: React.FC<TaskDialogsProps> = ({
             onOpenChange={setIsDeleteConfirmOpen}
             taskTitle={selectedTask.title}
             onDelete={deleteTask}
+            isDeleting={isDeleting}
           />
 
           <SubtaskDialog

@@ -10,12 +10,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Loader2 } from 'lucide-react';
 
 interface DeleteTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskTitle: string;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
 const DeleteTaskDialog: React.FC<DeleteTaskDialogProps> = ({
@@ -23,9 +25,10 @@ const DeleteTaskDialog: React.FC<DeleteTaskDialogProps> = ({
   onOpenChange,
   taskTitle,
   onDelete,
+  isDeleting = false,
 }) => {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={isDeleting ? undefined : onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -35,9 +38,20 @@ const DeleteTaskDialog: React.FC<DeleteTaskDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onDelete} className="bg-red-500 hover:bg-red-600">
-            Delete
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onDelete} 
+            className="bg-red-500 hover:bg-red-600"
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

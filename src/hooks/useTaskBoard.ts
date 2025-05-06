@@ -26,8 +26,11 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const [isCreateTaskDialogOpen, setIsCreateTaskDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isRefetching, setIsRefetching] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleCloseDialogs = () => {
+    if (isDeleting || isRefetching) return; // Don't close dialogs during async operations
+    
     setSelectedTask(null);
     setIsDialogOpen(false);
     setIsDeleteConfirmOpen(false);
@@ -41,8 +44,15 @@ export const useTaskBoard = (onRefetch: () => void) => {
     if (!isRefetching) {
       setIsRefetching(true);
       try {
-        await onRefetch();
         await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        await onRefetch();
+      } catch (error) {
+        console.error("Error refetching tasks:", error);
+        toast({
+          title: "Refresh Failed",
+          description: "Unable to refresh task data. Please try again.",
+          variant: "destructive"
+        });
       } finally {
         setIsRefetching(false);
       }
@@ -86,6 +96,8 @@ export const useTaskBoard = (onRefetch: () => void) => {
   const deleteTask = async () => {
     if (!selectedTask) return;
 
+    setIsDeleting(true);
+    
     try {
       // Check if this is a Gantt task
       const { data: ganttTask } = await supabase
@@ -128,8 +140,8 @@ export const useTaskBoard = (onRefetch: () => void) => {
 
       if (error) throw error;
 
-      await safeRefetch();
-      handleCloseDialogs();
+      // Invalidate all related queries
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
       
       toast({
         title: 'Task Deleted',
@@ -142,6 +154,15 @@ export const useTaskBoard = (onRefetch: () => void) => {
         description: 'Failed to delete the task. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteConfirmOpen(false);
+      setSelectedTask(null);
+      
+      // After a short delay to allow state updates, trigger a refetch
+      setTimeout(() => {
+        safeRefetch();
+      }, 300);
     }
   };
 
@@ -154,6 +175,8 @@ export const useTaskBoard = (onRefetch: () => void) => {
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
     selectedStatus,
+    isDeleting,
+    isRefetching,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,

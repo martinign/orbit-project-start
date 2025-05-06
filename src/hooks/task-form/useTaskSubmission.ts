@@ -20,17 +20,19 @@ export const useTaskSubmission = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const submitTask = async (taskData: any) => {
     console.time('taskSubmission');
     setIsSubmitting(true);
+    setError(null);
     
     try {
       console.log("Saving task with data:", taskData);
       
       if (mode === 'edit' && taskId) {
         console.time('taskUpdate');
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('project_tasks')
           .update({
             ...taskData,
@@ -39,7 +41,10 @@ export const useTaskSubmission = ({
           .eq('id', taskId);
         console.timeEnd('taskUpdate');
           
-        if (error) throw error;
+        if (updateError) throw updateError;
+        
+        // Invalidate queries after successful update
+        await queryClient.invalidateQueries({ queryKey: ["tasks"] });
         
         toast({
           title: "Success",
@@ -47,15 +52,16 @@ export const useTaskSubmission = ({
         });
       } else {
         console.time('taskCreate');
-        const { error } = await supabase
+        const { error: createError } = await supabase
           .from('project_tasks')
           .insert(taskData);
         console.timeEnd('taskCreate');
           
-        if (error) throw error;
+        if (createError) throw createError;
         
         // Explicitly invalidate the new tasks count query
-        queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        await queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });
+        await queryClient.invalidateQueries({ queryKey: ["tasks"] });
         
         toast({
           title: "Success",
@@ -63,18 +69,21 @@ export const useTaskSubmission = ({
         });
       }
 
-      // Use setTimeout to ensure state updates complete before closing
+      // Call success callback first
+      if (onSuccess) {
+        onSuccess();
+      }
+      
+      // Small delay before closing to ensure UI updates properly
       setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        }
         if (onClose) {
           onClose();
         }
-      }, 100);
+      }, 300);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving task:", error);
+      setError(error?.message || "Failed to save task");
       toast({
         title: "Error",
         description: "Failed to save task. Please try again.",
@@ -88,6 +97,7 @@ export const useTaskSubmission = ({
 
   return {
     isSubmitting,
+    error,
     submitTask
   };
 };

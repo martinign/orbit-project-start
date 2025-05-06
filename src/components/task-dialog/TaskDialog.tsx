@@ -44,12 +44,27 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   onSuccess 
 }) => {
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const { toast } = useToast();
   
   // Pass the projectId to useTeamMembers to filter by project
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers(projectId);
   
   const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
+  
+  // Improved dialog close handling
+  const handleClose = () => {
+    if (taskForm.isSubmitting) {
+      return; // Prevent closing while submitting
+    }
+    
+    setIsClosing(true);
+    // Add slight delay to allow animations
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 100);
+  };
 
   const handleTemplateSelect = (template: TaskTemplate | SOPTemplate, templateType: 'task' | 'sop') => {
     console.log(`Applying ${templateType} template to form:`, template);
@@ -88,7 +103,6 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
       toast({
         title: "SOP Template Applied",
         description: `Applied SOP template: ${template.title}`,
-        // Fix the type error by using a valid variant
         variant: "default",
       });
     } else {
@@ -102,8 +116,8 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent>
+      <Dialog open={open} onOpenChange={taskForm.isSubmitting ? undefined : handleClose}>
+        <DialogContent className={isClosing ? 'pointer-events-none opacity-70' : ''}>
           <DialogHeader>
             <DialogTitle>{mode === 'edit' ? 'Edit Task' : 'Create New Task'}</DialogTitle>
             <DialogDescription>
@@ -140,7 +154,7 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
             hasFixedProject={!!projectId}
             isSubmitting={taskForm.isSubmitting}
             onSubmit={taskForm.handleSubmit}
-            onClose={onClose}
+            onClose={handleClose}
             onOpenTemplateDialog={() => setIsTemplateDialogOpen(true)}
             mode={mode}
           />

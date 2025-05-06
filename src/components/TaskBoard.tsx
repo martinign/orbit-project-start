@@ -43,6 +43,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     isSubtaskDialogOpen,
     isCreateTaskDialogOpen,
     selectedStatus,
+    isDeleting,
+    isRefetching,
     setIsDialogOpen,
     setIsDeleteConfirmOpen,
     setIsUpdateDialogOpen,
@@ -94,7 +96,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
             {columnsConfig.map((column) => (
               <TaskBoardColumn
                 key={column.id}
@@ -110,6 +112,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
                 isColumnCollapsed={isColumnCollapsed}
                 toggleColumnCollapsed={toggleColumnCollapsed}
                 taskUpdateCounts={updateCounts}
+                disabled={isDeleting || isRefetching}
               />
             ))}
           </div>
@@ -125,6 +128,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
         isUpdatesDisplayOpen={isUpdatesDisplayOpen}
         isSubtaskDialogOpen={isSubtaskDialogOpen}
         isCreateTaskDialogOpen={isCreateTaskDialogOpen}
+        isDeleting={isDeleting}
         setIsDialogOpen={setIsDialogOpen}
         setIsDeleteConfirmOpen={setIsDeleteConfirmOpen}
         setIsUpdateDialogOpen={setIsUpdateDialogOpen}
