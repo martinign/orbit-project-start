@@ -11,6 +11,7 @@ import NotesEmptyState from './project-notes/NotesEmptyState';
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteOperations } from '@/hooks/useNoteOperations';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProjectNotesProps {
   projectId: string;
@@ -84,37 +85,51 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
 
   return (
     <div className="space-y-6">
-      {/* Search functionality handled in parent component (NotesTab) */}
+      {/* User controls at the top */}
+      {user && (
+        <div className="flex justify-end">
+          <Button 
+            onClick={() => setShowPrivateOnly(!showPrivateOnly)}
+            variant={showPrivateOnly ? "default" : "outline"}
+            className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+          >
+            <Lock className="mr-2 h-4 w-4" />
+            {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
+          </Button>
+        </div>
+      )}
       
+      {/* Notes content */}
       {isLoading ? (
         <div className="flex justify-center py-10">Loading notes...</div>
       ) : filteredNotes.length > 0 ? (
-        <>
-          {user && (
-            <div className="flex justify-end">
-              <Button 
-                onClick={() => setShowPrivateOnly(!showPrivateOnly)}
-                variant={showPrivateOnly ? "default" : "outline"}
-                className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
-              </Button>
-            </div>
-          )}
-          <NotesList 
-            notes={filteredNotes} 
-            onEditNote={handleEditNote} 
-            onDeleteConfirmation={handleDeleteConfirmation}
-            hasEditAccess={!!hasProjectAccess}
-          />
-        </>
+        <NotesList 
+          notes={filteredNotes} 
+          onEditNote={handleEditNote} 
+          onDeleteConfirmation={handleDeleteConfirmation}
+          hasEditAccess={!!hasProjectAccess}
+        />
       ) : notes.length > 0 && filteredNotes.length === 0 ? (
         <div className="py-10 text-center">
           <p className="text-muted-foreground">No notes match your search criteria</p>
         </div>
       ) : (
-        <NotesEmptyState onCreateNote={user ? handleCreateNote : undefined} />
+        <NotesEmptyState onCreateNote={null} />
+      )}
+
+      {/* Always show create note button if user is authenticated */}
+      {user && (
+        <Card className="mt-4">
+          <CardContent className="flex justify-center py-6">
+            <Button 
+              onClick={handleCreateNote} 
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Note
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Dialog components */}
