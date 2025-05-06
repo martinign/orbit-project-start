@@ -1,5 +1,5 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createAdminClient } from './supabaseClient.ts';
 import { extractProjectInfo, getUserProfile, getUserTemplates } from './contextExtractor.ts';
@@ -14,12 +14,12 @@ const contextCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Helper function to get context data with caching
-async function getContextWithCache(supabaseAdmin: any, userId: string) {
+async function getContextWithCache(supabaseAdmin: any, userId: string, forceRefresh = false) {
   const cacheKey = `user_${userId}`;
   const now = Date.now();
   
-  // Check if we have a valid cache entry
-  if (contextCache.has(cacheKey)) {
+  // Check if we have a valid cache entry and not forcing refresh
+  if (!forceRefresh && contextCache.has(cacheKey)) {
     const cachedData = contextCache.get(cacheKey);
     if (now < cachedData.expiry) {
       console.log('Using cached context data for userId:', userId);
@@ -27,7 +27,7 @@ async function getContextWithCache(supabaseAdmin: any, userId: string) {
     }
   }
   
-  // If no valid cache, fetch fresh data
+  // If no valid cache or forcing refresh, fetch fresh data
   console.log('Fetching fresh context data for userId:', userId);
   
   // Fetch all context data in parallel
@@ -46,16 +46,38 @@ async function getContextWithCache(supabaseAdmin: any, userId: string) {
   if (projectsContext?.length > 0) {
     // Only include essential project data to reduce token usage
     const essentialProjectData = projectsContext.map(project => {
+      // Process notes with attachments to make information more accessible
+      const notesWithFiles = (project.notes || [])
+        .filter(note => note.file_path && note.file_name)
+        .map(note => ({
+          id: note.id,
+          title: note.title,
+          content: note.content,
+          file_name: note.file_name,
+          file_type: note.file_type,
+          file_size: note.file_size,
+        }));
+      
       // Extract a limited set of files for context
-      const fileAttachments = (project.attachments || []).map(attachment => ({
-        id: attachment.id,
-        file_name: attachment.file_name,
-        file_type: attachment.file_type,
-        file_size: attachment.file_size,
-        related_type: attachment.related_type || 'repository',
-        created_at: attachment.created_at,
-        publicUrl: attachment.publicUrl
-      })).slice(0, 10); // Limit to 10 files per project
+      const fileAttachments = (project.attachments || []).map(attachment => {
+        const fileDetails = {
+          id: attachment.id,
+          file_name: attachment.file_name,
+          file_type: attachment.file_type,
+          file_size: attachment.file_size,
+          related_type: attachment.related_type || 'repository',
+          created_at: attachment.created_at,
+          publicUrl: attachment.publicUrl
+        };
+        
+        // Add associated note context if available
+        if (attachment.associatedNote) {
+          fileDetails.note_title = attachment.associatedNote.title;
+          fileDetails.note_content = attachment.associatedNote.content;
+        }
+        
+        return fileDetails;
+      }).slice(0, 15); // Increased limit to 15 files per project
       
       return {
         id: project.id,
@@ -68,6 +90,7 @@ async function getContextWithCache(supabaseAdmin: any, userId: string) {
         // Include only active tasks and recent updates to reduce context size
         tasks: (project.tasks || []).filter(task => task.status !== 'completed').slice(0, 10),
         notes: (project.notes || []).slice(0, 5),
+        notesWithFiles: notesWithFiles,
         teamMembers: project.teamMembers,
         // Only include recent or upcoming events
         events: (project.events || []).filter(event => {
@@ -141,18 +164,19 @@ serve(async (req) => {
       );
     }
 
-    const { message, history, userId } = await req.json();
+    const { message, history, userId, forceRefreshContext } = await req.json();
     
     console.log('Request received with message length:', message.length);
     console.log('History length:', history?.length || 0);
     console.log('Processing for userId:', userId);
+    console.log('Force refresh context:', forceRefreshContext || false);
     
     // Create Supabase client with admin privileges for data access
     const supabaseAdmin = createAdminClient();
 
     // Get user context data with caching
     console.log('Getting user context for userId:', userId);
-    const contextData = await getContextWithCache(supabaseAdmin, userId);
+    const contextData = await getContextWithCache(supabaseAdmin, userId, forceRefreshContext);
     const { contextText } = contextData;
     
     console.log('Context built successfully');
@@ -172,11 +196,12 @@ serve(async (req) => {
     - Respond quickly with short, helpful answers
     - When users ask about specific projects, tasks, team members, or files, use the context to provide accurate information
     - For questions about files, you can see metadata about them including file names, types, sizes, and URLs
+    - If a user asks about a specific protocol, clinical study, document or file, carefully search through the notes and files in the context to find information about it
     - If information isn't in the context, acknowledge it's not available rather than making assumptions
     - For project management advice, give practical, actionable recommendations based on their actual project data
     - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application
-    - If a user asks for a specific file, you can provide them the file name, type, and public URL from your context
-    - When users ask about files, attachments or documents, check the 'files' array in each project and provide relevant information`;
+    - When a user asks about files, attachments, documents, protocols or similar items, carefully check the 'files' array in each project AND the 'notesWithFiles' array to provide relevant information including file names, sizes, types, and details
+    - If a user asks for a specific file, check both file attachments and notes with files, and provide them the file name, type, size and public URL from your context`;
 
     const messages = [
       { role: "system", content: systemPrompt },

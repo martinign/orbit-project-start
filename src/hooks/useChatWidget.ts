@@ -79,6 +79,27 @@ export const useChatWidget = () => {
     setTimeout(() => setIsTyping(false), 1500 + Math.random() * 1000);
   }, []);
 
+  // Check if the query is related to files, documents, or similar
+  const isFileRelatedQuery = useCallback((query: string) => {
+    const fileKeywords = [
+      'file', 'document', 'attachment', 'upload', 'download',
+      'pdf', 'excel', 'image', 'picture', 'photo', 'repository',
+      'protocol', 'study', 'clinical', 'spreadsheet', 'presentation',
+      'powerpoint', 'word', 'doc', 'docx', 'xlsx', 'pptx', 'csv'
+    ];
+    
+    const lowerQuery = query.toLowerCase();
+    
+    // Match if the query contains file-related words or phrases
+    const hasFileKeyword = fileKeywords.some(keyword => lowerQuery.includes(keyword));
+    
+    // Match if the query looks like it's asking about a specific file
+    const possibleFilePattern = /\b\d{5,}\b|\.(pdf|doc|xlsx|ppt|jpg|png)\b/i;
+    const hasFilePattern = possibleFilePattern.test(lowerQuery);
+    
+    return hasFileKeyword || hasFilePattern;
+  }, []);
+
   const sendMessageInternal = useCallback(async () => {
     if (!inputMessage.trim() || !user) return;
     
@@ -103,20 +124,31 @@ export const useChatWidget = () => {
       });
 
       // Check if the query might be about files or attachments
-      const isFileQuery = /file|document|attachment|upload|download|pdf|excel|image|picture|photo|repository/i.test(inputMessage.toLowerCase());
+      const isFileQuery = isFileRelatedQuery(inputMessage);
 
+      let forceRefreshContext = false;
+      
       // If it's a file query, let the user know we're retrieving file information
       if (isFileQuery) {
         console.log('File-related query detected:', inputMessage);
         // Force refresh context for file queries to get the latest attachments
-        lastContextFetchRef.current = 0;
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastContextFetchRef.current;
+        
+        // Only force refresh if it's been more than 30 seconds since last refresh
+        if (timeSinceLastFetch > 30000) {
+          console.log('Forcing context refresh for file query');
+          forceRefreshContext = true;
+          lastContextFetchRef.current = now;
+        }
       }
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message: inputMessage,
           history: formattedHistory,
-          userId: user.id
+          userId: user.id,
+          forceRefreshContext
         }
       });
 
@@ -194,7 +226,7 @@ export const useChatWidget = () => {
       setIsLoading(false);
       setIsTyping(false);
     }
-  }, [inputMessage, messages, user, toast, retryCount, retryTimeout, simulateTyping]);
+  }, [inputMessage, messages, user, toast, retryCount, retryTimeout, simulateTyping, isFileRelatedQuery]);
 
   const sendMessage = useCallback(() => {
     debouncedSendMessage();

@@ -67,7 +67,8 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
         created_at, 
         created_by,
         project_id,
-        related_type
+        related_type,
+        related_id
       `)
       .in('project_id', projectIds)
       .order('created_at', { ascending: false })
@@ -80,18 +81,60 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
     
     console.log(`Fetched ${data?.length || 0} attachments for ${projectIds.length} projects`);
     
-    // Enhance attachments with URLs
+    // Get project notes to match attachment context
+    const { data: notesData, error: notesError } = await supabase
+      .from('project_notes')
+      .select(`
+        id,
+        title,
+        content,
+        file_path,
+        file_name,
+        file_type,
+        file_size,
+        project_id
+      `)
+      .in('project_id', projectIds)
+      .not('file_path', 'is', null);
+      
+    if (notesError) {
+      console.error('Error fetching notes with attachments:', notesError);
+    }
+    
+    // Create a map of note ID to note details for quick lookup
+    const notesMap = {};
+    if (notesData) {
+      notesData.forEach(note => {
+        if (note.id) {
+          notesMap[note.id] = note;
+        }
+      });
+    }
+    
+    // Enhance attachments with URLs and associated note context
     const enhancedAttachments = data.map(attachment => {
+      // Generate public URL for the attachment
       const publicUrl = supabase.storage
         .from('project-attachments')
         .getPublicUrl(attachment.file_path).data.publicUrl;
       
+      // Check if this attachment is associated with a note
+      let associatedNote = null;
+      if (attachment.related_type === 'note' && attachment.related_id && notesMap[attachment.related_id]) {
+        associatedNote = notesMap[attachment.related_id];
+      }
+      
       return {
         ...attachment,
-        publicUrl
+        publicUrl,
+        associatedNote: associatedNote ? {
+          title: associatedNote.title,
+          content: associatedNote.content
+        } : null
       };
     });
     
+    console.log(`Enhanced ${enhancedAttachments.length} attachments with URLs and context`);
     return enhancedAttachments;
   } catch (error) {
     console.error('Error getting project attachments:', error);
@@ -228,7 +271,7 @@ export const extractProjectInfo = async (supabase: any, userId: string) => {
 
           // Get project notes
           supabase.from('project_notes')
-            .select('id, title, content, created_at')
+            .select('id, title, content, created_at, file_path, file_name, file_type, file_size')
             .eq('project_id', project.id)
             .order('created_at', { ascending: false })
             .limit(10), // Limit to most recent notes
