@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProjectNotes from '@/components/ProjectNotes';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Plus, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNoteOperations } from '@/hooks/useNoteOperations';
 
@@ -15,6 +16,10 @@ export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const { setIsCreateDialogOpen } = useNoteOperations(projectId);
+  
+  const handleCreateNote = () => {
+    setIsCreateDialogOpen(true);
+  };
   
   return (
     <Card>
@@ -35,6 +40,17 @@ export const NotesTab: React.FC<NotesTabProps> = ({ projectId }) => {
         <CardDescription>View and manage project notes</CardDescription>
       </CardHeader>
       <CardContent>
+        {user && (
+          <div className="mb-4 flex justify-end">
+            <Button 
+              onClick={handleCreateNote} 
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Note
+            </Button>
+          </div>
+        )}
         <ProjectNotes 
           projectId={projectId} 
           searchQuery={searchQuery}

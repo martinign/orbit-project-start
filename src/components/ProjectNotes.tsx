@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Lock } from 'lucide-react';
+import { Lock, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import NotesList from './project-notes/NotesList';
@@ -58,26 +58,6 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
     return matchesSearch;
   });
 
-  const handleCreateNote = () => {
-    setTitle('');
-    setContent('');
-    setIsPrivate(false);
-    setIsCreateDialogOpen(true);
-  };
-
-  const handleEditNote = (note: any) => {
-    setSelectedNote(note);
-    setTitle(note.title);
-    setContent(note.content || '');
-    setIsPrivate(note.is_private);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDeleteConfirmation = (note: any) => {
-    setSelectedNote(note);
-    setIsDeleteDialogOpen(true);
-  };
-
   const handleSaveNote = (data: { title: string; content: string }) => {
     saveNewNote(data);
   };
@@ -104,8 +84,17 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
           )}
           <NotesList 
             notes={filteredNotes} 
-            onEditNote={handleEditNote} 
-            onDeleteConfirmation={handleDeleteConfirmation}
+            onEditNote={(note) => {
+              setSelectedNote(note);
+              setTitle(note.title);
+              setContent(note.content || '');
+              setIsPrivate(note.is_private);
+              setIsEditDialogOpen(true);
+            }} 
+            onDeleteConfirmation={(note) => {
+              setSelectedNote(note);
+              setIsDeleteDialogOpen(true);
+            }}
             hasEditAccess={!!hasProjectAccess}
           />
         </>
@@ -114,7 +103,7 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
           <p className="text-muted-foreground">No notes match your search criteria</p>
         </div>
       ) : (
-        <NotesEmptyState onCreateNote={user ? handleCreateNote : undefined} />
+        <NotesEmptyState onCreateNote={user ? () => setIsCreateDialogOpen(true) : undefined} />
       )}
 
       {/* Dialog components */}
