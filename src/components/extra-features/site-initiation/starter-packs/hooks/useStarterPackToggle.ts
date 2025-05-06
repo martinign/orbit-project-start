@@ -26,7 +26,7 @@ export const useStarterPackToggle = (refetch: () => void) => {
     }
   };
 
-  // Handle starter pack toggle with optimistic UI update
+  // Handle starter pack toggle with optimistic UI update - only for LABP sites
   const handleStarterPackToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
     if (labpSite && labpSite.id) {
       // Apply optimistic update
@@ -76,23 +76,23 @@ export const useStarterPackToggle = (refetch: () => void) => {
     }
   };
 
-  // Handle registered in SRP toggle with optimistic UI update
-  const handleRegisteredInSrpToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
-    if (labpSite && labpSite.id) {
+  // Handle registered in SRP toggle with optimistic UI update - for any site
+  const handleRegisteredInSrpToggle = async (site: SiteData | undefined, newValue: boolean) => {
+    if (site && site.id) {
       // Apply optimistic update
       setOptimisticUpdates(prev => ({
         ...prev,
-        [labpSite.id!]: { ...prev[labpSite.id!], registered_in_srp: newValue }
+        [site.id!]: { ...prev[site.id!], registered_in_srp: newValue }
       }));
       
       // Show optimistic toast
       toast({
         title: newValue ? "Marking site as registered in SRP..." : "Marking site as not registered in SRP...",
-        description: `Updating status for ${labpSite.pxl_site_reference_number}`,
+        description: `Updating status for ${site.pxl_site_reference_number}`,
       });
       
       // Make the actual update
-      const success = await updateSite(labpSite.id, { 
+      const success = await updateSite(site.id, { 
         registered_in_srp: newValue,
         updated_at: new Date().toISOString()
       });
@@ -100,16 +100,16 @@ export const useStarterPackToggle = (refetch: () => void) => {
       if (success) {
         toast({
           title: newValue ? "Site marked as registered in SRP" : "Site marked as not registered in SRP",
-          description: `Updated status for ${labpSite.pxl_site_reference_number}`,
+          description: `Updated status for ${site.pxl_site_reference_number}`,
         });
       } else {
         // Revert optimistic update on failure
         setOptimisticUpdates(prev => {
           const newUpdates = { ...prev };
-          if (newUpdates[labpSite.id!]) {
-            delete newUpdates[labpSite.id!].registered_in_srp;
-            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
-              delete newUpdates[labpSite.id!];
+          if (newUpdates[site.id!]) {
+            delete newUpdates[site.id!].registered_in_srp;
+            if (Object.keys(newUpdates[site.id!]).length === 0) {
+              delete newUpdates[site.id!];
             }
           }
           return newUpdates;
@@ -124,23 +124,23 @@ export const useStarterPackToggle = (refetch: () => void) => {
     }
   };
 
-  // Handle supplies applied toggle with optimistic UI update
-  const handleSuppliesAppliedToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
-    if (labpSite && labpSite.id) {
+  // Handle supplies applied toggle with optimistic UI update - for any site
+  const handleSuppliesAppliedToggle = async (site: SiteData | undefined, newValue: boolean) => {
+    if (site && site.id) {
       // Apply optimistic update
       setOptimisticUpdates(prev => ({
         ...prev,
-        [labpSite.id!]: { ...prev[labpSite.id!], supplies_applied: newValue }
+        [site.id!]: { ...prev[site.id!], supplies_applied: newValue }
       }));
       
       // Show optimistic toast
       toast({
         title: newValue ? "Marking supplies as applied..." : "Marking supplies as not applied...",
-        description: `Updating status for ${labpSite.pxl_site_reference_number}`,
+        description: `Updating status for ${site.pxl_site_reference_number}`,
       });
       
       // Make the actual update
-      const success = await updateSite(labpSite.id, { 
+      const success = await updateSite(site.id, { 
         supplies_applied: newValue,
         updated_at: new Date().toISOString()
       });
@@ -148,16 +148,16 @@ export const useStarterPackToggle = (refetch: () => void) => {
       if (success) {
         toast({
           title: newValue ? "Supplies marked as applied" : "Supplies marked as not applied",
-          description: `Updated status for ${labpSite.pxl_site_reference_number}`,
+          description: `Updated status for ${site.pxl_site_reference_number}`,
         });
       } else {
         // Revert optimistic update on failure
         setOptimisticUpdates(prev => {
           const newUpdates = { ...prev };
-          if (newUpdates[labpSite.id!]) {
-            delete newUpdates[labpSite.id!].supplies_applied;
-            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
-              delete newUpdates[labpSite.id!];
+          if (newUpdates[site.id!]) {
+            delete newUpdates[site.id!].supplies_applied;
+            if (Object.keys(newUpdates[site.id!]).length === 0) {
+              delete newUpdates[site.id!];
             }
           }
           return newUpdates;

@@ -49,19 +49,29 @@ export const useSiteReferences = (
       const labpSite = sitesForReference.find(site => site.role === 'LABP');
       const missingRoles = getMissingRoles(sites, reference);
       
-      // Apply optimistic updates if they exist for this site
-      const hasOptimisticUpdate = labpSite && labpSite.id && optimisticUpdates[labpSite.id] !== undefined;
+      // Find a representative site for this reference (prefer LABP if available)
+      const representativeSite = labpSite || sitesForReference[0];
+      
+      // Apply optimistic updates if they exist for the representative site
+      const hasOptimisticUpdate = representativeSite && representativeSite.id && 
+                                 optimisticUpdates[representativeSite.id] !== undefined;
       
       // Handle different types of optimistic updates
       let starterPackStatus = labpSite ? !!labpSite.starter_pack : false;
-      let registeredInSrpStatus = labpSite ? !!labpSite.registered_in_srp : false;
-      let suppliesAppliedStatus = labpSite ? !!labpSite.supplies_applied : false;
+      let registeredInSrpStatus = representativeSite ? !!representativeSite.registered_in_srp : false;
+      let suppliesAppliedStatus = representativeSite ? !!representativeSite.supplies_applied : false;
       
-      if (hasOptimisticUpdate) {
-        const updates = optimisticUpdates[labpSite!.id!];
+      // Apply optimistic updates for LABP site if available (for starter pack)
+      if (labpSite && labpSite.id && optimisticUpdates[labpSite.id]) {
+        const updates = optimisticUpdates[labpSite.id];
         if (updates.hasOwnProperty('starter_pack')) {
           starterPackStatus = updates.starter_pack;
         }
+      }
+      
+      // Apply optimistic updates for representative site
+      if (hasOptimisticUpdate) {
+        const updates = optimisticUpdates[representativeSite.id!];
         if (updates.hasOwnProperty('registered_in_srp')) {
           registeredInSrpStatus = updates.registered_in_srp;
         }
@@ -69,9 +79,6 @@ export const useSiteReferences = (
           suppliesAppliedStatus = updates.supplies_applied;
         }
       }
-      
-      // Find a representative site for display (prefer LABP if available)
-      const representativeSite = labpSite || sitesForReference[0];
       
       return {
         reference,

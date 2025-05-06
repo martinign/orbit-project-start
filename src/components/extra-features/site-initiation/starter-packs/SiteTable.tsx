@@ -77,44 +77,38 @@ export const SiteTable: React.FC<SiteTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {siteRef.missingLabp ? (
-                      <Badge variant="outline" className="bg-gray-100">
-                        Missing LABP Role
-                      </Badge>
-                    ) : (
-                      <div className="flex justify-center items-center gap-2">
-                        <Switch 
-                          checked={siteRef.registeredInSrp} 
-                          onCheckedChange={(checked) => handleRegisteredInSrpToggle(siteRef.labpSite, checked)}
-                        />
-                        <span className={cn(
-                          "text-xs",
-                          siteRef.registeredInSrp ? "text-green-600" : "text-muted-foreground"
-                        )}>
-                          {siteRef.registeredInSrp ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex justify-center items-center gap-2">
+                      <Switch 
+                        checked={siteRef.registeredInSrp} 
+                        onCheckedChange={(checked) => handleRegisteredInSrpToggle(
+                          siteRef.labpSite || siteRef.allSitesForReference[0], 
+                          checked
+                        )}
+                      />
+                      <span className={cn(
+                        "text-xs",
+                        siteRef.registeredInSrp ? "text-green-600" : "text-muted-foreground"
+                      )}>
+                        {siteRef.registeredInSrp ? "Yes" : "No"}
+                      </span>
+                    </div>
                   </TableCell>
                   <TableCell className="text-center">
-                    {siteRef.missingLabp ? (
-                      <Badge variant="outline" className="bg-gray-100">
-                        Missing LABP Role
-                      </Badge>
-                    ) : (
-                      <div className="flex justify-center items-center gap-2">
-                        <Switch 
-                          checked={siteRef.suppliesApplied} 
-                          onCheckedChange={(checked) => handleSuppliesAppliedToggle(siteRef.labpSite, checked)}
-                        />
-                        <span className={cn(
-                          "text-xs",
-                          siteRef.suppliesApplied ? "text-green-600" : "text-muted-foreground"
-                        )}>
-                          {siteRef.suppliesApplied ? "Yes" : "No"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex justify-center items-center gap-2">
+                      <Switch 
+                        checked={siteRef.suppliesApplied} 
+                        onCheckedChange={(checked) => handleSuppliesAppliedToggle(
+                          siteRef.labpSite || siteRef.allSitesForReference[0], 
+                          checked
+                        )}
+                      />
+                      <span className={cn(
+                        "text-xs",
+                        siteRef.suppliesApplied ? "text-green-600" : "text-muted-foreground"
+                      )}>
+                        {siteRef.suppliesApplied ? "Yes" : "No"}
+                      </span>
+                    </div>
                   </TableCell>
                 </TableRow>
               </HoverCardTrigger>
