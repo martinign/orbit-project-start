@@ -3,10 +3,10 @@ import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface AuthWarningProps {
-  isVisible: boolean;
+  isVisible?: boolean;
 }
 
-export const AuthWarning: React.FC<AuthWarningProps> = ({ isVisible }) => {
+export const AuthWarning: React.FC<AuthWarningProps> = ({ isVisible = true }) => {
   if (!isVisible) return null;
   
   return (
