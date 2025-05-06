@@ -13,7 +13,7 @@ interface CalendarLayoutProps {
   eventsLoading: boolean;
   onDeleteEvent: (id: string) => void;
   onEditEvent: (event: any) => void;
-  onCreateEvent: () => void; // New prop for creating events
+  onCreateEvent: () => void;
   isAuthenticated: boolean;
   currentUserId: string | undefined;
   lastUpdate: number;
@@ -28,7 +28,7 @@ export function CalendarLayout({
   eventsLoading,
   onDeleteEvent,
   onEditEvent,
-  onCreateEvent, // Add the new prop
+  onCreateEvent,
   isAuthenticated,
   currentUserId,
   lastUpdate,
@@ -67,7 +67,7 @@ export function CalendarLayout({
   }, {});
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-full">
       <Card className="lg:col-span-3 p-4 h-full">
         <div className="calendar-container w-full h-full">
           <Calendar 
@@ -133,14 +133,14 @@ export function CalendarLayout({
         </div>
       </Card>
       
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 h-full">
         <EventsList
           events={filteredSelectedDateEvents}
           date={selectedDate}
           isLoading={eventsLoading}
           onDeleteEvent={onDeleteEvent}
           onEditEvent={onEditEvent}
-          onCreateEvent={onCreateEvent} // Pass the new prop
+          onCreateEvent={onCreateEvent}
           hasEditAccess={hasEditAccess}
           isAuthenticated={isAuthenticated}
           currentUserId={currentUserId}

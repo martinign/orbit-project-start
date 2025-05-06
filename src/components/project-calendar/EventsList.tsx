@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface EventsListProps {
   events: any[];
@@ -79,8 +80,8 @@ export function EventsList({
   }
 
   return (
-    <Card className="h-full">
-      <CardHeader className="border-b py-3">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="border-b py-3 flex-shrink-0">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center">
             <Calendar className="h-5 w-5 mr-2 text-blue-500" />
@@ -103,8 +104,9 @@ export function EventsList({
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        {events.length === 0 ? (
+
+      {events.length === 0 ? (
+        <CardContent className="flex-grow">
           <div className="flex flex-col justify-center items-center h-60 text-center">
             {searchQuery ? (
               <>
@@ -124,8 +126,10 @@ export function EventsList({
               </>
             )}
           </div>
-        ) : (
-          <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+        </CardContent>
+      ) : (
+        <div className="flex-grow overflow-hidden">
+          <ScrollArea className="h-[calc(100%-2rem)] max-h-[400px]">
             {events.map((event, index) => {
               // Check if the current user is the creator of the event
               const isOwner = currentUserId === event.user_id;
@@ -164,6 +168,7 @@ export function EventsList({
                               {event.description && (
                                 <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                               )}
+                              <EventCreator />
                             </div>
                             {canModify && (
                               <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -218,9 +223,9 @@ export function EventsList({
                 </div>
               );
             })}
-          </div>
-        )}
-      </CardContent>
+          </ScrollArea>
+        </div>
+      )}
     </Card>
   );
 }

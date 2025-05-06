@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { ProjectCalendar } from '@/components/project-calendar/ProjectCalendar';
 
 interface CalendarTabProps {
@@ -15,7 +14,7 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
         <p className="text-muted-foreground">View and manage project events</p>
       </div>
       
-      <div className="h-[calc(100vh-230px)]">
+      <div className="flex-1">
         <ProjectCalendar 
           projectId={projectId} 
           searchQuery="" 
