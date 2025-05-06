@@ -8,7 +8,6 @@ import { TeamMembersTab } from './tabs/TeamMembersTab';
 import { InvitesTab } from './tabs/InvitesTab';
 import { ImportantLinksTab } from './tabs/ImportantLinksTab';
 import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
-import { RepositoryTab } from './tabs/RepositoryTab';
 import { DocPrintingTab } from './tabs/DocPrintingTab';
 import { WorkdayScheduleTab } from './tabs/WorkdayScheduleTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
@@ -53,7 +52,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   extraFeatures = {
     importantLinks: false,
     siteInitiationTracker: false,
-    repository: false,
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
@@ -108,7 +106,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   const safeFeatures = extraFeatures || {
     importantLinks: false,
     siteInitiationTracker: false,
-    repository: false,
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
@@ -159,10 +156,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
 
       {activeTab === 'site-initiation' && safeFeatures.siteInitiationTracker && (
         <SiteInitiationTrackerTab projectId={projectId} />
-      )}
-
-      {activeTab === 'repository' && safeFeatures.repository && (
-        <RepositoryTab projectId={projectId} />
       )}
       
       {activeTab === 'doc-printing' && safeFeatures.docPrinting && (

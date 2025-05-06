@@ -19,7 +19,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   extraFeatures = {
     importantLinks: false,
     siteInitiationTracker: false,
-    repository: false,
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
@@ -31,7 +30,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
   const safeExtraFeatures = extraFeatures || {
     importantLinks: false,
     siteInitiationTracker: false,
-    repository: false,
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
@@ -57,10 +55,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
         
         {safeExtraFeatures.siteInitiationTracker && (
           <TabsTrigger value="site-initiation" className="text-xs md:text-sm">Site Tracker</TabsTrigger>
-        )}
-        
-        {safeExtraFeatures.repository && (
-          <TabsTrigger value="repository" className="text-xs md:text-sm">Repository</TabsTrigger>
         )}
         
         {safeExtraFeatures.docPrinting && (

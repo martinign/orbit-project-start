@@ -33,7 +33,6 @@ export function ExtraFeaturesDialog({
   const [selectedFeatures, setSelectedFeatures] = useState({
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
-    repository: features.repository,
     docPrinting: features.docPrinting,
     billOfMaterials: features.billOfMaterials || false,
     designSheet: features.designSheet || false,
@@ -46,7 +45,6 @@ export function ExtraFeaturesDialog({
       setSelectedFeatures({
         importantLinks: features.importantLinks,
         siteInitiationTracker: features.siteInitiationTracker,
-        repository: features.repository,
         docPrinting: features.docPrinting,
         billOfMaterials: features.billOfMaterials || false,
         designSheet: features.designSheet || false,
@@ -54,6 +52,7 @@ export function ExtraFeaturesDialog({
       });
     }
   }, [open, features]);
+  
   const createBOMTask = async (projectId: string) => {
     if (!user) return;
     try {
@@ -167,14 +166,6 @@ export function ExtraFeaturesDialog({
             </div>
             
             <div className="flex items-center space-x-2">
-              <Checkbox id="repository" checked={selectedFeatures.repository} onCheckedChange={checked => setSelectedFeatures(prev => ({
-              ...prev,
-              repository: checked === true
-            }))} />
-              <Label htmlFor="repository" className="cursor-pointer">Repository</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
               <Checkbox id="docPrinting" checked={selectedFeatures.docPrinting} onCheckedChange={checked => setSelectedFeatures(prev => ({
               ...prev,
               docPrinting: checked === true
@@ -185,10 +176,6 @@ export function ExtraFeaturesDialog({
           
           {/* Second Column */}
           <div className="space-y-4">
-            
-            
-            
-            
             <div className="flex items-center space-x-2">
               <Checkbox id="workdayScheduled" checked={selectedFeatures.workdayScheduled} onCheckedChange={checked => setSelectedFeatures(prev => ({
               ...prev,

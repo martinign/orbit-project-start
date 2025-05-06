@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ImportantLinks } from '@/components/extra-features/ImportantLinks';
 import { SiteInitiationTracker } from '@/components/extra-features/SiteInitiationTracker';
-import { Repository } from '@/components/extra-features/Repository';
 import { DocPrinting } from '@/components/extra-features/DocPrinting';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
@@ -20,11 +19,9 @@ interface ExtraFeaturesSectionsProps {
   projectId?: string;
   isImportantLinksOpen: boolean;
   isSiteTrackerOpen: boolean;
-  isRepositoryOpen: boolean;
   isDocPrintingOpen: boolean;
   setIsImportantLinksOpen: (isOpen: boolean) => void;
   setIsSiteTrackerOpen: (isOpen: boolean) => void;
-  setIsRepositoryOpen: (isOpen: boolean) => void;
   setIsDocPrintingOpen: (isOpen: boolean) => void;
 }
 
@@ -33,11 +30,9 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
   projectId,
   isImportantLinksOpen,
   isSiteTrackerOpen,
-  isRepositoryOpen,
   isDocPrintingOpen,
   setIsImportantLinksOpen,
   setIsSiteTrackerOpen,
-  setIsRepositoryOpen,
   setIsDocPrintingOpen
 }) => {
   // Use state to track features so we can update immediately
@@ -63,7 +58,7 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
   }, []);
   
   const hasEnabledFeatures = localFeatures.importantLinks || localFeatures.siteInitiationTracker || 
-                            localFeatures.repository || localFeatures.docPrinting;
+                            localFeatures.docPrinting;
 
   if (!hasEnabledFeatures) return null;
 
@@ -117,33 +112,6 @@ export const ExtraFeaturesSections: React.FC<ExtraFeaturesSectionsProps> = ({
             <CollapsibleContent>
               <CardContent className="pt-4">
                 <SiteInitiationTracker projectId={projectId} />
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      )}
-      
-      {localFeatures.repository && (
-        <Collapsible 
-          open={isRepositoryOpen}
-          onOpenChange={setIsRepositoryOpen}
-          className="col-span-1"
-        >
-          <Card>
-            <CardHeader className="border-b flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Repository</CardTitle>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  {isRepositoryOpen ? 
-                    <ChevronUp className="h-4 w-4" /> : 
-                    <ChevronDown className="h-4 w-4" />
-                  }
-                </Button>
-              </CollapsibleTrigger>
-            </CardHeader>
-            <CollapsibleContent>
-              <CardContent className="pt-4">
-                <Repository projectId={projectId} />
               </CardContent>
             </CollapsibleContent>
           </Card>

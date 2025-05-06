@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface ExtraFeaturesState {
   importantLinks: boolean;
   siteInitiationTracker: boolean;
-  repository: boolean;
   docPrinting: boolean;
   billOfMaterials: boolean;
   designSheet: boolean;
@@ -16,7 +14,6 @@ export interface ExtraFeaturesState {
 const defaultFeatures: ExtraFeaturesState = {
   importantLinks: false,
   siteInitiationTracker: false,
-  repository: false,
   docPrinting: false,
   billOfMaterials: false,
   designSheet: false,
