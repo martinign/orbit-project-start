@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,10 +25,15 @@ interface MemberInvitationData {
   invitation_created_at: string;
   member_role: string;
   invitation_recipient_id?: string;
+  member_project_id: string;
   profiles?: {
     full_name: string | null;
     last_name: string | null;
     email?: string | null;
+  } | null;
+  project?: {
+    project_number: string | null;
+    Sponsor: string | null;
   } | null;
 }
 
@@ -45,7 +49,12 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
           invitation_status,
           invitation_created_at,
           member_role,
-          invitation_recipient_id
+          invitation_recipient_id,
+          member_project_id,
+          projects:member_project_id(
+            project_number,
+            Sponsor
+          )
         `);
 
       if (filters.projectId && filters.projectId !== "all") {
@@ -90,7 +99,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
         })
       );
       
-      console.log("Invitations with profiles:", invitationsWithProfiles);
+      console.log("Invitations with profiles and projects:", invitationsWithProfiles);
       return invitationsWithProfiles as unknown as MemberInvitationData[];
     },
     enabled: open,
@@ -122,6 +131,15 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
     return name || "Unknown";
   };
 
+  const formatProject = (invitation: MemberInvitationData) => {
+    if (!invitation.project) return "Unknown Project";
+    
+    const projectNumber = invitation.project.project_number || "No Number";
+    const sponsor = invitation.project.Sponsor || "";
+    
+    return sponsor ? `${projectNumber} - ${sponsor}` : projectNumber;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -143,6 +161,7 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
               <TableHeader>
                 <TableRow>
                   <TableHead>Recipient</TableHead>
+                  <TableHead>Project</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Invited On</TableHead>
@@ -153,6 +172,9 @@ export function AllMemberInvitationsDialog({ open, onClose, filters = {} }: AllM
                   <TableRow key={invitation.member_invitation_id}>
                     <TableCell className="font-medium">
                       {formatName(invitation)}
+                    </TableCell>
+                    <TableCell>
+                      {formatProject(invitation)}
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(invitation.invitation_status)}
