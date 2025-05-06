@@ -88,9 +88,10 @@ export function CalendarLayout({
                 fontWeight: "bold"
               },
               selected: {
-                backgroundColor: "#833D89", // Purple color for selected date
-                color: "white",
-                fontWeight: "bold"
+                backgroundColor: "transparent", // Remove background
+                color: "black", // Keep text black
+                fontWeight: "bold",
+                border: "2px solid #3B82F6" // Blue-500 border
               }
             }}
             classNames={{
@@ -105,7 +106,7 @@ export function CalendarLayout({
               cell: "relative h-14 w-full text-center text-sm p-0 rounded-md focus-within:relative focus-within:z-20",
               day: "h-14 w-full p-0 font-normal text-base aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
               day_today: "bg-accent text-accent-foreground",
-              day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white",
+              day_selected: "border-blue-500 border-2 text-black hover:bg-blue-50 hover:text-black focus:bg-blue-50 focus:text-black",
               day_outside: "text-muted-foreground opacity-50",
               day_disabled: "text-muted-foreground opacity-50",
               day_hidden: "invisible"
@@ -116,12 +117,12 @@ export function CalendarLayout({
                 const count = eventCounts[dateKey] || 0;
                 return (
                   <div className="relative flex flex-col items-center justify-center w-full h-full p-2">
-                    <span className="text-lg">{format(date, 'd')}</span>
                     {count > 0 && (
-                      <span className="absolute bottom-1 text-xs font-medium bg-blue-500 text-white px-1.5 py-0.5 rounded-full min-w-[20px]">
-                        +{count > 99 ? '99' : count}
+                      <span className="absolute top-0.5 right-1 text-xs font-medium bg-blue-500 text-white px-1 py-0.5 rounded-full min-w-[18px] flex items-center justify-center">
+                        {count > 99 ? '99+' : count}
                       </span>
                     )}
+                    <span className="text-lg mt-2">{format(date, 'd')}</span>
                   </div>
                 );
               }
