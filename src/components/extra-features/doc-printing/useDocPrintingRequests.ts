@@ -119,20 +119,23 @@ export const useDocPrintingRequests = (projectId: string) => {
 
   // Count documents by status
   const statusCounts = useCallback(() => {
-    if (!requests) return { pending: 0, approved: 0, completed: 0, cancelled: 0, total: 0 };
+    if (!requests) return { pending: 0, approved: 0, completed: 0, cancelled: 0, total: 0, totalAmount: 0 };
     
     const counts = {
       pending: 0,
       approved: 0,
       completed: 0,
       cancelled: 0,
-      total: requests.length
+      total: requests.length,
+      totalAmount: 0
     };
     
     requests.forEach(request => {
       if (request.doc_status in counts) {
         counts[request.doc_status as DocStatus]++;
       }
+      // Add amount to total
+      counts.totalAmount += request.doc_amount || 1;
     });
     
     return counts;

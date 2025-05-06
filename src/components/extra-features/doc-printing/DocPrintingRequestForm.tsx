@@ -18,6 +18,7 @@ import { DocumentDescription } from './form/DocumentDescription';
 import { DueDatePicker } from './form/DueDatePicker';
 import { CommentsField } from './form/CommentsField';
 import { FormActions } from './form/FormActions';
+import { AmountField } from './form/AmountField';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -32,6 +33,7 @@ const formSchema = z.object({
   doc_comments: z.string().optional(),
   doc_process_number_range: z.string().optional(),
   doc_selected_vendor: z.string().optional().nullable(),
+  doc_amount: z.number().int().min(1, 'Amount must be at least 1').default(1)
 });
 
 export type FormValues = z.infer<typeof formSchema>;
@@ -67,6 +69,7 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       doc_comments: initialData?.doc_comments || '',
       doc_process_number_range: initialData?.doc_process_number_range || '',
       doc_selected_vendor: initialData?.doc_selected_vendor || null,
+      doc_amount: initialData?.doc_amount || 1,
     }
   });
 
@@ -92,6 +95,8 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
       doc_process_number_range: values.doc_type === 'SLB' ? values.doc_process_number_range || null : null,
       // Add selected vendor
       doc_selected_vendor: values.doc_selected_vendor || null,
+      // Add amount field
+      doc_amount: values.doc_amount,
     };
     
     onSubmit(docRequestData);
@@ -120,11 +125,14 @@ export const DocPrintingRequestForm: React.FC<DocPrintingRequestFormProps> = ({
 
         <VendorSelect form={form} isSubmitting={isSubmitting} />
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <AmountField form={form} isSubmitting={isSubmitting} />
+          <DueDatePicker form={form} isSubmitting={isSubmitting} />
+        </div>
+
         {docType === 'general' && (
           <DocumentDescription form={form} isSubmitting={isSubmitting} />
         )}
-
-        <DueDatePicker form={form} isSubmitting={isSubmitting} />
 
         <CommentsField form={form} isSubmitting={isSubmitting} />
 

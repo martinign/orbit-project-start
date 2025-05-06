@@ -388,6 +388,7 @@ export type Database = {
       project_doc_requests: {
         Row: {
           created_at: string
+          doc_amount: number
           doc_assigned_to: string | null
           doc_comments: string | null
           doc_delivery_address: string | null
@@ -407,6 +408,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          doc_amount?: number
           doc_assigned_to?: string | null
           doc_comments?: string | null
           doc_delivery_address?: string | null
@@ -426,6 +428,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          doc_amount?: number
           doc_assigned_to?: string | null
           doc_comments?: string | null
           doc_delivery_address?: string | null

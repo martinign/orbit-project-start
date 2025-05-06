@@ -24,6 +24,7 @@ export interface DocRequest {
   doc_status: DocStatus;
   doc_process_number_range?: string | null;
   doc_selected_vendor?: string | null;
+  doc_amount: number;
   user_id: string;
   created_at: string;
   updated_at: string;
