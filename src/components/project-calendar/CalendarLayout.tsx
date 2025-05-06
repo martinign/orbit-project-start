@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { EventsGrid } from './EventsGrid';
+import { format } from 'date-fns';
+import { EventsList } from './EventsList';
 
 interface CalendarLayoutProps {
   selectedDate: Date | undefined;
@@ -32,38 +33,91 @@ export function CalendarLayout({
   searchQuery = ''
 }: CalendarLayoutProps) {
   // Process event dates for highlighting in the calendar
-  const eventDates = events
-    .filter(event => event.event_date)
-    .reduce((acc: { [key: string]: boolean }, event) => {
-      if (event.event_date) {
-        const date = new Date(event.event_date).toISOString().split('T')[0];
-        acc[date] = true;
+  const eventsByDate = events.reduce((acc: { [key: string]: any[] }, event) => {
+    if (event.event_date) {
+      const date = new Date(event.event_date).toISOString().split('T')[0];
+      if (!acc[date]) {
+        acc[date] = [];
       }
-      return acc;
-    }, {});
+      acc[date].push(event);
+    }
+    return acc;
+  }, {});
+  
+  // Get events for the selected date
+  const selectedDateKey = selectedDate ? selectedDate.toISOString().split('T')[0] : '';
+  const selectedDateEvents = selectedDateKey ? (eventsByDate[selectedDateKey] || []) : [];
 
-  return <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-      <Card className="p-3 md:col-span-2 py-[20px] px-[48px]">
+  // Filter selected date events by search query
+  const filteredSelectedDateEvents = selectedDateEvents.filter(event => {
+    if (!searchQuery) return true;
+    
+    return (
+      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+  
+  // Create the event count indicator for calendar days
+  const eventCounts = Object.keys(eventsByDate).reduce((acc: { [key: string]: number }, date) => {
+    acc[date] = eventsByDate[date].length;
+    return acc;
+  }, {});
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <Card className="lg:col-span-3 p-6">
         <Calendar 
           mode="single" 
           selected={selectedDate} 
           onSelect={onSelectDate} 
           className="w-full"
           modifiers={{
-            hasEvent: Object.keys(eventDates).map(d => new Date(d))
+            hasEvent: Object.keys(eventsByDate).map(d => new Date(d)),
+            today: new Date(),
           }}
           modifiersStyles={{
             hasEvent: {
-              backgroundColor: "#0FA0CE", // Bright blue for event dates
-              color: "white",
               fontWeight: "bold"
+            },
+            today: {
+              backgroundColor: "#E5E7EB", // Lighter gray
+              color: "black",
+              fontWeight: "bold"
+            }
+          }}
+          components={{
+            DayContent: ({ date }) => {
+              const dateKey = date.toISOString().split('T')[0];
+              const count = eventCounts[dateKey] || 0;
+              return (
+                <div className="relative flex items-center justify-center w-full h-full">
+                  <span>{format(date, 'd')}</span>
+                  {count > 0 && (
+                    <span className="absolute bottom-1 text-xs font-medium text-blue-500">
+                      {count > 9 ? '9+' : count}
+                    </span>
+                  )}
+                </div>
+              );
             }
           }}
         />
       </Card>
       
-      <div className="md:col-span-5">
-        <EventsGrid events={events} isLoading={eventsLoading} onDeleteEvent={onDeleteEvent} onEditEvent={onEditEvent} hasEditAccess={hasEditAccess} isAuthenticated={isAuthenticated} currentUserId={currentUserId} lastUpdate={lastUpdate} searchQuery={searchQuery} />
+      <div className="lg:col-span-2">
+        <EventsList
+          events={filteredSelectedDateEvents}
+          date={selectedDate}
+          isLoading={eventsLoading}
+          onDeleteEvent={onDeleteEvent}
+          onEditEvent={onEditEvent}
+          hasEditAccess={hasEditAccess}
+          isAuthenticated={isAuthenticated}
+          currentUserId={currentUserId}
+          searchQuery={searchQuery}
+        />
       </div>
-    </div>;
+    </div>
+  );
 }

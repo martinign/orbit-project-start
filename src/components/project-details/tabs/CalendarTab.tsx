@@ -14,7 +14,7 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
   
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b">
         <div>
           <CardTitle>Project Calendar</CardTitle>
           <CardDescription>View and manage project events</CardDescription>
@@ -30,8 +30,12 @@ export const CalendarTab: React.FC<CalendarTabProps> = ({ projectId }) => {
           />
         </div>
       </CardHeader>
-      <CardContent className="px-6">
-        <ProjectCalendar projectId={projectId} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <CardContent className="pt-6 px-6">
+        <ProjectCalendar 
+          projectId={projectId} 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+        />
       </CardContent>
     </Card>
   );

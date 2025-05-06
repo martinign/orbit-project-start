@@ -4,7 +4,6 @@ import { CalendarHeader } from './CalendarHeader';
 import { CalendarLayout } from './CalendarLayout';
 import { EventDialog } from './EventDialog';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
-import { EventsGrid } from './EventsGrid';
 
 interface ProjectCalendarProps {
   projectId: string;
@@ -49,7 +48,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-end items-center mb-4">
         <CalendarHeader 
           selectedUserId={selectedUserId} 
           setSelectedUserId={setSelectedUserId}
