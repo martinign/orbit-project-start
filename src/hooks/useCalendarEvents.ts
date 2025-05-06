@@ -23,7 +23,7 @@ interface TeamMember {
 export const useCalendarEvents = (projectId: string) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null); // Export the state and setter
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   // Add a state to track real-time updates
   const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
@@ -34,7 +34,7 @@ export const useCalendarEvents = (projectId: string) => {
   
   // Query for events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
-    queryKey: ['project_events', projectId, lastUpdate], // Add lastUpdate to the query key
+    queryKey: ['project_events', projectId, lastUpdate],
     queryFn: async () => {
       console.log(`Fetching events for project ${projectId}, update: ${lastUpdate}`);
       const { data, error } = await supabase
@@ -99,10 +99,14 @@ export const useCalendarEvents = (projectId: string) => {
     },
   });
 
+  // Modified to only select the date, not open the dialog
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
-    
-    // Check if user is authenticated
+    setSelectedDate(date);
+  };
+  
+  // New function to create an event (to be used by the button in EventsList)
+  const handleCreateEvent = () => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -111,8 +115,7 @@ export const useCalendarEvents = (projectId: string) => {
       });
       return;
     }
-
-    setSelectedDate(date);
+    
     setEditingEvent(null);
     setIsEventDialogOpen(true);
   };
@@ -213,7 +216,7 @@ export const useCalendarEvents = (projectId: string) => {
     selectedUserId,
     setSelectedUserId,
     editingEvent,
-    setEditingEvent, // Make sure to expose this setter
+    setEditingEvent,
     isEventDialogOpen,
     setIsEventDialogOpen,
     events: filteredEvents,
@@ -221,10 +224,11 @@ export const useCalendarEvents = (projectId: string) => {
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
+    handleCreateEvent, // Expose the new function
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
     user,
-    lastUpdate // Expose lastUpdate to force re-renders
+    lastUpdate
   };
 };

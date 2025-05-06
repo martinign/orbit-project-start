@@ -30,6 +30,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
     eventsLoading,
     hasEditAccess,
     handleDateSelect,
+    handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
     handleEventSubmit,
@@ -65,6 +66,7 @@ export const ProjectCalendar: React.FC<ProjectCalendarProps> = ({
           eventsLoading={eventsLoading}
           onDeleteEvent={handleDeleteEvent}
           onEditEvent={handleEditEvent}
+          onCreateEvent={handleCreateEvent}
           isAuthenticated={!!user}
           currentUserId={user?.id}
           lastUpdate={lastUpdate}

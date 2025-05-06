@@ -12,6 +12,7 @@ interface EventsListProps {
   isLoading: boolean;
   onDeleteEvent: (id: string) => void;
   onEditEvent: (event: any) => void;
+  onCreateEvent: () => void; // New prop for handling create event
   hasEditAccess: boolean | undefined;
   isAuthenticated: boolean;
   currentUserId: string | undefined;
@@ -24,6 +25,7 @@ export function EventsList({
   isLoading,
   onDeleteEvent,
   onEditEvent,
+  onCreateEvent, // New prop
   hasEditAccess,
   isAuthenticated,
   currentUserId,
@@ -77,8 +79,20 @@ export function EventsList({
             <Calendar className="h-5 w-5 mr-2 text-blue-500" />
             {formattedDate}
           </div>
-          <div className="text-sm font-normal bg-gray-100 px-2 py-1 rounded">
-            {events.length} {events.length === 1 ? 'event' : 'events'}
+          <div className="flex items-center space-x-2">
+            <div className="text-sm font-normal bg-gray-100 px-2 py-1 rounded">
+              {events.length} {events.length === 1 ? 'event' : 'events'}
+            </div>
+            {isAuthenticated && (
+              <Button 
+                onClick={onCreateEvent}
+                className="bg-blue-500 hover:bg-blue-600 text-white h-8 px-2"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                New Event
+              </Button>
+            )}
           </div>
         </CardTitle>
       </CardHeader>
@@ -96,7 +110,7 @@ export function EventsList({
                 <CalendarX className="h-12 w-12 text-muted-foreground opacity-30 mb-2" />
                 <p className="font-medium">No events for this day</p>
                 {isAuthenticated ? (
-                  <p className="text-sm text-muted-foreground">Click the calendar to add an event</p>
+                  <p className="text-sm text-muted-foreground">Click the "New Event" button to add an event</p>
                 ) : (
                   <p className="text-sm text-muted-foreground">Sign in to add events</p>
                 )}

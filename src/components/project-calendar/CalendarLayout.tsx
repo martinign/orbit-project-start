@@ -13,6 +13,7 @@ interface CalendarLayoutProps {
   eventsLoading: boolean;
   onDeleteEvent: (id: string) => void;
   onEditEvent: (event: any) => void;
+  onCreateEvent: () => void; // New prop for creating events
   isAuthenticated: boolean;
   currentUserId: string | undefined;
   lastUpdate: number;
@@ -27,6 +28,7 @@ export function CalendarLayout({
   eventsLoading,
   onDeleteEvent,
   onEditEvent,
+  onCreateEvent, // Add the new prop
   isAuthenticated,
   currentUserId,
   lastUpdate,
@@ -138,6 +140,7 @@ export function CalendarLayout({
           isLoading={eventsLoading}
           onDeleteEvent={onDeleteEvent}
           onEditEvent={onEditEvent}
+          onCreateEvent={onCreateEvent} // Pass the new prop
           hasEditAccess={hasEditAccess}
           isAuthenticated={isAuthenticated}
           currentUserId={currentUserId}
