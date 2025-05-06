@@ -50,6 +50,7 @@ export const DueDatePicker: React.FC<DueDatePickerProps> = ({ form, isSubmitting
                 onSelect={field.onChange}
                 disabled={(date) => date < new Date()}
                 initialFocus
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>

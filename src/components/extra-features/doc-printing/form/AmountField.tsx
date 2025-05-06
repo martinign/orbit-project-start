@@ -16,7 +16,7 @@ export const AmountField: React.FC<AmountFieldProps> = ({ form, isSubmitting }) 
       control={form.control}
       name="doc_amount"
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="flex flex-col">
           <FormLabel>Amount</FormLabel>
           <FormControl>
             <Input 
@@ -29,7 +29,6 @@ export const AmountField: React.FC<AmountFieldProps> = ({ form, isSubmitting }) 
               onChange={e => field.onChange(parseInt(e.target.value) || 1)}
               value={field.value}
               disabled={isSubmitting}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
             />
           </FormControl>
           <FormMessage />
