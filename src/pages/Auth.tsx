@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, User, MapPin, Phone } from 'lucide-react';
+import { Mail, Lock, User, MapPin, Phone, Briefcase } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -40,6 +41,7 @@ const Auth = () => {
     last_name: '',
     location: '',
     telephone: '',
+    job_title: '',
     acceptedTerms: false,
   });
 
@@ -90,6 +92,7 @@ const Auth = () => {
           last_name: signupData.last_name,
           location: signupData.location,
           telephone: signupData.telephone,
+          job_title: signupData.job_title.toUpperCase(), // Ensure job title is uppercase
           acceptedTerms: signupData.acceptedTerms,
         }
       );
@@ -102,6 +105,7 @@ const Auth = () => {
         last_name: '',
         location: '',
         telephone: '',
+        job_title: '',
         acceptedTerms: false,
       });
       document.getElementById('login-tab')?.click();
@@ -208,6 +212,21 @@ const Auth = () => {
                         value={signupData.last_name}
                         onChange={(e) => setSignupData({...signupData, last_name: e.target.value})}
                         className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-job-title">Job Title</Label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="signup-job-title" 
+                        type="text" 
+                        placeholder="PROJECT MANAGER" 
+                        value={signupData.job_title}
+                        onChange={(e) => setSignupData({...signupData, job_title: e.target.value})}
+                        className="pl-10 uppercase"
                       />
                     </div>
                   </div>
