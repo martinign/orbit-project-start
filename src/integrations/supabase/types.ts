@@ -394,6 +394,10 @@ export type Database = {
           doc_delivery_address: string | null
           doc_description: string | null
           doc_due_date: string | null
+          doc_file_name: string | null
+          doc_file_path: string | null
+          doc_file_size: number | null
+          doc_file_type: string | null
           doc_process_number_range: string | null
           doc_project_id: string
           doc_request_type: string
@@ -414,6 +418,10 @@ export type Database = {
           doc_delivery_address?: string | null
           doc_description?: string | null
           doc_due_date?: string | null
+          doc_file_name?: string | null
+          doc_file_path?: string | null
+          doc_file_size?: number | null
+          doc_file_type?: string | null
           doc_process_number_range?: string | null
           doc_project_id: string
           doc_request_type: string
@@ -434,6 +442,10 @@ export type Database = {
           doc_delivery_address?: string | null
           doc_description?: string | null
           doc_due_date?: string | null
+          doc_file_name?: string | null
+          doc_file_path?: string | null
+          doc_file_size?: number | null
+          doc_file_type?: string | null
           doc_process_number_range?: string | null
           doc_project_id?: string
           doc_request_type?: string

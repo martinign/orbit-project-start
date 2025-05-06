@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +24,10 @@ export interface DocRequest {
   doc_process_number_range?: string | null;
   doc_selected_vendor?: string | null;
   doc_amount: number;
+  doc_file_path?: string | null;
+  doc_file_name?: string | null;
+  doc_file_type?: string | null;
+  doc_file_size?: number | null;
   user_id: string;
   created_at: string;
   updated_at: string;

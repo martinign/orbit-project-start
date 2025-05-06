@@ -7,6 +7,7 @@ import { DocPrintingActions } from '../DocPrintingActions';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { AuthWarning } from './AuthWarning';
+import { FileAttachmentCell } from './FileAttachmentCell';
 
 interface DocPrintingContentProps {
   isAuthenticated: boolean;
@@ -47,16 +48,17 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
 
   // Define consistent column widths
   const columnWidths = {
-    title: "15%",
-    type: "10%",
+    title: "14%",
+    type: "8%",
     requestType: "10%",
-    amount: "8%",
-    deliveryAddress: "15%",
-    vendor: "10%",
-    status: "10%",
+    amount: "6%",
+    deliveryAddress: "12%",
+    vendor: "8%",
+    attachment: "10%",
+    status: "8%",
     dueDate: "10%",
-    created: "10%",
-    actions: "12%"
+    created: "8%",
+    actions: "10%"
   };
 
   return (
@@ -70,6 +72,7 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
             <TableHead style={{ width: columnWidths.amount }}>Amount</TableHead>
             <TableHead style={{ width: columnWidths.deliveryAddress }}>Delivery Address</TableHead>
             <TableHead style={{ width: columnWidths.vendor }}>Vendor</TableHead>
+            <TableHead style={{ width: columnWidths.attachment }}>Attachment</TableHead>
             <TableHead style={{ width: columnWidths.status }}>Status</TableHead>
             <TableHead style={{ width: columnWidths.dueDate }}>Due Date</TableHead>
             <TableHead style={{ width: columnWidths.created }}>Created</TableHead>
@@ -101,6 +104,9 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
               </TableCell>
               <TableCell style={{ width: columnWidths.vendor }}>
                 {request.doc_selected_vendor || '—'}
+              </TableCell>
+              <TableCell style={{ width: columnWidths.attachment }}>
+                <FileAttachmentCell request={request} />
               </TableCell>
               <TableCell style={{ width: columnWidths.status }}>
                 <DocRequestStatusBadge status={request.doc_status} />

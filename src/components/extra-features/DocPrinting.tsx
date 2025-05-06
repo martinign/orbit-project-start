@@ -11,6 +11,7 @@ import { DocPrintingStats } from './doc-printing/components/DocPrintingStats';
 import { DocPrintingFilters } from './doc-printing/components/DocPrintingFilters';
 import { DocPrintingContent } from './doc-printing/components/DocPrintingContent';
 import { ProjectWarning } from './doc-printing/components/ProjectWarning';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocPrintingProps {
   projectId?: string;
@@ -55,7 +56,21 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteRequest = (request: DocRequest) => {
+  const handleDeleteRequest = async (request: DocRequest) => {
+    // If the request has a file, delete it first
+    if (request.doc_file_path) {
+      const { error } = await supabase.storage
+        .from('doc-files')
+        .remove([request.doc_file_path]);
+      
+      if (error) {
+        console.error("Error deleting file:", error);
+        toast.error("Could not delete the attached file");
+        return;
+      }
+    }
+    
+    // Then delete the request
     deleteRequest(request.id);
   };
 
@@ -77,6 +92,15 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     setIsSubmitting(true);
     try {
       if (currentRequest) {
+        // If we're updating and there's a new file but an old file exists, delete the old file
+        if (data.doc_file_path && 
+            currentRequest.doc_file_path && 
+            data.doc_file_path !== currentRequest.doc_file_path) {
+          await supabase.storage
+            .from('doc-files')
+            .remove([currentRequest.doc_file_path]);
+        }
+        
         await updateRequest({ id: currentRequest.id, updates: data });
         setIsDialogOpen(false);
       } else {
