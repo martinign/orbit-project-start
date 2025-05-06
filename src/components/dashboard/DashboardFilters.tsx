@@ -5,10 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Filter, RefreshCcw, Lock } from "lucide-react";
+import { Filter, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 
 interface DashboardFiltersProps {
   onFilterChange: (filters: {
@@ -16,7 +15,6 @@ interface DashboardFiltersProps {
     status?: string;
     priority?: string;
     projectType?: string;
-    privateOnly?: boolean;
   }) => void;
   showNewTasks?: boolean;
   onClearNewTasks?: () => void;
@@ -31,7 +29,6 @@ export function DashboardFilters({
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
   const [projectType, setProjectType] = useState<string>("all");
-  const [privateOnly, setPrivateOnly] = useState<boolean>(false);
   
   const { toast } = useToast();
   
@@ -53,7 +50,6 @@ export function DashboardFilters({
     setStatus("all");
     setPriority("all");
     setProjectType("all");
-    setPrivateOnly(false);
     onFilterChange({});
     if (showNewTasks && onClearNewTasks) {
       onClearNewTasks();
@@ -69,8 +65,7 @@ export function DashboardFilters({
       projectId: projectId !== "all" ? projectId : undefined,
       status: status !== "all" ? status : undefined,
       priority: priority !== "all" ? priority : undefined,
-      projectType: projectType !== "all" ? projectType : undefined,
-      privateOnly: privateOnly || undefined
+      projectType: projectType !== "all" ? projectType : undefined
     };
     onFilterChange(filters);
     toast({
@@ -163,19 +158,6 @@ export function DashboardFilters({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center gap-2 mr-2">
-            <Switch 
-              id="private-tasks" 
-              checked={privateOnly} 
-              onCheckedChange={value => setPrivateOnly(value)}
-            />
-            <Label htmlFor="private-tasks" className="flex items-center cursor-pointer">
-              <Lock className="h-3 w-3 mr-1" /> Private Only
-            </Label>
-          </div>
-        </div>
-
         <div className="flex gap-2 w-full md:w-1/5">
           <Button onClick={applyFilters} className="w-full" variant="secondary">
             <Filter className="mr-2 h-4 w-4" /> Apply Filters
@@ -188,3 +170,4 @@ export function DashboardFilters({
     </div>
   );
 };
+
