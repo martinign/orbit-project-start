@@ -35,7 +35,7 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
           className={cn(
             'rounded-2xl px-4 py-2 text-sm',
             isUser
-              ? 'bg-primary text-primary-foreground'
+              ? 'bg-blue-500 hover:bg-blue-600 text-white'
               : 'bg-muted/50 text-foreground'
           )}
         >
