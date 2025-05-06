@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -7,7 +8,7 @@ import { Calendar, CircleDashed, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStatusBadge } from "@/utils/statusBadge";
 
-export function UpcomingTasks({ filters }: { filters: any }) {
+export function UpcomingTasks({ filters, hideHeader = false }: { filters: any, hideHeader?: boolean }) {
   const navigate = useNavigate();
 
   const { data: upcomingTasks, isLoading: upcomingLoading } = useQuery({
@@ -45,12 +46,14 @@ export function UpcomingTasks({ filters }: { filters: any }) {
   };
 
   return (
-    <Card className="min-h-[300px]">
-      <CardHeader>
-        <CardTitle>Upcoming Tasks</CardTitle>
-        <CardDescription>Tasks due in the next 7 days</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className={hideHeader ? "" : "card min-h-[300px]"}>
+      {!hideHeader && (
+        <CardHeader>
+          <CardTitle>Upcoming Tasks</CardTitle>
+          <CardDescription>Tasks due in the next 7 days</CardDescription>
+        </CardHeader>
+      )}
+      <div className={hideHeader ? "" : "card-content"}>
         {upcomingLoading ? (
           <div className="flex items-center justify-center h-40">
             <p className="text-muted-foreground">Loading upcoming tasks...</p>
@@ -78,7 +81,7 @@ export function UpcomingTasks({ filters }: { filters: any }) {
                 </div>
               </div>
             ))}
-            <Button variant="ghost" className="w-full mt-2 text-blue-500" onClick={() => navigate("/tasks")}>
+            <Button variant="ghost" className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white" onClick={() => navigate("/tasks")}>
               View all tasks <ArrowUpRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -89,7 +92,7 @@ export function UpcomingTasks({ filters }: { filters: any }) {
             <p className="text-sm mt-1">All caught up for the next 7 days!</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

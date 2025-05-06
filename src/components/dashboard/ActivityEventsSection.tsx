@@ -83,7 +83,7 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="pt-4">
-              <UpcomingTasks filters={activitiesFilters} />
+              <UpcomingTasks filters={activitiesFilters} hideHeader={true} />
             </CardContent>
           </CollapsibleContent>
         </Card>
