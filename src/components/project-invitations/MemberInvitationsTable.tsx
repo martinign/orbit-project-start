@@ -171,7 +171,6 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
         <TableHeader>
           <TableRow>
             <TableHead>Recipient</TableHead>
-            <TableHead>Sent By</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Invited</TableHead>
@@ -182,10 +181,7 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
           {invitations.map((invitation: MemberInvitation) => (
             <TableRow key={invitation.member_invitation_id}>
               <TableCell className="font-medium">
-                {invitation.recipient_name}
-              </TableCell>
-              <TableCell>
-                {invitation.sender_name}
+                {invitation.recipient_full_name} {invitation.recipient_last_name}
               </TableCell>
               <TableCell>
                 {getStatusBadge(invitation.invitation_status)}
@@ -239,7 +235,7 @@ const MemberInvitationsTable: React.FC<MemberInvitationsTableProps> = ({ project
                           <AlertTriangle className="h-5 w-5 text-red-500" /> Remove Team Member
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove <strong>{invitation.recipient_name}</strong> from this project? 
+                          Are you sure you want to remove <strong>{invitation.recipient_full_name}</strong> from this project? 
                           This will revoke their access to the project and all associated data.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

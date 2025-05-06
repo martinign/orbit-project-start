@@ -9,8 +9,8 @@ export interface MemberInvitation {
   invitation_status: string;
   member_role: string;
   invitation_created_at: string;
-  sender_name?: string;
-  recipient_name?: string;
+  recipient_full_name?: string;
+  recipient_last_name?: string;
 }
 
 export const useMemberInvitations = (projectId: string | null) => {
@@ -41,16 +41,9 @@ export const useMemberInvitations = (projectId: string | null) => {
         return [];
       }
 
-      // Now let's fetch profiles for each sender and recipient separately
+      // Now fetch only recipient profiles - we don't need sender data anymore
       const invitations: MemberInvitation[] = await Promise.all(
         invitationsData.map(async (invitation) => {
-          // Fetch sender profile
-          const { data: senderProfile } = await supabase
-            .from("profiles")
-            .select("id, full_name, last_name")
-            .eq("id", invitation.invitation_sender_id)
-            .single();
-
           // Fetch recipient profile
           const { data: recipientProfile } = await supabase
             .from("profiles")
@@ -61,8 +54,8 @@ export const useMemberInvitations = (projectId: string | null) => {
           // Return combined data
           return {
             ...invitation,
-            sender_name: senderProfile?.full_name || "Unknown User",
-            recipient_name: recipientProfile?.full_name || "Unknown User"
+            recipient_full_name: recipientProfile?.full_name || "Unknown User",
+            recipient_last_name: recipientProfile?.last_name || ""
           };
         })
       );
