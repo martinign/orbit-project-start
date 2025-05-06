@@ -5,7 +5,7 @@ import {
   Tabs, TabsList, TabsTrigger, TabsContent 
 } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Mail, Calendar, Phone, Users } from 'lucide-react';
+import { MapPin, Mail, Calendar, Phone, Users, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { REQUIRED_ROLES } from '@/hooks/site-initiation/siteUtils';
@@ -80,33 +80,77 @@ export const SiteHoverCard: React.FC<SiteHoverCardProps> = ({ siteRef }) => {
           <div>
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-500" />
-              Starter Pack Status
+              Site Status
             </h4>
-            <div className="mt-2">
-              {siteRef.missingLabp ? (
-                <div className="flex items-center gap-2 text-amber-600">
-                  <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
-                  <span className="text-xs">Cannot send starter pack</span>
-                </div>
-              ) : siteRef.hasStarterPack ? (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-green-600">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">Sent</Badge>
-                    <span className="text-xs">Starter pack has been sent</span>
+            <div className="mt-2 space-y-3">
+              {/* Starter Pack Status */}
+              <div>
+                <div className="text-sm font-medium mb-1">Starter Pack Status:</div>
+                {siteRef.missingLabp ? (
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
+                    <span className="text-xs">Cannot send starter pack</span>
                   </div>
-                  {siteRef.starterPackUpdatedAt && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>Sent on {format(new Date(siteRef.starterPackUpdatedAt), 'PPP')}</span>
+                ) : siteRef.hasStarterPack ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">Sent</Badge>
+                      <span className="text-xs">Starter pack has been sent</span>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">Not Sent</Badge>
-                  <span className="text-xs text-muted-foreground">Starter pack needs to be sent</span>
-                </div>
-              )}
+                    {siteRef.starterPackUpdatedAt && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>Sent on {format(new Date(siteRef.starterPackUpdatedAt), 'PPP')}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Not Sent</Badge>
+                    <span className="text-xs text-muted-foreground">Starter pack needs to be sent</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Registered in SRP Status */}
+              <div>
+                <div className="text-sm font-medium mb-1">Registered in SRP:</div>
+                {siteRef.missingLabp ? (
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
+                  </div>
+                ) : siteRef.registeredInSrp ? (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Yes, registered in SRP</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Badge variant="outline">Not Registered</Badge>
+                    <span className="text-xs">Not yet registered in SRP</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Supplies Applied Status */}
+              <div>
+                <div className="text-sm font-medium mb-1">Supplies Applied:</div>
+                {siteRef.missingLabp ? (
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <Badge variant="outline" className="bg-amber-50">Missing LABP Role</Badge>
+                  </div>
+                ) : siteRef.suppliesApplied ? (
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Yes, supplies have been applied</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Badge variant="outline">Not Applied</Badge>
+                    <span className="text-xs">Supplies have not been applied yet</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </TabsContent>

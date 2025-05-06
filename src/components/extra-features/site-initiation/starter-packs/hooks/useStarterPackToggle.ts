@@ -6,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 
 export const useStarterPackToggle = (refetch: () => void) => {
   // State to track optimistic UI updates
-  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, boolean>>({});
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Record<string, any>>({});
   
   // Update site function
   const updateSite = async (siteId: string, updates: Partial<SiteData>) => {
@@ -32,7 +32,7 @@ export const useStarterPackToggle = (refetch: () => void) => {
       // Apply optimistic update
       setOptimisticUpdates(prev => ({
         ...prev,
-        [labpSite.id!]: newValue
+        [labpSite.id!]: { ...prev[labpSite.id!], starter_pack: newValue }
       }));
       
       // Show optimistic toast
@@ -58,12 +58,113 @@ export const useStarterPackToggle = (refetch: () => void) => {
         // Revert optimistic update on failure
         setOptimisticUpdates(prev => {
           const newUpdates = { ...prev };
-          delete newUpdates[labpSite.id!];
+          if (newUpdates[labpSite.id!]) {
+            delete newUpdates[labpSite.id!].starter_pack;
+            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
+              delete newUpdates[labpSite.id!];
+            }
+          }
           return newUpdates;
         });
         
         toast({
           title: "Failed to update starter pack status",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // Handle registered in SRP toggle with optimistic UI update
+  const handleRegisteredInSrpToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
+    if (labpSite && labpSite.id) {
+      // Apply optimistic update
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [labpSite.id!]: { ...prev[labpSite.id!], registered_in_srp: newValue }
+      }));
+      
+      // Show optimistic toast
+      toast({
+        title: newValue ? "Marking site as registered in SRP..." : "Marking site as not registered in SRP...",
+        description: `Updating status for ${labpSite.pxl_site_reference_number}`,
+      });
+      
+      // Make the actual update
+      const success = await updateSite(labpSite.id, { 
+        registered_in_srp: newValue,
+        updated_at: new Date().toISOString()
+      });
+      
+      if (success) {
+        toast({
+          title: newValue ? "Site marked as registered in SRP" : "Site marked as not registered in SRP",
+          description: `Updated status for ${labpSite.pxl_site_reference_number}`,
+        });
+      } else {
+        // Revert optimistic update on failure
+        setOptimisticUpdates(prev => {
+          const newUpdates = { ...prev };
+          if (newUpdates[labpSite.id!]) {
+            delete newUpdates[labpSite.id!].registered_in_srp;
+            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
+              delete newUpdates[labpSite.id!];
+            }
+          }
+          return newUpdates;
+        });
+        
+        toast({
+          title: "Failed to update SRP registration status",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // Handle supplies applied toggle with optimistic UI update
+  const handleSuppliesAppliedToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
+    if (labpSite && labpSite.id) {
+      // Apply optimistic update
+      setOptimisticUpdates(prev => ({
+        ...prev,
+        [labpSite.id!]: { ...prev[labpSite.id!], supplies_applied: newValue }
+      }));
+      
+      // Show optimistic toast
+      toast({
+        title: newValue ? "Marking supplies as applied..." : "Marking supplies as not applied...",
+        description: `Updating status for ${labpSite.pxl_site_reference_number}`,
+      });
+      
+      // Make the actual update
+      const success = await updateSite(labpSite.id, { 
+        supplies_applied: newValue,
+        updated_at: new Date().toISOString()
+      });
+      
+      if (success) {
+        toast({
+          title: newValue ? "Supplies marked as applied" : "Supplies marked as not applied",
+          description: `Updated status for ${labpSite.pxl_site_reference_number}`,
+        });
+      } else {
+        // Revert optimistic update on failure
+        setOptimisticUpdates(prev => {
+          const newUpdates = { ...prev };
+          if (newUpdates[labpSite.id!]) {
+            delete newUpdates[labpSite.id!].supplies_applied;
+            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
+              delete newUpdates[labpSite.id!];
+            }
+          }
+          return newUpdates;
+        });
+        
+        toast({
+          title: "Failed to update supplies status",
           description: "Please try again",
           variant: "destructive"
         });
@@ -79,6 +180,8 @@ export const useStarterPackToggle = (refetch: () => void) => {
   return {
     optimisticUpdates,
     handleStarterPackToggle,
+    handleRegisteredInSrpToggle,
+    handleSuppliesAppliedToggle,
     resetOptimisticUpdates
   };
 };

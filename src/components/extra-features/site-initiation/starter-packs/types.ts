@@ -6,6 +6,8 @@ export interface StarterPackSiteReference {
   missingLabp: boolean;
   labpSite?: SiteData;
   hasStarterPack: boolean;
+  registeredInSrp: boolean;
+  suppliesApplied: boolean;
   starterPackUpdatedAt?: string;
   country: string;
   institution: string;

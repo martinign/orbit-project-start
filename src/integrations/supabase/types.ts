@@ -317,12 +317,14 @@ export type Database = {
           project_id: string
           province_state: string | null
           pxl_site_reference_number: string
+          registered_in_srp: boolean | null
           role: string
           site_personnel_email_address: string | null
           site_personnel_fax: string | null
           site_personnel_name: string
           site_personnel_telephone: string | null
           starter_pack: boolean | null
+          supplies_applied: boolean | null
           updated_at: string
           user_id: string
           zip_code: string | null
@@ -338,12 +340,14 @@ export type Database = {
           project_id: string
           province_state?: string | null
           pxl_site_reference_number: string
+          registered_in_srp?: boolean | null
           role: string
           site_personnel_email_address?: string | null
           site_personnel_fax?: string | null
           site_personnel_name: string
           site_personnel_telephone?: string | null
           starter_pack?: boolean | null
+          supplies_applied?: boolean | null
           updated_at?: string
           user_id: string
           zip_code?: string | null
@@ -359,12 +363,14 @@ export type Database = {
           project_id?: string
           province_state?: string | null
           pxl_site_reference_number?: string
+          registered_in_srp?: boolean | null
           role?: string
           site_personnel_email_address?: string | null
           site_personnel_fax?: string | null
           site_personnel_name?: string
           site_personnel_telephone?: string | null
           starter_pack?: boolean | null
+          supplies_applied?: boolean | null
           updated_at?: string
           user_id?: string
           zip_code?: string | null

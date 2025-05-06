@@ -17,6 +17,8 @@ export interface SiteData {
   province_state?: string;
   zip_code?: string;
   starter_pack?: boolean;
+  registered_in_srp?: boolean;
+  supplies_applied?: boolean;
   project_id: string;
   updated_at?: string; // Used for tracking when starter packs are sent
 }

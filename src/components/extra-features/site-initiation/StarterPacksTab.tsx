@@ -30,6 +30,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   const { 
     optimisticUpdates, 
     handleStarterPackToggle,
+    handleRegisteredInSrpToggle,
+    handleSuppliesAppliedToggle,
     resetOptimisticUpdates
   } = useStarterPackToggle(refetch);
   
@@ -100,6 +102,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
               <SiteTable 
                 displaySiteReferences={displaySiteReferences} 
                 handleStarterPackToggle={handleStarterPackToggle}
+                handleRegisteredInSrpToggle={handleRegisteredInSrpToggle}
+                handleSuppliesAppliedToggle={handleSuppliesAppliedToggle}
               />
               
               {/* Pagination Controls with Show All button */}
