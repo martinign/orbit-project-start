@@ -45,7 +45,7 @@ export const ActivityEventsSection: React.FC<ActivityEventsSectionProps> = ({
       <Card>
         <CardHeader className="border-b pb-2">
           <CardTitle>Upcoming Tasks</CardTitle>
-          <CardDescription>Tasks due in the next 7 days</CardDescription>
+          <CardDescription>Tasks due in the next 3 days</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
           <UpcomingTasks filters={activitiesFilters} hideHeader={true} />
