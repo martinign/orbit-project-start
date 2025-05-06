@@ -19,8 +19,9 @@ interface ProjectNotesProps {
   setSearchQuery?: (query: string) => void;
 }
 
-export default function ProjectNotes({ projectId, searchQuery = '', setSearchQuery }: ProjectNotesProps) {
+export default function ProjectNotes({ projectId, searchQuery: externalSearchQuery, setSearchQuery: setExternalSearchQuery }: ProjectNotesProps) {
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
   const [showPrivateOnly, setShowPrivateOnly] = useState(false);
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
@@ -43,13 +44,24 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
     deleteNote,
   } = useNoteOperations(projectId);
 
+  // Use internal state if external search query is not provided
+  const finalSearchQuery = externalSearchQuery !== undefined ? externalSearchQuery : searchQuery;
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (setExternalSearchQuery) {
+      setExternalSearchQuery(newValue);
+    } else {
+      setSearchQuery(newValue);
+    }
+  };
+
   // Filter notes based on search query and privacy setting
   const filteredNotes = notes.filter(note => {
     // First filter by search query
     const matchesSearch = 
-      searchQuery === '' || 
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (note.content && note.content.toLowerCase().includes(searchQuery.toLowerCase()));
+      finalSearchQuery === '' || 
+      note.title.toLowerCase().includes(finalSearchQuery.toLowerCase()) ||
+      (note.content && note.content.toLowerCase().includes(finalSearchQuery.toLowerCase()));
     
     // Then filter by privacy setting if needed
     if (showPrivateOnly) {
@@ -85,18 +97,43 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
 
   return (
     <div className="space-y-6">
-      {/* User controls at the top */}
+      {/* Controls card - contains create button, search, and privacy toggle */}
       {user && (
-        <div className="flex justify-end">
-          <Button 
-            onClick={() => setShowPrivateOnly(!showPrivateOnly)}
-            variant={showPrivateOnly ? "default" : "outline"}
-            className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-          >
-            <Lock className="mr-2 h-4 w-4" />
-            {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
-          </Button>
-        </div>
+        <Card className="mb-6">
+          <CardContent className="flex justify-between items-center py-4">
+            {/* Left side - Create Note button */}
+            <Button 
+              onClick={handleCreateNote} 
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Note
+            </Button>
+            
+            {/* Right side - Search and Private Notes toggle */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search notes..."
+                  className="pl-8 h-9 text-sm w-64"
+                  value={finalSearchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+              
+              <Button 
+                onClick={() => setShowPrivateOnly(!showPrivateOnly)}
+                variant={showPrivateOnly ? "default" : "outline"}
+                className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+              >
+                <Lock className="mr-2 h-4 w-4" />
+                {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
       
       {/* Notes content */}
@@ -114,22 +151,7 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
           <p className="text-muted-foreground">No notes match your search criteria</p>
         </div>
       ) : (
-        <NotesEmptyState onCreateNote={null} />
-      )}
-
-      {/* Always show create note button if user is authenticated */}
-      {user && (
-        <Card className="mt-4">
-          <CardContent className="flex justify-center py-6">
-            <Button 
-              onClick={handleCreateNote} 
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Note
-            </Button>
-          </CardContent>
-        </Card>
+        <NotesEmptyState onCreateNote={user ? handleCreateNote : null} />
       )}
 
       {/* Dialog components */}
