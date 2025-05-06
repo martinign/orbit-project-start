@@ -82,12 +82,6 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
     saveNewNote(data);
   };
 
-  const handleUpdateNote = (data: { title: string; content: string }) => {
-    if (selectedNote) {
-      updateNote(); // Fixed: removed the data parameter as it's not needed
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Search functionality handled in parent component (NotesTab) */}
@@ -136,7 +130,7 @@ export default function ProjectNotes({ projectId, searchQuery = '', setSearchQue
       <EditNoteDialog 
         open={isEditDialogOpen}
         onClose={() => setIsEditDialogOpen(false)}
-        onUpdate={handleUpdateNote}
+        onUpdate={() => updateNote()}
         title={title}
         setTitle={setTitle}
         content={content}

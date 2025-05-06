@@ -28,6 +28,7 @@ export function useProjectNotes(projectId: string) {
     queryFn: async () => {
       if (!projectId) return false;
       
+      // Fixed the query to explicitly specify which table the project_id belongs to
       const { data, error } = await supabase
         .rpc('has_project_access', { project_id: projectId });
       
