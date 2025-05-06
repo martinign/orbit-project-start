@@ -55,7 +55,7 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
   }
   
   try {
-    // Get repository files (attachments with related_type = 'repository')
+    // Get all project attachments (both repository files and other attachments)
     const { data, error } = await supabase
       .from('project_attachments')
       .select(`
@@ -66,11 +66,12 @@ export const getProjectAttachments = async (supabase: any, projectIds: string[])
         file_size, 
         created_at, 
         created_by,
-        project_id
+        project_id,
+        related_type
       `)
       .in('project_id', projectIds)
       .order('created_at', { ascending: false })
-      .limit(30); // Limit to most recent/important files
+      .limit(30); // Limit to most recent files
     
     if (error) {
       console.error('Error fetching project attachments:', error);

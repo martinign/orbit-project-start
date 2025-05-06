@@ -108,7 +108,8 @@ export const useChatWidget = () => {
       // If it's a file query, let the user know we're retrieving file information
       if (isFileQuery) {
         console.log('File-related query detected:', inputMessage);
-        // We don't need to do anything special here as the context already includes file information
+        // Force refresh context for file queries to get the latest attachments
+        lastContextFetchRef.current = 0;
       }
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {

@@ -52,6 +52,7 @@ async function getContextWithCache(supabaseAdmin: any, userId: string) {
         file_name: attachment.file_name,
         file_type: attachment.file_type,
         file_size: attachment.file_size,
+        related_type: attachment.related_type || 'repository',
         created_at: attachment.created_at,
         publicUrl: attachment.publicUrl
       })).slice(0, 10); // Limit to 10 files per project
@@ -174,7 +175,8 @@ serve(async (req) => {
     - If information isn't in the context, acknowledge it's not available rather than making assumptions
     - For project management advice, give practical, actionable recommendations based on their actual project data
     - If asked about creating or modifying data, explain that while you can't directly change records, you can guide them on using the application
-    - If a user asks for a specific file, you can provide them the file name, type, and public URL from your context`;
+    - If a user asks for a specific file, you can provide them the file name, type, and public URL from your context
+    - When users ask about files, attachments or documents, check the 'files' array in each project and provide relevant information`;
 
     const messages = [
       { role: "system", content: systemPrompt },
