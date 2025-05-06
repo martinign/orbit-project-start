@@ -45,40 +45,73 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
     );
   }
 
+  // Define consistent column widths
+  const columnWidths = {
+    title: "15%",
+    type: "10%",
+    requestType: "10%",
+    amount: "8%",
+    deliveryAddress: "15%",
+    vendor: "10%",
+    status: "10%",
+    dueDate: "10%",
+    created: "10%",
+    actions: "12%"
+  };
+
   return (
     <div className="overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead style={{ width: columnWidths.title }}>Title</TableHead>
+            <TableHead style={{ width: columnWidths.type }}>Type</TableHead>
+            <TableHead style={{ width: columnWidths.requestType }}>Request Type</TableHead>
+            <TableHead style={{ width: columnWidths.amount }}>Amount</TableHead>
+            <TableHead style={{ width: columnWidths.deliveryAddress }}>Delivery Address</TableHead>
+            <TableHead style={{ width: columnWidths.vendor }}>Vendor</TableHead>
+            <TableHead style={{ width: columnWidths.status }}>Status</TableHead>
+            <TableHead style={{ width: columnWidths.dueDate }}>Due Date</TableHead>
+            <TableHead style={{ width: columnWidths.created }}>Created</TableHead>
+            <TableHead style={{ width: columnWidths.actions }} className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredRequests.map((request) => (
             <TableRow key={request.id}>
-              <TableCell className="font-medium">{request.doc_title}</TableCell>
-              <TableCell>
+              <TableCell style={{ width: columnWidths.title }} className="font-medium">
+                {request.doc_title}
+                {request.doc_type === 'SLB' && request.doc_version && (
+                  <span className="ml-1 text-xs text-gray-500">
+                    (v{request.doc_version})
+                  </span>
+                )}
+              </TableCell>
+              <TableCell style={{ width: columnWidths.type }}>
                 <Badge variant={request.doc_type === 'SLB' ? 'default' : 'secondary'}>
                   {request.doc_type}
                 </Badge>
               </TableCell>
-              <TableCell>{request.doc_amount}</TableCell>
-              <TableCell>
+              <TableCell style={{ width: columnWidths.requestType }}>
+                {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
+              </TableCell>
+              <TableCell style={{ width: columnWidths.amount }}>{request.doc_amount}</TableCell>
+              <TableCell style={{ width: columnWidths.deliveryAddress }} className="truncate max-w-xs">
+                {request.doc_delivery_address || '—'}
+              </TableCell>
+              <TableCell style={{ width: columnWidths.vendor }}>
+                {request.doc_selected_vendor || '—'}
+              </TableCell>
+              <TableCell style={{ width: columnWidths.status }}>
                 <DocRequestStatusBadge status={request.doc_status} />
               </TableCell>
-              <TableCell>
-                {request.doc_due_date ? format(new Date(request.doc_due_date), 'MMM d, yyyy') : '-'}
+              <TableCell style={{ width: columnWidths.dueDate }}>
+                {request.doc_due_date ? format(new Date(request.doc_due_date), 'MMM d, yyyy') : '—'}
               </TableCell>
-              <TableCell>
+              <TableCell style={{ width: columnWidths.created }}>
                 {format(new Date(request.created_at), 'MMM d, yyyy')}
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell style={{ width: columnWidths.actions }} className="text-right">
                 <DocPrintingActions
                   request={request}
                   onEdit={() => onEdit(request)}
