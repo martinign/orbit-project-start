@@ -73,7 +73,7 @@ export const SiteTable: React.FC<SiteTableProps> = ({
           {displaySiteReferences.map((site) => (
             <TableRow key={site.reference}>
               <TableCell>
-                <SiteHoverCard site={site}>
+                <SiteHoverCard siteRef={site}>
                   <span className="font-medium">{site.reference}</span>
                 </SiteHoverCard>
               </TableCell>
