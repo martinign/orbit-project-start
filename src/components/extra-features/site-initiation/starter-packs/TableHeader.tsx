@@ -2,28 +2,12 @@
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
 import { Filter, Search } from 'lucide-react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { StarterPackFiltersPopover } from './StarterPackFiltersPopover';
 
 interface TableHeaderProps {
-  countryFilter: string;
-  setCountryFilter: (value: string) => void;
-  uniqueCountries: string[];
-  siteRefFilter: string;
-  setSiteRefFilter: (value: string) => void;
-  institutionFilter: string;
-  setInstitutionFilter: (value: string) => void;
-  personnelFilter: string;
-  setPersonnelFilter: (value: string) => void;
   starterPackFilter: string;
   setStarterPackFilter: (value: string) => void;
   registeredInSrpFilter: string;
@@ -37,15 +21,6 @@ interface TableHeaderProps {
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
-  countryFilter,
-  setCountryFilter,
-  uniqueCountries,
-  siteRefFilter,
-  setSiteRefFilter,
-  institutionFilter,
-  setInstitutionFilter,
-  personnelFilter,
-  setPersonnelFilter,
   starterPackFilter,
   setStarterPackFilter,
   registeredInSrpFilter,
@@ -76,21 +51,12 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
         <StarterPackFiltersPopover
           open={filtersOpen}
           setOpen={setFiltersOpen}
-          countryFilter={countryFilter}
-          setCountryFilter={setCountryFilter}
-          siteRefFilter={siteRefFilter}
-          setSiteRefFilter={setSiteRefFilter}
-          institutionFilter={institutionFilter}
-          setInstitutionFilter={setInstitutionFilter}
-          personnelFilter={personnelFilter}
-          setPersonnelFilter={setPersonnelFilter}
           starterPackFilter={starterPackFilter}
           setStarterPackFilter={setStarterPackFilter}
           registeredInSrpFilter={registeredInSrpFilter}
           setRegisteredInSrpFilter={setRegisteredInSrpFilter}
           suppliesAppliedFilter={suppliesAppliedFilter}
           setSuppliesAppliedFilter={setSuppliesAppliedFilter}
-          uniqueCountries={uniqueCountries}
           onResetFilters={resetFilters}
         >
           <Button variant="outline" size="sm" className="h-8 gap-1">

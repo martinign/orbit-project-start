@@ -41,14 +41,6 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   const {
     uniqueCountries,
     filteredSiteReferences,
-    countryFilter,
-    setCountryFilter,
-    siteRefFilter,
-    setSiteRefFilter,
-    institutionFilter,
-    setInstitutionFilter,
-    personnelFilter,
-    setPersonnelFilter,
     starterPackFilter,
     setStarterPackFilter,
     registeredInSrpFilter,
@@ -61,20 +53,6 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     resetFilters,
     siteReferenceData
   } = useSiteReferences(sites, optimisticUpdates);
-
-  // Handle the general search query
-  useEffect(() => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      setSiteRefFilter(query);
-      setInstitutionFilter(query);
-      setPersonnelFilter(query);
-    } else if (searchQuery === "" && (siteRefFilter || institutionFilter || personnelFilter)) {
-      setSiteRefFilter("");
-      setInstitutionFilter("");
-      setPersonnelFilter("");
-    }
-  }, [searchQuery]);
 
   // Calculate statistics
   const stats = useStarterPackStats(siteReferenceData);
@@ -113,15 +91,6 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <TableHeader 
-            countryFilter={countryFilter}
-            setCountryFilter={setCountryFilter}
-            uniqueCountries={uniqueCountries}
-            siteRefFilter={siteRefFilter}
-            setSiteRefFilter={setSiteRefFilter}
-            institutionFilter={institutionFilter}
-            setInstitutionFilter={setInstitutionFilter}
-            personnelFilter={personnelFilter}
-            setPersonnelFilter={setPersonnelFilter}
             starterPackFilter={starterPackFilter}
             setStarterPackFilter={setStarterPackFilter}
             registeredInSrpFilter={registeredInSrpFilter}

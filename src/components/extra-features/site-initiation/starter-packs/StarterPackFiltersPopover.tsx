@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Popover,
   PopoverContent,
@@ -14,26 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
 interface StarterPackFiltersPopoverProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  siteRefFilter: string;
-  setSiteRefFilter: (ref: string) => void;
-  institutionFilter: string;
-  setInstitutionFilter: (institution: string) => void;
-  personnelFilter: string;
-  setPersonnelFilter: (personnel: string) => void;
-  countryFilter: string;
-  setCountryFilter: (country: string) => void;
   starterPackFilter: string;
   setStarterPackFilter: (status: string) => void;
   registeredInSrpFilter: string;
   setRegisteredInSrpFilter: (status: string) => void;
   suppliesAppliedFilter: string;
   setSuppliesAppliedFilter: (status: string) => void;
-  uniqueCountries: string[];
   onResetFilters: () => void;
   children: React.ReactNode;
 }
@@ -41,21 +30,12 @@ interface StarterPackFiltersPopoverProps {
 export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps> = ({
   open,
   setOpen,
-  siteRefFilter,
-  setSiteRefFilter,
-  institutionFilter,
-  setInstitutionFilter,
-  personnelFilter,
-  setPersonnelFilter,
-  countryFilter,
-  setCountryFilter,
   starterPackFilter,
   setStarterPackFilter,
   registeredInSrpFilter,
   setRegisteredInSrpFilter,
   suppliesAppliedFilter,
   setSuppliesAppliedFilter,
-  uniqueCountries,
   onResetFilters,
   children
 }) => {
@@ -64,65 +44,10 @@ export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps>
       <PopoverTrigger asChild>
         {children}
       </PopoverTrigger>
-      <PopoverContent className="w-80 max-h-[80vh] overflow-y-auto">
+      <PopoverContent className="w-80">
         <div className="space-y-4 p-2">
           <h3 className="font-medium">Filter Sites</h3>
           
-          <div className="space-y-2">
-            <label htmlFor="site-ref-filter" className="text-sm font-medium">
-              Site Reference
-            </label>
-            <Input
-              id="site-ref-filter"
-              placeholder="Filter by site reference..."
-              value={siteRefFilter}
-              onChange={(e) => setSiteRefFilter(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="institution-filter" className="text-sm font-medium">
-              Institution
-            </label>
-            <Input
-              id="institution-filter"
-              placeholder="Filter by institution..."
-              value={institutionFilter}
-              onChange={(e) => setInstitutionFilter(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="personnel-filter" className="text-sm font-medium">
-              Personnel Name
-            </label>
-            <Input
-              id="personnel-filter"
-              placeholder="Filter by personnel name..."
-              value={personnelFilter}
-              onChange={(e) => setPersonnelFilter(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="country-filter" className="text-sm font-medium">
-              Country
-            </label>
-            <Select value={countryFilter} onValueChange={setCountryFilter}>
-              <SelectTrigger id="country-filter">
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Countries</SelectItem>
-                {uniqueCountries.map(country => (
-                  <SelectItem key={country} value={country}>{country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Separator />
-
           <div className="space-y-2">
             <label htmlFor="starter-pack-filter" className="text-sm font-medium">
               Starter Pack Status

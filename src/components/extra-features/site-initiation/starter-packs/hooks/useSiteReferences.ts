@@ -1,5 +1,4 @@
-
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { 
   getUniqueSiteReferences, 
@@ -12,11 +11,7 @@ export const useSiteReferences = (
   sites: SiteData[], 
   optimisticUpdates: Record<string, any>
 ) => {
-  // Main filters
-  const [countryFilter, setCountryFilter] = useState<string>("all");
-  const [siteRefFilter, setSiteRefFilter] = useState<string>("");
-  const [institutionFilter, setInstitutionFilter] = useState<string>("");
-  const [personnelFilter, setPersonnelFilter] = useState<string>("");
+  // Main filters - only keeping the requested ones
   const [starterPackFilter, setStarterPackFilter] = useState<string>("all");
   const [registeredInSrpFilter, setRegisteredInSrpFilter] = useState<string>("all");
   const [suppliesAppliedFilter, setSuppliesAppliedFilter] = useState<string>("all");
@@ -109,26 +104,6 @@ export const useSiteReferences = (
   // Apply all filters to site references
   const filteredSiteReferences = useMemo(() => {
     return siteReferenceData.filter(site => {
-      // Country filter
-      if (countryFilter !== "all" && site.country !== countryFilter) {
-        return false;
-      }
-      
-      // Site reference filter
-      if (siteRefFilter && !site.reference.toLowerCase().includes(siteRefFilter.toLowerCase())) {
-        return false;
-      }
-      
-      // Institution filter
-      if (institutionFilter && !site.institution.toLowerCase().includes(institutionFilter.toLowerCase())) {
-        return false;
-      }
-      
-      // Personnel filter
-      if (personnelFilter && !site.personnel.toLowerCase().includes(personnelFilter.toLowerCase())) {
-        return false;
-      }
-      
       // Starter pack filter
       if (starterPackFilter === 'sent' && !site.hasStarterPack) {
         return false;
@@ -152,29 +127,19 @@ export const useSiteReferences = (
       
       return true;
     });
-  }, [siteReferenceData, countryFilter, siteRefFilter, institutionFilter, personnelFilter, 
-      starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
+  }, [siteReferenceData, starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
 
   // Get count of active filters
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (countryFilter !== "all") count++;
-    if (siteRefFilter) count++;
-    if (institutionFilter) count++;
-    if (personnelFilter) count++;
     if (starterPackFilter !== "all") count++;
     if (registeredInSrpFilter !== "all") count++;
     if (suppliesAppliedFilter !== "all") count++;
     return count;
-  }, [countryFilter, siteRefFilter, institutionFilter, personnelFilter, 
-      starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
+  }, [starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
 
   // Reset all filters
   const resetFilters = () => {
-    setCountryFilter("all");
-    setSiteRefFilter("");
-    setInstitutionFilter("");
-    setPersonnelFilter("");
     setStarterPackFilter("all");
     setRegisteredInSrpFilter("all");
     setSuppliesAppliedFilter("all");
@@ -185,14 +150,6 @@ export const useSiteReferences = (
     uniqueCountries,
     siteReferenceData,
     filteredSiteReferences,
-    countryFilter,
-    setCountryFilter,
-    siteRefFilter,
-    setSiteRefFilter,
-    institutionFilter,
-    setInstitutionFilter,
-    personnelFilter,
-    setPersonnelFilter,
     starterPackFilter,
     setStarterPackFilter,
     registeredInSrpFilter,
