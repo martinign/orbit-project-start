@@ -23,7 +23,7 @@ export const SiteHoverCard: React.FC<SiteHoverCardProps> = ({ siteRef, children 
       <HoverCardTrigger asChild>
         {children}
       </HoverCardTrigger>
-      <HoverCardContent className="w-80 p-0">
+      <HoverCardContent className="w-80 p-0 z-50">
         <div className="space-y-6 max-w-md">
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full grid-cols-2">

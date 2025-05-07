@@ -6,6 +6,7 @@ export interface PaginationState {
   pageSize: number;
   totalItems: number;
   totalPages: number;
+  goToPage: (page: number) => void;
 }
 
 export interface PaginationOptions {
@@ -26,7 +27,7 @@ export const usePagination = ({
   // Use totalCount if provided, otherwise fallback to totalItems for backward compatibility
   const actualTotalItems = totalCount > 0 ? totalCount : totalItems;
   
-  const [paginationState, setPaginationState] = useState<PaginationState>({
+  const [paginationState, setPaginationState] = useState<Omit<PaginationState, 'goToPage'>>({
     currentPage: initialPage,
     pageSize: initialPageSize,
     totalItems: actualTotalItems,

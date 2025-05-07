@@ -3,12 +3,15 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { List } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { PaginationState } from '@/hooks/usePagination';
 
 interface TableFooterProps {
   showAll: boolean;
   setShowAll: React.Dispatch<React.SetStateAction<boolean>>;
-  pagination: PaginationState;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    goToPage: (page: number) => void;
+  };
 }
 
 export const TableFooter: React.FC<TableFooterProps> = ({
@@ -32,7 +35,7 @@ export const TableFooter: React.FC<TableFooterProps> = ({
         <PaginationControls
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
-          onPageChange={(page) => pagination.goToPage(page)}
+          onPageChange={pagination.goToPage}
         />
       )}
     </div>
