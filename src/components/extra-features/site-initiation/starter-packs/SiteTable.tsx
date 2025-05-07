@@ -119,7 +119,7 @@ export const SiteTable: React.FC<SiteTableProps> = ({
               </TableCell>
               <TableCell>
                 <SiteHoverCard siteRef={site}>
-                  <span className="font-medium">{site.reference}</span>
+                  <span className="font-medium cursor-pointer">{site.reference}</span>
                 </SiteHoverCard>
               </TableCell>
               <TableCell>{site.institution}</TableCell>

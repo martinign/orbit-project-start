@@ -29,11 +29,13 @@ export const SiteReferenceCell: React.FC<SiteReferenceCellProps> = ({ site, allS
   
   return (
     <div className="flex items-center">
-      <HoverCard>
-        <HoverCardTrigger className="hover:underline cursor-help">
-          {site.pxl_site_reference_number}
+      <HoverCard openDelay={0} closeDelay={100}>
+        <HoverCardTrigger asChild>
+          <span className="hover:underline cursor-pointer">
+            {site.pxl_site_reference_number}
+          </span>
         </HoverCardTrigger>
-        <HoverCardContent className="w-80">
+        <HoverCardContent className="w-80 z-50" side="right" sideOffset={10}>
           <div className="space-y-3">
             <h4 className="text-sm font-medium">Site Details</h4>
             <div className="grid grid-cols-2 gap-1 text-sm">

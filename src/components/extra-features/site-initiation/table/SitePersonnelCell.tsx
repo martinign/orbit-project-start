@@ -13,14 +13,14 @@ interface SitePersonnelCellProps {
 
 export const SitePersonnelCell: React.FC<SitePersonnelCellProps> = ({ site }) => {
   return (
-    <HoverCard>
-      <HoverCardTrigger className="hover:underline cursor-help">
-        <div>
+    <HoverCard openDelay={0} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <div className="hover:underline cursor-pointer">
           <div>{site.site_personnel_name}</div>
           <div className="text-xs text-muted-foreground">PI: {site.pi_name || 'N/A'}</div>
         </div>
       </HoverCardTrigger>
-      <HoverCardContent className="w-80">
+      <HoverCardContent className="w-80 z-50">
         <div className="space-y-3">
           <h4 className="text-sm font-medium">Personnel Details</h4>
           <div className="grid grid-cols-2 gap-1 text-sm">
