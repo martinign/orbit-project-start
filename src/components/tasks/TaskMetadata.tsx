@@ -4,24 +4,26 @@ import { Users, MessageSquare, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface TaskMetadataProps {
-  assignedToName?: string;
-  subtasksCount: number;
+  dueDate?: string;
+  assignedTo?: string;
+  subtasksCount?: number;
   updateCount?: number;
   isPrivate?: boolean;
 }
 
 export const TaskMetadata: React.FC<TaskMetadataProps> = ({
-  assignedToName,
-  subtasksCount,
+  dueDate,
+  assignedTo,
+  subtasksCount = 0,
   updateCount = 0,
   isPrivate = false
 }) => {
   return (
     <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-      {assignedToName && (
+      {assignedTo && (
         <div className="flex items-center">
           <Users className="h-3 w-3 mr-1" />
-          {assignedToName}
+          {assignedTo}
         </div>
       )}
       

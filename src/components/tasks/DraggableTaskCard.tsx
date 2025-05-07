@@ -15,6 +15,7 @@ interface Task {
   status: string;
   due_date?: string;
   is_private?: boolean;
+  priority?: string;
   file_name?: string | null;
   file_path?: string | null;
   file_type?: string | null;
@@ -75,6 +76,9 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
             <TaskMetadata
               dueDate={task.due_date}
               assignedTo={task.assigned_to}
+              subtasksCount={subtasksCount}
+              updateCount={updateCount}
+              isPrivate={task.is_private}
             />
             
             {/* Display file attachment if present */}
