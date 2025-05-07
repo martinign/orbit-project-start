@@ -6,6 +6,9 @@ export interface UserProfile {
   id: string;
   full_name: string | null;
   last_name: string | null;
+  job_title: string | null;
+  location: string | null;
+  telephone: string | null;
   displayName?: string;
 }
 
@@ -17,7 +20,7 @@ export const useUserProfile = (userId?: string | null) => {
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, last_name")
+        .select("id, full_name, last_name, job_title, location, telephone")
         .eq("id", userId)
         .maybeSingle();
 
@@ -28,6 +31,9 @@ export const useUserProfile = (userId?: string | null) => {
           id: userId, 
           full_name: "", 
           last_name: "",
+          job_title: "",
+          location: "",
+          telephone: "",
           displayName: "Unknown User" 
         };
       }
@@ -38,6 +44,9 @@ export const useUserProfile = (userId?: string | null) => {
           id: userId,
           full_name: "",
           last_name: "",
+          job_title: "",
+          location: "",
+          telephone: "",
           displayName: "Unknown User"
         };
       }
