@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -9,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { SiteHoverCard } from './SiteHoverCard';
+import { SiteHoverCard } from './hover-card';
 import { StarterPackSiteReference } from './types';
 import { Checkbox } from "@/components/ui/checkbox";
 
