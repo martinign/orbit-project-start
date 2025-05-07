@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -11,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { SiteHoverCard } from './hover-card';
 import { StarterPackSiteReference } from './types';
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatusBadge } from './hover-card/components/StatusBadge';
 
 interface SortableColumnHeaderProps {
   field: string;
@@ -125,15 +127,21 @@ export const SiteTable: React.FC<SiteTableProps> = ({
               <TableCell>{site.personnel}</TableCell>
               <TableCell className="text-center">
                 <div className="flex justify-center">
-                  <Switch 
-                    checked={site.hasStarterPack}
-                    onCheckedChange={(value) => {
-                      if (site.labpSite) {
-                        handleStarterPackToggle(site.labpSite, value);
-                      }
-                    }}
-                    disabled={!site.labpSite || site.missingLabp}
-                  />
+                  {site.missingLabp ? (
+                    <StatusBadge variant="secondary" className="text-xs opacity-70">
+                      No LABP role assigned
+                    </StatusBadge>
+                  ) : (
+                    <Switch 
+                      checked={site.hasStarterPack}
+                      onCheckedChange={(value) => {
+                        if (site.labpSite) {
+                          handleStarterPackToggle(site.labpSite, value);
+                        }
+                      }}
+                      disabled={!site.labpSite}
+                    />
+                  )}
                 </div>
               </TableCell>
               <TableCell className="text-center">
