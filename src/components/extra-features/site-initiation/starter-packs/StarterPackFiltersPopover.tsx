@@ -60,6 +60,7 @@ export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps>
                 <SelectItem value="all">All</SelectItem>
                 <SelectItem value="sent">Sent</SelectItem>
                 <SelectItem value="not-sent">Not Sent</SelectItem>
+                <SelectItem value="no-labp">No LABP Role Assigned</SelectItem>
               </SelectContent>
             </Select>
           </div>

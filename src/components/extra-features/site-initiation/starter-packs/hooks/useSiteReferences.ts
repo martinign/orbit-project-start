@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from 'react';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { 
@@ -108,6 +109,8 @@ export const useSiteReferences = (
       if (starterPackFilter === 'sent' && !site.hasStarterPack) {
         return false;
       } else if (starterPackFilter === 'not-sent' && site.hasStarterPack) {
+        return false;
+      } else if (starterPackFilter === 'no-labp' && !site.missingLabp) {
         return false;
       }
       

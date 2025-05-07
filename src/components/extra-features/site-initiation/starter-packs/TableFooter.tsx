@@ -8,11 +8,7 @@ import { PaginationState } from '@/hooks/usePagination';
 interface TableFooterProps {
   showAll: boolean;
   setShowAll: React.Dispatch<React.SetStateAction<boolean>>;
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    goToPage: (page: number) => void;
-  };
+  pagination: PaginationState;
 }
 
 export const TableFooter: React.FC<TableFooterProps> = ({
@@ -36,7 +32,7 @@ export const TableFooter: React.FC<TableFooterProps> = ({
         <PaginationControls
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
-          onPageChange={pagination.goToPage}
+          onPageChange={(page) => pagination.goToPage(page)}
         />
       )}
     </div>
