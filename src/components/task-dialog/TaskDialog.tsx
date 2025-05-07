@@ -148,6 +148,15 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
             setSelectedWorkdayCode={taskForm.setSelectedWorkdayCode}
             isPrivate={taskForm.isPrivate}
             setIsPrivate={taskForm.setIsPrivate}
+            // File attachment props
+            fileAttachment={taskForm.fileAttachment}
+            setFileAttachment={taskForm.setFileAttachment}
+            fileName={taskForm.fileName}
+            setFileName={taskForm.setFileName}
+            fileType={taskForm.fileType}
+            setFileType={taskForm.setFileType}
+            fileSize={taskForm.fileSize}
+            setFileSize={taskForm.setFileSize}
             teamMembers={teamMembers}
             projects={taskForm.projects}
             workdayCodes={taskForm.workdayCodes}

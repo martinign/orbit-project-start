@@ -9,6 +9,7 @@ import DueDatePicker from "./form-components/DueDatePicker";
 import NotesField from "./form-components/NotesField";
 import PrivacyToggle from "./form-components/PrivacyToggle";
 import FormActions from "./form-components/FormActions";
+import TaskFileUploadField from "./form-components/TaskFileUploadField";
 import { TeamMember } from "@/hooks/useTeamMembers";
 import { WorkdayCodeOption } from "@/utils/workdayCombinedUtils";
 
@@ -39,6 +40,15 @@ interface TaskFormProps {
   setSelectedWorkdayCode: (codeId: string) => void;
   isPrivate: boolean;
   setIsPrivate: (isPrivate: boolean) => void;
+  // File attachment props
+  fileAttachment?: File | null;
+  setFileAttachment?: (file: File | null) => void;
+  fileName?: string;
+  setFileName?: (name: string) => void;
+  fileType?: string;
+  setFileType?: (type: string) => void;
+  fileSize?: number | null;
+  setFileSize?: (size: number | null) => void;
   teamMembers?: TeamMember[];
   projects?: Project[];
   workdayCodes?: WorkdayCodeOption[];
@@ -71,6 +81,15 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   setSelectedWorkdayCode,
   isPrivate,
   setIsPrivate,
+  // File attachment props
+  fileAttachment = null,
+  setFileAttachment = () => {},
+  fileName = '',
+  setFileName = () => {},
+  fileType = '',
+  setFileType = () => {},
+  fileSize = null,
+  setFileSize = () => {},
   teamMembers = [],
   projects = [],
   workdayCodes = [],
@@ -121,6 +140,18 @@ export const TaskForm: React.FC<TaskFormProps> = ({
       />
 
       <DueDatePicker dueDate={dueDate} setDueDate={setDueDate} />
+
+      <TaskFileUploadField
+        fileAttachment={fileAttachment}
+        setFileAttachment={setFileAttachment}
+        setFileName={setFileName}
+        setFileType={setFileType}
+        setFileSize={setFileSize}
+        existingFileName={fileName}
+        existingFileType={fileType}
+        existingFileSize={fileSize}
+        isSubmitting={isSubmitting}
+      />
 
       <NotesField notes={notes} setNotes={setNotes} />
 
