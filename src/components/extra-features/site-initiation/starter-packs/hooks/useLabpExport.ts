@@ -33,24 +33,15 @@ export const useLabpExport = (sites: SiteData[], projectId?: string) => {
       }
 
       // Get only LABP site data for the selected references
-      const selectedLabpSites: SiteData[] = [];
+      const labpSites = sites.filter(site => 
+        selectedSiteRefs.includes(site.pxl_site_reference_number) && 
+        site.role === 'LABP'
+      );
       
-      // For each selected reference, get only LABP sites with that reference
-      for (const ref of selectedSiteRefs) {
-        const labpSitesWithRef = sites.filter(site => 
-          site.pxl_site_reference_number === ref && 
-          site.role === 'LABP'
-        );
-        
-        if (labpSitesWithRef.length > 0) {
-          selectedLabpSites.push(...labpSitesWithRef);
-        }
-      }
-      
-      if (selectedLabpSites.length === 0) {
+      if (labpSites.length === 0) {
         toast({
           title: "No LABP data to export",
-          description: "The selected sites don't have any LABP data to export.",
+          description: "The selected sites don't have any LABP role data to export.",
           variant: "destructive",
         });
         return;
@@ -76,10 +67,10 @@ export const useLabpExport = (sites: SiteData[], projectId?: string) => {
 
       // Format data to CSV
       const csvRows = [headers.join(',')];
-      selectedLabpSites.forEach(site => {
+      labpSites.forEach(site => {
         const row = [
           projectData?.Sponsor || '',
-          projectData?.project_number || '', // Use project_number instead of projectId
+          projectData?.project_number || '', 
           projectData?.protocol_number || '',
           site.country || '',
           site.province_state || '',
@@ -129,7 +120,7 @@ export const useLabpExport = (sites: SiteData[], projectId?: string) => {
       
       toast({
         title: "Export completed",
-        description: `Successfully exported ${selectedLabpSites.length} LABP site records.`,
+        description: `Successfully exported ${labpSites.length} LABP site records.`,
       });
     } catch (error) {
       console.error("Error exporting CSV:", error);
