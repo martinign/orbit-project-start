@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { List } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { PaginationState } from '@/hooks/usePagination';
 
 interface TableFooterProps {
   showAll: boolean;

@@ -9,7 +9,7 @@ import { TableFooter } from './TableFooter';
 import { StarterPackSiteReference } from './types';
 import { StarterPacksStats } from './types';
 import { SiteData } from '@/hooks/site-initiation/types';
-import { PaginationType } from '@/hooks/usePagination';
+import { PaginationState } from '@/hooks/usePagination';
 
 interface MainContentProps {
   loading: boolean;
@@ -34,7 +34,7 @@ interface MainContentProps {
   handleSuppliesAppliedToggle: (site: any, value: boolean) => void;
   showAll: boolean; 
   setShowAll: (value: boolean) => void;
-  pagination: PaginationType;
+  pagination: PaginationState;
   exporting: boolean;
 }
 
