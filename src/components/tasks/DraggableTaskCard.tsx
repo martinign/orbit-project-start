@@ -1,25 +1,28 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import { Draggable } from '@hello-pangea/dnd';
+import { Card, CardContent } from '@/components/ui/card';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { TaskCardHeader } from './TaskCardHeader';
-import { TaskHoverContent } from './TaskHoverContent';
+import { TaskActions } from './TaskActions';
 import { TaskMetadata } from './TaskMetadata';
-import TaskAttachment from './TaskAttachment';
+import { TaskHoverContent } from './TaskHoverContent';
+import { useTeamMemberName } from '@/hooks/useTeamMembers';
 
 interface Task {
   id: string;
   title: string;
   description?: string;
-  assigned_to?: string;
   status: string;
+  priority: string;
   due_date?: string;
+  project_id: string;
+  assigned_to?: string;
+  is_gantt_task?: boolean;
   is_private?: boolean;
-  priority?: string;
-  file_name?: string | null;
-  file_path?: string | null;
-  file_type?: string | null;
-  file_size?: number | null;
+  user_id?: string;
+  created_at?: string;
+  workday_code_id?: string;
 }
 
 interface DraggableTaskCardProps {
@@ -49,59 +52,74 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   onShowUpdates,
   updateCount = 0,
 }) => {
+  const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
+
+  // Determine the background color based on task properties
+  const getBackgroundColor = () => {
+    if (task.is_private) {
+      return 'bg-[#F1F0FB]'; // Light purple background for private tasks
+    }
+    if (task.is_gantt_task) {
+      return 'bg-[#F2FCE2]'; // Keep existing green background for Gantt tasks
+    }
+    return ''; // Default background
+  };
+
   return (
     <Draggable draggableId={task.id} index={index}>
-      {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-        >
-          <Card className={`p-3 mb-3 shadow-sm hover:shadow-md transition-shadow ${
-            task.is_private ? 'border-l-2 border-l-amber-500' : ''
-            } ${snapshot.isDragging ? 'shadow-md' : ''}`}
-          >
-            <TaskCardHeader
-              task={task}
-              subtasksCount={subtasksCount}
-              isExpanded={isExpanded}
-              toggleExpand={toggleExpand}
-              updateCount={updateCount}
-            />
-            
-            <div className="text-sm mb-2 text-muted-foreground line-clamp-2">
-              {task.description || 'No description'}
-            </div>
-            
-            <TaskMetadata
+      {(provided) => (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <Card
+              ref={provided.innerRef}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${getBackgroundColor()}`}
+            >
+              <CardContent className="p-3">
+                <div className="flex justify-between items-start w-full">
+                  <TaskCardHeader
+                    title={task.title}
+                    hasSubtasks={subtasksCount > 0}
+                    isExpanded={isExpanded}
+                    toggleExpand={toggleExpand}
+                    isPrivate={task.is_private}
+                  />
+                  
+                  <TaskActions
+                    task={task}
+                    updateCount={updateCount}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onUpdate={onUpdate}
+                    onAddSubtask={onAddSubtask}
+                    onShowUpdates={onShowUpdates}
+                  />
+                </div>
+
+                <TaskMetadata
+                  assignedToName={assignedToName}
+                  subtasksCount={subtasksCount}
+                  updateCount={updateCount}
+                  isPrivate={task.is_private}
+                />
+              </CardContent>
+            </Card>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80">
+            <TaskHoverContent
+              title={task.title}
+              description={task.description}
+              priority={task.priority}
               dueDate={task.due_date}
-              assignedTo={task.assigned_to}
-              subtasksCount={subtasksCount}
-              updateCount={updateCount}
+              assignedToName={assignedToName}
+              createdAt={task.created_at}
+              userId={task.user_id}
+              workdayCodeId={task.workday_code_id}
               isPrivate={task.is_private}
             />
-            
-            {/* Display file attachment if present */}
-            {task.file_name && (
-              <TaskAttachment 
-                fileName={task.file_name}
-                filePath={task.file_path}
-                fileType={task.file_type}
-                fileSize={task.file_size}
-              />
-            )}
-            
-            <TaskHoverContent
-              task={task}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              onAddSubtask={onAddSubtask} 
-              onShowUpdates={onShowUpdates}
-              updateCount={updateCount}
-            />
-          </Card>
-        </div>
+          </HoverCardContent>
+        </HoverCard>
       )}
     </Draggable>
   );

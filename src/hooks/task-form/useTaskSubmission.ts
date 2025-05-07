@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { createStorageFilePath } from '@/utils/file-utils';
 
 interface TaskSubmissionProps {
   mode: 'create' | 'edit';
@@ -31,46 +30,12 @@ export const useTaskSubmission = ({
     try {
       console.log("Saving task with data:", taskData);
       
-      // Extract file from taskData
-      const fileToUpload = taskData.fileAttachment;
-      let fileData = {};
-      
-      // If there's a file to upload, handle the file upload first
-      if (fileToUpload) {
-        const userId = taskData.user_id;
-        if (!userId) throw new Error("User ID is required for file uploads");
-        
-        // Create a unique path for the file
-        const filePath = createStorageFilePath(userId, fileToUpload.name);
-        
-        // Upload the file to Supabase storage
-        const { error: uploadError } = await supabase.storage
-          .from('task-attachments')
-          .upload(filePath, fileToUpload);
-        
-        if (uploadError) throw uploadError;
-        
-        // Add file data to the task
-        fileData = {
-          file_path: filePath,
-          file_name: fileToUpload.name,
-          file_type: fileToUpload.type,
-          file_size: fileToUpload.size
-        };
-        
-        console.log("File uploaded successfully:", fileData);
-      }
-      
-      // Remove the actual file object as it can't be stored in the database
-      const { fileAttachment, ...taskDataWithoutFile } = taskData;
-      
       if (mode === 'edit' && taskId) {
         console.time('taskUpdate');
         const { error: updateError } = await supabase
           .from('project_tasks')
           .update({
-            ...taskDataWithoutFile,
-            ...fileData,
+            ...taskData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', taskId);
@@ -89,10 +54,7 @@ export const useTaskSubmission = ({
         console.time('taskCreate');
         const { error: createError } = await supabase
           .from('project_tasks')
-          .insert({
-            ...taskDataWithoutFile,
-            ...fileData
-          });
+          .insert(taskData);
         console.timeEnd('taskCreate');
           
         if (createError) throw createError;

@@ -787,10 +787,6 @@ export type Database = {
           description: string | null
           due_date: string | null
           duration_days: number | null
-          file_name: string | null
-          file_path: string | null
-          file_size: number | null
-          file_type: string | null
           id: string
           is_gantt_task: boolean | null
           is_private: boolean
@@ -810,10 +806,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           duration_days?: number | null
-          file_name?: string | null
-          file_path?: string | null
-          file_size?: number | null
-          file_type?: string | null
           id?: string
           is_gantt_task?: boolean | null
           is_private?: boolean
@@ -833,10 +825,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           duration_days?: number | null
-          file_name?: string | null
-          file_path?: string | null
-          file_size?: number | null
-          file_type?: string | null
           id?: string
           is_gantt_task?: boolean | null
           is_private?: boolean

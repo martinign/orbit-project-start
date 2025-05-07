@@ -19,12 +19,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   const [isPrivate, setIsPrivate] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
   
-  // File attachment states
-  const [fileAttachment, setFileAttachment] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string>('');
-  const [fileType, setFileType] = useState<string>('');
-  const [fileSize, setFileSize] = useState<number | null>(null);
-  
   // Initialize form data
   useEffect(() => {
     if (!didInitialFormSet) {
@@ -39,13 +33,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         setPriority(task.priority || 'medium');
         setNotes(task.notes || '');
         setIsPrivate(task.is_private || false);
-        
-        // Set file attachment data if present
-        if (task.file_name) {
-          setFileName(task.file_name);
-          setFileType(task.file_type || '');
-          setFileSize(task.file_size || null);
-        }
         
         if (task.assigned_to) {
           setAssignedTo(task.assigned_to);
@@ -67,10 +54,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         setAssignedTo('none');
         setDueDate(undefined);
         setIsPrivate(false);
-        setFileAttachment(null);
-        setFileName('');
-        setFileType('');
-        setFileSize(null);
       }
 
       setDidInitialFormSet(true);
@@ -102,14 +85,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
     setAssignedTo,
     isPrivate,
     setIsPrivate,
-    fileAttachment,
-    setFileAttachment,
-    fileName,
-    setFileName,
-    fileType,
-    setFileType,
-    fileSize,
-    setFileSize,
     didInitialFormSet,
     setDidInitialFormSet,
   };

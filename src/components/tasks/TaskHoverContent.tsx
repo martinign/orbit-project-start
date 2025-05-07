@@ -5,43 +5,33 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, Users, MessageSquare, Lock } from 'lucide-react';
 import { useWorkdayCodeDetails } from '@/hooks/useWorkdayCodeDetails';
 
-interface Task {
-  id: string;
+interface TaskHoverContentProps {
   title: string;
   description?: string;
-  status: string;
-  priority?: string;
-  due_date?: string;
-  assigned_to?: string;
-  created_at?: string;
-  user_id?: string;
-  workday_code_id?: string;
-  is_private?: boolean;
-}
-
-interface TaskHoverContentProps {
-  task: Task;
-  onEdit: (task: Task) => void;
-  onDelete: (task: Task) => void;
-  onUpdate: (task: Task) => void;
-  onAddSubtask: (task: Task) => void;
-  onShowUpdates: (task: Task) => void;
-  updateCount?: number;
+  priority: string;
+  dueDate?: string;
+  assignedToName?: string;
+  createdAt?: string;
+  userId?: string;
+  workdayCodeId?: string;
+  isPrivate?: boolean;
 }
 
 export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
-  task,
-  onEdit,
-  onDelete,
-  onUpdate,
-  onAddSubtask,
-  onShowUpdates,
-  updateCount = 0
+  title,
+  description,
+  priority,
+  dueDate,
+  assignedToName,
+  createdAt,
+  userId,
+  workdayCodeId,
+  isPrivate
 }) => {
-  const { data: codeDetails } = useWorkdayCodeDetails(task.workday_code_id);
+  const { data: codeDetails } = useWorkdayCodeDetails(workdayCodeId);
   
   const getPriorityBadge = () => {
-    switch (task.priority) {
+    switch (priority) {
       case 'high':
         return <Badge variant="destructive">High Priority</Badge>;
       case 'medium':
@@ -55,12 +45,12 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
   
   return (
     <div className="space-y-2">
-      <h4 className="font-semibold text-base">{task.title}</h4>
+      <h4 className="font-semibold text-base">{title}</h4>
       
       <div className="flex flex-wrap gap-2 items-center">
         {getPriorityBadge()}
         
-        {task.is_private && (
+        {isPrivate && (
           <Badge variant="outline" className="flex items-center gap-1">
             <Lock className="h-3 w-3" />
             Private Task
@@ -68,28 +58,28 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
         )}
       </div>
       
-      {task.description && (
+      {description && (
         <p className="text-sm text-muted-foreground">
-          {task.description.length > 150 
-            ? `${task.description.substring(0, 150)}...` 
-            : task.description}
+          {description.length > 150 
+            ? `${description.substring(0, 150)}...` 
+            : description}
         </p>
       )}
       
       <div className="grid grid-cols-1 gap-1 text-xs">
-        {task.due_date && (
+        {dueDate && (
           <div className="flex items-center">
             <CalendarIcon className="h-3 w-3 mr-1" />
             <span className="text-muted-foreground mr-1">Due:</span>
-            {new Date(task.due_date).toLocaleDateString()}
+            {new Date(dueDate).toLocaleDateString()}
           </div>
         )}
         
-        {task.assigned_to && (
+        {assignedToName && (
           <div className="flex items-center">
             <Users className="h-3 w-3 mr-1" />
             <span className="text-muted-foreground mr-1">Assigned to:</span>
-            {task.assigned_to}
+            {assignedToName}
           </div>
         )}
         
@@ -101,9 +91,9 @@ export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
           </div>
         )}
         
-        {task.created_at && (
+        {createdAt && (
           <div className="text-xs text-muted-foreground mt-1">
-            Created {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+            Created {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
           </div>
         )}
       </div>
