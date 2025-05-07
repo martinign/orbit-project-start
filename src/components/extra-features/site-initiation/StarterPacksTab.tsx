@@ -88,7 +88,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     setSelectedSiteRefs([]);
   }, [filteredSiteReferences]);
 
-  // Function to export selected sites as CSV
+  // Function to export selected sites as CSV - UPDATED FOR LABP ONLY
   const handleExportCSV = () => {
     if (selectedSiteRefs.length === 0) {
       toast({
@@ -100,21 +100,25 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     }
 
     try {
-      // Get all site data for the selected references
-      const selectedSites: SiteData[] = [];
+      // Get only LABP site data for the selected references
+      const selectedLabpSites: SiteData[] = [];
       
-      // For each selected reference, get all sites with that reference
+      // For each selected reference, get only LABP sites with that reference
       selectedSiteRefs.forEach(ref => {
-        const sitesWithRef = sites.filter(site => site.pxl_site_reference_number === ref);
-        if (sitesWithRef.length > 0) {
-          selectedSites.push(...sitesWithRef);
+        const labpSitesWithRef = sites.filter(site => 
+          site.pxl_site_reference_number === ref && 
+          site.role === 'LABP'
+        );
+        
+        if (labpSitesWithRef.length > 0) {
+          selectedLabpSites.push(...labpSitesWithRef);
         }
       });
       
-      if (selectedSites.length === 0) {
+      if (selectedLabpSites.length === 0) {
         toast({
-          title: "No data to export",
-          description: "The selected sites don't have any data to export.",
+          title: "No LABP data to export",
+          description: "The selected sites don't have any LABP data to export.",
           variant: "destructive",
         });
         return;
@@ -147,7 +151,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
 
       // Format data to CSV
       const csvRows = [headers.join(',')];
-      selectedSites.forEach(site => {
+      selectedLabpSites.forEach(site => {
         const row = headers.map(header => {
           const value = site[header as keyof SiteData];
           // Handle special cases: quote strings with commas, leave nulls as empty strings
@@ -177,7 +181,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       
       // Create a file name with current date
       const date = new Date().toISOString().split('T')[0];
-      link.download = `site-data-${projectId ?? 'all'}-${date}.csv`;
+      link.download = `labp-site-data-${projectId ?? 'all'}-${date}.csv`;
       
       // Trigger download
       document.body.appendChild(link);
@@ -189,7 +193,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       
       toast({
         title: "Export completed",
-        description: `Successfully exported ${selectedSites.length} site records.`,
+        description: `Successfully exported ${selectedLabpSites.length} LABP site records.`,
       });
     } catch (error) {
       console.error("Error exporting CSV:", error);

@@ -6,6 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { StarterPackFiltersPopover } from './StarterPackFiltersPopover';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface TableHeaderProps {
   starterPackFilter: string;
@@ -87,15 +93,24 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
           </Button>
         )}
 
-        <Button 
-          onClick={handleExportCSV} 
-          size="sm" 
-          className="h-8 bg-blue-500 hover:bg-blue-600 text-white"
-          disabled={selectedCount === 0}
-        >
-          <Download className="h-3.5 w-3.5 mr-1" />
-          Export Selected ({selectedCount})
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                onClick={handleExportCSV} 
+                size="sm" 
+                className="h-8 bg-blue-500 hover:bg-blue-600 text-white"
+                disabled={selectedCount === 0}
+              >
+                <Download className="h-3.5 w-3.5 mr-1" />
+                Export LABP ({selectedCount})
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Export LABP data for selected site references</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
