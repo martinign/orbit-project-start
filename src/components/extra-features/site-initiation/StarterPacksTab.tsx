@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ErrorState } from './display/ErrorState';
 import { LoadingState } from './display/LoadingState';
@@ -27,6 +27,9 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     pagination
   } = useAllSitesData(projectId, 10); // Set page size to 10
 
+  // General search query for quick filtering
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const { 
     optimisticUpdates, 
     handleStarterPackToggle,
@@ -37,13 +40,41 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   
   const {
     uniqueCountries,
-    siteReferenceData,
     filteredSiteReferences,
     countryFilter,
     setCountryFilter,
+    siteRefFilter,
+    setSiteRefFilter,
+    institutionFilter,
+    setInstitutionFilter,
+    personnelFilter,
+    setPersonnelFilter,
+    starterPackFilter,
+    setStarterPackFilter,
+    registeredInSrpFilter,
+    setRegisteredInSrpFilter,
+    suppliesAppliedFilter,
+    setSuppliesAppliedFilter,
     showAll,
-    setShowAll
+    setShowAll,
+    activeFilterCount,
+    resetFilters,
+    siteReferenceData
   } = useSiteReferences(sites, optimisticUpdates);
+
+  // Handle the general search query
+  useEffect(() => {
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      setSiteRefFilter(query);
+      setInstitutionFilter(query);
+      setPersonnelFilter(query);
+    } else if (searchQuery === "" && (siteRefFilter || institutionFilter || personnelFilter)) {
+      setSiteRefFilter("");
+      setInstitutionFilter("");
+      setPersonnelFilter("");
+    }
+  }, [searchQuery]);
 
   // Calculate statistics
   const stats = useStarterPackStats(siteReferenceData);
@@ -82,9 +113,25 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <TableHeader 
-            countryFilter={countryFilter} 
-            setCountryFilter={setCountryFilter} 
-            uniqueCountries={uniqueCountries} 
+            countryFilter={countryFilter}
+            setCountryFilter={setCountryFilter}
+            uniqueCountries={uniqueCountries}
+            siteRefFilter={siteRefFilter}
+            setSiteRefFilter={setSiteRefFilter}
+            institutionFilter={institutionFilter}
+            setInstitutionFilter={setInstitutionFilter}
+            personnelFilter={personnelFilter}
+            setPersonnelFilter={setPersonnelFilter}
+            starterPackFilter={starterPackFilter}
+            setStarterPackFilter={setStarterPackFilter}
+            registeredInSrpFilter={registeredInSrpFilter}
+            setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+            suppliesAppliedFilter={suppliesAppliedFilter}
+            setSuppliesAppliedFilter={setSuppliesAppliedFilter}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeFilterCount={activeFilterCount}
+            resetFilters={resetFilters}
           />
         </CardHeader>
         <CardContent>
@@ -92,9 +139,9 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
             <LoadingState />
           ) : filteredSiteReferences.length === 0 ? (
             <div className="text-center py-10">
-              <h3 className="text-lg font-medium mb-2">No sites found for this country</h3>
+              <h3 className="text-lg font-medium mb-2">No sites found</h3>
               <p className="text-muted-foreground text-sm">
-                Try selecting a different country filter or add more sites
+                Try adjusting your filters or add more sites
               </p>
             </div>
           ) : (

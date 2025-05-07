@@ -12,7 +12,16 @@ export const useSiteReferences = (
   sites: SiteData[], 
   optimisticUpdates: Record<string, any>
 ) => {
+  // Main filters
   const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [siteRefFilter, setSiteRefFilter] = useState<string>("");
+  const [institutionFilter, setInstitutionFilter] = useState<string>("");
+  const [personnelFilter, setPersonnelFilter] = useState<string>("");
+  const [starterPackFilter, setStarterPackFilter] = useState<string>("all");
+  const [registeredInSrpFilter, setRegisteredInSrpFilter] = useState<string>("all");
+  const [suppliesAppliedFilter, setSuppliesAppliedFilter] = useState<string>("all");
+  
+  // Pagination state
   const [showAll, setShowAll] = useState(false);
 
   // Get all unique site references
@@ -54,7 +63,7 @@ export const useSiteReferences = (
       
       // Apply optimistic updates if they exist for the representative site
       const hasOptimisticUpdate = representativeSite && representativeSite.id && 
-                                 optimisticUpdates[representativeSite.id] !== undefined;
+                               optimisticUpdates[representativeSite.id] !== undefined;
       
       // Handle different types of optimistic updates
       let starterPackStatus = labpSite ? !!labpSite.starter_pack : false;
@@ -97,13 +106,79 @@ export const useSiteReferences = (
     });
   }, [uniqueSiteReferences, sitesByReference, sites, optimisticUpdates]);
 
-  // Apply country filter to site references
+  // Apply all filters to site references
   const filteredSiteReferences = useMemo(() => {
-    if (countryFilter === "all") {
-      return siteReferenceData;
-    }
-    return siteReferenceData.filter(site => site.country === countryFilter);
-  }, [siteReferenceData, countryFilter]);
+    return siteReferenceData.filter(site => {
+      // Country filter
+      if (countryFilter !== "all" && site.country !== countryFilter) {
+        return false;
+      }
+      
+      // Site reference filter
+      if (siteRefFilter && !site.reference.toLowerCase().includes(siteRefFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Institution filter
+      if (institutionFilter && !site.institution.toLowerCase().includes(institutionFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Personnel filter
+      if (personnelFilter && !site.personnel.toLowerCase().includes(personnelFilter.toLowerCase())) {
+        return false;
+      }
+      
+      // Starter pack filter
+      if (starterPackFilter === 'sent' && !site.hasStarterPack) {
+        return false;
+      } else if (starterPackFilter === 'not-sent' && site.hasStarterPack) {
+        return false;
+      }
+      
+      // Registered in SRP filter
+      if (registeredInSrpFilter === 'yes' && !site.registeredInSrp) {
+        return false;
+      } else if (registeredInSrpFilter === 'no' && site.registeredInSrp) {
+        return false;
+      }
+      
+      // Supplies applied filter
+      if (suppliesAppliedFilter === 'yes' && !site.suppliesApplied) {
+        return false;
+      } else if (suppliesAppliedFilter === 'no' && site.suppliesApplied) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [siteReferenceData, countryFilter, siteRefFilter, institutionFilter, personnelFilter, 
+      starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
+
+  // Get count of active filters
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (countryFilter !== "all") count++;
+    if (siteRefFilter) count++;
+    if (institutionFilter) count++;
+    if (personnelFilter) count++;
+    if (starterPackFilter !== "all") count++;
+    if (registeredInSrpFilter !== "all") count++;
+    if (suppliesAppliedFilter !== "all") count++;
+    return count;
+  }, [countryFilter, siteRefFilter, institutionFilter, personnelFilter, 
+      starterPackFilter, registeredInSrpFilter, suppliesAppliedFilter]);
+
+  // Reset all filters
+  const resetFilters = () => {
+    setCountryFilter("all");
+    setSiteRefFilter("");
+    setInstitutionFilter("");
+    setPersonnelFilter("");
+    setStarterPackFilter("all");
+    setRegisteredInSrpFilter("all");
+    setSuppliesAppliedFilter("all");
+  };
 
   return {
     uniqueSiteReferences,
@@ -112,7 +187,21 @@ export const useSiteReferences = (
     filteredSiteReferences,
     countryFilter,
     setCountryFilter,
+    siteRefFilter,
+    setSiteRefFilter,
+    institutionFilter,
+    setInstitutionFilter,
+    personnelFilter,
+    setPersonnelFilter,
+    starterPackFilter,
+    setStarterPackFilter,
+    registeredInSrpFilter,
+    setRegisteredInSrpFilter,
+    suppliesAppliedFilter,
+    setSuppliesAppliedFilter,
     showAll,
-    setShowAll
+    setShowAll,
+    activeFilterCount,
+    resetFilters
   };
 };

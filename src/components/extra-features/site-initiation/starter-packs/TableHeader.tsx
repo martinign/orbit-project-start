@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
-import { Filter } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -10,42 +10,108 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { StarterPackFiltersPopover } from './StarterPackFiltersPopover';
 
 interface TableHeaderProps {
   countryFilter: string;
   setCountryFilter: (value: string) => void;
   uniqueCountries: string[];
+  siteRefFilter: string;
+  setSiteRefFilter: (value: string) => void;
+  institutionFilter: string;
+  setInstitutionFilter: (value: string) => void;
+  personnelFilter: string;
+  setPersonnelFilter: (value: string) => void;
+  starterPackFilter: string;
+  setStarterPackFilter: (value: string) => void;
+  registeredInSrpFilter: string;
+  setRegisteredInSrpFilter: (value: string) => void;
+  suppliesAppliedFilter: string;
+  setSuppliesAppliedFilter: (value: string) => void;
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+  activeFilterCount: number;
+  resetFilters: () => void;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
   countryFilter,
   setCountryFilter,
-  uniqueCountries
+  uniqueCountries,
+  siteRefFilter,
+  setSiteRefFilter,
+  institutionFilter,
+  setInstitutionFilter,
+  personnelFilter,
+  setPersonnelFilter,
+  starterPackFilter,
+  setStarterPackFilter,
+  registeredInSrpFilter,
+  setRegisteredInSrpFilter,
+  suppliesAppliedFilter,
+  setSuppliesAppliedFilter,
+  searchQuery,
+  setSearchQuery,
+  activeFilterCount,
+  resetFilters
 }) => {
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  
   return (
-    <div className="flex flex-row items-center justify-between pb-2">
+    <div className="flex flex-col md:flex-row md:items-center justify-between pb-2 gap-2">
       <CardTitle className="text-base">Sites</CardTitle>
       <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <Select value={countryFilter} onValueChange={setCountryFilter}>
-          <SelectTrigger className="w-[180px] h-8 text-xs">
-            <SelectValue placeholder="Filter by country" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Countries</SelectItem>
-            {uniqueCountries.map(country => (
-              <SelectItem key={country} value={country}>{country}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {countryFilter !== "all" && (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search sites..."
+            className="pl-8 h-8 w-[180px] text-xs"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <StarterPackFiltersPopover
+          open={filtersOpen}
+          setOpen={setFiltersOpen}
+          countryFilter={countryFilter}
+          setCountryFilter={setCountryFilter}
+          siteRefFilter={siteRefFilter}
+          setSiteRefFilter={setSiteRefFilter}
+          institutionFilter={institutionFilter}
+          setInstitutionFilter={setInstitutionFilter}
+          personnelFilter={personnelFilter}
+          setPersonnelFilter={setPersonnelFilter}
+          starterPackFilter={starterPackFilter}
+          setStarterPackFilter={setStarterPackFilter}
+          registeredInSrpFilter={registeredInSrpFilter}
+          setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+          suppliesAppliedFilter={suppliesAppliedFilter}
+          setSuppliesAppliedFilter={setSuppliesAppliedFilter}
+          uniqueCountries={uniqueCountries}
+          onResetFilters={resetFilters}
+        >
+          <Button variant="outline" size="sm" className="h-8 gap-1">
+            <Filter className="h-3.5 w-3.5" />
+            Filters
+            {activeFilterCount > 0 && (
+              <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
+        </StarterPackFiltersPopover>
+        
+        {activeFilterCount > 0 && (
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-8 px-2 text-xs"
-            onClick={() => setCountryFilter("all")}
+            onClick={resetFilters}
           >
-            Clear
+            Clear All
           </Button>
         )}
       </div>
