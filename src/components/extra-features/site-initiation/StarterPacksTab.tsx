@@ -5,6 +5,7 @@ import { ErrorState } from './display/ErrorState';
 import { LoadingState } from './display/LoadingState';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import refactored components
 import { SummaryCard } from './starter-packs/SummaryCard';
@@ -88,8 +89,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     setSelectedSiteRefs([]);
   }, [filteredSiteReferences]);
 
-  // Function to export selected sites as CSV - UPDATED FOR LABP ONLY
-  const handleExportCSV = () => {
+  // Function to export selected sites as CSV - UPDATED to include specific fields
+  const handleExportCSV = async () => {
     if (selectedSiteRefs.length === 0) {
       toast({
         title: "No sites selected",
@@ -100,11 +101,23 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     }
 
     try {
+      // Get project data to include Sponsor and Protocol number
+      let projectData = null;
+      if (projectId) {
+        const { data: project } = await supabase
+          .from('projects')
+          .select('Sponsor, project_number, protocol_number')
+          .eq('id', projectId)
+          .single();
+        
+        projectData = project;
+      }
+
       // Get only LABP site data for the selected references
       const selectedLabpSites: SiteData[] = [];
       
       // For each selected reference, get only LABP sites with that reference
-      selectedSiteRefs.forEach(ref => {
+      for (const ref of selectedSiteRefs) {
         const labpSitesWithRef = sites.filter(site => 
           site.pxl_site_reference_number === ref && 
           site.role === 'LABP'
@@ -113,7 +126,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         if (labpSitesWithRef.length > 0) {
           selectedLabpSites.push(...labpSitesWithRef);
         }
-      });
+      }
       
       if (selectedLabpSites.length === 0) {
         toast({
@@ -124,47 +137,50 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
         return;
       }
 
-      // Create CSV header based on site data fields
+      // Create CSV header with only the requested fields
       const headers = [
-        'id',
-        'address',
-        'city_town',
-        'country',
-        'created_at',
-        'institution',
-        'pi_name',
+        'Sponsor',
         'project_id',
+        'Protocol number',
+        'country',
         'province_state',
+        'city_town',
+        'zip_code',
         'pxl_site_reference_number',
-        'registered_in_srp',
-        'role',
-        'site_personnel_email_address',
-        'site_personnel_fax',
+        'institution',
+        'address',
         'site_personnel_name',
+        'site_personnel_email_address',
         'site_personnel_telephone',
-        'starter_pack',
-        'supplies_applied',
-        'updated_at',
-        'user_id',
-        'zip_code'
+        'site_personnel_fax'
       ];
 
       // Format data to CSV
       const csvRows = [headers.join(',')];
       selectedLabpSites.forEach(site => {
-        const row = headers.map(header => {
-          const value = site[header as keyof SiteData];
-          // Handle special cases: quote strings with commas, leave nulls as empty strings
-          if (value === null || value === undefined) {
-            return '';
-          } else if (typeof value === 'string' && value.includes(',')) {
+        const row = [
+          projectData?.Sponsor || '',
+          projectId || '',
+          projectData?.protocol_number || '',
+          site.country || '',
+          site.province_state || '',
+          site.city_town || '',
+          site.zip_code || '',
+          site.pxl_site_reference_number || '',
+          site.institution || '',
+          site.address || '',
+          site.site_personnel_name || '',
+          site.site_personnel_email_address || '',
+          site.site_personnel_telephone || '',
+          site.site_personnel_fax || ''
+        ].map(value => {
+          // Handle strings with commas by quoting them
+          if (typeof value === 'string' && value.includes(',')) {
             return `"${value.replace(/"/g, '""')}"`;
-          } else if (typeof value === 'boolean') {
-            return value ? 'true' : 'false';
-          } else {
-            return value.toString();
           }
+          return value;
         });
+        
         csvRows.push(row.join(','));
       });
 
@@ -181,7 +197,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       
       // Create a file name with current date
       const date = new Date().toISOString().split('T')[0];
-      link.download = `labp-site-data-${projectId ?? 'all'}-${date}.csv`;
+      const projectIdentifier = projectData?.project_number || projectId?.substring(0, 8) || 'all';
+      link.download = `labp-site-data-${projectIdentifier}-${date}.csv`;
       
       // Trigger download
       document.body.appendChild(link);
