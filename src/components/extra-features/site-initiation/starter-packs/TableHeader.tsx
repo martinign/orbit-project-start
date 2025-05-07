@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
-import { Download, Filter, Search } from 'lucide-react';
+import { Download, Filter, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ interface TableHeaderProps {
   handleExportCSV: () => void;
   selectedCount: number;
   totalCount: number;
+  exporting?: boolean;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
@@ -42,7 +43,8 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
   resetFilters,
   handleExportCSV,
   selectedCount,
-  totalCount
+  totalCount,
+  exporting = false
 }) => {
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   
@@ -100,9 +102,13 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                 onClick={handleExportCSV} 
                 size="sm" 
                 className="h-8 bg-blue-500 hover:bg-blue-600 text-white"
-                disabled={selectedCount === 0}
+                disabled={selectedCount === 0 || exporting}
               >
-                <Download className="h-3.5 w-3.5 mr-1" />
+                {exporting ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                )}
                 Export LABP ({selectedCount})
               </Button>
             </TooltipTrigger>
