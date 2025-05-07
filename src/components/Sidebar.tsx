@@ -26,6 +26,7 @@ import { useSidebarDialogs } from "./sidebar/SidebarDialogs";
 import { OverviewSection } from "./sidebar/OverviewSection";
 import { ProjectsSection } from "./sidebar/ProjectsSection";
 import { SurveyButton } from "./sidebar/SurveyButton";
+import { ProfileButton } from "./sidebar/ProfileButton";
 
 export function AppSidebar() {
   const { signOut } = useAuth();
@@ -44,6 +45,7 @@ export function AppSidebar() {
     setIsWorkdayCodeDialogOpen,
     setIsSurveyDialogOpen,
     setIsExtraFeaturesDialogOpen,
+    setIsProfileDialogOpen,
     setSelectedProjectId,
     dialogs
   } = useSidebarDialogs();
@@ -92,6 +94,10 @@ export function AppSidebar() {
 
   const handleSurveyClick = () => {
     canSubmitSurvey && setIsSurveyDialogOpen(true);
+  };
+
+  const handleProfileClick = () => {
+    setIsProfileDialogOpen(true);
   };
 
   const { data: recentProjects, refetch: refetchRecentProjects } = useQuery({
@@ -159,9 +165,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       
-      {/* Survey section - Moved to bottom, just before footer */}
+      {/* Profile and Survey section - Just before footer */}
       <SidebarGroup className="mt-auto">
         <SidebarGroupContent>
+          <ProfileButton onClick={handleProfileClick} />
           <SurveyButton 
             canSubmitSurvey={canSubmitSurvey} 
             loadingSurveyAvailability={loadingSurveyAvailability} 

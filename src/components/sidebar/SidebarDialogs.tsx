@@ -9,6 +9,7 @@ import PendingInvitationsDialog from "@/components/team-members/PendingInvitatio
 import ProjectInvitesDialog from "@/components/team-members/ProjectInvitesDialog";
 import WorkdayCodeDialog from "@/components/WorkdayCodeDialog";
 import SurveyDialog from "@/components/SurveyDialog";
+import ProfileDialog from "@/components/ProfileDialog";
 import { ExtraFeaturesDialog } from "@/components/dashboard/ExtraFeaturesDialog";
 
 export const useSidebarDialogs = () => {
@@ -22,6 +23,7 @@ export const useSidebarDialogs = () => {
   const [isWorkdayCodeDialogOpen, setIsWorkdayCodeDialogOpen] = useState(false);
   const [isSurveyDialogOpen, setIsSurveyDialogOpen] = useState(false);
   const [isExtraFeaturesDialogOpen, setIsExtraFeaturesDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   // Added a state for holding the selected project ID when opening from sidebar
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
 
@@ -48,6 +50,8 @@ export const useSidebarDialogs = () => {
     setIsSurveyDialogOpen,
     isExtraFeaturesDialogOpen,
     setIsExtraFeaturesDialogOpen,
+    isProfileDialogOpen,
+    setIsProfileDialogOpen,
     selectedProjectId,
     setSelectedProjectId,
     dialogs: (
@@ -104,6 +108,11 @@ export const useSidebarDialogs = () => {
           open={isSurveyDialogOpen}
           onOpenChange={setIsSurveyDialogOpen}
           onSuccess={handleSurveySuccess}
+        />
+
+        <ProfileDialog
+          open={isProfileDialogOpen}
+          onOpenChange={setIsProfileDialogOpen}
         />
 
         <ExtraFeaturesDialog
