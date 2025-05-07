@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ErrorState } from './display/ErrorState';
@@ -160,7 +159,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
       selectedLabpSites.forEach(site => {
         const row = [
           projectData?.Sponsor || '',
-          projectId || '',
+          projectData?.project_number || '', // Use project_number instead of projectId
           projectData?.protocol_number || '',
           site.country || '',
           site.province_state || '',
