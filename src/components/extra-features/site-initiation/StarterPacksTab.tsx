@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ErrorState } from './display/ErrorState';
 import { LoadingState } from './display/LoadingState';
 import { useAllSitesData } from '@/hooks/site-initiation/useAllSitesData';
+import { toast } from '@/hooks/use-toast';
 
 // Import refactored components
 import { SummaryCard } from './starter-packs/SummaryCard';
@@ -13,6 +14,7 @@ import { TableFooter } from './starter-packs/TableFooter';
 import { useSiteReferences } from './starter-packs/hooks/useSiteReferences';
 import { useStarterPackToggle } from './starter-packs/hooks/useStarterPackToggle';
 import { useStarterPackStats } from './starter-packs/hooks/useStarterPackStats';
+import { SiteData } from '@/hooks/site-initiation/types';
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -29,6 +31,9 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
 
   // General search query for quick filtering
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
+  // State for tracking selected site references
+  const [selectedSiteRefs, setSelectedSiteRefs] = useState<string[]>([]);
 
   const { 
     optimisticUpdates, 
@@ -78,6 +83,124 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     resetOptimisticUpdates();
   }, [sites]);
 
+  // Reset selected sites when filtered data changes
+  useEffect(() => {
+    setSelectedSiteRefs([]);
+  }, [filteredSiteReferences]);
+
+  // Function to export selected sites as CSV
+  const handleExportCSV = () => {
+    if (selectedSiteRefs.length === 0) {
+      toast({
+        title: "No sites selected",
+        description: "Please select at least one site to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Get all site data for the selected references
+      const selectedSites: SiteData[] = [];
+      
+      // For each selected reference, get all sites with that reference
+      selectedSiteRefs.forEach(ref => {
+        const sitesWithRef = sites.filter(site => site.pxl_site_reference_number === ref);
+        if (sitesWithRef.length > 0) {
+          selectedSites.push(...sitesWithRef);
+        }
+      });
+      
+      if (selectedSites.length === 0) {
+        toast({
+          title: "No data to export",
+          description: "The selected sites don't have any data to export.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create CSV header based on site data fields
+      const headers = [
+        'id',
+        'address',
+        'city_town',
+        'country',
+        'created_at',
+        'institution',
+        'pi_name',
+        'project_id',
+        'province_state',
+        'pxl_site_reference_number',
+        'registered_in_srp',
+        'role',
+        'site_personnel_email_address',
+        'site_personnel_fax',
+        'site_personnel_name',
+        'site_personnel_telephone',
+        'starter_pack',
+        'supplies_applied',
+        'updated_at',
+        'user_id',
+        'zip_code'
+      ];
+
+      // Format data to CSV
+      const csvRows = [headers.join(',')];
+      selectedSites.forEach(site => {
+        const row = headers.map(header => {
+          const value = site[header as keyof SiteData];
+          // Handle special cases: quote strings with commas, leave nulls as empty strings
+          if (value === null || value === undefined) {
+            return '';
+          } else if (typeof value === 'string' && value.includes(',')) {
+            return `"${value.replace(/"/g, '""')}"`;
+          } else if (typeof value === 'boolean') {
+            return value ? 'true' : 'false';
+          } else {
+            return value.toString();
+          }
+        });
+        csvRows.push(row.join(','));
+      });
+
+      // Create CSV content
+      const csvContent = csvRows.join('\n');
+
+      // Create a downloadable blob with the CSV data
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a temporary link to download the file
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create a file name with current date
+      const date = new Date().toISOString().split('T')[0];
+      link.download = `site-data-${projectId ?? 'all'}-${date}.csv`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export completed",
+        description: `Successfully exported ${selectedSites.length} site records.`,
+      });
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      toast({
+        title: "Export failed",
+        description: "Failed to generate CSV file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (error) {
     return <ErrorState error={error} />;
   }
@@ -101,6 +224,9 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
             setSearchQuery={setSearchQuery}
             activeFilterCount={activeFilterCount}
             resetFilters={resetFilters}
+            handleExportCSV={handleExportCSV}
+            selectedCount={selectedSiteRefs.length}
+            totalCount={filteredSiteReferences.length}
           />
         </CardHeader>
         <CardContent>
@@ -120,6 +246,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
                 handleStarterPackToggle={handleStarterPackToggle}
                 handleRegisteredInSrpToggle={handleRegisteredInSrpToggle}
                 handleSuppliesAppliedToggle={handleSuppliesAppliedToggle}
+                selectedSiteRefs={selectedSiteRefs}
+                setSelectedSiteRefs={setSelectedSiteRefs}
               />
               
               {/* Pagination Controls with Show All button */}

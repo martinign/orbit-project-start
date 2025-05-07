@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CardTitle } from "@/components/ui/card";
-import { Filter, Search } from 'lucide-react';
+import { Download, Filter, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,9 @@ interface TableHeaderProps {
   setSearchQuery: (value: string) => void;
   activeFilterCount: number;
   resetFilters: () => void;
+  handleExportCSV: () => void;
+  selectedCount: number;
+  totalCount: number;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
@@ -30,14 +33,17 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
   searchQuery,
   setSearchQuery,
   activeFilterCount,
-  resetFilters
+  resetFilters,
+  handleExportCSV,
+  selectedCount,
+  totalCount
 }) => {
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between pb-2 gap-2">
       <CardTitle className="text-base">Sites</CardTitle>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -80,6 +86,16 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
             Clear All
           </Button>
         )}
+
+        <Button 
+          onClick={handleExportCSV} 
+          size="sm" 
+          className="h-8 bg-blue-500 hover:bg-blue-600 text-white"
+          disabled={selectedCount === 0}
+        >
+          <Download className="h-3.5 w-3.5 mr-1" />
+          Export Selected ({selectedCount})
+        </Button>
       </div>
     </div>
   );

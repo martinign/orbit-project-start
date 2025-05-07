@@ -11,6 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { SiteHoverCard } from './SiteHoverCard';
 import { StarterPackSiteReference } from './types';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface SortableColumnHeaderProps {
   field: string;
@@ -33,19 +34,55 @@ interface SiteTableProps {
   handleStarterPackToggle: (site: any, value: boolean) => void;
   handleRegisteredInSrpToggle: (site: any, value: boolean) => void;
   handleSuppliesAppliedToggle: (site: any, value: boolean) => void;
+  selectedSiteRefs: string[];
+  setSelectedSiteRefs: (refs: string[]) => void;
 }
 
 export const SiteTable: React.FC<SiteTableProps> = ({ 
   displaySiteReferences,
   handleStarterPackToggle, 
   handleRegisteredInSrpToggle,
-  handleSuppliesAppliedToggle
+  handleSuppliesAppliedToggle,
+  selectedSiteRefs,
+  setSelectedSiteRefs
 }) => {
+  // Handle the selection of all sites
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Select all visible sites
+      const allSiteRefs = displaySiteReferences.map(site => site.reference);
+      setSelectedSiteRefs(allSiteRefs);
+    } else {
+      // Deselect all
+      setSelectedSiteRefs([]);
+    }
+  };
+
+  // Handle selection of a single site
+  const handleSelectSite = (checked: boolean, siteRef: string) => {
+    if (checked) {
+      setSelectedSiteRefs([...selectedSiteRefs, siteRef]);
+    } else {
+      setSelectedSiteRefs(selectedSiteRefs.filter(ref => ref !== siteRef));
+    }
+  };
+
+  // Check if all displayed sites are selected
+  const isAllSelected = displaySiteReferences.length > 0 && 
+    displaySiteReferences.every(site => selectedSiteRefs.includes(site.reference));
+
   return (
     <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">
+              <Checkbox 
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                aria-label="Select all sites"
+              />
+            </TableHead>
             <TableHead>
               <SortableColumnHeader field="reference">Site Reference</SortableColumnHeader>
             </TableHead>
@@ -72,6 +109,13 @@ export const SiteTable: React.FC<SiteTableProps> = ({
         <TableBody>
           {displaySiteReferences.map((site) => (
             <TableRow key={site.reference}>
+              <TableCell className="w-[50px]">
+                <Checkbox 
+                  checked={selectedSiteRefs.includes(site.reference)}
+                  onCheckedChange={(checked) => handleSelectSite(!!checked, site.reference)}
+                  aria-label={`Select site ${site.reference}`}
+                />
+              </TableCell>
               <TableCell>
                 <SiteHoverCard siteRef={site}>
                   <span className="font-medium">{site.reference}</span>
