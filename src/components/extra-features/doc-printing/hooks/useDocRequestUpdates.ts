@@ -36,30 +36,16 @@ export const useDocRequestUpdates = (docRequestId: string) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
+      
+      // Update the count based on actual data
+      if (data && data.length !== updateCount) {
+        setUpdateCount(data.length);
+      }
+      
       return data as DocRequestUpdate[];
     },
     enabled: !!docRequestId
   });
-
-  // Fetch update count
-  const fetchUpdateCount = async () => {
-    if (!docRequestId) return;
-    
-    setIsLoading(true);
-    try {
-      const { count, error } = await supabase
-        .from('project_doc_request_updates')
-        .select('*', { count: 'exact', head: true })
-        .eq('doc_request_id', docRequestId);
-
-      if (error) throw error;
-      setUpdateCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching update count:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Add a new update
   const addUpdate = useMutation({
@@ -94,9 +80,7 @@ export const useDocRequestUpdates = (docRequestId: string) => {
     try {
       // In a future enhancement, this would update a 'viewed' flag in the database
       // For now, we'll just refetch to ensure the count is current
-      await fetchUpdateCount();
-      // Invalidate any queries that might be caching update counts
-      queryClient.invalidateQueries({ queryKey: ['doc-request-updates', docRequestId] });
+      queryClient.invalidateQueries({ queryKey });
     } catch (error) {
       console.error('Error marking updates as viewed:', error);
     }
@@ -105,6 +89,21 @@ export const useDocRequestUpdates = (docRequestId: string) => {
   // Set up real-time subscription for updates
   useEffect(() => {
     if (docRequestId) {
+      // Initial fetch of update count
+      const fetchUpdateCount = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('project_doc_request_updates')
+            .select('*')
+            .eq('doc_request_id', docRequestId);
+          
+          if (error) throw error;
+          setUpdateCount(data?.length || 0);
+        } catch (error) {
+          console.error('Error fetching updates:', error);
+        }
+      };
+      
       fetchUpdateCount();
       
       const channel = supabase
@@ -118,8 +117,7 @@ export const useDocRequestUpdates = (docRequestId: string) => {
             filter: `doc_request_id=eq.${docRequestId}`
           },
           () => {
-            fetchUpdateCount();
-            // Also invalidate any queries
+            // Invalidate query to refetch updates when changes occur
             queryClient.invalidateQueries({ queryKey });
           }
         )
@@ -133,7 +131,7 @@ export const useDocRequestUpdates = (docRequestId: string) => {
 
   return {
     updates,
-    updateCount,
+    updateCount: updates?.length || 0, // Ensure count matches actual updates length
     isLoading: isLoading || isUpdatesLoading,
     addUpdate: addUpdate.mutate,
     isSubmitting: addUpdate.isPending,

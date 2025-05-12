@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DocRequest, DocStatus } from '../api/docRequestsApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,10 +28,13 @@ const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
   onStatusChange: (requestId: string, status: DocStatus) => void;
 }) => {
   // Use the hook for each row to track updates
-  const { updateCount } = useDocRequestUpdates(request.id);
+  const { updates, updateCount } = useDocRequestUpdates(request.id);
+  
+  // Only show the icon if there are actually updates
+  const hasUpdates = updates && updates.length > 0;
 
   return (
-    <TableRow className={updateCount > 0 ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}>
+    <TableRow className={hasUpdates ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}>
       <TableCell className="font-medium">
         <div className="flex items-center space-x-2">
           <span>{request.doc_title}</span>
@@ -39,7 +43,7 @@ const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
               (v{request.doc_version})
             </span>
           )}
-          {updateCount > 0 && (
+          {hasUpdates && (
             <MessageSquare className="h-4 w-4 text-blue-500 ml-1" />
           )}
         </div>
