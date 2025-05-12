@@ -15,7 +15,7 @@ export const useStickyNotesActions = (userId: string | undefined) => {
       // This ensures notes don't all stack on top of each other
       const randomX = 50 + Math.random() * 600;
       const randomY = 50 + Math.random() * 400;
-      const randomRotation = (Math.random() * 6) - 3; // Random slight tilt between -3 and 3 degrees
+      const randomRotation = Math.floor((Math.random() * 6) - 3); // Integer between -3 and 3 degrees
       
       const { data, error } = await supabase
         .from('sticky_notes')
@@ -54,6 +54,11 @@ export const useStickyNotesActions = (userId: string | undefined) => {
     if (!userId) return null;
     
     try {
+      // If rotation is included, ensure it's an integer
+      if (noteData.rotation !== undefined) {
+        noteData.rotation = Math.floor(noteData.rotation);
+      }
+      
       const { data, error } = await supabase
         .from('sticky_notes')
         .update({

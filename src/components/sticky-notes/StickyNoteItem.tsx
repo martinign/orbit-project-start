@@ -31,13 +31,14 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const noteRef = useRef<HTMLDivElement>(null);
-  const rotation = note.rotation || (Math.random() * 6) - 3; // Random slight tilt if not set
+  const rotation = note.rotation || 0; // Use the rotation from the note or default to 0
 
   // Set initial random rotation if not already set
   useEffect(() => {
     if (note.rotation === 0 && noteRef.current) {
+      const randomRotation = Math.floor((Math.random() * 6) - 3); // Integer between -3 and 3
       updateNote(note.id, {
-        rotation
+        rotation: randomRotation
       });
     }
   }, []);

@@ -1036,9 +1036,12 @@ export type Database = {
           id: string
           is_archived: boolean
           position: number
+          rotation: number | null
           title: string
           updated_at: string
           user_id: string
+          x_position: number | null
+          y_position: number | null
         }
         Insert: {
           color?: string
@@ -1047,9 +1050,12 @@ export type Database = {
           id?: string
           is_archived?: boolean
           position?: number
+          rotation?: number | null
           title: string
           updated_at?: string
           user_id: string
+          x_position?: number | null
+          y_position?: number | null
         }
         Update: {
           color?: string
@@ -1058,9 +1064,12 @@ export type Database = {
           id?: string
           is_archived?: boolean
           position?: number
+          rotation?: number | null
           title?: string
           updated_at?: string
           user_id?: string
+          x_position?: number | null
+          y_position?: number | null
         }
         Relationships: []
       }
