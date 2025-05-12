@@ -117,6 +117,7 @@ const StickyNotesPage = () => {
             startPan={startPan}
             pan={pan}
             endPan={endPan}
+            handleWheel={handleWheel}
           />
         ) : (
           <StickyNotesEmptyState onCreateNote={handleOpenCreateDialog} />

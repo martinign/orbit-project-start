@@ -45,7 +45,7 @@ export const useZoomPanControl = (initialScale = 1) => {
   }, []);
   
   const startPan = useCallback((e: React.MouseEvent) => {
-    // Only start panning with middle mouse button or if holding the spacebar
+    // Only start panning with middle mouse button or if alt key is pressed
     if (e.button === 1 || e.altKey) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
