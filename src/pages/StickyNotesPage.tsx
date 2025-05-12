@@ -33,7 +33,7 @@ const StickyNotesPage = () => {
   }
 
   return (
-    <div className="container mx-auto max-w-7xl">
+    <div className="container-fluid w-full px-4 sm:px-6">
       <StickyNotesHeader 
         onCreateNote={handleOpenCreateDialog}
       />
