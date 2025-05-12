@@ -117,25 +117,29 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div
-            ref={boardContentRef}
-            className="absolute top-0 left-0 w-[3000px] h-[2000px] bg-[url('/cork-board.jpg')] bg-repeat rounded-lg p-8 border-2 border-gray-400/50 shadow-inner"
-            style={{
-              transform: `scale(${zoomPan.scale}) translate(${zoomPan.translateX / zoomPan.scale}px, ${zoomPan.translateY / zoomPan.scale}px)`,
-              transformOrigin: '0 0',
-              transition: isPanning ? 'none' : 'transform 0.1s ease-out',
-              cursor: isPanning ? 'grabbing' : 'grab',
-              boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)"
-            }}
-          >
-            {notes.map((note) => (
-              <StickyNoteItem 
-                key={note.id}
-                note={note}
-                onEditNote={onEditNote}
-                currentScale={zoomPan.scale}
-              />
-            ))}
+          {/* Board container with border that stays fixed */}
+          <div className="absolute top-0 left-0 w-[3000px] h-[2000px] rounded-lg border-2 border-gray-400/50 shadow-inner overflow-hidden">
+            {/* Board content that scales with zoom */}
+            <div
+              ref={boardContentRef}
+              className="absolute top-0 left-0 w-full h-full bg-[url('/cork-board.jpg')] bg-repeat p-8"
+              style={{
+                transform: `scale(${zoomPan.scale}) translate(${zoomPan.translateX / zoomPan.scale}px, ${zoomPan.translateY / zoomPan.scale}px)`,
+                transformOrigin: '0 0',
+                transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+                cursor: isPanning ? 'grabbing' : 'grab',
+                boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)"
+              }}
+            >
+              {notes.map((note) => (
+                <StickyNoteItem 
+                  key={note.id}
+                  note={note}
+                  onEditNote={onEditNote}
+                  currentScale={zoomPan.scale}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </ScrollArea>
