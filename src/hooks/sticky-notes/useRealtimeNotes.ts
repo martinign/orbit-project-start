@@ -80,7 +80,13 @@ export const useRealtimeNotes = (
         },
         (payload: RealtimePostgresChangesPayload<StickyNote>) => {
           console.log('Received DELETE update:', payload);
-          const deletedNoteId = payload.old?.id;
+          
+          // Fix for the TypeScript error - safely check for ID existence
+          // The old record may be partial or empty, so we need to safely check
+          const deletedNoteId = payload.old && typeof payload.old === 'object' && 'id' in payload.old 
+            ? payload.old.id 
+            : undefined;
+            
           if (deletedNoteId) {
             setNotes(prevNotes => prevNotes.filter(note => note.id !== deletedNoteId));
             
