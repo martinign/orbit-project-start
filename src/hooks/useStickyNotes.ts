@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -159,6 +160,9 @@ export const useStickyNotes = () => {
       
       if (error) throw error;
       
+      // Update notes state by filtering out the deleted note
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      
       toast({
         title: "Note deleted",
         description: "Your sticky note has been deleted.",
@@ -186,15 +190,55 @@ export const useStickyNotes = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'sticky_notes',
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Received real-time update:', payload);
-          // Refresh notes when any change is detected
-          fetchNotes();
+          console.log('Received INSERT update:', payload);
+          const newNote = payload.new as StickyNote;
+          // Add the new note to the existing notes array
+          setNotes(prevNotes => [...prevNotes, newNote]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'sticky_notes',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Received UPDATE update:', payload);
+          const updatedNote = payload.new as StickyNote;
+          // If it's archived, remove it from the list, otherwise update it
+          if (updatedNote.is_archived) {
+            setNotes(prevNotes => prevNotes.filter(note => note.id !== updatedNote.id));
+          } else {
+            setNotes(prevNotes => 
+              prevNotes.map(note => 
+                note.id === updatedNote.id ? updatedNote : note
+              )
+            );
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'sticky_notes',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Received DELETE update:', payload);
+          const deletedNoteId = payload.old?.id;
+          if (deletedNoteId) {
+            setNotes(prevNotes => prevNotes.filter(note => note.id !== deletedNoteId));
+          }
         }
       )
       .subscribe((status) => {
