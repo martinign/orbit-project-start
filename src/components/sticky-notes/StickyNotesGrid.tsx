@@ -34,14 +34,14 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const contentElement = contentRef.current;
-    if (contentElement) {
-      contentElement.addEventListener('wheel', handleWheel, { passive: false });
+    const boardElement = boardRef.current;
+    if (boardElement) {
+      boardElement.addEventListener('wheel', handleWheel, { passive: false });
     }
     
     return () => {
-      if (contentElement) {
-        contentElement.removeEventListener('wheel', handleWheel);
+      if (boardElement) {
+        boardElement.removeEventListener('wheel', handleWheel);
       }
     };
   }, [handleWheel]);
@@ -55,8 +55,13 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
         style={{ 
           minHeight: "800px",
           boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12), inset 0 2px 4px rgba(0, 0, 0, 0.05)",
-          transition: "box-shadow 0.3s ease"
+          transition: "box-shadow 0.3s ease",
+          cursor: isDragging ? 'grabbing' : 'grab',
         }}
+        onMouseDown={startPan}
+        onMouseMove={pan}
+        onMouseUp={endPan}
+        onMouseLeave={endPan}
       >
         {/* Zoomable and pannable content */}
         <div
@@ -66,12 +71,7 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
             transform: `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`,
             transformOrigin: '0 0',
             transition: isDragging ? 'none' : 'transform 0.1s ease',
-            cursor: isDragging ? 'grabbing' : 'grab',
           }}
-          onMouseDown={startPan}
-          onMouseMove={pan}
-          onMouseUp={endPan}
-          onMouseLeave={endPan}
         >
           {notes.map((note) => (
             <StickyNoteItem 
