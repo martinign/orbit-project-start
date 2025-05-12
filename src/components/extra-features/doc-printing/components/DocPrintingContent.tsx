@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DocRequest, DocStatus } from '../api/docRequestsApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -34,17 +33,14 @@ const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
     <TableRow className={updateCount > 0 ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}>
       <TableCell className="font-medium">
         <div className="flex items-center space-x-2">
-          {request.doc_title}
+          <span>{request.doc_title}</span>
           {request.doc_type === 'SLB' && request.doc_version && (
             <span className="ml-1 text-xs text-gray-500">
               (v{request.doc_version})
             </span>
           )}
           {updateCount > 0 && (
-            <Badge variant="destructive" className="ml-2 flex items-center space-x-1">
-              <MessageSquare className="h-3 w-3" />
-              <span>{updateCount}</span>
-            </Badge>
+            <MessageSquare className="h-4 w-4 text-blue-500 ml-1" />
           )}
         </div>
       </TableCell>
