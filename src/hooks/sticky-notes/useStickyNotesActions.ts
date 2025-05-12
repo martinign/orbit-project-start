@@ -5,11 +5,17 @@ import { StickyNote } from '@/types/sticky-notes';
 
 export const useStickyNotesActions = (userId: string | undefined) => {
   // Create a new sticky note
-  const createNote = async (noteData: Omit<StickyNote, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'position' | 'is_archived'>, notes: StickyNote[]) => {
+  const createNote = async (noteData: Omit<StickyNote, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'position' | 'is_archived' | 'x_position' | 'y_position' | 'rotation'>, notes: StickyNote[]) => {
     if (!userId) return null;
     
     try {
       const position = notes.length > 0 ? Math.max(...notes.map(note => note.position)) + 1 : 0;
+      
+      // Calculate a random position on the board 
+      // This ensures notes don't all stack on top of each other
+      const randomX = 50 + Math.random() * 600;
+      const randomY = 50 + Math.random() * 400;
+      const randomRotation = (Math.random() * 6) - 3; // Random slight tilt between -3 and 3 degrees
       
       const { data, error } = await supabase
         .from('sticky_notes')
@@ -17,7 +23,10 @@ export const useStickyNotesActions = (userId: string | undefined) => {
           ...noteData,
           user_id: userId,
           position,
-          is_archived: false
+          is_archived: false,
+          x_position: randomX,
+          y_position: randomY,
+          rotation: randomRotation
         }])
         .select();
       
@@ -49,6 +58,7 @@ export const useStickyNotesActions = (userId: string | undefined) => {
         .from('sticky_notes')
         .update({
           ...noteData,
+          updated_at: new Date().toISOString()
         })
         .eq('id', id)
         .eq('user_id', userId)
@@ -56,10 +66,13 @@ export const useStickyNotesActions = (userId: string | undefined) => {
       
       if (error) throw error;
       
-      toast({
-        title: "Note updated",
-        description: "Your sticky note has been updated successfully.",
-      });
+      // Only show toast for content updates (not position updates)
+      if (noteData.title || noteData.content || noteData.color) {
+        toast({
+          title: "Note updated",
+          description: "Your sticky note has been updated successfully.",
+        });
+      }
       
       return data?.[0] || null;
     } catch (err: any) {

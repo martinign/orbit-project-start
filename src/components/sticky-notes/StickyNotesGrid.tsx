@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useRef } from "react";
 import { StickyNote } from "@/hooks/useStickyNotes";
 import { StickyNoteItem } from "./StickyNoteItem";
 
@@ -12,8 +12,16 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
   notes,
   onEditNote
 }) => {
+  const boardRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+    <div 
+      ref={boardRef}
+      className="relative w-full min-h-[calc(100vh-220px)] bg-[url('/cork-board.jpg')] bg-repeat rounded-lg p-6 border border-amber-800 shadow-inner overflow-hidden"
+      style={{ 
+        minHeight: "600px",
+      }}
+    >
       {notes.map((note) => (
         <StickyNoteItem 
           key={note.id}

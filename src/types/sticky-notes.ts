@@ -8,4 +8,7 @@ export type StickyNote = {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  x_position?: number;
+  y_position?: number;
+  rotation?: number;
 };
