@@ -8,6 +8,7 @@ import Contacts from "./Contacts";
 import TeamMembers from "./TeamMembers";
 import DashboardHome from "./DashboardHome";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import StickyNotesPage from "./StickyNotesPage";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -27,6 +28,10 @@ const Dashboard = () => {
     
     if (path === "/team-members") {
       return <TeamMembers />;
+    }
+    
+    if (path === "/sticky-notes") {
+      return <StickyNotesPage />;
     }
     
     // Default to Projects for /projects and /projects/:id routes

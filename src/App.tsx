@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import WorkdayCodes from "./pages/WorkdayCodes";
+import StickyNotesPage from "./pages/StickyNotesPage";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/contacts" element={<Dashboard />} />
               <Route path="/team-members" element={<Dashboard />} />
               <Route path="/workday-codes" element={<Dashboard />} />
+              <Route path="/sticky-notes" element={<Dashboard />} />
             </Route>
             
             {/* Catch-all route */}

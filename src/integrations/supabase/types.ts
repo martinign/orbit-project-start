@@ -1028,6 +1028,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sticky_notes: {
+        Row: {
+          color: string
+          content: string | null
+          created_at: string
+          id: string
+          is_archived: boolean
+          position: number
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          position?: number
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          position?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       survey_responses: {
         Row: {
           additional_feedback: string | null
