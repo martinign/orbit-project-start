@@ -178,7 +178,7 @@ export const useStickyNotes = () => {
 
   // Subscribe to realtime changes
   useRealtimeSubscription({
-    table: 'sticky_notes',
+    table: 'sticky_notes' as any, // Type assertion to fix the TypeScript error
     filter: 'user_id',
     filterValue: user?.id,
     onRecordChange: () => {
