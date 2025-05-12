@@ -1,4 +1,5 @@
-import { LayoutDashboard, Package, Puzzle } from "lucide-react";
+
+import { LayoutDashboard, Package, Puzzle, StickyNote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -28,7 +29,12 @@ export const OverviewSection = ({
             </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            
+            <Link to="/sticky-notes">
+              <SidebarMenuButton tooltip="Sticky Notes" className="hover:bg-indigo-500/10 transition-colors duration-200">
+                <StickyNote className="text-indigo-500" />
+                <span>Sticky Notes</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
