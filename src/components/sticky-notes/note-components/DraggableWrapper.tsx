@@ -32,7 +32,8 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
     }
   }, []);
 
-  // Update position state when note position changes from outside
+  // Synchronize position state with note position from database
+  // But only when not actively dragging
   useEffect(() => {
     if (!isDragging && (note.x_position !== undefined || note.y_position !== undefined)) {
       setPosition({
@@ -88,11 +89,17 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
     
     setIsDragging(false);
     
-    // Save the new position in the database
-    await updateNote(note.id, {
-      x_position: position.x,
-      y_position: position.y
-    });
+    // This is the important part - save the final position to the database
+    // We need to await this to make sure the database is updated
+    try {
+      await updateNote(note.id, {
+        x_position: position.x,
+        y_position: position.y
+      });
+      console.log("Position saved:", position.x, position.y);
+    } catch (error) {
+      console.error("Error saving position:", error);
+    }
   };
 
   // Add event listeners for mouse and touch events
@@ -110,7 +117,7 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, startPos, position]); // Added position to the dependency array
+  }, [isDragging, startPos, position]); // Position is a dependency so it's updated during drag
 
   return (
     <div 
