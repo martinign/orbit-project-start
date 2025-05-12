@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +38,7 @@ export const useStickyNotes = () => {
       if (error) throw error;
       
       setNotes(data || []);
+      console.log('Fetched notes:', data);
     } catch (err: any) {
       console.error('Error fetching sticky notes:', err);
       setError(err);
@@ -176,21 +176,38 @@ export const useStickyNotes = () => {
     }
   };
 
-  // Subscribe to realtime changes
-  useRealtimeSubscription({
-    table: 'sticky_notes' as any, // Type assertion to fix the TypeScript error
-    filter: 'user_id',
-    filterValue: user?.id,
-    onRecordChange: () => {
-      fetchNotes();
-    },
-  });
-
-  // Initial fetch
+  // Set up real-time subscription
   useEffect(() => {
-    if (user) {
-      fetchNotes();
-    }
+    if (!user) return;
+    
+    // Create a channel for real-time updates
+    const channel = supabase
+      .channel('sticky-notes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sticky_notes',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Received real-time update:', payload);
+          // Refresh notes when any change is detected
+          fetchNotes();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Supabase channel status:', status);
+      });
+
+    // Initial fetch
+    fetchNotes();
+    
+    // Cleanup function
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
