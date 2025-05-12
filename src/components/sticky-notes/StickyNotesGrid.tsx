@@ -51,16 +51,17 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
       {/* Full area container with border and shadow */}
       <div 
         ref={boardRef}
-        className="relative w-full min-h-[calc(100vh-180px)] border border-stone-300"
+        className="relative w-full min-h-[calc(100vh-180px)] border border-stone-300 rounded-lg"
         style={{ 
           minHeight: "800px",
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08), inset 0 1px 3px rgba(0, 0, 0, 0.05)"
+          boxShadow: "0 8px 30px rgba(0, 0, 0, 0.12), inset 0 2px 4px rgba(0, 0, 0, 0.05)",
+          transition: "box-shadow 0.3s ease"
         }}
       >
         {/* Zoomable and pannable content */}
         <div
           ref={contentRef}
-          className="absolute inset-0 bg-[url('/cork-board.jpg')] bg-repeat p-8"
+          className="absolute inset-0 bg-[url('/cork-board.jpg')] bg-repeat p-8 rounded-lg"
           style={{
             transform: `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`,
             transformOrigin: '0 0',
