@@ -45,10 +45,11 @@ export const useZoomPanControl = (initialScale = 1) => {
   }, []);
   
   const startPan = useCallback((e: React.MouseEvent) => {
-    // Always allow panning with primary mouse button (no special key needed)
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    e.preventDefault(); // Prevent text selection while dragging
+    // Only start panning with middle mouse button or if holding the spacebar
+    if (e.button === 1 || e.altKey) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    }
   }, []);
   
   const pan = useCallback((e: React.MouseEvent) => {
