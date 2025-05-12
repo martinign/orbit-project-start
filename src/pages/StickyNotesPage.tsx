@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import { StickyNotesEmptyState } from "@/components/sticky-notes/StickyNotesEmpt
 const StickyNotesPage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const { notes, isLoading, error } = useStickyNotes();
   
   const handleOpenCreateDialog = () => {
@@ -23,6 +24,18 @@ const StickyNotesPage = () => {
     setEditingNote(note);
     setIsCreateDialogOpen(true);
   };
+
+  // Filter notes based on search query
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim() || !notes) return notes;
+    
+    const lowercaseQuery = searchQuery.toLowerCase();
+    return notes.filter(
+      note => 
+        note.title.toLowerCase().includes(lowercaseQuery) || 
+        (note.content && note.content.toLowerCase().includes(lowercaseQuery))
+    );
+  }, [notes, searchQuery]);
 
   if (error) {
     toast({
@@ -36,6 +49,8 @@ const StickyNotesPage = () => {
     <div className="container-fluid w-full px-4 sm:px-6">
       <StickyNotesHeader 
         onCreateNote={handleOpenCreateDialog}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       
       <div className="mt-6">
@@ -45,7 +60,7 @@ const StickyNotesPage = () => {
           </div>
         ) : notes && notes.length > 0 ? (
           <StickyNotesGrid 
-            notes={notes} 
+            notes={filteredNotes} 
             onEditNote={handleEditNote}
           />
         ) : (
