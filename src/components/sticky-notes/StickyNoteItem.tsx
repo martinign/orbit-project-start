@@ -20,11 +20,13 @@ import {
 interface StickyNoteItemProps {
   note: StickyNote;
   onEditNote: (note: StickyNote) => void;
+  currentScale: number;
 }
 
 export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   note,
-  onEditNote
+  onEditNote,
+  currentScale
 }) => {
   const { deleteNote, updateNote } = useStickyNotes();
   const [position, setPosition] = useState({ x: note.x_position || 0, y: note.y_position || 0 });
@@ -60,8 +62,14 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
     }
     
     e.preventDefault();
+    e.stopPropagation(); // Prevent parent elements from handling this event
     setIsDragging(true);
-    setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
+    
+    // Adjust start position based on current scale
+    setStartPos({ 
+      x: e.clientX / currentScale - position.x, 
+      y: e.clientY / currentScale - position.y 
+    });
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -72,15 +80,22 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
     }
     
     const touch = e.touches[0];
+    e.stopPropagation(); // Prevent parent elements from handling this event
     setIsDragging(true);
-    setStartPos({ x: touch.clientX - position.x, y: touch.clientY - position.y });
+    
+    // Adjust start position based on current scale
+    setStartPos({ 
+      x: touch.clientX / currentScale - position.x, 
+      y: touch.clientY / currentScale - position.y 
+    });
   };
 
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
     
-    const newX = e.clientX - startPos.x;
-    const newY = e.clientY - startPos.y;
+    // Calculate new position with scale adjustment
+    const newX = e.clientX / currentScale - startPos.x;
+    const newY = e.clientY / currentScale - startPos.y;
     setPosition({ x: newX, y: newY });
   };
 
@@ -88,8 +103,9 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
     if (!isDragging) return;
     
     const touch = e.touches[0];
-    const newX = touch.clientX - startPos.x;
-    const newY = touch.clientY - startPos.y;
+    // Calculate new position with scale adjustment
+    const newX = touch.clientX / currentScale - startPos.x;
+    const newY = touch.clientY / currentScale - startPos.y;
     setPosition({ x: newX, y: newY });
   };
 
@@ -125,7 +141,7 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, startPos, position]);
+  }, [isDragging, startPos, position, currentScale]);
   
   const handleDelete = async () => {
     await deleteNote(note.id);
