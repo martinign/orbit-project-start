@@ -2,6 +2,7 @@
 import { Circle, User } from "lucide-react";
 import { Seat } from "./types";
 import { useState } from "react";
+import { useZoomPanControl } from "@/hooks/useZoomPanControl";
 
 interface SeatGridProps {
   seats: Seat[];
@@ -12,10 +13,21 @@ interface SeatGridProps {
 }
 
 const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGridProps) => {
-  const [scale, setScale] = useState(1);
-
   // Check if we should use a custom layout for this office
   const hasCustomLayout = officeId === 'o1'; // Berlin office
+  
+  const {
+    scale,
+    offsetX,
+    offsetY,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    startPan,
+    pan,
+    endPan,
+    isDragging
+  } = useZoomPanControl();
   
   if (hasCustomLayout) {
     // Custom Berlin office layout
@@ -24,18 +36,24 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
         <div className="flex justify-center mb-4">
           <div className="flex gap-2">
             <button 
-              onClick={() => setScale(prev => Math.max(0.5, prev - 0.1))}
+              onClick={zoomOut}
               className="bg-gray-200 px-2 py-1 rounded"
             >
               -
             </button>
-            <span className="px-2 py-1">Zoom: {Math.round(scale * 100)}%</span>
+            <button
+              onClick={resetZoom}
+              className="bg-gray-200 px-2 py-1 rounded"
+            >
+              Reset
+            </button>
             <button 
-              onClick={() => setScale(prev => Math.min(1.5, prev + 0.1))}
+              onClick={zoomIn}
               className="bg-gray-200 px-2 py-1 rounded"
             >
               +
             </button>
+            <span className="px-2 py-1">Zoom: {Math.round(scale * 100)}%</span>
           </div>
         </div>
         
@@ -43,64 +61,80 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
           <div 
             className="relative bg-gray-50 border rounded-lg overflow-hidden"
             style={{ 
-              width: '1000px', 
+              width: '800px', 
               height: '600px',
-              transform: `scale(${scale})`,
-              transformOrigin: 'top center',
-              transition: 'transform 0.3s ease'
+              cursor: isDragging ? 'grabbing' : 'grab'
             }}
+            onMouseDown={startPan}
+            onMouseMove={pan}
+            onMouseUp={endPan}
+            onMouseLeave={endPan}
           >
-            {/* Hallway */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gray-200 flex items-center justify-center text-sm font-medium">
-              Hallway
-            </div>
-            
-            {/* Entrance */}
-            <div className="absolute bottom-0 left-[450px] w-[100px] h-5 bg-gray-300 flex items-center justify-center text-xs">
-              Entrance
-            </div>
-            
-            {/* Desks */}
-            {seats.filter(seat => seat.position).map(seat => {
-              const isSelected = selectedSeat === seat.id;
-              const isBooked = seat.isBooked;
+            <div
+              className="absolute"
+              style={{
+                transform: `scale(${scale}) translate(${offsetX}px, ${offsetY}px)`,
+                transformOrigin: 'top left',
+                transition: 'transform 0.1s ease-out',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              {/* Hallway */}
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gray-200 flex items-center justify-center text-sm font-medium">
+                Hallway
+              </div>
               
-              return (
-                <div
-                  key={seat.id}
-                  className={`absolute flex flex-col items-center justify-center border-2 cursor-pointer transition-colors rounded-md ${
-                    isBooked 
-                      ? "bg-red-100 border-red-300" 
-                      : isSelected 
-                        ? "bg-blue-500 border-blue-600 text-white" 
-                        : "bg-gray-100 border-gray-300 hover:bg-gray-200"
-                  }`}
-                  style={{
-                    left: `${seat.position?.x}px`,
-                    top: `${seat.position?.y}px`,
-                    width: `${seat.position?.width}px`,
-                    height: `${seat.position?.height}px`,
-                    transform: seat.position?.rotation ? `rotate(${seat.position.rotation}deg)` : undefined,
-                  }}
-                  onClick={() => !isBooked && onSeatSelect(seat.id)}
-                  title={`${seat.row}${seat.number} ${seat.employeeName ? `- ${seat.employeeName}` : ''}${isBooked ? ' (Booked)' : ''}`}
-                >
-                  <div className={`text-sm font-medium ${isSelected ? 'text-white' : ''}`}>
-                    {seat.row}{seat.number}
-                  </div>
-                  {seat.employeeName && (
-                    <div className={`text-xs ${isSelected ? 'text-white' : 'text-gray-600'}`}>
-                      {seat.employeeName}
+              {/* Entrance */}
+              <div className="absolute bottom-0 left-[450px] w-[100px] h-5 bg-gray-300 flex items-center justify-center text-xs">
+                Entrance
+              </div>
+              
+              {/* Desks */}
+              {seats.filter(seat => seat.position).map(seat => {
+                const isSelected = selectedSeat === seat.id;
+                const isBooked = seat.isBooked;
+                
+                return (
+                  <div
+                    key={seat.id}
+                    className={`absolute flex flex-col items-center justify-center border-2 cursor-pointer transition-colors rounded-md ${
+                      isBooked 
+                        ? "bg-red-100 border-red-300" 
+                        : isSelected 
+                          ? "bg-blue-500 border-blue-600 text-white" 
+                          : "bg-gray-100 border-gray-300 hover:bg-gray-200"
+                    }`}
+                    style={{
+                      left: `${seat.position?.x}px`,
+                      top: `${seat.position?.y}px`,
+                      width: `${seat.position?.width}px`,
+                      height: `${seat.position?.height}px`,
+                      transform: seat.position?.rotation ? `rotate(${seat.position.rotation}deg)` : undefined,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isBooked) onSeatSelect(seat.id);
+                    }}
+                    title={`${seat.row}${seat.number} ${seat.employeeName ? `- ${seat.employeeName}` : ''}${isBooked ? ' (Booked)' : ''}`}
+                  >
+                    <div className={`text-sm font-medium ${isSelected ? 'text-white' : ''}`}>
+                      {seat.row}{seat.number}
                     </div>
-                  )}
-                  <User className={`h-4 w-4 mt-1 ${
-                    isBooked ? 'text-red-500' : 
-                    isSelected ? 'text-white' : 
-                    'text-gray-500'
-                  }`} />
-                </div>
-              );
-            })}
+                    {seat.employeeName && (
+                      <div className={`text-xs ${isSelected ? 'text-white' : 'text-gray-600'}`}>
+                        {seat.employeeName}
+                      </div>
+                    )}
+                    <User className={`h-4 w-4 mt-1 ${
+                      isBooked ? 'text-red-500' : 
+                      isSelected ? 'text-white' : 
+                      'text-gray-500'
+                    }`} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
         

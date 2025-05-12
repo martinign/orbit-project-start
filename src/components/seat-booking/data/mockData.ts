@@ -40,14 +40,14 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
   // Special handling for Berlin office main hall
   if (roomId === 'r1') {
     return [
-      // First row - top of the image
+      // Top row (Row A)
       {
         id: `${roomId}-A1`,
         roomId,
         row: 'A',
         number: 1,
         isBooked: false,
-        employeeName: 'Sarah',
+        employeeName: 'Thomas',
         position: { x: 100, y: 100, width: 80, height: 60 }
       },
       {
@@ -56,7 +56,7 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'A',
         number: 2,
         isBooked: false,
-        employeeName: 'Michael',
+        employeeName: 'Anna',
         position: { x: 200, y: 100, width: 80, height: 60 }
       },
       {
@@ -65,7 +65,7 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'A',
         number: 3,
         isBooked: true,
-        employeeName: 'Emma',
+        employeeName: 'Maria',
         position: { x: 300, y: 100, width: 80, height: 60 }
       },
       {
@@ -74,7 +74,7 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'A',
         number: 4,
         isBooked: false,
-        employeeName: 'John',
+        employeeName: 'David',
         position: { x: 400, y: 100, width: 80, height: 60 }
       },
       {
@@ -83,19 +83,28 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'A',
         number: 5,
         isBooked: false,
-        employeeName: 'Lisa',
+        employeeName: 'Sarah',
         position: { x: 500, y: 100, width: 80, height: 60 }
       },
+      {
+        id: `${roomId}-A6`,
+        roomId,
+        row: 'A',
+        number: 6,
+        isBooked: true,
+        employeeName: 'Michael',
+        position: { x: 600, y: 100, width: 80, height: 60 }
+      },
       
-      // Second row
+      // Second row (Row B)
       {
         id: `${roomId}-B1`,
         roomId,
         row: 'B',
         number: 1,
         isBooked: false,
-        employeeName: 'Thomas',
-        position: { x: 100, y: 200, width: 80, height: 60 }
+        employeeName: 'Lisa',
+        position: { x: 100, y: 180, width: 80, height: 60 }
       },
       {
         id: `${roomId}-B2`,
@@ -103,8 +112,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'B',
         number: 2,
         isBooked: true,
-        employeeName: 'Jessica',
-        position: { x: 200, y: 200, width: 80, height: 60 }
+        employeeName: 'James',
+        position: { x: 200, y: 180, width: 80, height: 60 }
       },
       {
         id: `${roomId}-B3`,
@@ -112,8 +121,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'B',
         number: 3,
         isBooked: false,
-        employeeName: 'Daniel',
-        position: { x: 300, y: 200, width: 80, height: 60 }
+        employeeName: 'Emma',
+        position: { x: 300, y: 180, width: 80, height: 60 }
       },
       {
         id: `${roomId}-B4`,
@@ -121,8 +130,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'B',
         number: 4,
         isBooked: false,
-        employeeName: 'Sophie',
-        position: { x: 400, y: 200, width: 80, height: 60 }
+        employeeName: 'Robert',
+        position: { x: 400, y: 180, width: 80, height: 60 }
       },
       {
         id: `${roomId}-B5`,
@@ -130,19 +139,28 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'B',
         number: 5,
         isBooked: true,
-        employeeName: 'Alex',
-        position: { x: 500, y: 200, width: 80, height: 60 }
+        employeeName: 'Jessica',
+        position: { x: 500, y: 180, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-B6`,
+        roomId,
+        row: 'B',
+        number: 6,
+        isBooked: false,
+        employeeName: 'Daniel',
+        position: { x: 600, y: 180, width: 80, height: 60 }
       },
       
-      // Third row
+      // Third row (Row C)
       {
         id: `${roomId}-C1`,
         roomId,
         row: 'C',
         number: 1,
         isBooked: false,
-        employeeName: 'Mark',
-        position: { x: 100, y: 300, width: 80, height: 60 }
+        employeeName: 'John',
+        position: { x: 100, y: 260, width: 80, height: 60 }
       },
       {
         id: `${roomId}-C2`,
@@ -150,8 +168,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'C',
         number: 2,
         isBooked: false,
-        employeeName: 'Laura',
-        position: { x: 200, y: 300, width: 80, height: 60 }
+        employeeName: 'Sophie',
+        position: { x: 200, y: 260, width: 80, height: 60 }
       },
       {
         id: `${roomId}-C3`,
@@ -159,8 +177,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'C',
         number: 3,
         isBooked: false,
-        employeeName: 'Robert',
-        position: { x: 300, y: 300, width: 80, height: 60 }
+        employeeName: 'Alex',
+        position: { x: 300, y: 260, width: 80, height: 60 }
       },
       {
         id: `${roomId}-C4`,
@@ -168,8 +186,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'C',
         number: 4,
         isBooked: true,
-        employeeName: 'Emily',
-        position: { x: 400, y: 300, width: 80, height: 60 }
+        employeeName: 'Laura',
+        position: { x: 400, y: 260, width: 80, height: 60 }
       },
       {
         id: `${roomId}-C5`,
@@ -177,19 +195,28 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'C',
         number: 5,
         isBooked: false,
-        employeeName: 'David',
-        position: { x: 500, y: 300, width: 80, height: 60 }
+        employeeName: 'Mark',
+        position: { x: 500, y: 260, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-C6`,
+        roomId,
+        row: 'C',
+        number: 6,
+        isBooked: true,
+        employeeName: 'Emily',
+        position: { x: 600, y: 260, width: 80, height: 60 }
       },
       
-      // Fourth row
+      // Fourth row (Row D)
       {
         id: `${roomId}-D1`,
         roomId,
         row: 'D',
         number: 1,
         isBooked: false,
-        employeeName: 'Jennifer',
-        position: { x: 100, y: 400, width: 80, height: 60 }
+        employeeName: 'Peter',
+        position: { x: 100, y: 340, width: 80, height: 60 }
       },
       {
         id: `${roomId}-D2`,
@@ -197,8 +224,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'D',
         number: 2,
         isBooked: true,
-        employeeName: 'James',
-        position: { x: 200, y: 400, width: 80, height: 60 }
+        employeeName: 'Jennifer',
+        position: { x: 200, y: 340, width: 80, height: 60 }
       },
       {
         id: `${roomId}-D3`,
@@ -206,8 +233,8 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'D',
         number: 3,
         isBooked: false,
-        employeeName: 'Anna',
-        position: { x: 300, y: 400, width: 80, height: 60 }
+        employeeName: 'Richard',
+        position: { x: 300, y: 340, width: 80, height: 60 }
       },
       {
         id: `${roomId}-D4`,
@@ -215,17 +242,26 @@ const generateSeatsForRoom = (roomId: string): Seat[] => {
         row: 'D',
         number: 4,
         isBooked: false,
-        employeeName: 'Peter',
-        position: { x: 400, y: 400, width: 80, height: 60 }
+        employeeName: 'Amanda',
+        position: { x: 400, y: 340, width: 80, height: 60 }
       },
       {
         id: `${roomId}-D5`,
         roomId,
         row: 'D',
         number: 5,
+        isBooked: false,
+        employeeName: 'William',
+        position: { x: 500, y: 340, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-D6`,
+        roomId,
+        row: 'D',
+        number: 6,
         isBooked: true,
-        employeeName: 'Maria',
-        position: { x: 500, y: 400, width: 80, height: 60 }
+        employeeName: 'Karen',
+        position: { x: 600, y: 340, width: 80, height: 60 }
       },
     ];
   }
