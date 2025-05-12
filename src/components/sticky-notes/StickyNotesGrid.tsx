@@ -48,11 +48,14 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
 
   return (
     <ScrollArea className="h-[calc(100vh-240px)] min-h-[800px]">
-      {/* Full area container without any borders or constraints */}
+      {/* Full area container with border and shadow */}
       <div 
         ref={boardRef}
-        className="relative w-full min-h-[calc(100vh-180px)]"
-        style={{ minHeight: "800px" }}
+        className="relative w-full min-h-[calc(100vh-180px)] border border-stone-300"
+        style={{ 
+          minHeight: "800px",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.08), inset 0 1px 3px rgba(0, 0, 0, 0.05)"
+        }}
       >
         {/* Zoomable and pannable content */}
         <div
