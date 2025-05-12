@@ -32,6 +32,16 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
     }
   }, []);
 
+  // Update position state when note position changes from outside
+  useEffect(() => {
+    if (!isDragging && (note.x_position !== undefined || note.y_position !== undefined)) {
+      setPosition({
+        x: note.x_position || 0,
+        y: note.y_position || 0
+      });
+    }
+  }, [note.x_position, note.y_position, isDragging]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.target instanceof HTMLButtonElement || 
         (e.target as HTMLElement).closest('button') ||
@@ -100,7 +110,7 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, startPos]);
+  }, [isDragging, startPos, position]); // Added position to the dependency array
 
   return (
     <div 
