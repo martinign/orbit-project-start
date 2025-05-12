@@ -1,8 +1,9 @@
 
-import { Circle, User } from "lucide-react";
+import { Circle, User, List, Image } from "lucide-react";
 import { Seat } from "./types";
 import { useState } from "react";
 import { useZoomPanControl } from "@/hooks/useZoomPanControl";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface SeatGridProps {
   seats: Seat[];
@@ -28,13 +29,27 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
     endPan,
     isDragging
   } = useZoomPanControl();
+
+  const [showReferenceImage, setShowReferenceImage] = useState(false);
+  const [showSeatList, setShowSeatList] = useState(false);
+  
+  // Group seats by row for the seat list
+  const seatsByRow = seats.reduce<Record<string, Seat[]>>((acc, seat) => {
+    if (!acc[seat.row]) {
+      acc[seat.row] = [];
+    }
+    acc[seat.row].push(seat);
+    return acc;
+  }, {});
+  
+  const sortedRows = Object.keys(seatsByRow).sort();
   
   if (hasCustomLayout) {
     // Custom Berlin office layout
     return (
       <div className="overflow-auto pb-4">
         <div className="flex justify-center mb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button 
               onClick={zoomOut}
               className="bg-gray-200 px-2 py-1 rounded"
@@ -54,8 +69,69 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
               +
             </button>
             <span className="px-2 py-1">Zoom: {Math.round(scale * 100)}%</span>
+            
+            <button
+              onClick={() => setShowReferenceImage(!showReferenceImage)}
+              className="ml-4 flex items-center gap-1 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+              title="Show/hide reference floor plan"
+            >
+              <Image className="h-4 w-4" />
+              {showReferenceImage ? 'Hide Floor Plan' : 'Show Floor Plan'}
+            </button>
+            
+            <button
+              onClick={() => setShowSeatList(!showSeatList)}
+              className="flex items-center gap-1 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+              title="Show/hide seat list"
+            >
+              <List className="h-4 w-4" />
+              {showSeatList ? 'Hide Seat List' : 'Show Seat List'}
+            </button>
           </div>
         </div>
+        
+        {showSeatList && (
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle>All Seats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {sortedRows.map(rowId => (
+                  <div key={rowId} className="space-y-2">
+                    <h3 className="font-medium">Row {rowId}</h3>
+                    <ul className="space-y-1">
+                      {seatsByRow[rowId]
+                        .sort((a, b) => a.number - b.number)
+                        .map(seat => (
+                          <li key={seat.id} className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${seat.isBooked ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                            <span>
+                              {seat.row}{seat.number} 
+                              {seat.employeeName ? ` - ${seat.employeeName}` : ''} 
+                              {seat.isBooked ? ' (Booked)' : ''}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {showReferenceImage && (
+          <div className="mb-4 flex justify-center">
+            <div className="border rounded overflow-hidden max-w-full">
+              <img 
+                src="/berlin-office-layout.png" 
+                alt="Berlin Office Layout Reference" 
+                className="max-w-full h-auto"
+              />
+            </div>
+          </div>
+        )}
         
         <div className="flex justify-center">
           <div 
@@ -174,6 +250,46 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
 
   return (
     <div className="overflow-auto pb-4">
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => setShowSeatList(!showSeatList)}
+          className="flex items-center gap-1 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded"
+          title="Show/hide seat list"
+        >
+          <List className="h-4 w-4" />
+          {showSeatList ? 'Hide Seat List' : 'Show Seat List'}
+        </button>
+      </div>
+      
+      {showSeatList && (
+        <Card className="mb-4">
+          <CardHeader className="pb-3">
+            <CardTitle>All Seats</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {sortedRows.map(rowId => (
+                <div key={rowId} className="space-y-2">
+                  <h3 className="font-medium">Row {rowId}</h3>
+                  <ul className="space-y-1">
+                    {rows[rowId].map(seat => (
+                      <li key={seat.id} className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${seat.isBooked ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                        <span>
+                          {seat.row}{seat.number} 
+                          {seat.employeeName ? ` - ${seat.employeeName}` : ''} 
+                          {seat.isBooked ? ' (Booked)' : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <div className="flex justify-center">
         <div className="rounded-lg p-6 bg-gray-50 flex flex-col items-center">
           <div className="w-48 h-12 bg-gray-300 mb-10 rounded-lg flex items-center justify-center text-sm font-medium">
