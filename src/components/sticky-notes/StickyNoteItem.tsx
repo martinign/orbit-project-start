@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, MapPin, Trash2 } from "lucide-react";
 import { StickyNote, useStickyNotes } from "@/hooks/useStickyNotes";
 import { format } from "date-fns";
 import { 
@@ -33,7 +33,12 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   };
   
   return (
-    <Card className="overflow-hidden h-full flex flex-col" style={{ backgroundColor: note.color }}>
+    <Card className="overflow-hidden h-full flex flex-col relative" style={{ backgroundColor: note.color }}>
+      {/* Pin icon */}
+      <div className="absolute -right-1 -top-1 transform rotate-12 text-gray-700">
+        <MapPin className="w-6 h-6 drop-shadow-md" strokeWidth={2.5} />
+      </div>
+
       <CardHeader className="p-4 pb-2 font-medium border-b">
         <h3 className="text-lg font-semibold truncate">{note.title}</h3>
       </CardHeader>
