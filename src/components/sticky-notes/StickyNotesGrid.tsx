@@ -51,6 +51,13 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
     };
   }, [handleWheel]);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Pan when either middle mouse button (button === 1) or space key is held
+    if (e.button === 1 || e.button === 0) {
+      startPan(e);
+    }
+  };
+
   return (
     <ScrollArea className="h-[calc(100vh-240px)] min-h-[800px]">
       {/* Fixed border container that doesn't zoom */}
@@ -71,10 +78,10 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
             transform: `scale(${scale}) translate(${offsetX / scale}px, ${offsetY / scale}px)`,
             transformOrigin: '0 0',
             transition: isDragging ? 'none' : 'transform 0.1s ease',
-            cursor: isDragging ? 'grabbing' : 'default',
+            cursor: isDragging ? 'grabbing' : 'grab',
             boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.15)"
           }}
-          onMouseDown={startPan}
+          onMouseDown={handleMouseDown}
           onMouseMove={pan}
           onMouseUp={endPan}
           onMouseLeave={endPan}
