@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, FileDown, FileText, Edit, Trash2, MoreVertical, MessageSquare } from 'lucide-react';
@@ -35,6 +34,9 @@ export const DocPrintingActions: React.FC<DocPrintingActionsProps> = ({
     isSubmitting,
     markUpdatesAsViewed
   } = useDocRequestUpdates(request.id);
+  
+  // Only show badge if there are actual updates
+  const hasUpdates = updates && updates.length > 0;
 
   const handlePrint = () => {
     toast({
@@ -82,7 +84,7 @@ export const DocPrintingActions: React.FC<DocPrintingActionsProps> = ({
         className="relative"
       >
         <MessageSquare className="h-4 w-4" />
-        {updateCount > 0 && (
+        {hasUpdates && (
           <Badge 
             className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center"
             variant="destructive"
