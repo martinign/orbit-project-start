@@ -3,17 +3,26 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ZoomControls } from "./ZoomControls";
 
 interface StickyNotesHeaderProps {
   onCreateNote: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  scale: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
 }
 
 export const StickyNotesHeader: React.FC<StickyNotesHeaderProps> = ({ 
   onCreateNote,
   searchQuery,
-  onSearchChange
+  onSearchChange,
+  scale,
+  onZoomIn,
+  onZoomOut,
+  onResetZoom
 }) => {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -35,6 +44,14 @@ export const StickyNotesHeader: React.FC<StickyNotesHeaderProps> = ({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
+        
+        {/* Add zoom controls */}
+        <ZoomControls
+          scale={scale}
+          onZoomIn={onZoomIn}
+          onZoomOut={onZoomOut}
+          onReset={onResetZoom}
+        />
         
         <Button 
           onClick={onCreateNote} 

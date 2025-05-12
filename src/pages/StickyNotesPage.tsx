@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -9,6 +9,7 @@ import { StickyNoteDialog } from "@/components/sticky-notes/StickyNoteDialog";
 import { useStickyNotes } from "@/hooks/useStickyNotes";
 import { StickyNotesEmptyState } from "@/components/sticky-notes/StickyNotesEmptyState";
 import { useEnableRealtime } from "@/hooks/sticky-notes/useEnableRealtime";
+import { useZoomPanControl } from "@/hooks/useZoomPanControl";
 
 const StickyNotesPage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -16,8 +17,47 @@ const StickyNotesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { notes, isLoading, error, refresh } = useStickyNotes();
   
+  // Use the zoom and pan hook
+  const {
+    scale,
+    offsetX,
+    offsetY,
+    isDragging,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    startPan,
+    pan,
+    endPan,
+    handleWheel
+  } = useZoomPanControl();
+  
   // This is just for development - ensures realtime is configured correctly
   useEnableRealtime();
+  
+  // Handle keyboard shortcuts for zoom
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Zoom in with Ctrl/Cmd + Plus
+      if ((e.ctrlKey || e.metaKey) && e.key === '=') {
+        e.preventDefault();
+        zoomIn();
+      }
+      // Zoom out with Ctrl/Cmd + Minus
+      else if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        zoomOut();
+      }
+      // Reset with Ctrl/Cmd + 0
+      else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomIn, zoomOut, resetZoom]);
   
   const handleOpenCreateDialog = () => {
     setEditingNote(null);
@@ -55,6 +95,10 @@ const StickyNotesPage = () => {
         onCreateNote={handleOpenCreateDialog}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        scale={scale}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        onResetZoom={resetZoom}
       />
       
       <div className="mt-6">
@@ -66,6 +110,13 @@ const StickyNotesPage = () => {
           <StickyNotesGrid 
             notes={filteredNotes} 
             onEditNote={handleEditNote}
+            scale={scale}
+            offsetX={offsetX}
+            offsetY={offsetY}
+            isDragging={isDragging}
+            startPan={startPan}
+            pan={pan}
+            endPan={endPan}
           />
         ) : (
           <StickyNotesEmptyState onCreateNote={handleOpenCreateDialog} />
