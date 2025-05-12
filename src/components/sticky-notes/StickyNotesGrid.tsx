@@ -48,13 +48,13 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
 
   return (
     <ScrollArea className="h-[calc(100vh-240px)] min-h-[800px]">
-      {/* Fixed border container that doesn't zoom */}
+      {/* Container without border */}
       <div 
         ref={boardRef}
-        className="relative w-full min-h-[calc(100vh-180px)] rounded-lg border-2 border-gray-400/50 overflow-hidden"
+        className="relative w-full min-h-[calc(100vh-180px)] rounded-lg overflow-hidden"
         style={{ 
           minHeight: "800px",
-          boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 20px rgba(0, 0, 0, 0.1)",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
           background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%)"
         }}
       >
@@ -87,3 +87,4 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
     </ScrollArea>
   );
 };
+
