@@ -9,6 +9,7 @@ import TeamMembers from "./TeamMembers";
 import DashboardHome from "./DashboardHome";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import StickyNotesPage from "./StickyNotesPage";
+import SeatBookingPage from "./SeatBookingPage";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -54,18 +55,6 @@ const Dashboard = () => {
       </SidebarProvider>
       
       <ChatWidget />
-    </div>
-  );
-};
-
-// Placeholder for the SeatBookingPage component
-const SeatBookingPage = () => {
-  return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Seat Booking</h1>
-      <p className="text-gray-600">
-        This feature will allow you to book seats in the office. Coming soon.
-      </p>
     </div>
   );
 };
