@@ -32,7 +32,15 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
-  const rotation = note.rotation || 0; // Use the rotation from the note or default to 0
+  const rotation = note.rotation || 0;
+  
+  // Update local position when note position changes from props
+  useEffect(() => {
+    setPosition({ 
+      x: note.x_position || 0, 
+      y: note.y_position || 0 
+    });
+  }, [note.x_position, note.y_position]);
 
   // Set initial random rotation if not already set
   useEffect(() => {
@@ -91,10 +99,15 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
     setIsDragging(false);
     
     // Save the new position in the database
-    await updateNote(note.id, {
-      x_position: position.x,
-      y_position: position.y
-    });
+    try {
+      console.log(`Saving position for note ${note.id}: x=${position.x}, y=${position.y}`);
+      await updateNote(note.id, {
+        x_position: position.x,
+        y_position: position.y
+      });
+    } catch (error) {
+      console.error('Error updating sticky note position:', error);
+    }
   };
 
   // Add event listeners for mouse and touch events
@@ -112,7 +125,7 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, startPos]);
+  }, [isDragging, startPos, position]);
   
   const handleDelete = async () => {
     await deleteNote(note.id);

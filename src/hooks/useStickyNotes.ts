@@ -21,6 +21,7 @@ export const useStickyNotes = () => {
   useEffect(() => {
     const loadNotes = async () => {
       if (user) {
+        console.log(`Fetching initial notes for user ${user.id}`);
         const fetchedNotes = await fetchNotes();
         setNotes(fetchedNotes);
       }
@@ -29,13 +30,33 @@ export const useStickyNotes = () => {
     loadNotes();
   }, [user]);
 
+  const optimisticUpdateNote = async (id: string, noteData: Partial<StickyNote>) => {
+    // Update state immediately for better UX
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === id ? { ...note, ...noteData } : note
+      )
+    );
+    
+    // Then update in the database
+    try {
+      return await updateNote(id, noteData);
+    } catch (error) {
+      // If there's an error, revert to the original data by refetching
+      console.error('Error updating note, reverting to original data:', error);
+      const refreshedNotes = await fetchNotes();
+      setNotes(refreshedNotes);
+      return null;
+    }
+  };
+
   return {
     notes,
     isLoading,
     error,
     createNote: (noteData: Omit<StickyNote, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'position' | 'is_archived'>) => 
       createNote(noteData, notes),
-    updateNote,
+    updateNote: optimisticUpdateNote,
     archiveNote,
     deleteNote,
     refresh: async () => {

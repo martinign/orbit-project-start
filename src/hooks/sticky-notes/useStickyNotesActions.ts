@@ -17,6 +17,8 @@ export const useStickyNotesActions = (userId: string | undefined) => {
       const randomY = 50 + Math.random() * 400;
       const randomRotation = Math.floor((Math.random() * 6) - 3); // Integer between -3 and 3 degrees
       
+      console.log(`Creating note with position x:${randomX}, y:${randomY}`);
+      
       const { data, error } = await supabase
         .from('sticky_notes')
         .insert([{
@@ -58,6 +60,8 @@ export const useStickyNotesActions = (userId: string | undefined) => {
       if (noteData.rotation !== undefined) {
         noteData.rotation = Math.floor(noteData.rotation);
       }
+      
+      console.log(`Updating note ${id} with data:`, noteData);
       
       const { data, error } = await supabase
         .from('sticky_notes')

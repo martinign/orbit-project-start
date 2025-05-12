@@ -8,12 +8,16 @@ import { StickyNotesGrid } from "@/components/sticky-notes/StickyNotesGrid";
 import { StickyNoteDialog } from "@/components/sticky-notes/StickyNoteDialog";
 import { useStickyNotes } from "@/hooks/useStickyNotes";
 import { StickyNotesEmptyState } from "@/components/sticky-notes/StickyNotesEmptyState";
+import { useEnableRealtime } from "@/hooks/sticky-notes/useEnableRealtime";
 
 const StickyNotesPage = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { notes, isLoading, error } = useStickyNotes();
+  const { notes, isLoading, error, refresh } = useStickyNotes();
+  
+  // This is just for development - ensures realtime is configured correctly
+  useEnableRealtime();
   
   const handleOpenCreateDialog = () => {
     setEditingNote(null);
@@ -70,7 +74,11 @@ const StickyNotesPage = () => {
       
       <StickyNoteDialog
         open={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
+        onClose={() => {
+          setIsCreateDialogOpen(false);
+          // Force refresh when closing dialog
+          refresh();
+        }}
         note={editingNote}
       />
     </div>
