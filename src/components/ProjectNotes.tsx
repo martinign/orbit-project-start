@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Lock } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import NotesList from './project-notes/NotesList';
@@ -22,7 +22,6 @@ interface ProjectNotesProps {
 export default function ProjectNotes({ projectId, searchQuery: externalSearchQuery, setSearchQuery: setExternalSearchQuery }: ProjectNotesProps) {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showPrivateOnly, setShowPrivateOnly] = useState(false);
   const { notes, isLoading, hasProjectAccess } = useProjectNotes(projectId);
   const {
     isCreateDialogOpen,
@@ -55,26 +54,18 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
     }
   };
 
-  // Filter notes based on search query and privacy setting
+  // Filter notes based on search query only (removed privacy filter)
   const filteredNotes = notes.filter(note => {
-    // First filter by search query
-    const matchesSearch = 
-      finalSearchQuery === '' || 
+    // Filter by search query
+    return finalSearchQuery === '' || 
       note.title.toLowerCase().includes(finalSearchQuery.toLowerCase()) ||
       (note.content && note.content.toLowerCase().includes(finalSearchQuery.toLowerCase()));
-    
-    // Then filter by privacy setting if needed
-    if (showPrivateOnly) {
-      return matchesSearch && note.is_private && note.user_id === user?.id;
-    }
-    
-    return matchesSearch;
   });
 
   const handleCreateNote = () => {
     setTitle('');
     setContent('');
-    setIsPrivate(false);
+    setIsPrivate(false); // Keep this for compatibility, but it won't be used in UI
     setIsCreateDialogOpen(true);
   };
 
@@ -82,7 +73,7 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
     setSelectedNote(note);
     setTitle(note.title);
     setContent(note.content || '');
-    setIsPrivate(note.is_private);
+    setIsPrivate(note.is_private); // Keep this for compatibility
     setIsEditDialogOpen(true);
   };
 
@@ -101,7 +92,7 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
 
   return (
     <div className="space-y-6">
-      {/* Controls card - contains create button, search, and privacy toggle */}
+      {/* Controls card - contains create button and search (removed privacy toggle) */}
       {user && (
         <Card className="mb-6">
           <CardContent className="flex justify-between items-center py-4">
@@ -114,27 +105,16 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
               Create Note
             </Button>
             
-            {/* Right side - Search and Private Notes toggle */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search notes..."
-                  className="pl-8 h-9 text-sm w-64"
-                  value={finalSearchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-              
-              <Button 
-                onClick={() => setShowPrivateOnly(!showPrivateOnly)}
-                variant={showPrivateOnly ? "default" : "outline"}
-                className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-              >
-                <Lock className="mr-2 h-4 w-4" />
-                {showPrivateOnly ? 'Show All Notes' : 'Private Notes Only'}
-              </Button>
+            {/* Right side - Search only (removed Private Notes toggle) */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search notes..."
+                className="pl-8 h-9 text-sm w-64"
+                value={finalSearchQuery}
+                onChange={handleSearchChange}
+              />
             </div>
           </CardContent>
         </Card>
@@ -164,8 +144,6 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
         onClose={() => setIsCreateDialogOpen(false)}
         onSave={handleSaveNote}
         initialData={{ title, content }}
-        isPrivate={isPrivate}
-        setIsPrivate={setIsPrivate}
       />
       
       <EditNoteDialog 
@@ -176,8 +154,6 @@ export default function ProjectNotes({ projectId, searchQuery: externalSearchQue
         setTitle={setTitle}
         content={content}
         setContent={setContent}
-        isPrivate={isPrivate}
-        setIsPrivate={setIsPrivate}
         fileDetails={selectedNote ? {
           fileName: selectedNote.file_name,
           filePath: selectedNote.file_path,

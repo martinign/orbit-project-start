@@ -15,7 +15,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import PrivacyToggle from '@/components/task-dialog/form-components/PrivacyToggle';
 import FileUploadField from './FileUploadField';
 
 const formSchema = z.object({
@@ -35,17 +34,13 @@ type CreateNoteDialogProps = {
     title: string;
     content: string;
   };
-  isPrivate: boolean;
-  setIsPrivate: (isPrivate: boolean) => void;
 };
 
 const CreateNoteDialog = ({
   open,
   onClose,
   onSave,
-  initialData = { title: '', content: '' },
-  isPrivate,
-  setIsPrivate
+  initialData = { title: '', content: '' }
 }: CreateNoteDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -133,8 +128,6 @@ const CreateNoteDialog = ({
               name="file" 
               isSubmitting={isSubmitting}
             />
-            
-            <PrivacyToggle isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
             
             <DialogFooter>
               <Button variant="outline" onClick={onClose} type="button">

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +12,7 @@ export function useNoteOperations(projectId: string) {
   const [selectedNote, setSelectedNote] = useState<any | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  // Keep isPrivate for database compatibility, but set it always to false
   const [isPrivate, setIsPrivate] = useState(false);
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
@@ -75,7 +75,7 @@ export function useNoteOperations(projectId: string) {
           title: data.title,
           content: data.content,
           user_id: user.id,
-          is_private: isPrivate,
+          is_private: false, // Always set to false now that we've removed the feature
           ...(fileData ? {
             file_path: fileData.filePath,
             file_name: fileData.fileName,
@@ -136,7 +136,7 @@ export function useNoteOperations(projectId: string) {
         .update({
           title,
           content,
-          is_private: isPrivate,
+          is_private: false, // Always set to false now that we've removed the feature
           updated_at: new Date().toISOString(),
           ...(fileData ? {
             file_path: fileData.filePath,
@@ -229,8 +229,8 @@ export function useNoteOperations(projectId: string) {
     setTitle,
     content,
     setContent,
-    isPrivate,
-    setIsPrivate,
+    isPrivate, // Keep for backward compatibility
+    setIsPrivate, // Keep for backward compatibility
     attachmentFile,
     setAttachmentFile,
     saveNewNote,

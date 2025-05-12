@@ -65,7 +65,7 @@ export function useProjectNotes(projectId: string) {
 
   // Mutation to create a note
   const createNote = useMutation({
-    mutationFn: async ({ title, content, is_private }: { title: string; content: string; is_private: boolean }) => {
+    mutationFn: async ({ title, content, is_private = false }: { title: string; content: string; is_private?: boolean }) => {
       if (!user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
@@ -75,7 +75,7 @@ export function useProjectNotes(projectId: string) {
           content,
           project_id: projectId,
           user_id: user.id,
-          is_private
+          is_private: false // Always set to false now that we've removed the feature
         })
         .select();
       
@@ -109,7 +109,7 @@ export function useProjectNotes(projectId: string) {
         .update({
           title: note.title,
           content: note.content,
-          is_private: note.is_private,
+          is_private: false, // Always set to false now that we've removed the feature
           updated_at: new Date().toISOString(),
         })
         .eq("id", note.id)

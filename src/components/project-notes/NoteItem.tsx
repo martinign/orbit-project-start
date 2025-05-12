@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Edit, Trash2, Lock } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNewItems } from '@/hooks/useNewItems';
 import { cn } from '@/lib/utils';
@@ -60,12 +60,7 @@ const NoteItem = ({ note, onEdit, onDelete, hasEditAccess }: NoteItemProps) => {
     >
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            {note.is_private && (
-              <Lock className="h-4 w-4 text-blue-500" />
-            )}
-            <h4 className="font-semibold text-lg mb-2 line-clamp-2">{note.title}</h4>
-          </div>
+          <h4 className="font-semibold text-lg mb-2 line-clamp-2">{note.title}</h4>
           {isNoteOwner && (
             <div className="flex gap-1">
               <Button variant="ghost" size="icon" onClick={(e) => {
