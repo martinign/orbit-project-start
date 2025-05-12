@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { StickyNote, useStickyNotes } from "@/hooks/useStickyNotes";
 import { format } from "date-fns";
 import { 
@@ -31,8 +31,12 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
   const rotation = note.rotation || 0; // Use the rotation from the note or default to 0
+  
+  // Check if content is long enough to truncate
+  const isContentLong = note.content && note.content.length > 100;
 
   // Set initial random rotation if not already set
   useEffect(() => {
@@ -43,6 +47,11 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
       });
     }
   }, []);
+
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.target instanceof HTMLButtonElement || 
@@ -117,6 +126,55 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   const handleDelete = async () => {
     await deleteNote(note.id);
   };
+
+  // Render content with truncation if needed
+  const renderContent = () => {
+    if (!note.content) return null;
+    
+    if (isContentLong && !isExpanded) {
+      return (
+        <div>
+          <div className="whitespace-pre-wrap text-gray-700 text-sm">
+            {note.content.substring(0, 100)}...
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleExpand} 
+            className="mt-1 h-6 text-xs text-gray-500 hover:text-gray-700 p-0"
+          >
+            <ChevronDown className="h-3 w-3 mr-1" />
+            Show more
+          </Button>
+        </div>
+      );
+    } 
+    
+    if (isContentLong && isExpanded) {
+      return (
+        <div>
+          <div className="whitespace-pre-wrap text-gray-700 text-sm">
+            {note.content}
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleExpand} 
+            className="mt-1 h-6 text-xs text-gray-500 hover:text-gray-700 p-0"
+          >
+            <ChevronUp className="h-3 w-3 mr-1" />
+            Show less
+          </Button>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="whitespace-pre-wrap text-gray-700 text-sm">
+        {note.content}
+      </div>
+    );
+  };
   
   return (
     <div 
@@ -153,9 +211,7 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
         </CardHeader>
         
         <CardContent className="p-4 flex-grow">
-          <div className="whitespace-pre-wrap text-gray-700 text-sm">
-            {note.content}
-          </div>
+          {renderContent()}
         </CardContent>
         
         <CardFooter className="p-3 border-t flex justify-between items-center bg-white bg-opacity-40">
