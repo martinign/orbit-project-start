@@ -30,6 +30,7 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   const [position, setPosition] = useState({ x: note.x_position || 0, y: note.y_position || 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
   const rotation = note.rotation || 0; // Use the rotation from the note or default to 0
 
@@ -120,24 +121,31 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   return (
     <div 
       ref={noteRef}
-      className={`absolute ${isDragging ? 'z-50' : 'z-10'}`}
+      className={`absolute ${isDragging ? 'z-50' : (isHovered ? 'z-20' : 'z-10')}`}
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
         transform: `rotate(${rotation}deg)`,
-        transition: isDragging ? 'none' : 'box-shadow 0.2s ease, transform 0.1s ease',
+        transition: isDragging ? 'none' : 'box-shadow 0.2s ease, transform 0.3s ease, scale 0.3s ease',
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Card 
         className={`w-64 overflow-hidden shadow-lg flex flex-col ${isDragging ? 'shadow-xl' : ''}`}
         style={{ 
           backgroundColor: note.color,
-          boxShadow: isDragging 
-            ? '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
-            : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          transform: isHovered ? 'translateY(-8px)' : 'none',
+          scale: isHovered ? '1.05' : '1',
+          boxShadow: isHovered 
+            ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
+            : isDragging 
+              ? '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
+              : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          transition: isDragging ? 'none' : 'all 0.3s ease',
         }}
       >
         <CardHeader className="p-4 pb-2 font-medium border-b">
