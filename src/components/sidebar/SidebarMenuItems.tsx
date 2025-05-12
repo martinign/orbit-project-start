@@ -19,19 +19,6 @@ interface SidebarMenuItemsProps {
 export const SidebarMenuItems = ({ recentProjects, getStatusColor }: SidebarMenuItemsProps) => {
   return (
     <>
-      {/* Seat Booking Section */}
-      <SidebarMenuItem>
-        <Link to="/seat-booking">
-          <SidebarMenuButton 
-            tooltip="Seat Booking" 
-            className="hover:bg-blue-500/10 transition-colors duration-200"
-          >
-            <Circle className="h-3 w-3 text-green-500" />
-            <span className="truncate max-w-[150px]">Seat Booking</span>
-          </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
-
       {/* Recent Projects Menu */}
       <SidebarMenu>
         {recentProjects && recentProjects.length > 0 ? (

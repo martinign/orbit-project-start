@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Package, Puzzle, StickyNote } from "lucide-react";
+import { LayoutDashboard, Package, Puzzle, StickyNote, Circle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -33,6 +33,14 @@ export const OverviewSection = ({
               <SidebarMenuButton tooltip="Sticky Notes" className="hover:bg-indigo-500/10 transition-colors duration-200">
                 <StickyNote className="text-indigo-500" />
                 <span>Sticky Notes</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link to="/seat-booking">
+              <SidebarMenuButton tooltip="Seat Booking" className="hover:bg-indigo-500/10 transition-colors duration-200">
+                <Circle className="text-indigo-500" />
+                <span>Seat Booking</span>
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
