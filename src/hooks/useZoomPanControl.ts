@@ -45,8 +45,8 @@ export const useZoomPanControl = (initialScale = 1) => {
   }, []);
   
   const startPan = useCallback((e: React.MouseEvent) => {
-    // Only start panning with middle mouse button or if alt key is pressed
-    if (e.button === 0) { // Changed to left mouse button for easier panning
+    // Only start panning with left mouse button for easier panning
+    if (e.button === 0) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
@@ -69,6 +69,25 @@ export const useZoomPanControl = (initialScale = 1) => {
     setIsDragging(false);
   }, []);
   
+  // Add handleWheel function for StickyNotesPage compatibility
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    if (e.deltaY < 0) {
+      // Zoom in on scroll up
+      setState(prev => ({
+        ...prev,
+        scale: Math.min(prev.scale + ZOOM_STEP, MAX_SCALE)
+      }));
+    } else {
+      // Zoom out on scroll down
+      setState(prev => ({
+        ...prev,
+        scale: Math.max(prev.scale - ZOOM_STEP, MIN_SCALE)
+      }));
+    }
+  }, []);
+  
   return {
     scale: state.scale,
     offsetX: state.offsetX,
@@ -79,6 +98,7 @@ export const useZoomPanControl = (initialScale = 1) => {
     resetZoom,
     startPan,
     pan,
-    endPan
+    endPan,
+    handleWheel
   };
 };

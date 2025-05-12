@@ -42,7 +42,8 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
     return acc;
   }, {});
   
-  const sortedRows = Object.keys(seatsByRow).sort();
+  // Create sorted rows once to use in both layouts
+  const sortedRowIds = Object.keys(seatsByRow).sort();
   
   if (hasCustomLayout) {
     // Custom Berlin office layout
@@ -97,7 +98,7 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {sortedRows.map(rowId => (
+                {sortedRowIds.map(rowId => (
                   <div key={rowId} className="space-y-2">
                     <h3 className="font-medium">Row {rowId}</h3>
                     <ul className="space-y-1">
@@ -243,8 +244,8 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
   }, {});
 
   // Sort rows and seats within rows
-  const sortedRows = Object.keys(rows).sort();
-  sortedRows.forEach(row => {
+  // Use sortedRowIds instead of creating a new sortedRows variable
+  sortedRowIds.forEach(row => {
     rows[row] = rows[row].sort((a, b) => a.number - b.number);
   });
 
@@ -268,7 +269,7 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {sortedRows.map(rowId => (
+              {sortedRowIds.map(rowId => (
                 <div key={rowId} className="space-y-2">
                   <h3 className="font-medium">Row {rowId}</h3>
                   <ul className="space-y-1">
@@ -297,7 +298,7 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
           </div>
           
           <div className="grid gap-x-16 gap-y-6">
-            {sortedRows.map(rowId => (
+            {sortedRowIds.map(rowId => (
               <div key={rowId} className="flex items-center gap-4">
                 <div className="text-sm font-medium w-6 text-right">
                   {rowId}
