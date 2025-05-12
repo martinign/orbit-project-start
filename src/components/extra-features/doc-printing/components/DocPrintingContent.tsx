@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { AuthWarning } from './AuthWarning';
 import { FileAttachmentCell } from './FileAttachmentCell';
+import { MessageSquare } from 'lucide-react';
+import { useDocRequestUpdates } from '../hooks/useDocRequestUpdates';
 
 interface DocPrintingContentProps {
   isAuthenticated: boolean;
@@ -17,6 +19,73 @@ interface DocPrintingContentProps {
   onDelete: (request: DocRequest) => void;
   onStatusChange: (requestId: string, status: DocStatus) => void;
 }
+
+// Make a separate component for each row to handle individual update counts
+const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
+  request: DocRequest;
+  onEdit: (request: DocRequest) => void;
+  onDelete: (request: DocRequest) => void;
+  onStatusChange: (requestId: string, status: DocStatus) => void;
+}) => {
+  // Use the hook for each row to track updates
+  const { updateCount } = useDocRequestUpdates(request.id);
+
+  return (
+    <TableRow className={updateCount > 0 ? "bg-blue-50/30 dark:bg-blue-900/10" : ""}>
+      <TableCell className="font-medium">
+        <div className="flex items-center space-x-2">
+          {request.doc_title}
+          {request.doc_type === 'SLB' && request.doc_version && (
+            <span className="ml-1 text-xs text-gray-500">
+              (v{request.doc_version})
+            </span>
+          )}
+          {updateCount > 0 && (
+            <Badge variant="destructive" className="ml-2 flex items-center space-x-1">
+              <MessageSquare className="h-3 w-3" />
+              <span>{updateCount}</span>
+            </Badge>
+          )}
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant={request.doc_type === 'SLB' ? 'default' : 'secondary'}>
+          {request.doc_type}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
+      </TableCell>
+      <TableCell>{request.doc_amount}</TableCell>
+      <TableCell className="truncate max-w-xs">
+        {request.doc_delivery_address || '—'}
+      </TableCell>
+      <TableCell>
+        {request.doc_selected_vendor || '—'}
+      </TableCell>
+      <TableCell>
+        <FileAttachmentCell request={request} />
+      </TableCell>
+      <TableCell>
+        <DocRequestStatusBadge status={request.doc_status} />
+      </TableCell>
+      <TableCell>
+        {request.doc_due_date ? format(new Date(request.doc_due_date), 'MMM d, yyyy') : '—'}
+      </TableCell>
+      <TableCell>
+        {format(new Date(request.created_at), 'MMM d, yyyy')}
+      </TableCell>
+      <TableCell className="text-right">
+        <DocPrintingActions
+          request={request}
+          onEdit={() => onEdit(request)}
+          onDelete={() => onDelete(request)}
+          onStatusChange={(status) => onStatusChange(request.id, status)}
+        />
+      </TableCell>
+    </TableRow>
+  );
+};
 
 export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
   isAuthenticated,
@@ -81,51 +150,13 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
         </TableHeader>
         <TableBody>
           {filteredRequests.map((request) => (
-            <TableRow key={request.id}>
-              <TableCell style={{ width: columnWidths.title }} className="font-medium">
-                {request.doc_title}
-                {request.doc_type === 'SLB' && request.doc_version && (
-                  <span className="ml-1 text-xs text-gray-500">
-                    (v{request.doc_version})
-                  </span>
-                )}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.type }}>
-                <Badge variant={request.doc_type === 'SLB' ? 'default' : 'secondary'}>
-                  {request.doc_type}
-                </Badge>
-              </TableCell>
-              <TableCell style={{ width: columnWidths.requestType }}>
-                {request.doc_request_type === 'printing' ? 'Printing' : 'Proposal'}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.amount }}>{request.doc_amount}</TableCell>
-              <TableCell style={{ width: columnWidths.deliveryAddress }} className="truncate max-w-xs">
-                {request.doc_delivery_address || '—'}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.vendor }}>
-                {request.doc_selected_vendor || '—'}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.attachment }}>
-                <FileAttachmentCell request={request} />
-              </TableCell>
-              <TableCell style={{ width: columnWidths.status }}>
-                <DocRequestStatusBadge status={request.doc_status} />
-              </TableCell>
-              <TableCell style={{ width: columnWidths.dueDate }}>
-                {request.doc_due_date ? format(new Date(request.doc_due_date), 'MMM d, yyyy') : '—'}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.created }}>
-                {format(new Date(request.created_at), 'MMM d, yyyy')}
-              </TableCell>
-              <TableCell style={{ width: columnWidths.actions }} className="text-right">
-                <DocPrintingActions
-                  request={request}
-                  onEdit={() => onEdit(request)}
-                  onDelete={() => onDelete(request)}
-                  onStatusChange={(status) => onStatusChange(request.id, status)}
-                />
-              </TableCell>
-            </TableRow>
+            <RequestRow 
+              key={request.id}
+              request={request}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onStatusChange={onStatusChange}
+            />
           ))}
         </TableBody>
       </Table>

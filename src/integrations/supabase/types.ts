@@ -388,6 +388,41 @@ export type Database = {
           },
         ]
       }
+      project_doc_request_updates: {
+        Row: {
+          content: string
+          created_at: string
+          doc_request_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          doc_request_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          doc_request_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_doc_request_updates_doc_request_id_fkey"
+            columns: ["doc_request_id"]
+            isOneToOne: false
+            referencedRelation: "project_doc_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_doc_requests: {
         Row: {
           created_at: string
