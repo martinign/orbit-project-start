@@ -3,6 +3,7 @@ export interface Office {
   id: string;
   name: string;
   location: string;
+  hasCustomLayout?: boolean;
 }
 
 export interface Room {
@@ -19,4 +20,25 @@ export interface Seat {
   row: string;
   number: number;
   isBooked: boolean;
+  employeeName?: string;
+  position?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    rotation?: number;
+  };
+}
+
+export interface OfficeLayout {
+  width: number;
+  height: number;
+  elements: {
+    type: 'desk' | 'room' | 'hallway' | 'entrance';
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    label?: string;
+  }[];
 }

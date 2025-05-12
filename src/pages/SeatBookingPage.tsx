@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Building, Calendar as CalendarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,8 +11,10 @@ import { cn } from "@/lib/utils";
 import RoomsList from "@/components/seat-booking/RoomsList";
 import SeatGrid from "@/components/seat-booking/SeatGrid";
 import { offices, rooms, getSeatsForRoom } from "@/components/seat-booking/data/mockData";
+import { useToast } from "@/components/ui/use-toast";
 
 const SeatBookingPage = () => {
+  const { toast } = useToast();
   const [selectedOffice, setSelectedOffice] = useState(offices[0].id);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
@@ -53,7 +54,11 @@ const SeatBookingPage = () => {
         return updatedBookings;
       });
 
-      alert(`Seat ${selectedSeat} booked for ${format(date, 'PPPP')}`);
+      toast({
+        title: "Seat Booked",
+        description: `Seat ${selectedSeat} booked for ${format(date, 'PPPP')}`,
+      });
+      
       setSelectedSeat(null);
     }
   };
@@ -142,22 +147,12 @@ const SeatBookingPage = () => {
                   selectedSeat={selectedSeat}
                   onSeatSelect={handleSeatSelect}
                   date={date}
+                  officeId={selectedOffice}
                 />
                 
                 <div className="flex justify-between items-center mt-4">
                   <div className="flex space-x-4">
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 bg-gray-200 rounded mr-2"></div>
-                      <span className="text-sm">Available</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-                      <span className="text-sm">Selected</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 bg-red-500 rounded mr-2"></div>
-                      <span className="text-sm">Booked</span>
-                    </div>
+                    {/* Legend is now handled within the SeatGrid component */}
                   </div>
                   
                   <Button 

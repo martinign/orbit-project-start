@@ -1,10 +1,10 @@
 
 import { addDays, format, isSameDay } from 'date-fns';
-import { Office, Room, Seat } from '../types';
+import { Office, Room, Seat, OfficeLayout } from '../types';
 
 // Mock data for offices
 export const offices: Office[] = [
-  { id: 'o1', name: 'Berlin Office', location: 'Germany' },
+  { id: 'o1', name: 'Berlin Office', location: 'Germany', hasCustomLayout: true },
   { id: 'o2', name: 'Buenos Aires Office', location: 'Argentina' },
   { id: 'o3', name: 'New York Office', location: 'USA' },
   { id: 'o4', name: 'Bangalore Office', location: 'India' },
@@ -23,8 +23,213 @@ export const rooms: Room[] = [
   { id: 'r9', officeId: 'o4', name: 'Garden View', capacity: 10, description: 'Area with view of the garden' },
 ];
 
+// Berlin office layout definition based on the image
+export const berlinOfficeLayout: OfficeLayout = {
+  width: 1000,
+  height: 600,
+  elements: [
+    // Hallway at the bottom
+    { type: 'hallway', x: 50, y: 500, width: 900, height: 50, label: 'Hallway' },
+    // Entrance
+    { type: 'entrance', x: 450, y: 550, width: 100, height: 20, label: 'Entrance' },
+  ]
+};
+
 // Generate seats for each room
 const generateSeatsForRoom = (roomId: string): Seat[] => {
+  // Special handling for Berlin office main hall
+  if (roomId === 'r1') {
+    return [
+      // First row - top of the image
+      {
+        id: `${roomId}-A1`,
+        roomId,
+        row: 'A',
+        number: 1,
+        isBooked: false,
+        employeeName: 'Sarah',
+        position: { x: 100, y: 100, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-A2`,
+        roomId,
+        row: 'A',
+        number: 2,
+        isBooked: false,
+        employeeName: 'Michael',
+        position: { x: 200, y: 100, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-A3`,
+        roomId,
+        row: 'A',
+        number: 3,
+        isBooked: true,
+        employeeName: 'Emma',
+        position: { x: 300, y: 100, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-A4`,
+        roomId,
+        row: 'A',
+        number: 4,
+        isBooked: false,
+        employeeName: 'John',
+        position: { x: 400, y: 100, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-A5`,
+        roomId,
+        row: 'A',
+        number: 5,
+        isBooked: false,
+        employeeName: 'Lisa',
+        position: { x: 500, y: 100, width: 80, height: 60 }
+      },
+      
+      // Second row
+      {
+        id: `${roomId}-B1`,
+        roomId,
+        row: 'B',
+        number: 1,
+        isBooked: false,
+        employeeName: 'Thomas',
+        position: { x: 100, y: 200, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-B2`,
+        roomId,
+        row: 'B',
+        number: 2,
+        isBooked: true,
+        employeeName: 'Jessica',
+        position: { x: 200, y: 200, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-B3`,
+        roomId,
+        row: 'B',
+        number: 3,
+        isBooked: false,
+        employeeName: 'Daniel',
+        position: { x: 300, y: 200, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-B4`,
+        roomId,
+        row: 'B',
+        number: 4,
+        isBooked: false,
+        employeeName: 'Sophie',
+        position: { x: 400, y: 200, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-B5`,
+        roomId,
+        row: 'B',
+        number: 5,
+        isBooked: true,
+        employeeName: 'Alex',
+        position: { x: 500, y: 200, width: 80, height: 60 }
+      },
+      
+      // Third row
+      {
+        id: `${roomId}-C1`,
+        roomId,
+        row: 'C',
+        number: 1,
+        isBooked: false,
+        employeeName: 'Mark',
+        position: { x: 100, y: 300, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-C2`,
+        roomId,
+        row: 'C',
+        number: 2,
+        isBooked: false,
+        employeeName: 'Laura',
+        position: { x: 200, y: 300, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-C3`,
+        roomId,
+        row: 'C',
+        number: 3,
+        isBooked: false,
+        employeeName: 'Robert',
+        position: { x: 300, y: 300, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-C4`,
+        roomId,
+        row: 'C',
+        number: 4,
+        isBooked: true,
+        employeeName: 'Emily',
+        position: { x: 400, y: 300, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-C5`,
+        roomId,
+        row: 'C',
+        number: 5,
+        isBooked: false,
+        employeeName: 'David',
+        position: { x: 500, y: 300, width: 80, height: 60 }
+      },
+      
+      // Fourth row
+      {
+        id: `${roomId}-D1`,
+        roomId,
+        row: 'D',
+        number: 1,
+        isBooked: false,
+        employeeName: 'Jennifer',
+        position: { x: 100, y: 400, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-D2`,
+        roomId,
+        row: 'D',
+        number: 2,
+        isBooked: true,
+        employeeName: 'James',
+        position: { x: 200, y: 400, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-D3`,
+        roomId,
+        row: 'D',
+        number: 3,
+        isBooked: false,
+        employeeName: 'Anna',
+        position: { x: 300, y: 400, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-D4`,
+        roomId,
+        row: 'D',
+        number: 4,
+        isBooked: false,
+        employeeName: 'Peter',
+        position: { x: 400, y: 400, width: 80, height: 60 }
+      },
+      {
+        id: `${roomId}-D5`,
+        roomId,
+        row: 'D',
+        number: 5,
+        isBooked: true,
+        employeeName: 'Maria',
+        position: { x: 500, y: 400, width: 80, height: 60 }
+      },
+    ];
+  }
+  
   const rowLetters = ['A', 'B', 'C', 'D'];
   const room = rooms.find(r => r.id === roomId);
   const seats: Seat[] = [];
