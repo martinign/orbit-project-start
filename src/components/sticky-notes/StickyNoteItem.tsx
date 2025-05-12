@@ -1,21 +1,8 @@
 
-import React, { useRef, useState, useEffect } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 import { StickyNote, useStickyNotes } from "@/hooks/useStickyNotes";
-import { format } from "date-fns";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { DraggableWrapper } from "./note-components/DraggableWrapper";
+import { NoteCard } from "./note-components/NoteCard";
 
 interface StickyNoteItemProps {
   note: StickyNote;
@@ -26,203 +13,27 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
   note,
   onEditNote
 }) => {
-  const { deleteNote, updateNote } = useStickyNotes();
-  const [position, setPosition] = useState({ x: note.x_position || 0, y: note.y_position || 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const { deleteNote } = useStickyNotes();
   const [isHovered, setIsHovered] = useState(false);
-  const noteRef = useRef<HTMLDivElement>(null);
-  const rotation = note.rotation || 0; // Use the rotation from the note or default to 0
-  
-  // Check if content is long enough to truncate
-  const isContentLong = note.content && note.content.length > 100;
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Set initial random rotation if not already set
-  useEffect(() => {
-    if (note.rotation === 0 && noteRef.current) {
-      const randomRotation = Math.floor((Math.random() * 6) - 3); // Integer between -3 and 3
-      updateNote(note.id, {
-        rotation: randomRotation
-      });
-    }
-  }, []);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target instanceof HTMLButtonElement || 
-        (e.target as HTMLElement).closest('button') ||
-        (e.target as HTMLElement).closest('[role="dialog"]')) {
-      return; // Don't start drag if clicking on a button or dialog
-    }
-    
-    e.preventDefault();
-    setIsDragging(true);
-    setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.target instanceof HTMLButtonElement || 
-        (e.target as HTMLElement).closest('button') ||
-        (e.target as HTMLElement).closest('[role="dialog"]')) {
-      return; // Don't start drag if touching a button or dialog
-    }
-    
-    const touch = e.touches[0];
-    setIsDragging(true);
-    setStartPos({ x: touch.clientX - position.x, y: touch.clientY - position.y });
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const newX = e.clientX - startPos.x;
-    const newY = e.clientY - startPos.y;
-    setPosition({ x: newX, y: newY });
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!isDragging) return;
-    
-    const touch = e.touches[0];
-    const newX = touch.clientX - startPos.x;
-    const newY = touch.clientY - startPos.y;
-    setPosition({ x: newX, y: newY });
-  };
-
-  const handleMouseUp = async () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    
-    // Save the new position in the database
-    await updateNote(note.id, {
-      x_position: position.x,
-      y_position: position.y
-    });
-  };
-
-  // Add event listeners for mouse and touch events
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleTouchMove);
-      window.addEventListener('touchend', handleMouseUp);
-    }
-    
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleMouseUp);
-    };
-  }, [isDragging, startPos]);
-  
   const handleDelete = async () => {
     await deleteNote(note.id);
   };
 
-  // Render content with hover-based truncation
-  const renderContent = () => {
-    if (!note.content) return null;
-    
-    if (isContentLong && !isHovered) {
-      return (
-        <div className="whitespace-pre-wrap text-gray-700 text-sm">
-          {note.content.substring(0, 100)}...
-        </div>
-      );
-    }
-    
-    return (
-      <div className="whitespace-pre-wrap text-gray-700 text-sm">
-        {note.content}
-      </div>
-    );
-  };
-  
   return (
-    <div 
-      ref={noteRef}
-      className={`absolute ${isDragging ? 'z-50' : (isHovered ? 'z-20' : 'z-10')}`}
-      style={{ 
-        left: `${position.x}px`, 
-        top: `${position.y}px`,
-        transform: `rotate(${rotation}deg)`,
-        transition: isDragging ? 'none' : 'box-shadow 0.2s ease, transform 0.3s ease, scale 0.3s ease',
-        cursor: isDragging ? 'grabbing' : 'grab'
-      }}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <DraggableWrapper 
+      note={note} 
+      isHovered={isHovered}
+      setIsHovered={setIsHovered}
     >
-      <Card 
-        className={`w-64 overflow-hidden shadow-lg flex flex-col ${isDragging ? 'shadow-xl' : ''}`}
-        style={{ 
-          backgroundColor: note.color,
-          transform: isHovered ? 'translateY(-8px)' : 'none',
-          scale: isHovered ? '1.05' : '1',
-          boxShadow: isHovered 
-            ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
-            : isDragging 
-              ? '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
-              : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-          transition: isDragging ? 'none' : 'all 0.3s ease',
-        }}
-      >
-        <CardHeader className="p-4 pb-2 font-medium border-b">
-          <h3 className="text-lg font-semibold truncate">{note.title}</h3>
-        </CardHeader>
-        
-        <CardContent className="p-4 flex-grow">
-          {renderContent()}
-        </CardContent>
-        
-        <CardFooter className="p-3 border-t flex justify-between items-center bg-white bg-opacity-40">
-          <span className="text-xs text-gray-500">
-            {format(new Date(note.created_at), 'MMM d, yyyy')}
-          </span>
-          
-          <div className="flex space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => onEditNote(note)}
-              className="h-8 w-8 p-0"
-            >
-              <Edit className="h-4 w-4" />
-              <span className="sr-only">Edit</span>
-            </Button>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Note</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this note? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-red-600 text-white hover:bg-red-700">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+      <NoteCard 
+        note={note} 
+        isHovered={isHovered} 
+        isDragging={isDragging}
+        onEditNote={onEditNote}
+        onDeleteNote={handleDelete}
+      />
+    </DraggableWrapper>
   );
 };
