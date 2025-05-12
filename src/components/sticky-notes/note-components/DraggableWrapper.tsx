@@ -19,7 +19,6 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
   const [position, setPosition] = useState({ x: note.x_position || 0, y: note.y_position || 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [isShaking, setIsShaking] = useState(false);
   const noteRef = useRef<HTMLDivElement>(null);
   const rotation = note.rotation || 0;
 
@@ -41,10 +40,6 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
     }
     
     e.preventDefault();
-    // Add shake animation briefly when starting to drag
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 300);
-    
     setIsDragging(true);
     setStartPos({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
@@ -57,10 +52,6 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
     }
     
     const touch = e.touches[0];
-    // Add shake animation briefly when starting to drag on touch devices
-    setIsShaking(true);
-    setTimeout(() => setIsShaking(false), 300);
-    
     setIsDragging(true);
     setStartPos({ x: touch.clientX - position.x, y: touch.clientY - position.y });
   };
@@ -114,12 +105,12 @@ export const DraggableWrapper: React.FC<DraggableWrapperProps> = ({
   return (
     <div 
       ref={noteRef}
-      className={`absolute ${isDragging ? 'z-50' : (isHovered ? 'z-20' : 'z-10')} ${isShaking ? 'animate-shake' : ''}`}
+      className={`absolute ${isDragging ? 'z-50' : (isHovered ? 'z-20' : 'z-10')}`}
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
         transform: `rotate(${rotation}deg)`,
-        transition: isDragging ? 'none' : 'box-shadow 0.2s ease, transform 0.3s ease, scale 0.3s ease',
+        transition: isDragging ? 'none' : 'box-shadow 0.3s ease, transform 0.3s ease, scale 0.3s ease',
         cursor: isDragging ? 'grabbing' : 'grab'
       }}
       onMouseDown={handleMouseDown}
