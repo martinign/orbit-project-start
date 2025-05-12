@@ -17,9 +17,10 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
   return (
     <div 
       ref={boardRef}
-      className="relative w-full min-h-[calc(100vh-220px)] bg-[url('/cork-board.jpg')] bg-repeat rounded-lg p-6 border border-amber-800 shadow-inner overflow-hidden"
+      className="relative w-full min-h-[calc(100vh-180px)] bg-[url('/cork-board.jpg')] bg-repeat rounded-lg p-8 border-2 border-gray-400/50 shadow-inner overflow-hidden"
       style={{ 
-        minHeight: "600px",
+        minHeight: "800px",
+        boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)"
       }}
     >
       {notes.map((note) => (
