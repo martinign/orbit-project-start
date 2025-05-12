@@ -25,7 +25,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
       className={`w-64 overflow-hidden shadow-lg flex flex-col ${isDragging ? 'shadow-xl' : ''}`}
       style={{ 
         backgroundColor: note.color,
-        transform: isHovered ? 'translateY(-8px)' : 'none',
+        transform: isHovered 
+          ? 'translateY(-8px) rotate(1deg)'  // Add slight rotation when hovered
+          : 'none',
         scale: isHovered ? '1.05' : '1',
         boxShadow: isHovered 
           ? '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
@@ -33,6 +35,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             ? '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
             : '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         transition: isDragging ? 'none' : 'all 0.3s ease',
+        animationName: isHovered ? 'wiggle' : 'none',
+        animationDuration: '0.5s',
+        animationIterationCount: '1'
       }}
     >
       <CardHeader className="p-4 pb-2 font-medium border-b">

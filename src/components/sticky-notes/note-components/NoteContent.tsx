@@ -14,14 +14,19 @@ export const NoteContent: React.FC<NoteContentProps> = ({ content, isHovered }) 
 
   if (isContentLong && !isHovered) {
     return (
-      <div className="whitespace-pre-wrap text-gray-700 text-sm">
+      <div className="whitespace-pre-wrap text-gray-700 text-sm transition-all duration-300">
         {content.substring(0, 100)}...
       </div>
     );
   }
   
   return (
-    <div className="whitespace-pre-wrap text-gray-700 text-sm">
+    <div 
+      className={`whitespace-pre-wrap text-gray-700 text-sm ${isContentLong && isHovered ? 'animate-fade-in' : ''}`}
+      style={{
+        transition: 'all 0.3s ease',
+      }}
+    >
       {content}
     </div>
   );
