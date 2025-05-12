@@ -32,6 +32,7 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
 
   const [showReferenceImage, setShowReferenceImage] = useState(false);
   const [showSeatList, setShowSeatList] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   // Group seats by row for the seat list
   const seatsByRow = seats.reduce<Record<string, Seat[]>>((acc, seat) => {
@@ -125,11 +126,19 @@ const SeatGrid = ({ seats, selectedSeat, onSeatSelect, date, officeId }: SeatGri
         {showReferenceImage && (
           <div className="mb-4 flex justify-center">
             <div className="border rounded overflow-hidden max-w-full">
-              <img 
-                src="/berlin-office-layout.png" 
-                alt="Berlin Office Layout Reference" 
-                className="max-w-full h-auto"
-              />
+              {imageError ? (
+                <div className="bg-gray-100 p-8 text-center">
+                  <p className="text-gray-600 mb-2">Floor plan image not found</p>
+                  <p className="text-sm text-gray-500">Please upload an image named "berlin-office-layout.png" to the public folder</p>
+                </div>
+              ) : (
+                <img 
+                  src="/berlin-office-layout.png" 
+                  alt="Berlin Office Layout Reference" 
+                  className="max-w-full h-auto"
+                  onError={() => setImageError(true)}
+                />
+              )}
             </div>
           </div>
         )}
