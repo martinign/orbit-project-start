@@ -69,7 +69,7 @@ export const useZoomPanControl = (initialScale = 1) => {
     setIsDragging(false);
   }, []);
   
-  // Add handleWheel function for StickyNotesPage compatibility
+  // Update handleWheel to accept React.WheelEvent
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     

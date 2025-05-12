@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useCallback } from "react";
 import { StickyNote } from "@/hooks/useStickyNotes";
 import { StickyNoteItem } from "./StickyNoteItem";
@@ -15,7 +14,7 @@ interface StickyNotesGridProps {
   startPan: (e: React.MouseEvent) => void;
   pan: (e: React.MouseEvent) => void;
   endPan: () => void;
-  handleWheel: (e: WheelEvent) => void;
+  handleWheel: (e: React.WheelEvent) => void;
 }
 
 export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
@@ -35,14 +34,24 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
 
   useEffect(() => {
     const boardElement = boardRef.current;
-    if (boardElement) {
-      boardElement.addEventListener('wheel', handleWheel, { passive: false });
-    }
+    
+    if (!boardElement) return;
+    
+    // Create a handler that will call our passed handleWheel function
+    const wheelHandler = (e: WheelEvent) => {
+      // Convert the native event to something compatible with our handler
+      const syntheticEvent = {
+        ...e,
+        preventDefault: () => e.preventDefault()
+      } as unknown as React.WheelEvent;
+      
+      handleWheel(syntheticEvent);
+    };
+    
+    boardElement.addEventListener('wheel', wheelHandler, { passive: false });
     
     return () => {
-      if (boardElement) {
-        boardElement.removeEventListener('wheel', handleWheel);
-      }
+      boardElement.removeEventListener('wheel', wheelHandler);
     };
   }, [handleWheel]);
 
