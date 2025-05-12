@@ -18,34 +18,50 @@ interface SidebarMenuItemsProps {
 
 export const SidebarMenuItems = ({ recentProjects, getStatusColor }: SidebarMenuItemsProps) => {
   return (
-    <SidebarMenu>
-      {recentProjects && recentProjects.length > 0 ? (
-        recentProjects.map(project => (
-          <SidebarMenuItem key={project.id}>
-            <Link to={`/projects/${project.id}`}>
-              <SidebarMenuButton 
-                tooltip={project.project_type === 'non-billable' 
-                  ? project.project_number 
-                  : `${project.project_number} - ${project.Sponsor}`} 
-                className="hover:bg-blue-500/10 transition-colors duration-200"
-              >
-                <Circle className={`h-3 w-3 ${getStatusColor(project.status)}`} />
-                <span className="truncate max-w-[150px]">
-                  {project.project_type === 'non-billable' 
-                    ? project.project_number
-                    : `${project.project_number} - ${project.Sponsor}`}
-                </span>
-              </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        ))
-      ) : (
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-gray-400 cursor-default">
-            <span>No recent projects</span>
+    <>
+      {/* Seat Booking Section */}
+      <SidebarMenuItem>
+        <Link to="/seat-booking">
+          <SidebarMenuButton 
+            tooltip="Seat Booking" 
+            className="hover:bg-blue-500/10 transition-colors duration-200"
+          >
+            <Circle className="h-3 w-3 text-green-500" />
+            <span className="truncate max-w-[150px]">Seat Booking</span>
           </SidebarMenuButton>
-        </SidebarMenuItem>
-      )}
-    </SidebarMenu>
+        </Link>
+      </SidebarMenuItem>
+
+      {/* Recent Projects Menu */}
+      <SidebarMenu>
+        {recentProjects && recentProjects.length > 0 ? (
+          recentProjects.map(project => (
+            <SidebarMenuItem key={project.id}>
+              <Link to={`/projects/${project.id}`}>
+                <SidebarMenuButton 
+                  tooltip={project.project_type === 'non-billable' 
+                    ? project.project_number 
+                    : `${project.project_number} - ${project.Sponsor}`} 
+                  className="hover:bg-blue-500/10 transition-colors duration-200"
+                >
+                  <Circle className={`h-3 w-3 ${getStatusColor(project.status)}`} />
+                  <span className="truncate max-w-[150px]">
+                    {project.project_type === 'non-billable' 
+                      ? project.project_number
+                      : `${project.project_number} - ${project.Sponsor}`}
+                  </span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))
+        ) : (
+          <SidebarMenuItem>
+            <SidebarMenuButton className="text-gray-400 cursor-default">
+              <span>No recent projects</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
+      </SidebarMenu>
+    </>
   );
 };

@@ -34,6 +34,10 @@ const Dashboard = () => {
       return <StickyNotesPage />;
     }
     
+    if (path === "/seat-booking") {
+      return <SeatBookingPage />;
+    }
+    
     // Default to Projects for /projects and /projects/:id routes
     return <Projects />;
   };
@@ -50,6 +54,18 @@ const Dashboard = () => {
       </SidebarProvider>
       
       <ChatWidget />
+    </div>
+  );
+};
+
+// Placeholder for the SeatBookingPage component
+const SeatBookingPage = () => {
+  return (
+    <div className="container mx-auto py-6">
+      <h1 className="text-2xl font-bold mb-6">Seat Booking</h1>
+      <p className="text-gray-600">
+        This feature will allow you to book seats in the office. Coming soon.
+      </p>
     </div>
   );
 };
