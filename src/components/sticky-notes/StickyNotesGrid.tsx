@@ -48,15 +48,11 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
 
   return (
     <ScrollArea className="h-[calc(100vh-240px)] min-h-[800px]">
-      {/* Container without border */}
+      {/* Full area container without any borders or constraints */}
       <div 
         ref={boardRef}
-        className="relative w-full min-h-[calc(100vh-180px)] rounded-lg overflow-hidden"
-        style={{ 
-          minHeight: "800px",
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)",
-          background: "linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%)"
-        }}
+        className="relative w-full min-h-[calc(100vh-180px)]"
+        style={{ minHeight: "800px" }}
       >
         {/* Zoomable and pannable content */}
         <div
@@ -67,7 +63,6 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
             transformOrigin: '0 0',
             transition: isDragging ? 'none' : 'transform 0.1s ease',
             cursor: isDragging ? 'grabbing' : 'grab',
-            boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.15)"
           }}
           onMouseDown={startPan}
           onMouseMove={pan}
@@ -87,4 +82,3 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
     </ScrollArea>
   );
 };
-
