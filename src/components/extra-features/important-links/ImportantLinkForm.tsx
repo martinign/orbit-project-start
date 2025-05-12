@@ -69,7 +69,25 @@ export const ImportantLinkForm: React.FC<ImportantLinkFormProps> = ({
             <FormItem>
               <FormLabel>URL</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com" {...field} />
+                <Input 
+                  placeholder="https://example.com" 
+                  {...field} 
+                  // Ensure URL has proper format
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    // Add https:// if needed when user starts typing
+                    if (value && value.trim() !== '' && !value.match(/^https?:\/\//)) {
+                      if (!value.match(/^www\./)) {
+                        if (value.includes(".")) {
+                          value = "https://www." + value;
+                        }
+                      } else {
+                        value = "https://" + value;
+                      }
+                    }
+                    field.onChange(value);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -102,7 +120,11 @@ export const ImportantLinkForm: React.FC<ImportantLinkFormProps> = ({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? 'Saving...' : defaultValues.title ? 'Save Changes' : 'Add Link'}
           </Button>
         </DialogFooter>
