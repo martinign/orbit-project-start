@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DocRequest, DocStatus } from './api/docRequestsApi';
 import { DocRequestStatusBadge } from './DocRequestStatusBadge';
 import { MessageSquare, MessageSquarePlus } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DocPrintingActionsProps {
   request: DocRequest;
@@ -24,6 +25,10 @@ export const DocPrintingActions: React.FC<DocPrintingActionsProps> = ({
   onViewUpdates,
   onAddUpdate
 }) => {
+  const { user } = useAuth();
+  // Check if current user is the creator of this document
+  const isCreator = user?.id === request.user_id;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,12 +37,17 @@ export const DocPrintingActions: React.FC<DocPrintingActionsProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onEdit}>
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete}>
-          Delete
-        </DropdownMenuItem>
+        {isCreator && (
+          <>
+            <DropdownMenuItem onClick={onEdit}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+        
         <DropdownMenuItem>
           <Button
             variant="ghost"

@@ -29,6 +29,7 @@ import { DocRequest, DocStatus } from './api/docRequestsApi';
 import { DocRequestStatusBadge } from './DocRequestStatusBadge';
 import { format } from 'date-fns';
 import { useTeamMemberName } from '@/hooks/useTeamMembers';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DocPrintingRequestsProps {
   requests: DocRequest[];
@@ -136,6 +137,10 @@ const RequestRow: React.FC<RequestRowProps> = ({
   columnWidth 
 }) => {
   const { memberName, isLoading: isLoadingMemberName } = useTeamMemberName(request.doc_assigned_to);
+  const { user } = useAuth();
+  
+  // Check if current user is the creator of this document
+  const isCreator = user?.id === request.user_id;
   
   return (
     <TableRow>
@@ -182,12 +187,16 @@ const RequestRow: React.FC<RequestRowProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(request)}>
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(request)}>
-                Delete
-              </DropdownMenuItem>
+              {isCreator && (
+                <>
+                  <DropdownMenuItem onClick={() => onEdit(request)}>
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDelete(request)}>
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem 
                 disabled={request.doc_status === 'pending'}
                 onClick={() => onStatusChange(request.id, 'pending')}
