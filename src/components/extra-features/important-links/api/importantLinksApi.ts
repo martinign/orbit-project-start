@@ -7,7 +7,7 @@ export const fetchImportantLinks = async (projectId: string) => {
   const { data, error } = await supabase
     .from('project_important_links')
     .select('*')
-    .eq('link_project_id', projectId)
+    .eq('project_id', projectId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -18,10 +18,10 @@ export const addImportantLink = async (values: LinkFormValues, projectId: string
   const { error } = await supabase
     .from('project_important_links')
     .insert({
-      link_project_id: projectId,
-      link_title: values.title,
-      link_url: values.url,
-      link_description: values.description || null,
+      project_id: projectId,
+      title: values.title,
+      url: values.url,
+      description: values.description || null,
       user_id: userId,
     });
 
@@ -35,9 +35,9 @@ export const updateImportantLink = async (values: LinkFormValues, linkId: string
   const { error } = await supabase
     .from('project_important_links')
     .update({
-      link_title: values.title,
-      link_url: values.url,
-      link_description: values.description || null,
+      title: values.title,
+      url: values.url,
+      description: values.description || null,
     })
     .eq('id', linkId);
 

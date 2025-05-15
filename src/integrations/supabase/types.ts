@@ -588,43 +588,76 @@ export type Database = {
       project_important_links: {
         Row: {
           created_at: string
+          description: string | null
           id: string
-          link_description: string | null
-          link_project_id: string
-          link_title: string
-          link_url: string
+          project_id: string
+          title: string
           updated_at: string
+          url: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
-          link_description?: string | null
-          link_project_id: string
-          link_title: string
-          link_url: string
+          project_id: string
+          title: string
           updated_at?: string
+          url: string
           user_id: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
-          link_description?: string | null
-          link_project_id?: string
-          link_title?: string
-          link_url?: string
+          project_id?: string
+          title?: string
           updated_at?: string
+          url?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "project_important_links_link_project_id_fkey"
-            columns: ["link_project_id"]
+            foreignKeyName: "project_important_links_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
+      }
+      project_important_links_backup: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          link_description: string | null
+          link_project_id: string | null
+          link_title: string | null
+          link_url: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          link_description?: string | null
+          link_project_id?: string | null
+          link_title?: string | null
+          link_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          link_description?: string | null
+          link_project_id?: string | null
+          link_title?: string | null
+          link_url?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       project_invitations: {
         Row: {

@@ -78,9 +78,9 @@ export const ImportantLinkDialogs: React.FC<ImportantLinkDialogsProps> = ({
           {currentLink && (
             <ImportantLinkForm 
               defaultValues={{
-                title: currentLink.link_title,
-                url: currentLink.link_url,
-                description: currentLink.link_description || '',
+                title: currentLink.title,
+                url: currentLink.url,
+                description: currentLink.description || '',
               }}
               onSubmit={handleEditLink}
               onCancel={() => setIsEditDialogOpen(false)}
@@ -97,7 +97,7 @@ export const ImportantLinkDialogs: React.FC<ImportantLinkDialogsProps> = ({
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the link 
-              "{currentLink?.link_title}".
+              "{currentLink?.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

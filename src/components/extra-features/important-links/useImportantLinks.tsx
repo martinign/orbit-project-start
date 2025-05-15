@@ -69,7 +69,7 @@ export const useImportantLinks = (projectId?: string) => {
   // Add real-time subscription for links
   useRealtimeSubscription({
     table: 'project_important_links',
-    filter: projectId ? 'link_project_id' : undefined,
+    filter: projectId ? 'project_id' : undefined,
     filterValue: projectId,
     onRecordChange: (payload) => {
       console.log('Important links change detected:', payload);

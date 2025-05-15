@@ -13,10 +13,10 @@ import { ExternalLink, Pencil, Trash } from 'lucide-react';
 
 export interface ImportantLink {
   id: string;
-  link_project_id: string;  // Updated from project_id to link_project_id
-  link_title: string;       // Updated from title to link_title
-  link_url: string;         // Updated from url to link_url
-  link_description: string | null;  // Updated from description to link_description
+  project_id: string;
+  title: string;
+  url: string;
+  description: string | null;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -46,20 +46,20 @@ export const ImportantLinksTable: React.FC<ImportantLinksTableProps> = ({
       <TableBody>
         {links.map((link) => (
           <TableRow key={link.id}>
-            <TableCell className="font-medium">{link.link_title}</TableCell>
+            <TableCell className="font-medium">{link.title}</TableCell>
             <TableCell>
               <a 
-                href={link.link_url} 
+                href={link.url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center text-blue-600 hover:underline"
               >
-                {new URL(link.link_url).hostname}
+                {new URL(link.url).hostname}
                 <ExternalLink className="h-3 w-3 ml-1" />
               </a>
             </TableCell>
             <TableCell className="max-w-[200px] truncate">
-              {link.link_description || '—'}
+              {link.description || '—'}
             </TableCell>
             <TableCell>
               <div className="flex gap-2">
