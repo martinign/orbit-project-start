@@ -392,6 +392,10 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          doc_file_name: string | null
+          doc_file_path: string | null
+          doc_file_size: number | null
+          doc_file_type: string | null
           doc_request_id: string
           id: string
           updated_at: string
@@ -400,6 +404,10 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          doc_file_name?: string | null
+          doc_file_path?: string | null
+          doc_file_size?: number | null
+          doc_file_type?: string | null
           doc_request_id: string
           id?: string
           updated_at?: string
@@ -408,6 +416,10 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          doc_file_name?: string | null
+          doc_file_path?: string | null
+          doc_file_size?: number | null
+          doc_file_type?: string | null
           doc_request_id?: string
           id?: string
           updated_at?: string

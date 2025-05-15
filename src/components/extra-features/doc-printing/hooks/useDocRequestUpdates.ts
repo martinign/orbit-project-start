@@ -12,6 +12,10 @@ export interface DocRequestUpdate {
   content: string;
   created_at: string;
   updated_at: string;
+  doc_file_path?: string | null;
+  doc_file_name?: string | null;
+  doc_file_type?: string | null;
+  doc_file_size?: number | null;
 }
 
 export const useDocRequestUpdates = (docRequestId: string) => {
@@ -49,17 +53,42 @@ export const useDocRequestUpdates = (docRequestId: string) => {
 
   // Add a new update
   const addUpdate = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, file }: { content: string, file?: File }) => {
       if (!user) throw new Error('You must be logged in to add updates');
       if (!docRequestId) throw new Error('Document request ID is required');
       
+      // Initialize the update data
+      const updateData: any = {
+        doc_request_id: docRequestId,
+        user_id: user.id,
+        content
+      };
+      
+      // Handle file upload if a file is provided
+      if (file) {
+        const timestamp = new Date().getTime();
+        const randomString = Math.random().toString(36).substring(2, 15);
+        const fileExtension = file.name.split('.').pop();
+        const filePath = `${user.id}/${timestamp}-${randomString}.${fileExtension}`;
+        
+        // Upload file to Supabase Storage
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('doc-files')
+          .upload(filePath, file);
+        
+        if (fileError) throw fileError;
+        
+        // Add file info to the update data
+        updateData.doc_file_path = filePath;
+        updateData.doc_file_name = file.name;
+        updateData.doc_file_type = file.type;
+        updateData.doc_file_size = file.size;
+      }
+      
+      // Insert the update into the database
       const { data, error } = await supabase
         .from('project_doc_request_updates')
-        .insert({
-          doc_request_id: docRequestId,
-          user_id: user.id,
-          content
-        })
+        .insert(updateData)
         .select('*')
         .single();
         

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useDocPrintingRequests } from './doc-printing/useDocPrintingRequests';
@@ -12,6 +11,9 @@ import { DocPrintingFilters } from './doc-printing/components/DocPrintingFilters
 import { DocPrintingContent } from './doc-printing/components/DocPrintingContent';
 import { ProjectWarning } from './doc-printing/components/ProjectWarning';
 import { supabase } from '@/integrations/supabase/client';
+import { DocUpdateDialog } from './doc-printing/DocUpdateDialog';
+import { DocUpdatesDisplay } from './doc-printing/DocUpdatesDisplay';
+import { useDocRequestUpdates } from './doc-printing/hooks/useDocRequestUpdates';
 
 interface DocPrintingProps {
   projectId?: string;
@@ -25,6 +27,11 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
 
   // Set up the active tab for SLB vs General
   const [activeDocType, setActiveDocType] = useState<DocType | 'all'>('all');
+
+  // Updated to also show the updates functionality in the component
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [isUpdatesDisplayOpen, setIsUpdatesDisplayOpen] = useState(false);
+  const [selectedRequestForUpdates, setSelectedRequestForUpdates] = useState<DocRequest | null>(null);
 
   // Only proceed if we have a project ID
   const {
@@ -121,6 +128,29 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     }
   };
 
+  // Handler for adding updates to documents
+  const handleAddUpdate = (docRequest: DocRequest) => {
+    setSelectedRequestForUpdates(docRequest);
+    setIsUpdateDialogOpen(true);
+  };
+  
+  const handleViewUpdates = (docRequest: DocRequest) => {
+    setSelectedRequestForUpdates(docRequest);
+    setIsUpdatesDisplayOpen(true);
+  };
+
+  // Handler to submit an update
+  const handleSubmitUpdate = (content: string, file?: File) => {
+    if (!selectedRequestForUpdates || !user) return;
+    
+    // Here we need to use the hook or function to add the update
+    // This would be handled by a component using useDocRequestUpdates
+    const { addUpdate, isSubmitting: isUpdateSubmitting } = useDocRequestUpdates(selectedRequestForUpdates.id);
+    
+    addUpdate({ content, file });
+    setIsUpdateDialogOpen(false);
+  };
+
   // Filter requests based on active tab
   const filteredRequests = requests.filter(r => 
     activeDocType === 'all' || r.doc_type === activeDocType
@@ -154,6 +184,8 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
             onEdit={handleEditRequest}
             onDelete={handleDeleteRequest}
             onStatusChange={handleStatusChange}
+            onAddUpdate={handleAddUpdate}
+            onViewUpdates={handleViewUpdates}
           />
         </CardContent>
       </Card>
@@ -168,6 +200,31 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
           projectId={projectId}
           initialData={currentRequest}
           isSubmitting={isSubmitting}
+        />
+      )}
+      
+      {/* Document Update Dialog */}
+      {selectedRequestForUpdates && (
+        <DocUpdateDialog
+          open={isUpdateDialogOpen}
+          onClose={() => setIsUpdateDialogOpen(false)}
+          docRequestId={selectedRequestForUpdates.id}
+          docTitle={selectedRequestForUpdates.doc_title}
+          onAddUpdate={handleSubmitUpdate}
+          isSubmitting={isSubmitting}
+        />
+      )}
+      
+      {/* Document Updates Display */}
+      {selectedRequestForUpdates && (
+        <DocUpdatesDisplay
+          open={isUpdatesDisplayOpen}
+          onClose={() => setIsUpdatesDisplayOpen(false)}
+          docRequestId={selectedRequestForUpdates.id}
+          docTitle={selectedRequestForUpdates.doc_title}
+          onMarkViewed={() => {}}
+          updates={[]}
+          isLoading={false}
         />
       )}
     </div>
