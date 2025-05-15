@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { DocRequest, DocStatus } from '../api/docRequestsApi';
-import { DocRequestStatusBadge } from '../DocRequestStatusBadge';
+import { DocRequest, DocStatus } from './api/docRequestsApi';
+import { DocRequestStatusBadge } from './DocRequestStatusBadge';
 import { MessageSquare, MessageSquarePlus } from 'lucide-react';
 
 interface DocPrintingActionsProps {

@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { DocRequest, DocStatus } from '../api/docRequestsApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DocRequestStatusBadge } from '../DocRequestStatusBadge';
-import { DocPrintingActions } from '../DocPrintingActions';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { AuthWarning } from './AuthWarning';
@@ -18,14 +16,18 @@ interface DocPrintingContentProps {
   onEdit: (request: DocRequest) => void;
   onDelete: (request: DocRequest) => void;
   onStatusChange: (requestId: string, status: DocStatus) => void;
+  onAddUpdate?: (request: DocRequest) => void;
+  onViewUpdates?: (request: DocRequest) => void;
 }
 
 // Make a separate component for each row to handle individual update counts
-const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
+const RequestRow = ({ request, onEdit, onDelete, onStatusChange, onAddUpdate, onViewUpdates }: {
   request: DocRequest;
   onEdit: (request: DocRequest) => void;
   onDelete: (request: DocRequest) => void;
   onStatusChange: (requestId: string, status: DocStatus) => void;
+  onAddUpdate?: (request: DocRequest) => void;
+  onViewUpdates?: (request: DocRequest) => void;
 }) => {
   // Use the hook for each row to track updates
   const { updates, updateCount } = useDocRequestUpdates(request.id);
@@ -81,6 +83,8 @@ const RequestRow = ({ request, onEdit, onDelete, onStatusChange }: {
           onEdit={() => onEdit(request)}
           onDelete={() => onDelete(request)}
           onStatusChange={(status) => onStatusChange(request.id, status)}
+          onViewUpdates={onViewUpdates ? () => onViewUpdates(request) : undefined}
+          onAddUpdate={onAddUpdate ? () => onAddUpdate(request) : undefined}
         />
       </TableCell>
     </TableRow>
@@ -93,7 +97,9 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
   filteredRequests,
   onEdit,
   onDelete,
-  onStatusChange
+  onStatusChange,
+  onAddUpdate,
+  onViewUpdates
 }) => {
   if (!isAuthenticated) {
     return <AuthWarning />;
@@ -156,6 +162,8 @@ export const DocPrintingContent: React.FC<DocPrintingContentProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onStatusChange={onStatusChange}
+              onAddUpdate={onAddUpdate}
+              onViewUpdates={onViewUpdates}
             />
           ))}
         </TableBody>
