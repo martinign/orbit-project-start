@@ -946,6 +946,56 @@ export type Database = {
           },
         ]
       }
+      project_team_vacations: {
+        Row: {
+          created_at: string
+          end_date: string
+          full_name: string
+          id: string
+          last_name: string | null
+          project_id: string
+          reason: string | null
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          full_name: string
+          id?: string
+          last_name?: string | null
+          project_id: string
+          reason?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          full_name?: string
+          id?: string
+          last_name?: string | null
+          project_id?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_team_vacations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_workday_codes: {
         Row: {
           created_at: string

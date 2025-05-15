@@ -10,6 +10,7 @@ import { ImportantLinksTab } from './tabs/ImportantLinksTab';
 import { SiteInitiationTrackerTab } from './tabs/SiteInitiationTrackerTab';
 import { DocPrintingTab } from './tabs/DocPrintingTab';
 import { WorkdayScheduleTab } from './tabs/WorkdayScheduleTab';
+import { VacationTrackerTab } from './tabs/VacationTrackerTab';
 import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Placeholder components for new tabs
 const BillOfMaterialsTab: React.FC<{projectId: string}> = ({ projectId }) => (
   <div className="p-6">
-    <h2 className="text-2xl font-semibold mb-4">TP34-Bill of Materials</h2>
+    <h2 className="text-2xl font-semibold mb-4">Bill of Materials</h2>
     <p className="text-gray-600">This feature is coming soon. You'll be able to manage bill of materials for this project here.</p>
   </div>
 );
@@ -27,13 +28,6 @@ const DesignSheetTab: React.FC<{projectId: string}> = ({ projectId }) => (
   <div className="p-6">
     <h2 className="text-2xl font-semibold mb-4">Design Sheet</h2>
     <p className="text-gray-600">This feature is coming soon. You'll be able to manage design sheets for this project here.</p>
-  </div>
-);
-
-const VacationTrackerTab: React.FC<{projectId: string}> = ({ projectId }) => (
-  <div className="p-6">
-    <h2 className="text-2xl font-semibold mb-4">Vacation Tracker</h2>
-    <p className="text-gray-600">This feature is coming soon. You'll be able to track team vacations for this project here.</p>
   </div>
 );
 
