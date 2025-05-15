@@ -51,7 +51,7 @@ export const useImportantLinks = (projectId?: string) => {
     } catch (error) {
       console.error('Error fetching important links:', error);
       toast({
-        title: 'Error',
+        title: "Error",
         description: 'Failed to load important links',
         variant: 'destructive',
       });
@@ -80,7 +80,7 @@ export const useImportantLinks = (projectId?: string) => {
   const handleAddLink = async (values: LinkFormValues) => {
     if (!user || !projectId) {
       toast({
-        title: 'Error',
+        title: "Error",
         description: 'User or project information missing',
         variant: 'destructive',
       });
@@ -92,15 +92,18 @@ export const useImportantLinks = (projectId?: string) => {
       await addImportantLink(values, projectId, user.id);
       
       toast({
-        title: 'Success',
+        title: "Success",
         description: 'Link added successfully',
       });
+      
+      // Immediately fetch the updated list
+      await fetchLinks();
       
       setIsAddDialogOpen(false);
     } catch (error: any) {
       console.error('Error adding link:', error);
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message || 'Failed to add link',
         variant: 'destructive',
       });
@@ -117,16 +120,19 @@ export const useImportantLinks = (projectId?: string) => {
       await updateImportantLink(values, currentLink.id);
       
       toast({
-        title: 'Success',
+        title: "Success",
         description: 'Link updated successfully',
       });
+      
+      // Immediately fetch the updated list
+      await fetchLinks();
       
       setIsEditDialogOpen(false);
       setCurrentLink(null);
     } catch (error: any) {
       console.error('Error updating link:', error);
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message || 'Failed to update link',
         variant: 'destructive',
       });
@@ -143,16 +149,19 @@ export const useImportantLinks = (projectId?: string) => {
       await deleteImportantLink(currentLink.id);
       
       toast({
-        title: 'Success',
+        title: "Success",
         description: 'Link deleted successfully',
       });
+      
+      // Immediately fetch the updated list
+      await fetchLinks();
       
       setIsDeleteDialogOpen(false);
       setCurrentLink(null);
     } catch (error: any) {
       console.error('Error deleting link:', error);
       toast({
-        title: 'Error',
+        title: "Error",
         description: error.message || 'Failed to delete link',
         variant: 'destructive',
       });
@@ -178,5 +187,6 @@ export const useImportantLinks = (projectId?: string) => {
     openEditDialog,
     openDeleteDialog,
     isSubmitting,
+    refetch: fetchLinks,
   };
 };
