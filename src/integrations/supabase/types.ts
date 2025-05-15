@@ -1415,6 +1415,10 @@ export type Database = {
         Args: { object_id: string }
         Returns: boolean
       }
+      get_doc_update_project_id: {
+        Args: { doc_request_id: string }
+        Returns: string
+      }
       get_task_project_id: {
         Args: { task_id: string }
         Returns: string

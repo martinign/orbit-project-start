@@ -121,6 +121,7 @@ const TaskUpdateDialog: React.FC<TaskUpdateDialogProps> = ({
             </Button>
             <Button 
               type="submit"
+              className="bg-blue-500 hover:bg-blue-600 text-white"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
