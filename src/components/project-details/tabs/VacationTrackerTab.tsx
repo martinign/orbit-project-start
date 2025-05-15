@@ -24,7 +24,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 
 interface VacationRecord {
@@ -34,7 +33,6 @@ interface VacationRecord {
   start_date: string;
   end_date: string;
   reason?: string;
-  status: string;
   user_id: string;
 }
 
@@ -54,7 +52,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
-  const [status, setStatus] = useState('pending');
   
   useEffect(() => {
     fetchVacations();
@@ -94,7 +91,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
       setStartDate(vacation.start_date);
       setEndDate(vacation.end_date);
       setReason(vacation.reason || '');
-      setStatus(vacation.status);
     } else {
       // Add mode
       setIsEditMode(false);
@@ -102,7 +98,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
       setStartDate('');
       setEndDate('');
       setReason('');
-      setStatus('pending');
     }
     setIsDialogOpen(true);
   };
@@ -132,7 +127,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
             start_date: startDate,
             end_date: endDate,
             reason,
-            status,
             updated_at: new Date().toISOString()
           })
           .eq('id', currentVacation.id);
@@ -160,8 +154,7 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
             last_name: profileData?.last_name || '',
             start_date: startDate,
             end_date: endDate,
-            reason,
-            status
+            reason
           });
           
         if (error) throw error;
@@ -214,19 +207,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
     }
   };
   
-  const getStatusBadgeColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return 'bg-green-500';
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'rejected':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-  
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
@@ -265,7 +245,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
                 <TableHead>End Date</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -282,11 +261,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
                     <TableCell>{format(new Date(vacation.end_date), 'MMM d, yyyy')}</TableCell>
                     <TableCell>{durationDays} day{durationDays !== 1 ? 's' : ''}</TableCell>
                     <TableCell className="max-w-xs truncate">{vacation.reason || '—'}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusBadgeColor(vacation.status)}>
-                        {vacation.status.charAt(0).toUpperCase() + vacation.status.slice(1)}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-right">
                       {user?.id === vacation.user_id && (
                         <div className="flex justify-end gap-2">
@@ -354,22 +328,6 @@ export const VacationTrackerTab: React.FC<VacationTrackerTabProps> = ({ projectI
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
-            
-            {isEditMode && (
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  className="w-full rounded-md border border-gray-300 p-2"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-            )}
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
