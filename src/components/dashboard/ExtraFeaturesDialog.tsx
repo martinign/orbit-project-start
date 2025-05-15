@@ -36,7 +36,8 @@ export function ExtraFeaturesDialog({
     docPrinting: features.docPrinting,
     billOfMaterials: features.billOfMaterials || false,
     designSheet: features.designSheet || false,
-    workdayScheduled: features.workdayScheduled || false
+    workdayScheduled: features.workdayScheduled || false,
+    vacationTracker: features.vacationTracker || false
   });
 
   // Sync with actual features when dialog opens
@@ -48,7 +49,8 @@ export function ExtraFeaturesDialog({
         docPrinting: features.docPrinting,
         billOfMaterials: features.billOfMaterials || false,
         designSheet: features.designSheet || false,
-        workdayScheduled: features.workdayScheduled || false
+        workdayScheduled: features.workdayScheduled || false,
+        vacationTracker: features.vacationTracker || false
       });
     }
   }, [open, features]);
@@ -182,6 +184,14 @@ export function ExtraFeaturesDialog({
               workdayScheduled: checked === true
             }))} />
               <Label htmlFor="workdayScheduled" className="cursor-pointer">Workday Scheduled</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox id="vacationTracker" checked={selectedFeatures.vacationTracker} onCheckedChange={checked => setSelectedFeatures(prev => ({
+              ...prev,
+              vacationTracker: checked === true
+            }))} />
+              <Label htmlFor="vacationTracker" className="cursor-pointer">Vacation Tracker</Label>
             </div>
           </div>
         </div>

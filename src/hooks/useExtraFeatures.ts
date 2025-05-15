@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ export interface ExtraFeaturesState {
   billOfMaterials: boolean;
   designSheet: boolean;
   workdayScheduled: boolean;
+  vacationTracker: boolean;
 }
 
 const defaultFeatures: ExtraFeaturesState = {
@@ -18,6 +20,7 @@ const defaultFeatures: ExtraFeaturesState = {
   billOfMaterials: false,
   designSheet: false,
   workdayScheduled: false,
+  vacationTracker: false,
 };
 
 export function useExtraFeatures(projectId?: string) {

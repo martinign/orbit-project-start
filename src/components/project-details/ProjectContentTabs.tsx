@@ -22,7 +22,8 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
-    workdayScheduled: false
+    workdayScheduled: false,
+    vacationTracker: false
   },
   isProjectOwner
 }) => {
@@ -33,7 +34,8 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
-    workdayScheduled: false
+    workdayScheduled: false,
+    vacationTracker: false
   };
   
   return (
@@ -71,6 +73,10 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
         
         {safeExtraFeatures.workdayScheduled && (
           <TabsTrigger value="workday-schedule" className="text-xs md:text-sm">Workday Schedule</TabsTrigger>
+        )}
+        
+        {safeExtraFeatures.vacationTracker && (
+          <TabsTrigger value="vacation-tracker" className="text-xs md:text-sm">Vacation</TabsTrigger>
         )}
       </TabsList>
 
