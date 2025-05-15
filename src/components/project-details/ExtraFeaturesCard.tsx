@@ -15,7 +15,7 @@ export const ExtraFeaturesCard: React.FC<ExtraFeaturesCardProps> = ({ projectId,
   
   // Count enabled features
   const enabledFeaturesCount = Object.values(localFeatures).filter(Boolean).length;
-  const totalFeatures = Object.keys(localFeatures).length;
+  const totalFeatures = 7; // Update to reflect the actual total number of features
   
   // Update local state when features change
   useEffect(() => {
