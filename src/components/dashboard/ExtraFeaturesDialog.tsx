@@ -30,6 +30,8 @@ export function ExtraFeaturesDialog({
     importantLinks: features.importantLinks,
     siteInitiationTracker: features.siteInitiationTracker,
     docPrinting: features.docPrinting,
+    billOfMaterials: features.billOfMaterials,
+    designSheet: features.designSheet,
     workdayScheduled: features.workdayScheduled || false,
     vacationTracker: features.vacationTracker || false
   });
@@ -41,6 +43,8 @@ export function ExtraFeaturesDialog({
         importantLinks: features.importantLinks,
         siteInitiationTracker: features.siteInitiationTracker,
         docPrinting: features.docPrinting,
+        billOfMaterials: features.billOfMaterials,
+        designSheet: features.designSheet,
         workdayScheduled: features.workdayScheduled || false,
         vacationTracker: features.vacationTracker || false
       });
@@ -142,10 +146,34 @@ export function ExtraFeaturesDialog({
               />
               <Label htmlFor="docPrinting" className="cursor-pointer">Doc Printing</Label>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="billOfMaterials" 
+                checked={selectedFeatures.billOfMaterials} 
+                onCheckedChange={checked => setSelectedFeatures(prev => ({
+                  ...prev,
+                  billOfMaterials: checked === true
+                }))} 
+              />
+              <Label htmlFor="billOfMaterials" className="cursor-pointer">Bill of Materials</Label>
+            </div>
           </div>
           
           {/* Second Column */}
           <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="designSheet" 
+                checked={selectedFeatures.designSheet} 
+                onCheckedChange={checked => setSelectedFeatures(prev => ({
+                  ...prev,
+                  designSheet: checked === true
+                }))} 
+              />
+              <Label htmlFor="designSheet" className="cursor-pointer">Design Sheet</Label>
+            </div>
+
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="workdayScheduled" 
