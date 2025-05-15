@@ -30,6 +30,13 @@ const DesignSheetTab: React.FC<{projectId: string}> = ({ projectId }) => (
   </div>
 );
 
+const VacationTrackerTab: React.FC<{projectId: string}> = ({ projectId }) => (
+  <div className="p-6">
+    <h2 className="text-2xl font-semibold mb-4">Vacation Tracker</h2>
+    <p className="text-gray-600">This feature is coming soon. You'll be able to track team vacations for this project here.</p>
+  </div>
+);
+
 interface ProjectTabsContentProps {
   activeTab: string;
   projectId: string;
@@ -55,7 +62,8 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
-    workdayScheduled: false
+    workdayScheduled: false,
+    vacationTracker: false
   }
 }) => {
   const [teamSearchQuery, setTeamSearchQuery] = React.useState("");
@@ -109,7 +117,8 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
-    workdayScheduled: false
+    workdayScheduled: false,
+    vacationTracker: false
   };
 
   return (
@@ -174,6 +183,11 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       {/* New tab for Workday Schedule */}
       {activeTab === 'workday-schedule' && safeFeatures.workdayScheduled && (
         <WorkdayScheduleTab projectId={projectId} />
+      )}
+      
+      {/* New tab for Vacation Tracker */}
+      {activeTab === 'vacation-tracker' && safeFeatures.vacationTracker && (
+        <VacationTrackerTab projectId={projectId} />
       )}
     </>
   );

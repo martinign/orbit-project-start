@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -95,11 +96,11 @@ const ProjectDetailsView = () => {
   const safeFeatures = localFeatures || {
     importantLinks: false,
     siteInitiationTracker: false,
-    repository: false,
     docPrinting: false,
     billOfMaterials: false,
     designSheet: false,
-    workdayScheduled: false
+    workdayScheduled: false,
+    vacationTracker: false
   };
 
   if (projectLoading) {
