@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DocRequest, DocStatus } from '../api/docRequestsApi';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,6 +9,7 @@ import { AuthWarning } from './AuthWarning';
 import { FileAttachmentCell } from './FileAttachmentCell';
 import { MessageSquare } from 'lucide-react';
 import { useDocRequestUpdates } from '../hooks/useDocRequestUpdates';
+import { DocPrintingActions } from '../DocPrintingActions';
 
 interface DocPrintingContentProps {
   isAuthenticated: boolean;
