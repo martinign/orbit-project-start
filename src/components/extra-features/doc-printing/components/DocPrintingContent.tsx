@@ -48,7 +48,14 @@ const RequestRow = ({ request, onEdit, onDelete, onStatusChange, onAddUpdate, on
             </span>
           )}
           {hasUpdates && (
-            <MessageSquare className="h-4 w-4 text-blue-500 ml-1" />
+            <div className="relative">
+              <MessageSquare className="h-4 w-4 text-blue-500 ml-1" />
+              {updateCount > 0 && (
+                <span className="absolute -top-2 -right-2 flex items-center justify-center bg-blue-500 text-white text-xs rounded-full w-4 h-4">
+                  {updateCount}
+                </span>
+              )}
+            </div>
           )}
         </div>
       </TableCell>
