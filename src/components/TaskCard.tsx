@@ -43,11 +43,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
   updateCount = 0,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCardExpanded, setIsCardExpanded] = useState(false);
   const { subtasks } = useSubtasks(task.id);
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+
+  const toggleCardExpand = () => {
+    setIsCardExpanded(!isCardExpanded);
   };
 
   return (
@@ -73,6 +78,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onAddSubtask={handleAddSubtask}
           onShowUpdates={handleShowUpdates}
           updateCount={updateCount}
+          isCardExpanded={isCardExpanded}
+          toggleCardExpand={toggleCardExpand}
         />
         
         {isExpanded && subtasks.length > 0 && <SubtaskList subtasks={subtasks} />}

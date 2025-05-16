@@ -31,7 +31,7 @@ interface TaskBoardProps {
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
   const queryClient = useQueryClient();
-  const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
+  const { isColumnCollapsed, toggleColumnCollapsed, isCardExpanded, toggleCardExpanded } = useCollapsibleTaskColumns(projectId);
   const { updateCounts, markTaskUpdatesAsViewed } = useProjectTaskUpdates(projectId);
   
   const {

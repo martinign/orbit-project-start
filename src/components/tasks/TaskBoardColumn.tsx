@@ -64,8 +64,9 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
     }
   };
   
-  const displayedTasks = isCollapsed && tasks.length > 2 
-    ? tasks.slice(0, 2) 
+  // Change threshold from 2 to 5
+  const displayedTasks = isCollapsed && tasks.length > 5 
+    ? tasks.slice(0, 5) 
     : tasks;
 
   return (
@@ -135,14 +136,14 @@ const TaskBoardColumn: React.FC<TaskBoardColumnProps> = ({
                   />
                 ))}
                 
-                {isCollapsed && tasks.length > 2 && (
+                {isCollapsed && tasks.length > 5 && (
                   <Button 
                     variant="ghost" 
                     className="w-full text-xs mt-2 text-gray-500 hover:text-gray-800"
                     onClick={handleToggleCollapse}
                     disabled={disabled}
                   >
-                    {tasks.length - 2} more task{tasks.length - 2 !== 1 ? 's' : ''}
+                    {tasks.length - 5} more task{tasks.length - 5 !== 1 ? 's' : ''}
                   </Button>
                 )}
               </div>

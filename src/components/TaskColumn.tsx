@@ -58,9 +58,9 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
     toggleColumnCollapsed(column.id);
   };
   
-  // Determine which tasks to display
-  const displayedTasks = isCollapsed && tasks.length > 2 
-    ? tasks.slice(0, 2)  // Show only first 2 tasks when collapsed
+  // Change the threshold from 2 to 5 tasks for collapsing
+  const displayedTasks = isCollapsed && tasks.length > 5 
+    ? tasks.slice(0, 5)  // Show only first 5 tasks when collapsed
     : tasks;
 
   return (
@@ -126,13 +126,13 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                 ))}
                 
                 {/* Show count of hidden tasks when collapsed */}
-                {isCollapsed && tasks.length > 2 && (
+                {isCollapsed && tasks.length > 5 && (
                   <Button 
                     variant="ghost" 
                     className="w-full text-xs mt-2 text-gray-500 hover:text-gray-800"
                     onClick={handleToggleCollapse}
                   >
-                    {tasks.length - 2} more task{tasks.length - 2 !== 1 ? 's' : ''}
+                    {tasks.length - 5} more task{tasks.length - 5 !== 1 ? 's' : ''}
                   </Button>
                 )}
               </div>

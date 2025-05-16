@@ -37,6 +37,8 @@ interface DraggableTaskCardProps {
   onAddSubtask: (task: Task) => void;
   onShowUpdates: (task: Task) => void;
   updateCount?: number;
+  isCardExpanded: boolean;
+  toggleCardExpand: () => void;
 }
 
 export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
@@ -51,6 +53,8 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   onAddSubtask,
   onShowUpdates,
   updateCount = 0,
+  isCardExpanded,
+  toggleCardExpand,
 }) => {
   const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
 
@@ -75,34 +79,65 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
               {...provided.draggableProps}
               {...provided.dragHandleProps}
               className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${getBackgroundColor()}`}
+              onClick={toggleCardExpand}
             >
-              <CardContent className="p-3">
-                <div className="flex justify-between items-start w-full">
-                  <TaskCardHeader
-                    title={task.title}
-                    hasSubtasks={subtasksCount > 0}
-                    isExpanded={isExpanded}
-                    toggleExpand={toggleExpand}
+              <CardContent className={`p-3 ${isCardExpanded ? '' : 'py-2'}`}>
+                {isCardExpanded ? (
+                  // Expanded view - show full card content
+                  <div className="flex justify-between items-start w-full">
+                    <TaskCardHeader
+                      title={task.title}
+                      hasSubtasks={subtasksCount > 0}
+                      isExpanded={isExpanded}
+                      toggleExpand={toggleExpand}
+                      isPrivate={task.is_private}
+                    />
+                    
+                    <TaskActions
+                      task={task}
+                      updateCount={updateCount}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      onUpdate={onUpdate}
+                      onAddSubtask={onAddSubtask}
+                      onShowUpdates={onShowUpdates}
+                    />
+                  </div>
+                ) : (
+                  // Collapsed view - show only a single line with title
+                  <div className="flex justify-between items-center w-full overflow-hidden whitespace-nowrap">
+                    <div className="flex items-center">
+                      {task.is_private && (
+                        <span className="mr-1 text-purple-500" title="Private task">
+                          🔒
+                        </span>
+                      )}
+                      <span className="font-medium truncate max-w-[200px]">
+                        {task.title}
+                      </span>
+                      {subtasksCount > 0 && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          ({subtasksCount})
+                        </span>
+                      )}
+                    </div>
+                    
+                    {updateCount > 0 && (
+                      <span className="ml-auto mr-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {updateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {isCardExpanded && (
+                  <TaskMetadata
+                    assignedToName={assignedToName}
+                    subtasksCount={subtasksCount}
+                    updateCount={updateCount}
                     isPrivate={task.is_private}
                   />
-                  
-                  <TaskActions
-                    task={task}
-                    updateCount={updateCount}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onUpdate={onUpdate}
-                    onAddSubtask={onAddSubtask}
-                    onShowUpdates={onShowUpdates}
-                  />
-                </div>
-
-                <TaskMetadata
-                  assignedToName={assignedToName}
-                  subtasksCount={subtasksCount}
-                  updateCount={updateCount}
-                  isPrivate={task.is_private}
-                />
+                )}
               </CardContent>
             </Card>
           </HoverCardTrigger>
