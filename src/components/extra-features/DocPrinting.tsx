@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useDocPrintingRequests } from './doc-printing/useDocPrintingRequests';
@@ -48,6 +49,14 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
     statusCounts,
     isAuthenticated
   } = useDocPrintingRequests(projectId || '');
+
+  // Initialize the updates hook with the selected request's ID (if any)
+  const {
+    addUpdate,
+    isSubmitting: isUpdateSubmitting,
+    updates,
+    updateCount
+  } = useDocRequestUpdates(selectedRequestForUpdates?.id || '');
 
   const handleNewRequest = () => {
     if (!user) {
@@ -143,10 +152,6 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
   const handleSubmitUpdate = (content: string, file?: File) => {
     if (!selectedRequestForUpdates || !user) return;
     
-    // Here we need to use the hook or function to add the update
-    // This would be handled by a component using useDocRequestUpdates
-    const { addUpdate, isSubmitting: isUpdateSubmitting } = useDocRequestUpdates(selectedRequestForUpdates.id);
-    
     addUpdate({ content, file });
     setIsUpdateDialogOpen(false);
   };
@@ -211,7 +216,7 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
           docRequestId={selectedRequestForUpdates.id}
           docTitle={selectedRequestForUpdates.doc_title}
           onAddUpdate={handleSubmitUpdate}
-          isSubmitting={isSubmitting}
+          isSubmitting={isUpdateSubmitting}
         />
       )}
       
@@ -223,8 +228,8 @@ export const DocPrinting: React.FC<DocPrintingProps> = ({ projectId }) => {
           docRequestId={selectedRequestForUpdates.id}
           docTitle={selectedRequestForUpdates.doc_title}
           onMarkViewed={() => {}}
-          updates={[]}
-          isLoading={false}
+          updates={updates}
+          isLoading={isLoading}
         />
       )}
     </div>
