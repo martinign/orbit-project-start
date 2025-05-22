@@ -35,10 +35,15 @@ export const useTaskSubmission = ({
         console.time('taskUpdate');
         console.log(`Updating task with ID: ${taskId}`);
         
+        // Remove any undefined or null values that might cause issues
+        const cleanedData = Object.fromEntries(
+          Object.entries(taskData).filter(([_, v]) => v !== undefined)
+        );
+        
         const { error: updateError, data } = await supabase
           .from('project_tasks')
           .update({
-            ...taskData,
+            ...cleanedData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', taskId)

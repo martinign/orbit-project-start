@@ -50,14 +50,15 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   // Pass the projectId to useTeamMembers to filter by project
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers(projectId);
   
-  const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
-  
   // Debug task data
   useEffect(() => {
     if (open && mode === 'edit' && task) {
       console.log("TaskDialog opened in edit mode with task:", task);
     }
   }, [open, mode, task]);
+  
+  // Use the task form hook
+  const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
   
   // Improved dialog close handling
   const handleClose = () => {
