@@ -41,6 +41,7 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
           description: 'The task has been completed and archived.',
         });
         
+        // Invalidate all relevant queries to refresh the data
         queryClient.invalidateQueries({ queryKey: ['tasks'] });
         queryClient.invalidateQueries({ queryKey: ['gantt_tasks'] });
         queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
@@ -110,6 +111,7 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
         description: 'The task has been archived successfully.',
       });
       
+      // Invalidate all relevant queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
       onRefetch();
@@ -143,6 +145,7 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
         description: 'The task has been restored to the Kanban board.',
       });
       
+      // Invalidate all relevant queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
       onRefetch();

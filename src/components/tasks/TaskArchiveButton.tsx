@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Droppable } from '@hello-pangea/dnd';
 
 interface TaskArchiveButtonProps {
   onShowArchivedTasks: () => void;
@@ -23,16 +24,26 @@ export const TaskArchiveButton: React.FC<TaskArchiveButtonProps> = ({
   };
 
   return (
-    <Button 
-      variant="outline"
-      className={`relative ${isDropTarget ? 'bg-blue-100 border-blue-500' : ''} bg-blue-500 hover:bg-blue-600 text-white`}
-      onClick={onShowArchivedTasks}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      data-droppable-id="archive-drop-target"
-    >
-      <Archive className="mr-1 h-4 w-4" />
-      Archives
-    </Button>
+    <Droppable droppableId="archive-drop-target">
+      {(provided) => (
+        <div 
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+          className="inline-block"
+        >
+          <Button 
+            variant="outline"
+            className={`relative ${isDropTarget ? 'bg-blue-100 border-blue-500' : ''} bg-blue-500 hover:bg-blue-600 text-white`}
+            onClick={onShowArchivedTasks}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+          >
+            <Archive className="mr-1 h-4 w-4" />
+            Archives
+          </Button>
+          {provided.placeholder}
+        </div>
+      )}
+    </Droppable>
   );
 };
