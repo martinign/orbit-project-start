@@ -24,7 +24,6 @@ export const useTaskSubmission = ({
 
   const submitTask = async (taskData: any) => {
     console.time('taskSubmission');
-    console.log(`Starting task submission in ${mode} mode`, { taskData, taskId });
     setIsSubmitting(true);
     setError(null);
     
@@ -33,34 +32,18 @@ export const useTaskSubmission = ({
       
       if (mode === 'edit' && taskId) {
         console.time('taskUpdate');
-        console.log(`Updating task with ID: ${taskId}`);
-        
-        // Remove any undefined or null values that might cause issues
-        const cleanedData = Object.fromEntries(
-          Object.entries(taskData)
-            .filter(([_, v]) => v !== undefined && v !== null)
-        );
-        
-        console.log("Cleaned data for update:", cleanedData);
-        
-        const { error: updateError, data } = await supabase
+        const { error: updateError } = await supabase
           .from('project_tasks')
           .update({
-            ...cleanedData,
+            ...taskData,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', taskId)
-          .select();
-        
-        console.log("Update response:", { error: updateError, data });
+          .eq('id', taskId);
         console.timeEnd('taskUpdate');
           
-        if (updateError) {
-          console.error("Supabase update error:", updateError);
-          throw updateError;
-        }
+        if (updateError) throw updateError;
         
-        // Ensure the queries are invalidated after a successful update
+        // Invalidate queries after successful update
         await queryClient.invalidateQueries({ queryKey: ["tasks"] });
         
         toast({
@@ -69,12 +52,9 @@ export const useTaskSubmission = ({
         });
       } else {
         console.time('taskCreate');
-        const { error: createError, data } = await supabase
+        const { error: createError } = await supabase
           .from('project_tasks')
-          .insert(taskData)
-          .select();
-        
-        console.log("Create response:", { error: createError, data });
+          .insert(taskData);
         console.timeEnd('taskCreate');
           
         if (createError) throw createError;
@@ -91,14 +71,12 @@ export const useTaskSubmission = ({
 
       // Call success callback first
       if (onSuccess) {
-        console.log("Calling onSuccess callback");
         onSuccess();
       }
       
       // Small delay before closing to ensure UI updates properly
       setTimeout(() => {
         if (onClose) {
-          console.log("Calling onClose callback after delay");
           onClose();
         }
       }, 300);
@@ -108,7 +86,7 @@ export const useTaskSubmission = ({
       setError(error?.message || "Failed to save task");
       toast({
         title: "Error",
-        description: error?.message || "Failed to save task. Please try again.",
+        description: "Failed to save task. Please try again.",
         variant: "destructive",
       });
     } finally {

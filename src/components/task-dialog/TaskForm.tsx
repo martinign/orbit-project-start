@@ -81,26 +81,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   onOpenTemplateDialog,
   mode,
 }) => {
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Form submitted with data:", {
-      title,
-      description,
-      status,
-      priority,
-      selectedProject,
-      dueDate,
-      notes,
-      assignedTo,
-      selectedWorkdayCode,
-      isPrivate,
-      mode
-    });
-    onSubmit(e);
-  };
-
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
       <BasicInfoSection
         title={title}
         setTitle={setTitle}

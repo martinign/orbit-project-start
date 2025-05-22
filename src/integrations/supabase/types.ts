@@ -872,7 +872,6 @@ export type Database = {
           file_size: number | null
           file_type: string | null
           id: string
-          is_archived: boolean | null
           is_gantt_task: boolean | null
           is_private: boolean
           notes: string | null
@@ -896,7 +895,6 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
-          is_archived?: boolean | null
           is_gantt_task?: boolean | null
           is_private?: boolean
           notes?: string | null
@@ -920,7 +918,6 @@ export type Database = {
           file_size?: number | null
           file_type?: string | null
           id?: string
-          is_archived?: boolean | null
           is_gantt_task?: boolean | null
           is_private?: boolean
           notes?: string | null

@@ -21,11 +21,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   
   // Initialize form data
   useEffect(() => {
-    // Reset the state flag when the task or mode changes
-    if (task?.id !== undefined || mode === 'create') {
-      setDidInitialFormSet(false);
-    }
-
     if (!didInitialFormSet) {
       console.time('initializeTaskForm');
       
@@ -47,8 +42,6 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         
         if (task.due_date) {
           setDueDate(new Date(task.due_date));
-        } else {
-          setDueDate(undefined);
         }
       } else {
         // For create mode, reset all fields
