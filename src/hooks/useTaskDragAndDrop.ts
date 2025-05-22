@@ -21,7 +21,8 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
     // Check if the task is being dropped on the archive button
     if (destination.droppableId === 'archive-drop-target') {
       try {
-        // First mark the task as completed if it's not already
+        console.log('Archiving task:', draggableId);
+        // Mark the task as completed if it's not already and archive it
         const { error: updateError } = await supabase
           .from('project_tasks')
           .update({ 
@@ -30,7 +31,10 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
           })
           .eq('id', draggableId);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Error updating task:', updateError);
+          throw updateError;
+        }
 
         toast({
           title: 'Task Archived',
@@ -87,14 +91,19 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
 
   const archiveTask = async (taskId: string) => {
     try {
+      console.log('Archiving task with ID:', taskId);
       const { error } = await supabase
         .from('project_tasks')
         .update({ 
           status: 'completed', 
           is_archived: true 
-        } as any) // Using 'as any' to bypass TypeScript check since we know is_archived exists in the database
+        })
+        .eq('id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error in SQL update:', error);
+        throw error;
+      }
 
       toast({
         title: 'Task Archived',
@@ -118,12 +127,16 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
 
   const unarchiveTask = async (taskId: string) => {
     try {
+      console.log('Unarchiving task with ID:', taskId);
       const { error } = await supabase
         .from('project_tasks')
-        .update({ is_archived: false } as any) // Using 'as any' to bypass TypeScript check
+        .update({ is_archived: false })
         .eq('id', taskId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error in SQL update:', error);
+        throw error;
+      }
 
       toast({
         title: 'Task Unarchived',

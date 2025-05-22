@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import TaskBoardColumn from './tasks/TaskBoardColumn';
 import { TaskDialogs } from './tasks/TaskDialogs';
@@ -100,19 +100,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          {/* Create a hidden droppable for the archive */}
-          <Droppable droppableId="archive-drop-target" isDropDisabled={isDeleting || isRefetching}>
-            {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="hidden"
-              >
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-          
           <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
             {columnsConfig.map((column) => (
               <TaskBoardColumn
