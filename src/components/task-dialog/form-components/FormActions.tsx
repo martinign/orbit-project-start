@@ -11,16 +11,27 @@ interface FormActionsProps {
 
 const FormActions = ({ onClose, isSubmitting, mode }: FormActionsProps) => {
   return (
-    <DialogFooter>
-      <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+    <DialogFooter className="mt-4">
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={onClose} 
+        disabled={isSubmitting}
+        className="mr-2"
+      >
         Cancel
       </Button>
       <Button 
         type="submit" 
-        disabled={isSubmitting} 
+        disabled={isSubmitting}
         className="bg-blue-500 hover:bg-blue-600 text-white"
       >
-        {isSubmitting ? "Saving..." : mode === "edit" ? "Save changes" : "Create task"}
+        {isSubmitting 
+          ? "Saving..." 
+          : mode === "edit" 
+            ? "Save changes" 
+            : "Create task"
+        }
       </Button>
     </DialogFooter>
   );

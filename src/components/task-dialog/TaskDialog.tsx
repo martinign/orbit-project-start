@@ -57,20 +57,35 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
     }
   }, [open, mode, task]);
   
-  // Use the task form hook
-  const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
+  // Use the task form hook with key based on task id to force re-initialization
+  const taskForm = useTaskForm(
+    mode, 
+    task, 
+    projectId, 
+    () => {
+      console.log('Task form onSuccess called');
+      if (onSuccess) onSuccess();
+    }, 
+    () => {
+      console.log('Task form onClose called');
+      onClose();
+    }
+  );
   
   // Improved dialog close handling
   const handleClose = () => {
     if (taskForm.isSubmitting) {
+      console.log("Cannot close dialog while submitting");
       return; // Prevent closing while submitting
     }
     
     setIsClosing(true);
+    console.log("Closing dialog with animation");
     // Add slight delay to allow animations
     setTimeout(() => {
       onClose();
       setIsClosing(false);
+      console.log("Dialog closed");
     }, 100);
   };
 

@@ -37,8 +37,11 @@ export const useTaskSubmission = ({
         
         // Remove any undefined or null values that might cause issues
         const cleanedData = Object.fromEntries(
-          Object.entries(taskData).filter(([_, v]) => v !== undefined)
+          Object.entries(taskData)
+            .filter(([_, v]) => v !== undefined && v !== null)
         );
+        
+        console.log("Cleaned data for update:", cleanedData);
         
         const { error: updateError, data } = await supabase
           .from('project_tasks')
@@ -52,9 +55,12 @@ export const useTaskSubmission = ({
         console.log("Update response:", { error: updateError, data });
         console.timeEnd('taskUpdate');
           
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Supabase update error:", updateError);
+          throw updateError;
+        }
         
-        // Invalidate queries after successful update
+        // Ensure the queries are invalidated after a successful update
         await queryClient.invalidateQueries({ queryKey: ["tasks"] });
         
         toast({
@@ -85,12 +91,14 @@ export const useTaskSubmission = ({
 
       // Call success callback first
       if (onSuccess) {
+        console.log("Calling onSuccess callback");
         onSuccess();
       }
       
       // Small delay before closing to ensure UI updates properly
       setTimeout(() => {
         if (onClose) {
+          console.log("Calling onClose callback after delay");
           onClose();
         }
       }, 300);
