@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -51,6 +51,13 @@ const TaskDialog: React.FC<TaskDialogProps> = ({
   const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers(projectId);
   
   const taskForm = useTaskForm(mode, task, projectId, onSuccess, onClose);
+  
+  // Debug task data
+  useEffect(() => {
+    if (open && mode === 'edit' && task) {
+      console.log("TaskDialog opened in edit mode with task:", task);
+    }
+  }, [open, mode, task]);
   
   // Improved dialog close handling
   const handleClose = () => {

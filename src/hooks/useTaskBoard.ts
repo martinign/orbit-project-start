@@ -60,6 +60,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
   };
 
   const handleEditTask = (task: Task) => {
+    console.log("Opening edit dialog with task:", task);
     setSelectedTask(task);
     setIsDialogOpen(true);
   };
