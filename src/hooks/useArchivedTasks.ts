@@ -2,6 +2,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+interface ArchivedTask {
+  id: string;
+  title: string;
+  status: string;
+  project_id: string;
+  completion_date?: string;
+  total_duration_days?: number;
+  task_status_history?: Array<{
+    completion_date: string;
+    total_duration_days: number;
+  }>;
+}
+
 export const useArchivedTasks = (projectId: string) => {
   const { data: archivedTasks, isLoading, refetch } = useQuery({
     queryKey: ['archived_tasks', projectId],
@@ -28,7 +41,7 @@ export const useArchivedTasks = (projectId: string) => {
       }
 
       // Transform the data to include completion date and duration
-      return tasks.map(task => {
+      return tasks.map((task: ArchivedTask) => {
         // Get the most recent status history entry (for completed status)
         const latestStatusChange = task.task_status_history?.[0];
         
