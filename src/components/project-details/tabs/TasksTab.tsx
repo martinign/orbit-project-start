@@ -9,10 +9,6 @@ import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/task-dialog/TaskDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { TaskArchiveButton } from '@/components/tasks/TaskArchiveButton';
-import ArchivedTasksDialog from '@/components/tasks/ArchivedTasksDialog';
-import { useArchivedTasks } from '@/hooks/useArchivedTasks';
-import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 
 interface TasksTabProps {
   projectId: string;
@@ -30,28 +26,12 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isTimelineView, setIsTimelineView] = useState(false);
   const [showPrivateOnly, setShowPrivateOnly] = useState(false);
-  const [isArchivedTasksOpen, setIsArchivedTasksOpen] = useState(false);
   const queryClient = useQueryClient();
-  
-  const { archivedTasks, isLoading: archiveLoading, refetchArchivedTasks } = useArchivedTasks(projectId);
-  const { unarchiveTask } = useTaskDragAndDrop(refetchTasks);
 
   // Filter tasks based on the showPrivateOnly state
   const filteredTasks = showPrivateOnly 
     ? tasks.filter(task => task.is_private) 
     : tasks;
-
-  // Handle showing archived tasks
-  const handleShowArchivedTasks = () => {
-    setIsArchivedTasksOpen(true);
-    refetchArchivedTasks();
-  };
-
-  // Handle unarchiving a task
-  const handleUnarchiveTask = async (taskId: string) => {
-    await unarchiveTask(taskId);
-    refetchArchivedTasks();
-  };
 
   // Add realtime subscription for task badges
   useEffect(() => {
@@ -108,8 +88,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             {showPrivateOnly ? 'All Tasks' : 'Private Only'}
           </Button>
           
-          <TaskArchiveButton onShowArchivedTasks={handleShowArchivedTasks} />
-          
           <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white" size="sm">
             <Plus className="mr-2 h-4 w-4" />
             Create Task
@@ -134,26 +112,12 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           </div>}
       </CardContent>
 
-      <TaskDialog 
-        open={isTaskDialogOpen} 
-        onClose={() => setIsTaskDialogOpen(false)} 
-        mode="create" 
-        projectId={projectId} 
-        onSuccess={() => {
-          refetchTasks();
-          queryClient.invalidateQueries({
-            queryKey: ["new_tasks_count"]
-          });
-          setIsTaskDialogOpen(false);
-        }} 
-      />
-
-      <ArchivedTasksDialog 
-        isOpen={isArchivedTasksOpen}
-        onClose={() => setIsArchivedTasksOpen(false)}
-        archivedTasks={archivedTasks}
-        onUnarchive={handleUnarchiveTask}
-        isLoading={archiveLoading}
-      />
+      <TaskDialog open={isTaskDialogOpen} onClose={() => setIsTaskDialogOpen(false)} mode="create" projectId={projectId} onSuccess={() => {
+      refetchTasks();
+      queryClient.invalidateQueries({
+        queryKey: ["new_tasks_count"]
+      });
+      setIsTaskDialogOpen(false);
+    }} />
     </Card>;
 };

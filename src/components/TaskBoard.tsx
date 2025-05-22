@@ -21,7 +21,6 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
-  is_archived?: boolean;
 }
 
 interface TaskBoardProps {
@@ -87,11 +86,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     markTaskUpdatesAsViewed(task.id);
   };
 
-  // Filter out archived tasks
-  const displayedTasks = tasks.filter(task => !task.is_archived);
-
   const getTasksForColumn = (status: string) => {
-    return displayedTasks.filter(task => 
+    return tasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
     );
   };
