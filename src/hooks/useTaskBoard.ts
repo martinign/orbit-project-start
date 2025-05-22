@@ -12,6 +12,7 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  is_archived?: boolean;
 }
 
 export const useTaskBoard = (onRefetch: () => void) => {
@@ -45,6 +46,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
       setIsRefetching(true);
       try {
         await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        await queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
         await onRefetch();
       } catch (error) {
         console.error("Error refetching tasks:", error);
@@ -142,6 +144,7 @@ export const useTaskBoard = (onRefetch: () => void) => {
 
       // Invalidate all related queries
       await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      await queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
       
       toast({
         title: 'Task Deleted',

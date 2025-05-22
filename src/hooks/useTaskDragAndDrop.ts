@@ -11,12 +11,48 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
   const handleDragEnd = async (result: any) => {
     const { destination, source, draggableId } = result;
 
+    // If there's no destination or the item was dropped in the same place, do nothing
     if (!destination || 
         (destination.droppableId === source.droppableId && 
          destination.index === source.index)) {
       return;
     }
 
+    // Check if the task is being dropped on the archive button
+    if (destination.droppableId === 'archive-drop-target') {
+      try {
+        // First mark the task as completed if it's not already
+        const { error: updateError } = await supabase
+          .from('project_tasks')
+          .update({ 
+            status: 'completed',
+            is_archived: true 
+          })
+          .eq('id', draggableId);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: 'Task Archived',
+          description: 'The task has been completed and archived.',
+        });
+        
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['gantt_tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
+        onRefetch();
+        return;
+      } catch (error) {
+        console.error('Error archiving task:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to archive task.',
+          variant: 'destructive',
+        });
+      }
+    }
+
+    // Normal column movement continues as before
     const newStatus = columnsConfig.find(
       col => col.id === destination.droppableId
     )?.status;
@@ -49,5 +85,70 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
     }
   };
 
-  return { handleDragEnd };
+  const archiveTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_tasks')
+        .update({ 
+          status: 'completed', 
+          is_archived: true 
+        })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Task Archived',
+        description: 'The task has been archived successfully.',
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
+      onRefetch();
+      return true;
+    } catch (error) {
+      console.error('Error archiving task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to archive task.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  const unarchiveTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_tasks')
+        .update({ is_archived: false })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Task Unarchived',
+        description: 'The task has been restored to the Kanban board.',
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['archived_tasks'] });
+      onRefetch();
+      return true;
+    } catch (error) {
+      console.error('Error unarchiving task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unarchive task.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  return { 
+    handleDragEnd,
+    archiveTask,
+    unarchiveTask
+  };
 };

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DragDropContext } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import TaskBoardColumn from './tasks/TaskBoardColumn';
 import { TaskDialogs } from './tasks/TaskDialogs';
@@ -21,6 +21,7 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  is_archived?: boolean;
 }
 
 interface TaskBoardProps {
@@ -86,8 +87,11 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     markTaskUpdatesAsViewed(task.id);
   };
 
+  // Filter out archived tasks
+  const displayedTasks = tasks.filter(task => !task.is_archived);
+
   const getTasksForColumn = (status: string) => {
-    return tasks.filter(task => 
+    return displayedTasks.filter(task => 
       task.status.toLowerCase() === status.toLowerCase()
     );
   };
@@ -96,6 +100,19 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
+          {/* Create a hidden droppable for the archive */}
+          <Droppable droppableId="archive-drop-target" isDropDisabled={isDeleting || isRefetching}>
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="hidden"
+              >
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          
           <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
             {columnsConfig.map((column) => (
               <TaskBoardColumn
