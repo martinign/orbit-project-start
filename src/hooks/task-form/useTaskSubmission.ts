@@ -24,6 +24,7 @@ export const useTaskSubmission = ({
 
   const submitTask = async (taskData: any) => {
     console.time('taskSubmission');
+    console.log(`Starting task submission in ${mode} mode`, { taskData, taskId });
     setIsSubmitting(true);
     setError(null);
     
@@ -32,13 +33,18 @@ export const useTaskSubmission = ({
       
       if (mode === 'edit' && taskId) {
         console.time('taskUpdate');
-        const { error: updateError } = await supabase
+        console.log(`Updating task with ID: ${taskId}`);
+        
+        const { error: updateError, data } = await supabase
           .from('project_tasks')
           .update({
             ...taskData,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', taskId);
+          .eq('id', taskId)
+          .select();
+        
+        console.log("Update response:", { error: updateError, data });
         console.timeEnd('taskUpdate');
           
         if (updateError) throw updateError;
@@ -52,9 +58,12 @@ export const useTaskSubmission = ({
         });
       } else {
         console.time('taskCreate');
-        const { error: createError } = await supabase
+        const { error: createError, data } = await supabase
           .from('project_tasks')
-          .insert(taskData);
+          .insert(taskData)
+          .select();
+        
+        console.log("Create response:", { error: createError, data });
         console.timeEnd('taskCreate');
           
         if (createError) throw createError;
@@ -86,7 +95,7 @@ export const useTaskSubmission = ({
       setError(error?.message || "Failed to save task");
       toast({
         title: "Error",
-        description: "Failed to save task. Please try again.",
+        description: error?.message || "Failed to save task. Please try again.",
         variant: "destructive",
       });
     } finally {

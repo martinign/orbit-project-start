@@ -58,6 +58,7 @@ export const useTaskForm = (
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted with mode:", mode, "and task ID:", task?.id);
     
     if (!projectSelect.selectedProject) {
       toast({
@@ -91,6 +92,7 @@ export const useTaskForm = (
       is_private: formState.isPrivate
     };
     
+    console.log("Submitting task data:", taskData);
     await submission.submitTask(taskData);
   };
 
