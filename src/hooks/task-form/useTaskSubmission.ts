@@ -28,20 +28,32 @@ export const useTaskSubmission = ({
     setError(null);
     
     try {
-      console.log("Saving task with data:", taskData);
+      // Clean the taskData object to remove undefined and null values
+      const cleanedData = Object.fromEntries(
+        Object.entries(taskData).filter(([_, v]) => v !== undefined)
+      );
+      
+      console.log(`${mode === 'edit' ? 'Updating' : 'Creating'} task with data:`, cleanedData);
       
       if (mode === 'edit' && taskId) {
         console.time('taskUpdate');
+        console.log('Task ID for update:', taskId);
+        
         const { error: updateError } = await supabase
           .from('project_tasks')
           .update({
-            ...taskData,
+            ...cleanedData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', taskId);
         console.timeEnd('taskUpdate');
           
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Update error:', updateError);
+          throw updateError;
+        }
+        
+        console.log('Task updated successfully');
         
         // Invalidate queries after successful update
         await queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -54,10 +66,15 @@ export const useTaskSubmission = ({
         console.time('taskCreate');
         const { error: createError } = await supabase
           .from('project_tasks')
-          .insert(taskData);
+          .insert(cleanedData);
         console.timeEnd('taskCreate');
           
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Create error:', createError);
+          throw createError;
+        }
+        
+        console.log('Task created successfully');
         
         // Explicitly invalidate the new tasks count query
         await queryClient.invalidateQueries({ queryKey: ["new_tasks_count"] });

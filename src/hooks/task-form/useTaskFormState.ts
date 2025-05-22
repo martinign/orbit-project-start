@@ -19,10 +19,19 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
   const [isPrivate, setIsPrivate] = useState(false);
   const [didInitialFormSet, setDidInitialFormSet] = useState(false);
   
+  // Reset flag when task changes
+  useEffect(() => {
+    if (task?.id) {
+      console.log('Task changed, resetting form initialization flag for task:', task.id);
+      setDidInitialFormSet(false);
+    }
+  }, [task?.id]);
+  
   // Initialize form data
   useEffect(() => {
     if (!didInitialFormSet) {
       console.time('initializeTaskForm');
+      console.log('Initializing form with task:', task?.id, 'mode:', mode);
       
       if (mode === 'edit' && task) {
         console.log('Initializing edit form with task data:', task);
@@ -42,6 +51,8 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
         
         if (task.due_date) {
           setDueDate(new Date(task.due_date));
+        } else {
+          setDueDate(undefined);
         }
       } else {
         // For create mode, reset all fields
@@ -59,11 +70,12 @@ export const useTaskFormState = ({ task, mode, initialStatus = 'not started' }: 
       setDidInitialFormSet(true);
       console.timeEnd('initializeTaskForm');
     }
-  }, [mode, task, didInitialFormSet, initialStatus]);
+  }, [mode, task, didInitialFormSet, initialStatus, task?.id]);
 
   // Reset form when unmounting
   useEffect(() => {
     return () => {
+      console.log('Form component unmounting, cleaning up');
       setDidInitialFormSet(false);
     };
   }, []);
