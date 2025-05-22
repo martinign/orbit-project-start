@@ -19,7 +19,19 @@ export const useTaskDragAndDrop = (onRefetch: () => void) => {
     }
 
     // Check if the task is being dropped on the archive button
-    if (destination.droppableId === 'archive-drop-target') {
+    const isArchiveDropTarget = document.querySelector('[data-droppable-id="archive-drop-target"]');
+    const archiveRect = isArchiveDropTarget?.getBoundingClientRect();
+    
+    // Get the client coordinates of the drop
+    const clientX = result.client?.x;
+    const clientY = result.client?.y;
+    
+    // Check if drop happened over the archive button
+    if (archiveRect && 
+        clientX >= archiveRect.left && 
+        clientX <= archiveRect.right && 
+        clientY >= archiveRect.top && 
+        clientY <= archiveRect.bottom) {
       try {
         console.log('Archiving task:', draggableId);
         // Mark the task as completed if it's not already and archive it
