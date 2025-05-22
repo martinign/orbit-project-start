@@ -2,6 +2,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define the task status history entry type separately to avoid recursive definition
+interface TaskStatusHistoryEntry {
+  completion_date: string;
+  total_duration_days: number;
+}
+
+// Define the ArchivedTask interface with proper typing
 interface ArchivedTask {
   id: string;
   title: string;
@@ -9,10 +16,7 @@ interface ArchivedTask {
   project_id: string;
   completion_date?: string;
   total_duration_days?: number;
-  task_status_history?: Array<{
-    completion_date: string;
-    total_duration_days: number;
-  }>;
+  task_status_history?: TaskStatusHistoryEntry[];
 }
 
 export const useArchivedTasks = (projectId: string) => {
