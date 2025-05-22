@@ -11,6 +11,23 @@ interface TaskSubmissionProps {
   onClose?: () => void;
 }
 
+// Define the task data interface to match what Supabase expects
+interface TaskData {
+  title: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  project_id?: string;
+  notes?: string;
+  due_date?: string | null;
+  assigned_to?: string | null;
+  user_id?: string;
+  workday_code_id?: string | null;
+  is_private?: boolean;
+  updated_at?: string;
+  [key: string]: any; // Allow for additional properties
+}
+
 export const useTaskSubmission = ({ 
   mode, 
   taskId, 
@@ -22,16 +39,17 @@ export const useTaskSubmission = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const submitTask = async (taskData: any) => {
+  const submitTask = async (taskData: TaskData) => {
     console.time('taskSubmission');
     setIsSubmitting(true);
     setError(null);
     
     try {
       // Clean the taskData object to remove undefined and null values
-      const cleanedData = Object.fromEntries(
+      // Cast to the correct interface to ensure TypeScript is happy
+      const cleanedData: TaskData = Object.fromEntries(
         Object.entries(taskData).filter(([_, v]) => v !== undefined)
-      );
+      ) as TaskData;
       
       console.log(`${mode === 'edit' ? 'Updating' : 'Creating'} task with data:`, cleanedData);
       
