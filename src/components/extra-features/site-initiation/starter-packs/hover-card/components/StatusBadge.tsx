@@ -3,6 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Check, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface StatusBadgeProps {
   status?: boolean;
@@ -29,8 +30,11 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   if (!onToggle) {
     return (
       <Badge 
-        variant={isActive ? "success" : "destructive"}
-        className="gap-1 font-normal"
+        variant={isActive ? "default" : "destructive"}
+        className={cn(
+          "gap-1 font-normal",
+          isActive && "bg-green-500 hover:bg-green-600"
+        )}
       >
         {isActive ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
         {label || (isActive ? 'Yes' : 'No')}
@@ -43,7 +47,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       <Switch 
         checked={!!isActive} 
         onCheckedChange={handleToggle}
-        size="sm"
+        className="data-[state=checked]:bg-blue-500"
       />
       <span className="text-xs">{label || (isActive ? 'Yes' : 'No')}</span>
     </div>
