@@ -50,10 +50,10 @@ export const useTaskSubmission = ({
       }
 
       // Clean the taskData object to remove undefined values and ensure correct types
-      const cleanedData: Partial<TaskData> = {};
+      const cleanedData: any = {};
       Object.entries(taskData).forEach(([key, value]) => {
         if (value !== undefined) {
-          cleanedData[key as keyof TaskData] = value;
+          cleanedData[key] = value;
         }
       });
       

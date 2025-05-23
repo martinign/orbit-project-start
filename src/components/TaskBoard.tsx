@@ -117,7 +117,7 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   // Calculate grid columns based on number of visible columns and archive-only mode
   const getGridCols = () => {
     if (archiveOnlyMode) {
-      return 'grid-cols-1 max-w-md mx-auto'; // Single column, centered
+      return 'grid-cols-1 max-w-2xl'; // Single column, wider and left-aligned
     }
     return showArchiveColumn ? 'lg:grid-cols-6' : 'lg:grid-cols-5';
   };
