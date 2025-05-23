@@ -49,10 +49,13 @@ export const useTaskSubmission = ({
         throw new Error('Project ID is required');
       }
 
-      // Clean the taskData object to remove undefined values
-      const cleanedData: Partial<TaskData> = Object.fromEntries(
-        Object.entries(taskData).filter(([_, v]) => v !== undefined)
-      );
+      // Clean the taskData object to remove undefined values and ensure correct types
+      const cleanedData: Record<string, any> = {};
+      Object.entries(taskData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          cleanedData[key] = value;
+        }
+      });
       
       console.log(`${mode === 'edit' ? 'Updating' : 'Creating'} task with data:`, cleanedData);
       

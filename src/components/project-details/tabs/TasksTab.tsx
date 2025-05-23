@@ -95,7 +95,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
     setShowArchivedOnly(!showArchivedOnly);
   };
 
-  return <Card>
+  return (
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Project Tasks</CardTitle>
@@ -129,12 +130,26 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        {tasksLoading ? <div className="text-center py-6 border rounded-lg bg-gray-50">
+        {tasksLoading ? (
+          <div className="text-center py-6 border rounded-lg bg-gray-50">
             <div className="animate-pulse flex flex-col items-center justify-center">
               <div className="h-6 w-24 bg-gray-200 rounded mb-2"></div>
               <div className="h-4 w-32 bg-gray-200 rounded"></div>
             </div>
-          </div> : filteredTasks && filteredTasks.length > 0 ? !isTimelineView ? <TaskBoard tasks={filteredTasks} projectId={projectId} onRefetch={refetchTasks} /> : <TimelineView tasks={filteredTasks} isLoading={tasksLoading} /> : <div className="text-center p-8 border rounded-lg bg-gray-50">
+          </div>
+        ) : filteredTasks && filteredTasks.length > 0 ? (
+          !isTimelineView ? (
+            <TaskBoard 
+              tasks={filteredTasks} 
+              projectId={projectId} 
+              onRefetch={refetchTasks}
+              showArchiveColumn={showArchivedOnly}
+            />
+          ) : (
+            <TimelineView tasks={filteredTasks} isLoading={tasksLoading} />
+          )
+        ) : (
+          <div className="text-center p-8 border rounded-lg bg-gray-50">
             <p className="text-muted-foreground mb-4">
               {showArchivedOnly ? 
                 'No archived tasks found for this project' : 
@@ -143,16 +158,23 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white">
               <Plus className="mr-2 h-4 w-4" /> Create Task
             </Button>
-          </div>}
+          </div>
+        )}
       </CardContent>
 
-      <TaskDialog open={isTaskDialogOpen} onClose={() => setIsTaskDialogOpen(false)} mode="create" projectId={projectId} onSuccess={() => {
-      refetchTasks();
-      queryClient.invalidateQueries({
-        queryKey: ["new_tasks_count"]
-      });
-      setIsTaskDialogOpen(false);
-    }} />
-    </Card>;
+      <TaskDialog 
+        open={isTaskDialogOpen} 
+        onClose={() => setIsTaskDialogOpen(false)} 
+        mode="create" 
+        projectId={projectId} 
+        onSuccess={() => {
+          refetchTasks();
+          queryClient.invalidateQueries({
+            queryKey: ["new_tasks_count"]
+          });
+          setIsTaskDialogOpen(false);
+        }} 
+      />
+    </Card>
+  );
 };
-

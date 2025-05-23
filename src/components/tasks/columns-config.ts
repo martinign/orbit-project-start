@@ -5,7 +5,7 @@ export const columnsConfig = [
     title: 'Not Started',
     status: 'not started',
     color: 'bg-gray-100 border-gray-300',
-    badgeColor: 'bg-gray-500', // Changed from bg-red-500 to bg-gray-500
+    badgeColor: 'bg-gray-500',
   },
   {
     id: 'pending',
@@ -45,6 +45,14 @@ export const columnsConfig = [
   }
 ];
 
+// Get columns based on whether archive should be shown
+export const getVisibleColumns = (showArchive: boolean = false) => {
+  if (showArchive) {
+    return columnsConfig;
+  }
+  return columnsConfig.filter(col => !col.isArchive);
+};
+
 // Add interface for TypeScript type checking
 export interface ColumnConfig {
   id: string;
@@ -57,4 +65,3 @@ export interface ColumnConfig {
 
 // Define a special droppable ID for the archive drop zone
 export const ARCHIVE_DROPPABLE_ID = 'archive-drop-zone';
-

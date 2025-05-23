@@ -1,19 +1,18 @@
 
 import React, { useState } from 'react';
-import { DragDropContext, Droppable } from '@hello-pangea/dnd';
+import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import TaskBoardColumn from './tasks/TaskBoardColumn';
 import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
-import { columnsConfig, ARCHIVE_DROPPABLE_ID } from './tasks/columns-config';
+import { getVisibleColumns } from './tasks/columns-config';
+import { CompactArchiveDropZone } from './tasks/CompactArchiveDropZone';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCollapsibleTaskColumns } from '@/hooks/useCollapsibleTaskColumns';
 import { useProjectTaskUpdates } from '@/hooks/useProjectTaskUpdates';
-import { Archive, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from './ui/button';
 
 interface Task {
   id: string;
@@ -30,13 +29,18 @@ interface TaskBoardProps {
   tasks: Task[];
   projectId: string;
   onRefetch: () => void;
+  showArchiveColumn?: boolean;
 }
 
-const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) => {
+const TaskBoard: React.FC<TaskBoardProps> = ({ 
+  tasks, 
+  projectId, 
+  onRefetch, 
+  showArchiveColumn = false 
+}) => {
   const queryClient = useQueryClient();
-  const { isColumnCollapsed, toggleColumnCollapsed, isCardExpanded, toggleCardExpanded } = useCollapsibleTaskColumns(projectId);
+  const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
   const { updateCounts, markTaskUpdatesAsViewed } = useProjectTaskUpdates(projectId);
-  const [showArchiveZone, setShowArchiveZone] = useState(false);
   
   const {
     selectedTask,
@@ -91,6 +95,9 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     markTaskUpdatesAsViewed(task.id);
   };
 
+  // Get visible columns based on showArchiveColumn prop
+  const visibleColumns = getVisibleColumns(showArchiveColumn);
+
   // Filter tasks to show only non-archived in regular columns
   // and only archived in archive column
   const getTasksForColumn = (status: string, isArchiveColumn: boolean = false) => {
@@ -105,17 +112,18 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
     );
   };
 
-  // Toggle archive drop zone visibility
-  const toggleArchiveZone = () => {
-    setShowArchiveZone(!showArchiveZone);
-  };
+  // Calculate grid columns based on number of visible columns
+  const gridCols = showArchiveColumn ? 'lg:grid-cols-6' : 'lg:grid-cols-5';
 
   return (
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
-            {columnsConfig.map((column) => (
+          {/* Compact Archive Drop Zone - Always Visible */}
+          <CompactArchiveDropZone />
+
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+            {visibleColumns.map((column) => (
               <TaskBoardColumn
                 key={column.id}
                 column={column}
@@ -134,41 +142,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({ tasks, projectId, onRefetch }) =>
               />
             ))}
           </div>
-
-          {/* Archive drop zone toggle button */}
-          <div className="flex justify-center mt-4">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={toggleArchiveZone}
-            >
-              <Archive className="h-4 w-4" />
-              {showArchiveZone ? "Hide Archive Zone" : "Show Archive Zone"}
-              {showArchiveZone ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          {/* Archive drop zone */}
-          {showArchiveZone && (
-            <Droppable droppableId={ARCHIVE_DROPPABLE_ID} direction="horizontal">
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`mt-4 p-4 h-24 border-2 border-dashed rounded-lg flex items-center justify-center
-                    ${snapshot.isDraggingOver ? 'bg-purple-100 border-purple-500' : 'bg-gray-50 border-gray-300'}`}
-                >
-                  <div className="flex flex-col items-center">
-                    <Archive className={`h-8 w-8 ${snapshot.isDraggingOver ? 'text-purple-500' : 'text-gray-400'}`} />
-                    <p className={`mt-2 text-sm ${snapshot.isDraggingOver ? 'text-purple-700' : 'text-gray-500'}`}>
-                      {snapshot.isDraggingOver ? "Drop to archive" : "Drag tasks here to archive"}
-                    </p>
-                  </div>
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          )}
         </DragDropContext>
       </TooltipProvider>
 
