@@ -87,7 +87,6 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
         <ContactsTab 
           projectId={projectId} 
           contactSearchQuery={contactSearchQuery}
-          setContactSearchQuery={setContactSearchQuery}
         />
       </TabsContent>
 

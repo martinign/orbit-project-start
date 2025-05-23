@@ -41,7 +41,11 @@ export const ImportantLinks: React.FC<ImportantLinksProps> = ({ projectId }) => 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+        <Button 
+          onClick={() => setIsAddDialogOpen(true)} 
+          size="sm"
+          className="bg-blue-500 hover:bg-blue-600 text-white"
+        >
           <Plus className="h-4 w-4 mr-2" /> Add Link
         </Button>
       </div>
