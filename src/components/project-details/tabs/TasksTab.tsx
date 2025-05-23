@@ -104,6 +104,15 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
           <Button 
+            onClick={handleArchiveToggle}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            size="sm"
+          >
+            <Archive className="mr-1 h-4 w-4" />
+            {showArchivedOnly ? 'Active Tasks' : 'Archives'}
+          </Button>
+          
+          <Button 
             onClick={handlePrivateToggle}
             variant={showPrivateOnly ? "default" : "outline"}
             className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
@@ -111,15 +120,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           >
             <Lock className="mr-1 h-4 w-4" />
             {showPrivateOnly ? 'All Tasks' : 'Private Only'}
-          </Button>
-          
-          <Button 
-            onClick={handleArchiveToggle}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            size="sm"
-          >
-            <Archive className="mr-1 h-4 w-4" />
-            {showArchivedOnly ? 'Active Tasks' : 'Archives'}
           </Button>
           
           <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white" size="sm">
