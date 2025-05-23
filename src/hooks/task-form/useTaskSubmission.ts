@@ -17,7 +17,7 @@ interface TaskData {
   description?: string;
   status?: string;
   priority?: string;
-  project_id?: string;
+  project_id: string; // Make this required
   notes?: string;
   due_date?: string | null;
   assigned_to?: string | null;
@@ -25,7 +25,6 @@ interface TaskData {
   workday_code_id?: string | null;
   is_private?: boolean;
   updated_at?: string;
-  [key: string]: any; // Allow for additional properties
 }
 
 export const useTaskSubmission = ({ 
@@ -45,11 +44,15 @@ export const useTaskSubmission = ({
     setError(null);
     
     try {
-      // Clean the taskData object to remove undefined and null values
-      // Cast to the correct interface to ensure TypeScript is happy
-      const cleanedData: TaskData = Object.fromEntries(
+      // Ensure project_id is always present for database operations
+      if (!taskData.project_id) {
+        throw new Error('Project ID is required');
+      }
+
+      // Clean the taskData object to remove undefined values
+      const cleanedData: Partial<TaskData> = Object.fromEntries(
         Object.entries(taskData).filter(([_, v]) => v !== undefined)
-      ) as TaskData;
+      );
       
       console.log(`${mode === 'edit' ? 'Updating' : 'Creating'} task with data:`, cleanedData);
       

@@ -16,6 +16,12 @@ interface Task {
   project_id: string;
   is_private?: boolean;
   is_archived?: boolean;
+  description?: string;
+  due_date?: string;
+  assigned_to?: string;
+  created_at?: string;
+  user_id?: string;
+  workday_code_id?: string;
 }
 
 interface DraggableTaskCardProps {
@@ -74,9 +80,10 @@ export const DraggableTaskCard = ({
             <div className="flex-1 min-w-0">
               <TaskCardHeader
                 title={title}
-                subtasksCount={subtasksCount}
+                hasSubtasks={subtasksCount > 0}
                 isExpanded={isExpanded}
                 toggleExpand={toggleExpand}
+                isPrivate={is_private}
               />
               
               {/* Archive indicator */}
@@ -94,7 +101,11 @@ export const DraggableTaskCard = ({
                 </Badge>
               )}
               
-              <TaskMetadata task={task} />
+              <TaskMetadata 
+                subtasksCount={subtasksCount}
+                updateCount={updateCount}
+                isPrivate={is_private}
+              />
             </div>
 
             <TaskActions
@@ -108,7 +119,18 @@ export const DraggableTaskCard = ({
             />
           </div>
 
-          {isCardExpanded && <TaskHoverContent task={task} />}
+          {isCardExpanded && (
+            <TaskHoverContent 
+              title={task.title}
+              description={task.description}
+              priority={task.priority}
+              dueDate={task.due_date}
+              createdAt={task.created_at}
+              userId={task.user_id}
+              workdayCodeId={task.workday_code_id}
+              isPrivate={task.is_private}
+            />
+          )}
         </div>
       )}
     </Draggable>
