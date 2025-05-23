@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { SubtaskForm } from './subtasks/SubtaskForm';
-import { useSubtaskForm } from '@/hooks/useSubtaskForm';
+import { useSubtaskForm } from '@/hooks/subtask-form';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 
 interface Task {
