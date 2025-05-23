@@ -1,32 +1,21 @@
 
 import React from 'react';
 import { SiteData } from '@/hooks/site-initiation/types';
+import { REQUIRED_ROLES } from '@/hooks/site-initiation/siteUtils';
+import { Badge } from '@/components/ui/badge';
 
 export interface SiteRolesTabProps {
   sites?: SiteData[];
 }
 
 export const SiteRolesTab: React.FC<SiteRolesTabProps> = ({ sites = [] }) => {
-  // Group sites by role
-  const sitesByRole = React.useMemo(() => {
-    const roleGroups: Record<string, SiteData[]> = {};
-    
-    sites.forEach(site => {
-      if (!roleGroups[site.role]) {
-        roleGroups[site.role] = [];
-      }
-      roleGroups[site.role].push(site);
-    });
-    
-    return roleGroups;
-  }, [sites]);
+  // Get existing roles for this site reference
+  const existingRoles = sites.map(site => site.role);
   
-  const roleEntries = Object.entries(sitesByRole);
-  
-  if (roleEntries.length === 0) {
+  if (sites.length === 0) {
     return (
       <div className="text-center py-3 text-xs text-gray-500">
-        No roles assigned
+        No sites assigned
       </div>
     );
   }
@@ -35,17 +24,24 @@ export const SiteRolesTab: React.FC<SiteRolesTabProps> = ({ sites = [] }) => {
     <div className="space-y-3">
       <h4 className="text-sm font-medium">Site Roles</h4>
       
-      <div className="space-y-2">
-        {roleEntries.map(([role, roleSites]) => (
-          <div key={role} className="border-b pb-1 last:border-0">
-            <div className="text-xs font-medium">{role}</div>
-            {roleSites.map(site => (
-              <div key={site.id} className="text-xs">
-                {site.site_personnel_name}
-              </div>
-            ))}
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-2">
+        {REQUIRED_ROLES.map(role => {
+          const isAvailable = existingRoles.includes(role);
+          
+          return (
+            <Badge
+              key={role}
+              variant={isAvailable ? "default" : "destructive"}
+              className={`text-xs ${
+                isAvailable 
+                  ? "bg-green-500 hover:bg-green-600 text-white" 
+                  : "bg-gray-400 hover:bg-gray-500 text-white"
+              }`}
+            >
+              {role}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );
