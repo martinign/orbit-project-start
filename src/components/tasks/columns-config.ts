@@ -6,6 +6,7 @@ export const columnsConfig = [
     status: 'not started',
     color: 'bg-gray-100 border-gray-300',
     badgeColor: 'bg-gray-500',
+    borderColor: 'border-gray-500',
   },
   {
     id: 'pending',
@@ -13,6 +14,7 @@ export const columnsConfig = [
     status: 'pending',
     color: 'bg-yellow-100 border-yellow-300',
     badgeColor: 'bg-yellow-500',
+    borderColor: 'border-yellow-500',
   },
   {
     id: 'in-progress',
@@ -20,6 +22,7 @@ export const columnsConfig = [
     status: 'in progress',
     color: 'bg-blue-100 border-blue-300',
     badgeColor: 'bg-blue-500',
+    borderColor: 'border-blue-500',
   },
   {
     id: 'completed',
@@ -27,6 +30,7 @@ export const columnsConfig = [
     status: 'completed',
     color: 'bg-green-100 border-green-300',
     badgeColor: 'bg-green-500',
+    borderColor: 'border-green-500',
   },
   {
     id: 'stucked',
@@ -34,6 +38,7 @@ export const columnsConfig = [
     status: 'stucked',
     color: 'bg-red-100 border-red-300',
     badgeColor: 'bg-red-500',
+    borderColor: 'border-red-500',
   },
   {
     id: 'archived',
@@ -41,6 +46,7 @@ export const columnsConfig = [
     status: 'archived',
     color: 'bg-purple-100 border-purple-300',
     badgeColor: 'bg-purple-500',
+    borderColor: 'border-purple-500',
     isArchive: true,
   }
 ];
@@ -61,6 +67,22 @@ export const getVisibleColumns = (showArchive: boolean = false, archiveOnlyMode:
   return columnsConfig.filter(col => !col.isArchive);
 };
 
+// Helper function to get border color based on task status
+export const getTaskBorderColor = (status: string, isArchived?: boolean) => {
+  // If task is archived, always use purple border
+  if (isArchived) {
+    return 'border-purple-500';
+  }
+  
+  // Find the matching column configuration
+  const column = columnsConfig.find(col => 
+    col.status.toLowerCase() === status.toLowerCase()
+  );
+  
+  // Return the border color or default to gray if status not found
+  return column?.borderColor || 'border-gray-500';
+};
+
 // Add interface for TypeScript type checking
 export interface ColumnConfig {
   id: string;
@@ -68,6 +90,7 @@ export interface ColumnConfig {
   status: string;
   color: string;
   badgeColor: string;
+  borderColor: string;
   isArchive?: boolean;
 }
 

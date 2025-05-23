@@ -1,4 +1,3 @@
-
 import { Draggable } from "@hello-pangea/dnd";
 import { Badge } from "@/components/ui/badge";
 import { TaskCardHeader } from "./TaskCardHeader";
@@ -7,6 +6,7 @@ import { TaskMetadata } from "./TaskMetadata";
 import { TaskHoverContent } from "./TaskHoverContent";
 import { Archive } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTaskBorderColor } from "./columns-config";
 
 interface Task {
   id: string;
@@ -55,7 +55,10 @@ export const DraggableTaskCard = ({
   isCardExpanded,
   toggleCardExpand
 }: DraggableTaskCardProps) => {
-  const { id, title, priority, is_private, is_archived } = task;
+  const { id, title, status, is_private, is_archived } = task;
+  
+  // Get border color based on task status
+  const borderColor = getTaskBorderColor(status, is_archived);
 
   return (
     <Draggable draggableId={id} index={index}>
@@ -66,11 +69,8 @@ export const DraggableTaskCard = ({
           {...provided.dragHandleProps}
           className={cn(
             "p-2 mb-2 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-l-4",
+            borderColor,
             {
-              "border-blue-500": priority === "high",
-              "border-yellow-500": priority === "medium",
-              "border-green-500": priority === "low",
-              "border-purple-500": is_archived,
               "opacity-70": is_archived,
             }
           )}
