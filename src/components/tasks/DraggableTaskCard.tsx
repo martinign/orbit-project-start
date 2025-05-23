@@ -1,3 +1,4 @@
+
 import { Draggable } from "@hello-pangea/dnd";
 import { Badge } from "@/components/ui/badge";
 import { TaskCardHeader } from "./TaskCardHeader";
@@ -134,7 +135,6 @@ export const DraggableTaskCard = ({
               </div>
 
               <TaskHoverContent 
-                title={task.title}
                 description={task.description}
                 priority={task.priority}
                 dueDate={task.due_date}

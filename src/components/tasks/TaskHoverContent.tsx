@@ -1,16 +1,13 @@
 
 import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { Calendar, Clock, User, Code, AlertCircle, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Users, MessageSquare, Lock } from 'lucide-react';
-import { useWorkdayCodeDetails } from '@/hooks/useWorkdayCodeDetails';
+import { format } from 'date-fns';
 
 interface TaskHoverContentProps {
-  title: string;
   description?: string;
   priority: string;
   dueDate?: string;
-  assignedToName?: string;
   createdAt?: string;
   userId?: string;
   workdayCodeId?: string;
@@ -18,83 +15,67 @@ interface TaskHoverContentProps {
 }
 
 export const TaskHoverContent: React.FC<TaskHoverContentProps> = ({
-  title,
   description,
   priority,
   dueDate,
-  assignedToName,
   createdAt,
   userId,
   workdayCodeId,
   isPrivate
 }) => {
-  const { data: codeDetails } = useWorkdayCodeDetails(workdayCodeId);
-  
-  const getPriorityBadge = () => {
-    switch (priority) {
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
       case 'high':
-        return <Badge variant="destructive">High Priority</Badge>;
+        return 'bg-red-100 text-red-800 border-red-300';
       case 'medium':
-        return <Badge variant="default">Medium Priority</Badge>;
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'low':
-        return <Badge variant="secondary">Low Priority</Badge>;
+        return 'bg-green-100 text-green-800 border-green-300';
       default:
-        return null;
+        return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
-  
+
   return (
-    <div className="space-y-2">
-      <h4 className="font-semibold text-base">{title}</h4>
-      
-      <div className="flex flex-wrap gap-2 items-center">
-        {getPriorityBadge()}
-        
-        {isPrivate && (
+    <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+      {description && (
+        <div className="text-sm text-gray-600">
+          <p className="line-clamp-2">{description}</p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+        <Badge variant="outline" className={`flex items-center gap-1 ${getPriorityColor(priority)}`}>
+          <AlertCircle className="h-3 w-3" />
+          {priority} Priority
+        </Badge>
+
+        {dueDate && (
           <Badge variant="outline" className="flex items-center gap-1">
-            <Lock className="h-3 w-3" />
-            Private Task
+            <Calendar className="h-3 w-3" />
+            Due: {format(new Date(dueDate), 'MMM dd')}
           </Badge>
         )}
-      </div>
-      
-      {description && (
-        <p className="text-sm text-muted-foreground">
-          {description.length > 150 
-            ? `${description.substring(0, 150)}...` 
-            : description}
-        </p>
-      )}
-      
-      <div className="grid grid-cols-1 gap-1 text-xs">
-        {dueDate && (
-          <div className="flex items-center">
-            <CalendarIcon className="h-3 w-3 mr-1" />
-            <span className="text-muted-foreground mr-1">Due:</span>
-            {new Date(dueDate).toLocaleDateString()}
-          </div>
-        )}
-        
-        {assignedToName && (
-          <div className="flex items-center">
-            <Users className="h-3 w-3 mr-1" />
-            <span className="text-muted-foreground mr-1">Assigned to:</span>
-            {assignedToName}
-          </div>
-        )}
-        
-        {codeDetails && (
-          <div className="flex items-center">
-            <MessageSquare className="h-3 w-3 mr-1" />
-            <span className="text-muted-foreground mr-1">Workday code:</span>
-            {codeDetails.task} - {codeDetails.activity}
-          </div>
-        )}
-        
+
         {createdAt && (
-          <div className="text-xs text-muted-foreground mt-1">
-            Created {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
-          </div>
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Created: {format(new Date(createdAt), 'MMM dd')}
+          </Badge>
+        )}
+
+        {workdayCodeId && (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Code className="h-3 w-3" />
+            Workday
+          </Badge>
+        )}
+
+        {isPrivate && (
+          <Badge variant="outline" className="flex items-center gap-1 bg-blue-50 text-blue-700 border-blue-300">
+            <Shield className="h-3 w-3" />
+            Private
+          </Badge>
         )}
       </div>
     </div>
