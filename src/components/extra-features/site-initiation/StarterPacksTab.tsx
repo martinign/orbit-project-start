@@ -40,8 +40,7 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     optimisticUpdates, 
     handleStarterPackToggle,
     handleRegisteredInSrpToggle,
-    handleSuppliesAppliedToggle,
-    resetOptimisticUpdates
+    handleSuppliesAppliedToggle
   } = useStarterPackToggle(refetch);
   
   const {
@@ -106,10 +105,8 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     );
   }, [filteredSiteReferences, pagination.currentPage, pagination.pageSize, showAll]);
   
-  // Clear optimistic updates when sites data is refreshed
-  useEffect(() => {
-    resetOptimisticUpdates();
-  }, [sites]);
+  // Remove the automatic clearing of optimistic updates when sites data changes
+  // This was causing the toggles to not reflect updates immediately
 
   // Reset selected sites when filtered data changes
   useEffect(() => {

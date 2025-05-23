@@ -26,6 +26,22 @@ export const useStarterPackToggle = (refetch: () => void) => {
     }
   };
 
+  // Clear optimistic update for a specific site
+  const clearOptimisticUpdate = (siteId: string, field?: string) => {
+    setOptimisticUpdates(prev => {
+      const newUpdates = { ...prev };
+      if (field && newUpdates[siteId]) {
+        delete newUpdates[siteId][field];
+        if (Object.keys(newUpdates[siteId]).length === 0) {
+          delete newUpdates[siteId];
+        }
+      } else {
+        delete newUpdates[siteId];
+      }
+      return newUpdates;
+    });
+  };
+
   // Handle starter pack toggle with optimistic UI update - only for LABP sites
   const handleStarterPackToggle = async (labpSite: SiteData | undefined, newValue: boolean) => {
     if (labpSite && labpSite.id) {
@@ -53,19 +69,14 @@ export const useStarterPackToggle = (refetch: () => void) => {
           description: `Updated status for ${labpSite.pxl_site_reference_number}`,
         });
         
-        // No need to call refetch() as the real-time subscription will handle the update
+        // Clear optimistic update after successful database update
+        // Real-time subscription will handle showing the final state
+        setTimeout(() => {
+          clearOptimisticUpdate(labpSite.id!, 'starter_pack');
+        }, 1000); // Give real-time subscription time to update
       } else {
         // Revert optimistic update on failure
-        setOptimisticUpdates(prev => {
-          const newUpdates = { ...prev };
-          if (newUpdates[labpSite.id!]) {
-            delete newUpdates[labpSite.id!].starter_pack;
-            if (Object.keys(newUpdates[labpSite.id!]).length === 0) {
-              delete newUpdates[labpSite.id!];
-            }
-          }
-          return newUpdates;
-        });
+        clearOptimisticUpdate(labpSite.id!, 'starter_pack');
         
         toast({
           title: "Failed to update starter pack status",
@@ -102,18 +113,14 @@ export const useStarterPackToggle = (refetch: () => void) => {
           title: newValue ? "Site marked as registered in SRP" : "Site marked as not registered in SRP",
           description: `Updated status for ${site.pxl_site_reference_number}`,
         });
+        
+        // Clear optimistic update after successful database update
+        setTimeout(() => {
+          clearOptimisticUpdate(site.id!, 'registered_in_srp');
+        }, 1000);
       } else {
         // Revert optimistic update on failure
-        setOptimisticUpdates(prev => {
-          const newUpdates = { ...prev };
-          if (newUpdates[site.id!]) {
-            delete newUpdates[site.id!].registered_in_srp;
-            if (Object.keys(newUpdates[site.id!]).length === 0) {
-              delete newUpdates[site.id!];
-            }
-          }
-          return newUpdates;
-        });
+        clearOptimisticUpdate(site.id!, 'registered_in_srp');
         
         toast({
           title: "Failed to update SRP registration status",
@@ -150,18 +157,14 @@ export const useStarterPackToggle = (refetch: () => void) => {
           title: newValue ? "Supplies marked as applied" : "Supplies marked as not applied",
           description: `Updated status for ${site.pxl_site_reference_number}`,
         });
+        
+        // Clear optimistic update after successful database update
+        setTimeout(() => {
+          clearOptimisticUpdate(site.id!, 'supplies_applied');
+        }, 1000);
       } else {
         // Revert optimistic update on failure
-        setOptimisticUpdates(prev => {
-          const newUpdates = { ...prev };
-          if (newUpdates[site.id!]) {
-            delete newUpdates[site.id!].supplies_applied;
-            if (Object.keys(newUpdates[site.id!]).length === 0) {
-              delete newUpdates[site.id!];
-            }
-          }
-          return newUpdates;
-        });
+        clearOptimisticUpdate(site.id!, 'supplies_applied');
         
         toast({
           title: "Failed to update supplies status",
