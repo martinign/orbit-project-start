@@ -57,7 +57,11 @@ export const useSiteReferences = (
       // Find a representative site for this reference (prefer LABP if available)
       const representativeSite = labpSite || sitesForReference[0];
       
-      // Apply optimistic updates - check all relevant sites for this reference
+      // Apply optimistic updates if they exist for the representative site
+      const hasOptimisticUpdate = representativeSite && representativeSite.id && 
+                               optimisticUpdates[representativeSite.id] !== undefined;
+      
+      // Handle different types of optimistic updates
       let starterPackStatus = labpSite ? !!labpSite.starter_pack : false;
       let registeredInSrpStatus = representativeSite ? !!representativeSite.registered_in_srp : false;
       let suppliesAppliedStatus = representativeSite ? !!representativeSite.supplies_applied : false;
@@ -70,9 +74,9 @@ export const useSiteReferences = (
         }
       }
       
-      // Apply optimistic updates for representative site (for SRP and supplies)
-      if (representativeSite && representativeSite.id && optimisticUpdates[representativeSite.id]) {
-        const updates = optimisticUpdates[representativeSite.id];
+      // Apply optimistic updates for representative site
+      if (hasOptimisticUpdate) {
+        const updates = optimisticUpdates[representativeSite.id!];
         if (updates.hasOwnProperty('registered_in_srp')) {
           registeredInSrpStatus = updates.registered_in_srp;
         }
@@ -80,23 +84,6 @@ export const useSiteReferences = (
           suppliesAppliedStatus = updates.supplies_applied;
         }
       }
-      
-      // Also check if any other site in this reference has optimistic updates
-      sitesForReference.forEach(site => {
-        if (site.id && optimisticUpdates[site.id]) {
-          const updates = optimisticUpdates[site.id];
-          
-          // Update registered_in_srp status if this site has an optimistic update
-          if (updates.hasOwnProperty('registered_in_srp') && site === representativeSite) {
-            registeredInSrpStatus = updates.registered_in_srp;
-          }
-          
-          // Update supplies_applied status if this site has an optimistic update
-          if (updates.hasOwnProperty('supplies_applied') && site === representativeSite) {
-            suppliesAppliedStatus = updates.supplies_applied;
-          }
-        }
-      });
       
       return {
         reference,
