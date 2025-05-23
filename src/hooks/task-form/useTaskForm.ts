@@ -77,6 +77,14 @@ export const useTaskForm = (
       return;
     }
     
+    // Helper function to convert empty strings and 'none' to null for UUID fields
+    const convertToNullIfEmpty = (value: string | null | undefined): string | null => {
+      if (!value || value === 'none' || value.trim() === '') {
+        return null;
+      }
+      return value;
+    };
+    
     const taskData = {
       title: formState.title,
       description: formState.description,
@@ -85,9 +93,9 @@ export const useTaskForm = (
       project_id: projectSelect.selectedProject,
       notes: formState.notes,
       due_date: formState.dueDate ? formState.dueDate.toISOString() : null,
-      assigned_to: formState.assignedTo === 'none' ? null : formState.assignedTo,
+      assigned_to: convertToNullIfEmpty(formState.assignedTo),
       user_id: user.id,
-      workday_code_id: workdayCodes.selectedWorkdayCode === 'none' ? null : workdayCodes.selectedWorkdayCode,
+      workday_code_id: convertToNullIfEmpty(workdayCodes.selectedWorkdayCode),
       is_private: formState.isPrivate
     };
     

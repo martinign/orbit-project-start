@@ -134,6 +134,14 @@ export const useSubtaskForm = (
     console.time('subtaskSubmission');
     
     try {
+      // Helper function to convert empty strings and 'none' to null for UUID fields
+      const convertToNullIfEmpty = (value: string | null | undefined): string | null => {
+        if (!value || value === 'none' || value.trim() === '') {
+          return null;
+        }
+        return value;
+      };
+      
       const subtaskData = {
         title,
         description,
@@ -142,8 +150,8 @@ export const useSubtaskForm = (
         notes,
         due_date: dueDate ? dueDate.toISOString() : null,
         user_id: user.id,
-        assigned_to: assignedTo === 'none' ? null : assignedTo,
-        workday_code_id: selectedWorkdayCode === 'none' ? null : selectedWorkdayCode
+        assigned_to: convertToNullIfEmpty(assignedTo),
+        workday_code_id: convertToNullIfEmpty(selectedWorkdayCode)
       };
       
       if (mode === 'edit' && subtask?.id) {
