@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -97,8 +96,6 @@ const ProjectDetailsView = () => {
     importantLinks: false,
     siteInitiationTracker: false,
     docPrinting: false,
-    billOfMaterials: false,
-    designSheet: false,
     workdayScheduled: false,
     vacationTracker: false
   };
@@ -149,7 +146,6 @@ const ProjectDetailsView = () => {
           key={`tabs-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}`}
         >
           <ProjectTabsContent
-            activeTab={activeTab}
             projectId={id || ''}
             tasks={tasks}
             tasksLoading={tasksLoading}
@@ -157,6 +153,7 @@ const ProjectDetailsView = () => {
             contactSearchQuery={contactSearchQuery}
             setContactSearchQuery={setContactSearchQuery}
             extraFeatures={safeFeatures}
+            isProjectOwner={isProjectOwner}
             key={`content-${forceUpdateCounter}-${JSON.stringify(safeFeatures)}-${id}`}
           />
         </ProjectContentTabs>

@@ -16,12 +16,22 @@ import { ExtraFeaturesState } from '@/hooks/useExtraFeatures';
 
 interface ProjectTabsContentProps {
   projectId: string;
+  tasks: any[];
+  tasksLoading: boolean;
+  refetchTasks: () => void;
+  contactSearchQuery: string;
+  setContactSearchQuery: (query: string) => void;
   extraFeatures?: ExtraFeaturesState;
   isProjectOwner: boolean;
 }
 
 export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   projectId,
+  tasks,
+  tasksLoading,
+  refetchTasks,
+  contactSearchQuery,
+  setContactSearchQuery,
   extraFeatures = {
     importantLinks: false,
     siteInitiationTracker: false,
@@ -57,7 +67,12 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   return (
     <>
       <TabsContent value="tasks">
-        <TasksTab projectId={projectId} />
+        <TasksTab 
+          projectId={projectId} 
+          tasks={tasks}
+          tasksLoading={tasksLoading}
+          refetchTasks={refetchTasks}
+        />
       </TabsContent>
 
       <TabsContent value="notes">
@@ -69,7 +84,11 @@ export const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       </TabsContent>
 
       <TabsContent value="contacts">
-        <ContactsTab projectId={projectId} />
+        <ContactsTab 
+          projectId={projectId} 
+          contactSearchQuery={contactSearchQuery}
+          setContactSearchQuery={setContactSearchQuery}
+        />
       </TabsContent>
 
       <TabsContent value="team">
