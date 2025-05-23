@@ -62,6 +62,23 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
 
   // Calculate statistics
   const stats = useStarterPackStats(siteReferenceData);
+  
+  // Prepare stats in the format expected by MainContent
+  const contentStats = {
+    totalSites: stats.total,
+    labpSites: siteReferenceData.length, // All site references that could have a LABP site
+    starterPackSent: stats.sent,
+    starterPackNeeded: stats.total - stats.sent,
+    registeredInSrp: siteReferenceData.filter(site => site.registeredInSrp).length,
+    suppliesApplied: siteReferenceData.filter(site => site.suppliesApplied).length
+  };
+
+  // Convert site references to format expected by MainContent
+  const mappedSiteReferences = siteReferenceData.map(site => ({
+    siteRef: site.reference,
+    sites: site.allSitesForReference,
+    hasSiteData: true
+  }));
 
   // CSV export functionality
   const { exportLabpSitesToCsv, exporting } = useLabpExport(sites, projectId);
@@ -73,10 +90,17 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   
   // Calculate paginated data or show all data based on showAll state
   const displaySiteReferences = React.useMemo(() => {
+    const filteredMappedReferences = filteredSiteReferences.map(site => ({
+      siteRef: site.reference,
+      sites: site.allSitesForReference,
+      hasSiteData: true
+    }));
+    
     if (showAll) {
-      return filteredSiteReferences;
+      return filteredMappedReferences;
     }
-    return filteredSiteReferences.slice(
+    
+    return filteredMappedReferences.slice(
       (pagination.currentPage - 1) * pagination.pageSize,
       pagination.currentPage * pagination.pageSize
     );
@@ -111,9 +135,13 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     <>
       <MainContent
         loading={loading}
-        stats={stats}
+        stats={contentStats}
         displaySiteReferences={displaySiteReferences}
-        filteredSiteReferences={filteredSiteReferences}
+        filteredSiteReferences={filteredSiteReferences.map(site => ({
+          siteRef: site.reference,
+          sites: site.allSitesForReference,
+          hasSiteData: true
+        }))}
         starterPackFilter={starterPackFilter}
         setStarterPackFilter={setStarterPackFilter}
         registeredInSrpFilter={registeredInSrpFilter}

@@ -83,8 +83,9 @@ export const SiteTable: React.FC<SiteTableProps> = ({
             <TableHead className="w-[40px]">
               <Checkbox 
                 checked={allSelected}
-                indeterminate={someSelected} 
-                onCheckedChange={() => toggleSelectAll()}
+                onCheckedChange={toggleSelectAll}
+                aria-label={allSelected ? "Deselect all sites" : "Select all sites"}
+                className={someSelected ? "opacity-50" : ""}
               />
             </TableHead>
             <TableHead>Reference</TableHead>
@@ -120,7 +121,7 @@ export const SiteTable: React.FC<SiteTableProps> = ({
                 <TableCell className="text-center">
                   {labpSite && isEligibleForStarterPack(labpSite) ? (
                     <StatusBadge
-                      value={labpSite.starter_pack}
+                      status={labpSite.starter_pack}
                       onToggle={(newValue) => onStarterPackToggle(labpSite, newValue)}
                       label={labpSite.starter_pack ? "Sent" : "Not sent"}
                     />
@@ -130,14 +131,14 @@ export const SiteTable: React.FC<SiteTableProps> = ({
                 </TableCell>
                 <TableCell className="text-center">
                   <StatusBadge
-                    value={site?.registered_in_srp}
+                    status={site?.registered_in_srp}
                     onToggle={(newValue) => onRegisteredInSrpToggle(site, newValue)}
                     label={site?.registered_in_srp ? "Registered" : "Not registered"}
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <StatusBadge
-                    value={site?.supplies_applied}
+                    status={site?.supplies_applied}
                     onToggle={(newValue) => onSuppliesAppliedToggle(site, newValue)}
                     label={site?.supplies_applied ? "Applied" : "Not applied"}
                   />

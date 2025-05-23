@@ -14,9 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface StarterPackFiltersPopoverProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
+export interface StarterPackFiltersPopoverProps {
   starterPackFilter: string;
   setStarterPackFilter: (status: string) => void;
   registeredInSrpFilter: string;
@@ -24,12 +22,12 @@ interface StarterPackFiltersPopoverProps {
   suppliesAppliedFilter: string;
   setSuppliesAppliedFilter: (status: string) => void;
   onResetFilters: () => void;
-  children: React.ReactNode;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
+  children?: React.ReactNode;
 }
 
 export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps> = ({
-  open,
-  setOpen,
   starterPackFilter,
   setStarterPackFilter,
   registeredInSrpFilter,
@@ -37,12 +35,20 @@ export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps>
   suppliesAppliedFilter,
   setSuppliesAppliedFilter,
   onResetFilters,
+  open,
+  setOpen,
   children
 }) => {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const isControlled = open !== undefined && setOpen !== undefined;
+  
+  const isOpen = isControlled ? open : internalOpen;
+  const onOpenChange = isControlled ? setOpen : setInternalOpen;
+  
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={isOpen} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        {children}
+        {children || <Button variant="outline">Filters</Button>}
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="space-y-4 p-2">
@@ -104,7 +110,7 @@ export const StarterPackFiltersPopover: React.FC<StarterPackFiltersPopoverProps>
             <Button 
               size="sm" 
               className="bg-blue-500 hover:bg-blue-600 text-white"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               Apply Filters
             </Button>

@@ -79,6 +79,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   exporting,
   onViewHistory
 }) => {
+  const [filtersOpen, setFiltersOpen] = React.useState(false);
+  
   if (loading) {
     return <LoadingSiteState />;
   }
@@ -89,28 +91,35 @@ export const MainContent: React.FC<MainContentProps> = ({
       
       <div className="bg-white border rounded-md shadow-sm">
         <TableHeader
-          filtersOpen={false} 
-          setFiltersOpen={() => {}}
-          activeFilterCount={activeFilterCount}
+          starterPackFilter={starterPackFilter}
+          setStarterPackFilter={setStarterPackFilter}
+          registeredInSrpFilter={registeredInSrpFilter}
+          setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+          suppliesAppliedFilter={suppliesAppliedFilter}
+          setSuppliesAppliedFilter={setSuppliesAppliedFilter}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          hasActiveFilters={activeFilterCount > 0}
-          onExportCSV={handleExportCSV}
-          exporting={exporting}
+          activeFilterCount={activeFilterCount}
+          resetFilters={resetFilters}
+          handleExportCSV={handleExportCSV}
           selectedCount={selectedSiteRefs.length}
           totalCount={filteredSiteReferences.length}
-          FiltersPopover={
-            <StarterPackFiltersPopover
-              starterPackFilter={starterPackFilter}
-              setStarterPackFilter={setStarterPackFilter}
-              registeredInSrpFilter={registeredInSrpFilter}
-              setRegisteredInSrpFilter={setRegisteredInSrpFilter}
-              suppliesAppliedFilter={suppliesAppliedFilter}
-              setSuppliesAppliedFilter={setSuppliesAppliedFilter}
-              onResetFilters={resetFilters}
-            />
-          }
+          exporting={exporting}
         />
+        
+        <StarterPackFiltersPopover
+          open={filtersOpen}
+          setOpen={setFiltersOpen}
+          starterPackFilter={starterPackFilter}
+          setStarterPackFilter={setStarterPackFilter}
+          registeredInSrpFilter={registeredInSrpFilter}
+          setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+          suppliesAppliedFilter={suppliesAppliedFilter}
+          setSuppliesAppliedFilter={setSuppliesAppliedFilter}
+          onResetFilters={resetFilters}
+        >
+          <div></div>
+        </StarterPackFiltersPopover>
         
         <SiteTable 
           siteReferences={displaySiteReferences}
@@ -127,6 +136,8 @@ export const MainContent: React.FC<MainContentProps> = ({
           pagination={pagination}
           showAll={showAll}
           setShowAll={setShowAll}
+          selectedCount={selectedSiteRefs.length}
+          exporting={exporting}
         />
       </div>
     </div>

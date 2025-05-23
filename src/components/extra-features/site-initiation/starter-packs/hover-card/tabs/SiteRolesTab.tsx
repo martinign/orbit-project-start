@@ -1,58 +1,52 @@
 
 import React from 'react';
-import { Users } from 'lucide-react';
-import { StarterPackSiteReference } from '../../types';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { REQUIRED_ROLES } from '@/hooks/site-initiation/siteUtils';
+import { SiteData } from '@/hooks/site-initiation/types';
 
-interface SiteRolesTabProps {
-  siteRef: StarterPackSiteReference;
+export interface SiteRolesTabProps {
+  sites?: SiteData[];
 }
 
-export const SiteRolesTab: React.FC<SiteRolesTabProps> = ({ siteRef }) => {
-  // Get all roles for this site reference
-  const presentRoles = siteRef.allSitesForReference.map(site => site.role);
+export const SiteRolesTab: React.FC<SiteRolesTabProps> = ({ sites = [] }) => {
+  // Group sites by role
+  const sitesByRole = React.useMemo(() => {
+    const roleGroups: Record<string, SiteData[]> = {};
+    
+    sites.forEach(site => {
+      if (!roleGroups[site.role]) {
+        roleGroups[site.role] = [];
+      }
+      roleGroups[site.role].push(site);
+    });
+    
+    return roleGroups;
+  }, [sites]);
+  
+  const roleEntries = Object.entries(sitesByRole);
+  
+  if (roleEntries.length === 0) {
+    return (
+      <div className="text-center py-3 text-xs text-gray-500">
+        No roles assigned
+      </div>
+    );
+  }
   
   return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="text-sm font-semibold flex items-center gap-2">
-          <Users className="h-4 w-4 text-blue-500" />
-          Role Coverage
-        </h4>
-        <div className="grid grid-cols-2 gap-2 text-sm mt-3">
-          {REQUIRED_ROLES.map(role => {
-            const hasRole = presentRoles.includes(role);
-            return (
-              <div 
-                key={role} 
-                className={cn(
-                  "p-1.5 rounded-md border flex justify-between items-center",
-                  hasRole ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"
-                )}
-              >
-                <span>{role}</span>
-                {hasRole ? (
-                  <Badge className="bg-green-600">Present</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-amber-700 border-amber-700">Missing</Badge>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    <div className="space-y-3">
+      <h4 className="text-sm font-medium">Site Roles</h4>
       
-      {siteRef.missingRoles.length > 0 && (
-        <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm">
-          <p className="font-medium text-amber-800">Missing {siteRef.missingRoles.length} required roles</p>
-          <p className="text-xs mt-1">This site reference is missing the following roles: {siteRef.missingRoles.join(', ')}</p>
-          {siteRef.missingLabp && (
-            <p className="text-xs font-medium mt-2 text-amber-900">LABP role is required for starter packs</p>
-          )}
-        </div>
-      )}
+      <div className="space-y-2">
+        {roleEntries.map(([role, roleSites]) => (
+          <div key={role} className="border-b pb-1 last:border-0">
+            <div className="text-xs font-medium">{role}</div>
+            {roleSites.map(site => (
+              <div key={site.id} className="text-xs">
+                {site.site_personnel_name}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

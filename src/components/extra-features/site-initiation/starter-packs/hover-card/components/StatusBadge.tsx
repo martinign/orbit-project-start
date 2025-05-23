@@ -1,37 +1,51 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Check, X } from 'lucide-react';
 
-interface StatusBadgeProps {
-  variant?: 'default' | 'outline' | 'secondary' | 'destructive' | 'success';
-  className?: string;
-  children: React.ReactNode;
+export interface StatusBadgeProps {
+  status?: boolean;
+  onToggle?: (newValue: boolean) => Promise<void>;
+  label?: string;
+  value?: boolean; // Added to support existing usages
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ 
-  variant = 'default',
-  className, 
-  children 
+export const StatusBadge: React.FC<StatusBadgeProps> = ({
+  status,
+  onToggle,
+  label,
+  value // Added to support existing usages
 }) => {
-  // Custom styling based on variant
-  const getCustomClass = () => {
-    switch (variant) {
-      case 'success':
-        return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
-      case 'destructive':
-        return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
-      default:
-        return '';
+  // Use value if provided, otherwise fall back to status
+  const isActive = value !== undefined ? value : status;
+  
+  const handleToggle = async () => {
+    if (onToggle) {
+      await onToggle(!isActive);
     }
   };
-  
+
+  if (!onToggle) {
+    return (
+      <Badge 
+        variant={isActive ? "success" : "destructive"}
+        className="gap-1 font-normal"
+      >
+        {isActive ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+        {label || (isActive ? 'Yes' : 'No')}
+      </Badge>
+    );
+  }
+
   return (
-    <Badge 
-      variant={variant === 'success' || variant === 'destructive' ? 'outline' : variant}
-      className={cn(getCustomClass(), className)}
-    >
-      {children}
-    </Badge>
+    <div className="flex items-center space-x-1">
+      <Switch 
+        checked={!!isActive} 
+        onCheckedChange={handleToggle}
+        size="sm"
+      />
+      <span className="text-xs">{label || (isActive ? 'Yes' : 'No')}</span>
+    </div>
   );
 };

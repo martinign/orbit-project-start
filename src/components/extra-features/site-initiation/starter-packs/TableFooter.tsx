@@ -13,26 +13,26 @@ interface PaginationState {
 interface TableFooterProps {
   showAll: boolean;
   setShowAll: (value: boolean) => void;
-  filteredReferencesCount: number;
-  selectedCount: number;
+  filteredCount: number;
   pagination: PaginationState;
+  selectedCount?: number;
   exporting?: boolean;
 }
 
-const TableFooter: React.FC<TableFooterProps> = ({
+export const TableFooter: React.FC<TableFooterProps> = ({
   showAll,
   setShowAll,
-  filteredReferencesCount,
-  selectedCount,
+  filteredCount,
+  selectedCount = 0,
   pagination,
-  exporting
+  exporting = false
 }) => {
-  if (filteredReferencesCount === 0) {
+  if (filteredCount === 0) {
     return null;
   }
 
   return (
-    <div className="flex justify-between items-center mt-4">
+    <div className="flex justify-between items-center p-4 border-t">
       <div className="flex items-center space-x-2">
         <Button 
           variant="outline" 
@@ -60,5 +60,3 @@ const TableFooter: React.FC<TableFooterProps> = ({
     </div>
   );
 };
-
-export default TableFooter;

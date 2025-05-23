@@ -5,7 +5,6 @@ import { Download, Filter, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { StarterPackFiltersPopover } from './StarterPackFiltersPopover';
 import { 
   Tooltip,
   TooltipContent,
@@ -13,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface TableHeaderProps {
+export interface TableHeaderProps {
   starterPackFilter: string;
   setStarterPackFilter: (value: string) => void;
   registeredInSrpFilter: string;
@@ -49,7 +48,7 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
   const [filtersOpen, setFiltersOpen] = React.useState(false);
   
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between pb-2 gap-2">
+    <div className="flex flex-col md:flex-row md:items-center justify-between p-4 border-b gap-2">
       <CardTitle className="text-base">Sites</CardTitle>
       <div className="flex items-center gap-2 flex-wrap">
         <div className="relative">
@@ -62,27 +61,20 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
           />
         </div>
         
-        <StarterPackFiltersPopover
-          open={filtersOpen}
-          setOpen={setFiltersOpen}
-          starterPackFilter={starterPackFilter}
-          setStarterPackFilter={setStarterPackFilter}
-          registeredInSrpFilter={registeredInSrpFilter}
-          setRegisteredInSrpFilter={setRegisteredInSrpFilter}
-          suppliesAppliedFilter={suppliesAppliedFilter}
-          setSuppliesAppliedFilter={setSuppliesAppliedFilter}
-          onResetFilters={resetFilters}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 gap-1"
+          onClick={() => setFiltersOpen(!filtersOpen)}
         >
-          <Button variant="outline" size="sm" className="h-8 gap-1">
-            <Filter className="h-3.5 w-3.5" />
-            Filters
-            {activeFilterCount > 0 && (
-              <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
-                {activeFilterCount}
-              </Badge>
-            )}
-          </Button>
-        </StarterPackFiltersPopover>
+          <Filter className="h-3.5 w-3.5" />
+          Filters
+          {activeFilterCount > 0 && (
+            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center">
+              {activeFilterCount}
+            </Badge>
+          )}
+        </Button>
         
         {activeFilterCount > 0 && (
           <Button 
