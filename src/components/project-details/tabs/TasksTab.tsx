@@ -9,7 +9,6 @@ import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/task-dialog/TaskDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { CompactArchiveDropZone } from '@/components/tasks/CompactArchiveDropZone';
 
 interface TasksTabProps {
   projectId: string;
@@ -104,37 +103,31 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           <CardDescription>Manage tasks for this project</CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
-          <div className="flex items-center gap-3">
-            <CompactArchiveDropZone />
-            
-            <Button 
-              onClick={handleArchiveToggle}
-              variant={showArchivedOnly ? "default" : "outline"}
-              className={showArchivedOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-              size="sm"
-            >
-              <Archive className="mr-1 h-4 w-4" />
-              {showArchivedOnly ? 'Active Tasks' : 'Archives'}
-            </Button>
-            
-            <Button 
-              onClick={handlePrivateToggle}
-              variant={showPrivateOnly ? "default" : "outline"}
-              className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
-              size="sm"
-            >
-              <Lock className="mr-1 h-4 w-4" />
-              {showPrivateOnly ? 'All Tasks' : 'Private Only'}
-            </Button>
-            
-            <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Task
-            </Button>
-          </div>
+          <Button 
+            onClick={handleArchiveToggle}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            size="sm"
+          >
+            <Archive className="mr-1 h-4 w-4" />
+            {showArchivedOnly ? 'Active Tasks' : 'Archives'}
+          </Button>
+          
+          <Button 
+            onClick={handlePrivateToggle}
+            variant={showPrivateOnly ? "default" : "outline"}
+            className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
+            size="sm"
+          >
+            <Lock className="mr-1 h-4 w-4" />
+            {showPrivateOnly ? 'All Tasks' : 'Private Only'}
+          </Button>
+          
+          <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white" size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Task
+          </Button>
         </div>
       </CardHeader>
-      
       <CardContent>
         {tasksLoading ? (
           <div className="text-center py-6 border rounded-lg bg-gray-50">
