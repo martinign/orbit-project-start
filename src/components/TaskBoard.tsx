@@ -8,6 +8,7 @@ import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { getVisibleColumns } from './tasks/columns-config';
 import { CompactArchiveDropZone } from './tasks/CompactArchiveDropZone';
+import { ArchiveTasksGrid } from './tasks/ArchiveTasksGrid';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,10 +115,15 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     );
   };
 
+  // Get archived tasks for the grid view
+  const getArchivedTasks = () => {
+    return tasks.filter(task => task.is_archived === true);
+  };
+
   // Calculate grid columns based on number of visible columns and archive-only mode
   const getGridCols = () => {
     if (archiveOnlyMode) {
-      return 'grid-cols-1 max-w-2xl'; // Single column, wider and left-aligned
+      return ''; // No grid needed for archive-only mode, using custom grid component
     }
     return showArchiveColumn ? 'lg:grid-cols-6' : 'lg:grid-cols-5';
   };
@@ -129,26 +135,44 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
           {/* Compact Archive Drop Zone - Only show when not in archive-only mode */}
           {!archiveOnlyMode && <CompactArchiveDropZone />}
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${getGridCols()} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
-            {visibleColumns.map((column) => (
-              <TaskBoardColumn
-                key={column.id}
-                column={column}
+          {archiveOnlyMode ? (
+            // Archive-only mode: Show responsive grid
+            <div className={`${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+              <ArchiveTasksGrid
+                tasks={getArchivedTasks()}
                 projectId={projectId}
-                tasks={getTasksForColumn(column.status, column.isArchive)}
                 handleEditTask={handleEditTask}
                 handleDeleteConfirm={handleDeleteConfirm}
                 handleTaskUpdates={handleTaskUpdates}
                 handleShowUpdates={handleViewTaskUpdates}
                 handleAddSubtask={handleAddSubtask}
-                handleCreateTask={handleCreateTask}
-                isColumnCollapsed={isColumnCollapsed}
-                toggleColumnCollapsed={toggleColumnCollapsed}
                 taskUpdateCounts={updateCounts}
                 disabled={isDeleting || isRefetching}
               />
-            ))}
-          </div>
+            </div>
+          ) : (
+            // Regular mode: Show columns
+            <div className={`grid grid-cols-1 md:grid-cols-2 ${getGridCols()} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+              {visibleColumns.map((column) => (
+                <TaskBoardColumn
+                  key={column.id}
+                  column={column}
+                  projectId={projectId}
+                  tasks={getTasksForColumn(column.status, column.isArchive)}
+                  handleEditTask={handleEditTask}
+                  handleDeleteConfirm={handleDeleteConfirm}
+                  handleTaskUpdates={handleTaskUpdates}
+                  handleShowUpdates={handleViewTaskUpdates}
+                  handleAddSubtask={handleAddSubtask}
+                  handleCreateTask={handleCreateTask}
+                  isColumnCollapsed={isColumnCollapsed}
+                  toggleColumnCollapsed={toggleColumnCollapsed}
+                  taskUpdateCounts={updateCounts}
+                  disabled={isDeleting || isRefetching}
+                />
+              ))}
+            </div>
+          )}
         </DragDropContext>
       </TooltipProvider>
 
