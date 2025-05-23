@@ -7,7 +7,6 @@ import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
 import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { getVisibleColumns } from './tasks/columns-config';
-import { CompactArchiveDropZone } from './tasks/CompactArchiveDropZone';
 import { ArchiveTasksGrid } from './tasks/ArchiveTasksGrid';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
@@ -132,9 +131,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          {/* Compact Archive Drop Zone - Only show when not in archive-only mode */}
-          {!archiveOnlyMode && <CompactArchiveDropZone />}
-
           {archiveOnlyMode ? (
             // Archive-only mode: Show responsive grid
             <div className={`${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
