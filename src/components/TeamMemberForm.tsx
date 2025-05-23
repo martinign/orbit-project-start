@@ -190,6 +190,7 @@ const TeamMemberForm = ({ projectId: initialProjectId, teamMember, onSuccess }: 
         onCancel={onSuccess}
         isSubmitting={isSubmitting}
         isEditMode={!!teamMember}
+        buttonClassName="bg-blue-500 hover:bg-blue-600 text-white"
       />
     </form>
   );

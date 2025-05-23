@@ -1,30 +1,37 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface FormActionsProps {
   onCancel: () => void;
   isSubmitting: boolean;
   isEditMode: boolean;
+  buttonClassName?: string;
 }
 
-const FormActions = ({ onCancel, isSubmitting, isEditMode }: FormActionsProps) => {
+const FormActions: React.FC<FormActionsProps> = ({ 
+  onCancel, 
+  isSubmitting, 
+  isEditMode,
+  buttonClassName = "bg-blue-500 hover:bg-blue-600 text-white"
+}) => {
   return (
-    <div className="flex justify-end gap-3 pt-4">
+    <div className="flex justify-end space-x-2 pt-2">
       <Button
         type="button"
         variant="outline"
         onClick={onCancel}
-        disabled={isSubmitting}
       >
         Cancel
       </Button>
-      <Button
-        type="submit"
+      <Button 
+        type="submit" 
         disabled={isSubmitting}
-        className="bg-purple-500 hover:bg-purple-600"
+        className={buttonClassName}
       >
-        {isSubmitting ? "Saving..." : isEditMode ? "Update" : "Add Team Member"}
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isEditMode ? "Update Team Member" : "Add Team Member"}
       </Button>
     </div>
   );
