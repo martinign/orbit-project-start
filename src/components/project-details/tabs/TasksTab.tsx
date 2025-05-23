@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Kanban, Calendar, Plus, Lock, Archive } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import TaskBoard from '@/components/TaskBoard';
 import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/task-dialog/TaskDialog';

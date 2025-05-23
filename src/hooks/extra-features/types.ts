@@ -3,8 +3,7 @@ export interface ExtraFeaturesState {
   importantLinks: boolean;
   siteInitiationTracker: boolean;
   docPrinting: boolean;
-  billOfMaterials: boolean;
-  designSheet: boolean;
+  // billOfMaterials and designSheet are removed
   workdayScheduled: boolean;
   vacationTracker: boolean;
 }
@@ -13,8 +12,7 @@ export const defaultFeatures: ExtraFeaturesState = {
   importantLinks: false,
   siteInitiationTracker: false,
   docPrinting: false,
-  billOfMaterials: false,
-  designSheet: false,
+  // billOfMaterials and designSheet are removed
   workdayScheduled: false,
   vacationTracker: false,
 };

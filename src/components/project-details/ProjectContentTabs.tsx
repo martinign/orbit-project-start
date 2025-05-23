@@ -20,8 +20,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     importantLinks: false,
     siteInitiationTracker: false,
     docPrinting: false,
-    billOfMaterials: false,
-    designSheet: false,
     workdayScheduled: false,
     vacationTracker: false
   },
@@ -32,8 +30,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
     importantLinks: false,
     siteInitiationTracker: false,
     docPrinting: false,
-    billOfMaterials: false,
-    designSheet: false,
     workdayScheduled: false,
     vacationTracker: false
   };
@@ -61,14 +57,6 @@ export const ProjectContentTabs: React.FC<ProjectContentTabsProps> = ({
         
         {safeExtraFeatures.docPrinting && (
           <TabsTrigger value="doc-printing" className="text-xs md:text-sm">Doc Printing</TabsTrigger>
-        )}
-        
-        {safeExtraFeatures.billOfMaterials && (
-          <TabsTrigger value="bill-of-materials" className="text-xs md:text-sm">Bill of Materials</TabsTrigger>
-        )}
-        
-        {safeExtraFeatures.designSheet && (
-          <TabsTrigger value="design-sheet" className="text-xs md:text-sm">Design Sheet</TabsTrigger>
         )}
         
         {safeExtraFeatures.workdayScheduled && (

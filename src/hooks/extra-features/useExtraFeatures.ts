@@ -18,8 +18,7 @@ export function useExtraFeatures(projectId?: string) {
   const {
     isLoading,
     setIsLoading,
-    saveProjectFeatures,
-    createBOMTask
+    saveProjectFeatures
   } = useProjectFeatures();
 
   // Set up event listeners
@@ -28,16 +27,11 @@ export function useExtraFeatures(projectId?: string) {
   // Fetch project features from database
   useFetchProjectFeatures(projectId, setFeaturesState, setIsLoading);
 
-  // Handle saving project features with BOM task creation
+  // Handle saving project features
   const handleSaveProjectFeatures = async (
     projectIds: string[], 
     updatedFeatures: ExtraFeaturesState
   ) => {
-    // Check if bill of materials was newly enabled and create task if needed
-    if (projectId && updatedFeatures.billOfMaterials && !features.billOfMaterials) {
-      await createBOMTask(projectId);
-    }
-
     // Save to database
     await saveProjectFeatures(projectIds, updatedFeatures);
   };
