@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,8 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
       return; // Don't start drag if clicking on a button or dialog
     }
     
+    // Stop event propagation to prevent board panning
+    e.stopPropagation();
     e.preventDefault();
     setIsDragging(true);
     
@@ -77,6 +80,8 @@ export const StickyNoteItem: React.FC<StickyNoteItemProps> = ({
       return; // Don't start drag if touching a button or dialog
     }
     
+    // Stop event propagation to prevent board panning
+    e.stopPropagation();
     const touch = e.touches[0];
     setIsDragging(true);
     

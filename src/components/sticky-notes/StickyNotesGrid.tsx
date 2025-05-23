@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useCallback } from "react";
 import { StickyNote } from "@/hooks/useStickyNotes";
 import { StickyNoteItem } from "./StickyNoteItem";
@@ -31,6 +32,7 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
 }) => {
   const boardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isNoteDragging, setIsNoteDragging] = useState(false);
 
   useEffect(() => {
     const boardElement = boardRef.current;
@@ -55,6 +57,34 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
     };
   }, [handleWheel]);
 
+  // Add a global event listener to detect note dragging
+  useEffect(() => {
+    // Custom event handler for when a note starts dragging
+    const handleNoteDragStart = () => {
+      setIsNoteDragging(true);
+    };
+    
+    // Custom event handler for when a note stops dragging
+    const handleNoteDragEnd = () => {
+      setIsNoteDragging(false);
+    };
+    
+    window.addEventListener('noteStartDrag', handleNoteDragStart);
+    window.addEventListener('noteEndDrag', handleNoteDragEnd);
+    
+    return () => {
+      window.removeEventListener('noteStartDrag', handleNoteDragStart);
+      window.removeEventListener('noteEndDrag', handleNoteDragEnd);
+    };
+  }, []);
+
+  // Safe pan handler that only starts panning if no note is being dragged
+  const safePanStart = (e: React.MouseEvent) => {
+    if (e.target === boardRef.current || e.target === contentRef.current) {
+      startPan(e);
+    }
+  };
+
   return (
     <ScrollArea className="h-[calc(100vh-240px)] min-h-[800px]">
       {/* Full area container with border and shadow */}
@@ -67,7 +97,7 @@ export const StickyNotesGrid: React.FC<StickyNotesGridProps> = ({
           transition: "box-shadow 0.3s ease",
           cursor: isDragging ? 'grabbing' : 'grab',
         }}
-        onMouseDown={startPan}
+        onMouseDown={safePanStart}
         onMouseMove={pan}
         onMouseUp={endPan}
         onMouseLeave={endPan}

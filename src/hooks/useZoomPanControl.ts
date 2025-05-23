@@ -45,8 +45,13 @@ export const useZoomPanControl = (initialScale = 1) => {
   }, []);
   
   const startPan = useCallback((e: React.MouseEvent) => {
-    // Only start panning with left mouse button for easier panning
-    if (e.button === 0) {
+    // Check if the event target is part of a note
+    const isOnNote = e.target instanceof HTMLElement && 
+      (e.target.closest('.sticky-note-item') || 
+       e.target.classList.contains('sticky-note-item'));
+    
+    // Only start panning if not on a note and using left mouse button
+    if (!isOnNote && e.button === 0) {
       setIsDragging(true);
       setDragStart({ x: e.clientX, y: e.clientY });
       e.preventDefault();
