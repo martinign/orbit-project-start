@@ -328,9 +328,9 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   // Generate a template CSV file for download
   const handleDownloadTemplate = () => {
     if (importType === 'site-data') {
-      const csvHeader = 'Country,PXL Site Reference Number,PI Name,Site Personnel Name,Role,Site Personnel Email Address,Site Personnel Telephone,Site Personnel Fax,Institution,Address,City/Town,Province/State,Zip Code,Starter Pack\n';
-      const csvRow1 = 'Canada,PXL-123,Dr. John Doe,Jane Smith,LABP,jane@example.com,555-123-4567,555-123-4568,General Hospital,123 Main St,Toronto,Ontario,M5V 2K7,Yes\n';
-      const csvRow2 = 'USA,PXL-124,Dr. Sarah Brown,Mike Johnson,CRA,mike@example.com,555-987-6543,555-987-6544,Research Center,456 Oak Ave,Boston,Massachusetts,02108,No\n';
+      const csvHeader = 'Country,PXL Site Reference Number,PI Name,Site Personnel Name,Role,Site Personnel Email Address,Site Personnel Telephone,Site Personnel Fax,Institution,Address,City/Town,Province/State,Zip Code,Starter Pack,Registered in SRP,Supplies Applied\n';
+      const csvRow1 = 'Canada,PXL-123,Dr. John Doe,Jane Smith,LABP,jane@example.com,555-123-4567,555-123-4568,General Hospital,123 Main St,Toronto,Ontario,M5V 2K7,Yes,No,No\n';
+      const csvRow2 = 'USA,PXL-124,Dr. Sarah Brown,Mike Johnson,CRA,mike@example.com,555-987-6543,555-987-6544,Research Center,456 Oak Ave,Boston,Massachusetts,02108,No,Yes,Yes\n';
       const blob = new Blob([csvHeader + csvRow1 + csvRow2], {
         type: 'text/csv'
       });

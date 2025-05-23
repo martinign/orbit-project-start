@@ -7,7 +7,7 @@ import { SiteData, SiteOperationsResult } from './types';
 export const useSiteCsvImport = (projectId?: string, userId?: string) => {
   const [processing, setProcessing] = useState(false);
 
-  // Process CSV data with upsert logic
+  // Process CSV data with upsert logic that preserves existing status columns
   const processCSVData = async (records: SiteData[]): Promise<SiteOperationsResult> => {
     if (!userId || !projectId || !records.length) return { success: 0, error: 0 };
 
@@ -32,17 +32,57 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
         const batchEnd = Math.min((i + 1) * batchSize, processedRecords.length);
         const batch = processedRecords.slice(batchStart, batchEnd);
 
-        // Prepare batch with user_id and project_id
-        const batchWithIds = batch.map(record => ({
-          ...record,
-          user_id: userId,
-          project_id: projectId
-        }));
+        // For each record in the batch, check if it already exists and preserve status columns
+        const batchWithPreservedStatus = await Promise.all(
+          batch.map(async (record) => {
+            try {
+              // Check if record already exists
+              const { data: existingRecord } = await supabase
+                .from('project_csam_site')
+                .select('starter_pack, registered_in_srp, supplies_applied')
+                .eq('pxl_site_reference_number', record.pxl_site_reference_number)
+                .eq('site_personnel_name', record.site_personnel_name)
+                .eq('role', record.role)
+                .eq('project_id', projectId)
+                .maybeSingle();
 
-        // Use upsert operation - now with proper conflict detection
+              // If record exists, preserve the existing status values unless explicitly provided in CSV
+              const recordWithPreservedStatus = {
+                ...record,
+                user_id: userId,
+                project_id: projectId
+              };
+
+              if (existingRecord) {
+                // Only preserve existing status if the CSV doesn't explicitly set these values
+                if (record.starter_pack === undefined || record.starter_pack === null) {
+                  recordWithPreservedStatus.starter_pack = existingRecord.starter_pack;
+                }
+                if (record.registered_in_srp === undefined || record.registered_in_srp === null) {
+                  recordWithPreservedStatus.registered_in_srp = existingRecord.registered_in_srp;
+                }
+                if (record.supplies_applied === undefined || record.supplies_applied === null) {
+                  recordWithPreservedStatus.supplies_applied = existingRecord.supplies_applied;
+                }
+              }
+
+              return recordWithPreservedStatus;
+            } catch (error) {
+              console.error('Error checking existing record:', error);
+              // If there's an error checking, proceed with the original record
+              return {
+                ...record,
+                user_id: userId,
+                project_id: projectId
+              };
+            }
+          })
+        );
+
+        // Use upsert operation with proper conflict detection
         const { data, error } = await supabase
           .from('project_csam_site')
-          .upsert(batchWithIds, {
+          .upsert(batchWithPreservedStatus, {
             onConflict: 'pxl_site_reference_number,site_personnel_name,role,project_id',
             ignoreDuplicates: false
           })
