@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Kanban, Calendar, Plus, Lock } from 'lucide-react';
+import { Kanban, Calendar, Plus, Lock, Archive } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -26,12 +26,19 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isTimelineView, setIsTimelineView] = useState(false);
   const [showPrivateOnly, setShowPrivateOnly] = useState(false);
+  const [showArchivedOnly, setShowArchivedOnly] = useState(false);
   const queryClient = useQueryClient();
 
-  // Filter tasks based on the showPrivateOnly state
-  const filteredTasks = showPrivateOnly 
-    ? tasks.filter(task => task.is_private) 
-    : tasks;
+  // Filter tasks based on the showPrivateOnly and showArchivedOnly state
+  const filteredTasks = tasks.filter(task => {
+    if (showArchivedOnly) {
+      return task.is_archived === true;
+    }
+    if (showPrivateOnly) {
+      return task.is_private === true && task.is_archived !== true;
+    }
+    return task.is_archived !== true; // Default view filters out archived tasks
+  });
 
   // Add realtime subscription for task badges
   useEffect(() => {
@@ -71,6 +78,23 @@ export const TasksTab: React.FC<TasksTabProps> = ({
     };
   }, [projectId, queryClient, refetchTasks]);
 
+  // Handle filter toggles
+  const handlePrivateToggle = () => {
+    if (showArchivedOnly && !showPrivateOnly) {
+      // If switching to private view, turn off archive view
+      setShowArchivedOnly(false);
+    }
+    setShowPrivateOnly(!showPrivateOnly);
+  };
+
+  const handleArchiveToggle = () => {
+    if (showPrivateOnly && !showArchivedOnly) {
+      // If switching to archive view, turn off private view
+      setShowPrivateOnly(false);
+    }
+    setShowArchivedOnly(!showArchivedOnly);
+  };
+
   return <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -79,13 +103,23 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         </div>
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
           <Button 
-            onClick={() => setShowPrivateOnly(!showPrivateOnly)}
+            onClick={handlePrivateToggle}
             variant={showPrivateOnly ? "default" : "outline"}
             className={showPrivateOnly ? "bg-blue-500 hover:bg-blue-600 text-white" : ""}
             size="sm"
           >
             <Lock className="mr-1 h-4 w-4" />
             {showPrivateOnly ? 'All Tasks' : 'Private Only'}
+          </Button>
+          
+          <Button 
+            onClick={handleArchiveToggle}
+            variant={showArchivedOnly ? "default" : "outline"}
+            className={showArchivedOnly ? "bg-purple-500 hover:bg-purple-600 text-white" : ""}
+            size="sm"
+          >
+            <Archive className="mr-1 h-4 w-4" />
+            {showArchivedOnly ? 'Active Tasks' : 'Archives'}
           </Button>
           
           <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white" size="sm">
@@ -102,9 +136,9 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             </div>
           </div> : filteredTasks && filteredTasks.length > 0 ? !isTimelineView ? <TaskBoard tasks={filteredTasks} projectId={projectId} onRefetch={refetchTasks} /> : <TimelineView tasks={filteredTasks} isLoading={tasksLoading} /> : <div className="text-center p-8 border rounded-lg bg-gray-50">
             <p className="text-muted-foreground mb-4">
-              {!isTimelineView ? 
-                (showPrivateOnly ? 'No private tasks found for this project' : 'No tasks found for this project') : 
-                'No tasks available for timeline view'}
+              {showArchivedOnly ? 
+                'No archived tasks found for this project' : 
+                (showPrivateOnly ? 'No private tasks found for this project' : 'No tasks found for this project')}
             </p>
             <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white">
               <Plus className="mr-2 h-4 w-4" /> Create Task
@@ -121,3 +155,4 @@ export const TasksTab: React.FC<TasksTabProps> = ({
     }} />
     </Card>;
 };
+

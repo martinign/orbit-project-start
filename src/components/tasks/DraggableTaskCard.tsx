@@ -1,28 +1,21 @@
 
-import React from 'react';
-import { Draggable } from '@hello-pangea/dnd';
-import { Card, CardContent } from '@/components/ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { TaskCardHeader } from './TaskCardHeader';
-import { TaskActions } from './TaskActions';
-import { TaskMetadata } from './TaskMetadata';
-import { TaskHoverContent } from './TaskHoverContent';
-import { useTeamMemberName } from '@/hooks/useTeamMembers';
+import { Draggable } from "@hello-pangea/dnd";
+import { Badge } from "@/components/ui/badge";
+import { TaskCardHeader } from "./TaskCardHeader";
+import { TaskActions } from "./TaskActions";
+import { TaskMetadata } from "./TaskMetadata";
+import { TaskHoverContent } from "./TaskHoverContent";
+import { Archive } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Task {
   id: string;
   title: string;
-  description?: string;
   status: string;
   priority: string;
-  due_date?: string;
   project_id: string;
-  assigned_to?: string;
-  is_gantt_task?: boolean;
   is_private?: boolean;
-  user_id?: string;
-  created_at?: string;
-  workday_code_id?: string;
+  is_archived?: boolean;
 }
 
 interface DraggableTaskCardProps {
@@ -36,12 +29,12 @@ interface DraggableTaskCardProps {
   onUpdate: (task: Task) => void;
   onAddSubtask: (task: Task) => void;
   onShowUpdates: (task: Task) => void;
-  updateCount?: number;
+  updateCount: number;
   isCardExpanded: boolean;
   toggleCardExpand: () => void;
 }
 
-export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
+export const DraggableTaskCard = ({
   task,
   index,
   subtasksCount,
@@ -52,109 +45,71 @@ export const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({
   onUpdate,
   onAddSubtask,
   onShowUpdates,
-  updateCount = 0,
+  updateCount,
   isCardExpanded,
-  toggleCardExpand,
-}) => {
-  const { memberName: assignedToName } = useTeamMemberName(task.assigned_to);
-
-  // Determine the background color based on task properties
-  const getBackgroundColor = () => {
-    if (task.is_private) {
-      return 'bg-[#F1F0FB]'; // Light purple background for private tasks
-    }
-    if (task.is_gantt_task) {
-      return 'bg-[#F2FCE2]'; // Keep existing green background for Gantt tasks
-    }
-    return ''; // Default background
-  };
+  toggleCardExpand
+}: DraggableTaskCardProps) => {
+  const { id, title, priority, is_private, is_archived } = task;
 
   return (
-    <Draggable draggableId={task.id} index={index}>
-      {(provided) => (
-        <HoverCard>
-          <HoverCardTrigger asChild>
-            <Card
-              ref={provided.innerRef}
-              {...provided.draggableProps}
-              {...provided.dragHandleProps}
-              className={`shadow-sm cursor-pointer hover:shadow-md transition-shadow w-full overflow-hidden ${getBackgroundColor()}`}
-              onClick={toggleCardExpand}
-            >
-              <CardContent className={`p-3 ${isCardExpanded ? '' : 'py-2'}`}>
-                {isCardExpanded ? (
-                  // Expanded view - show full card content
-                  <div className="flex justify-between items-start w-full">
-                    <TaskCardHeader
-                      title={task.title}
-                      hasSubtasks={subtasksCount > 0}
-                      isExpanded={isExpanded}
-                      toggleExpand={toggleExpand}
-                      isPrivate={task.is_private}
-                    />
-                    
-                    <TaskActions
-                      task={task}
-                      updateCount={updateCount}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onUpdate={onUpdate}
-                      onAddSubtask={onAddSubtask}
-                      onShowUpdates={onShowUpdates}
-                    />
-                  </div>
-                ) : (
-                  // Collapsed view - show only a single line with title
-                  <div className="flex justify-between items-center w-full overflow-hidden whitespace-nowrap">
-                    <div className="flex items-center">
-                      {task.is_private && (
-                        <span className="mr-1 text-purple-500" title="Private task">
-                          🔒
-                        </span>
-                      )}
-                      <span className="font-medium truncate max-w-[200px]">
-                        {task.title}
-                      </span>
-                      {subtasksCount > 0 && (
-                        <span className="ml-2 text-xs text-gray-500">
-                          ({subtasksCount})
-                        </span>
-                      )}
-                    </div>
-                    
-                    {updateCount > 0 && (
-                      <span className="ml-auto mr-2 px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                        {updateCount}
-                      </span>
-                    )}
-                  </div>
-                )}
+    <Draggable draggableId={id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={cn(
+            "p-2 mb-2 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer border-l-4",
+            {
+              "border-blue-500": priority === "high",
+              "border-yellow-500": priority === "medium",
+              "border-green-500": priority === "low",
+              "border-purple-500": is_archived,
+              "opacity-70": is_archived,
+            }
+          )}
+          onClick={toggleCardExpand}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <TaskCardHeader
+                title={title}
+                subtasksCount={subtasksCount}
+                isExpanded={isExpanded}
+                toggleExpand={toggleExpand}
+              />
+              
+              {/* Archive indicator */}
+              {is_archived && (
+                <Badge variant="outline" className="flex items-center gap-1 mt-1 bg-purple-50 text-purple-700 border-purple-300">
+                  <Archive className="h-3 w-3" />
+                  Archived
+                </Badge>
+              )}
 
-                {isCardExpanded && (
-                  <TaskMetadata
-                    assignedToName={assignedToName}
-                    subtasksCount={subtasksCount}
-                    updateCount={updateCount}
-                    isPrivate={task.is_private}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80">
-            <TaskHoverContent
-              title={task.title}
-              description={task.description}
-              priority={task.priority}
-              dueDate={task.due_date}
-              assignedToName={assignedToName}
-              createdAt={task.created_at}
-              userId={task.user_id}
-              workdayCodeId={task.workday_code_id}
-              isPrivate={task.is_private}
+              {/* Private indicator */}
+              {is_private && (
+                <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-300">
+                  Private
+                </Badge>
+              )}
+              
+              <TaskMetadata task={task} />
+            </div>
+
+            <TaskActions
+              task={task}
+              updateCount={updateCount}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onUpdate={onUpdate}
+              onAddSubtask={onAddSubtask}
+              onShowUpdates={onShowUpdates}
             />
-          </HoverCardContent>
-        </HoverCard>
+          </div>
+
+          {isCardExpanded && <TaskHoverContent task={task} />}
+        </div>
       )}
     </Draggable>
   );

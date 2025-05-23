@@ -1459,6 +1459,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_task_by_id: {
+        Args: { task_id: string }
+        Returns: undefined
+      }
+      auto_archive_completed_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_project_attachment_access: {
         Args: { object_id: string }
         Returns: boolean
@@ -1498,6 +1506,10 @@ export type Database = {
       is_project_team_member: {
         Args: { project_id: string }
         Returns: boolean
+      }
+      unarchive_task_by_id: {
+        Args: { task_id: string }
+        Returns: undefined
       }
     }
     Enums: {

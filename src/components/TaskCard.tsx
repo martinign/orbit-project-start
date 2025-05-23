@@ -16,6 +16,7 @@ interface Task {
   assigned_to?: string;
   is_gantt_task?: boolean;
   is_private?: boolean;
+  is_archived?: boolean;
   user_id?: string;
   created_at?: string;
   workday_code_id?: string;

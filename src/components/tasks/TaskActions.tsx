@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FilePen, FilePlus, MessageCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { FilePen, FilePlus, MessageCircle, MoreHorizontal, Edit, Trash2, Archive, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useTaskBoard } from '@/hooks/useTaskBoard';
 
 interface Task {
   id: string;
@@ -22,6 +23,7 @@ interface Task {
   status: string;
   priority: string;
   project_id: string;
+  is_archived?: boolean;
 }
 
 interface TaskActionsProps {
@@ -43,6 +45,19 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
   onAddSubtask,
   onShowUpdates,
 }) => {
+  // Get archive and unarchive functions from the task board hook
+  const { archiveTask, unarchiveTask } = useTaskBoard(() => {});
+
+  const handleArchiveTask = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await archiveTask(task);
+  };
+
+  const handleUnarchiveTask = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await unarchiveTask(task);
+  };
+
   return (
     <div className="flex flex-col gap-1 ml-2 flex-shrink-0">
       <DropdownMenu>
@@ -56,6 +71,19 @@ export const TaskActions: React.FC<TaskActionsProps> = ({
             <Edit className="h-4 w-4 mr-2" />
             Edit
           </DropdownMenuItem>
+          
+          {!task.is_archived ? (
+            <DropdownMenuItem onClick={handleArchiveTask}>
+              <Archive className="h-4 w-4 mr-2" />
+              Archive
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem onClick={handleUnarchiveTask}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Unarchive
+            </DropdownMenuItem>
+          )}
+          
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => onDelete(task)}

@@ -12,6 +12,7 @@ interface Task {
   priority: string;
   due_date?: string;
   project_id: string;
+  is_archived?: boolean;
 }
 
 export const useTaskBoard = (onRefetch: () => void) => {
@@ -166,6 +167,54 @@ export const useTaskBoard = (onRefetch: () => void) => {
     }
   };
 
+  // New function to handle archiving tasks
+  const archiveTask = async (task: Task) => {
+    try {
+      const { error } = await supabase.rpc('archive_task_by_id', { task_id: task.id });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Task Archived',
+        description: 'Task has been moved to archives',
+      });
+      
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      onRefetch();
+    } catch (error) {
+      console.error('Error archiving task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to archive task.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // New function to handle unarchiving tasks
+  const unarchiveTask = async (task: Task) => {
+    try {
+      const { error } = await supabase.rpc('unarchive_task_by_id', { task_id: task.id });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Task Unarchived',
+        description: 'Task has been removed from archives',
+      });
+      
+      await queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      onRefetch();
+    } catch (error) {
+      console.error('Error unarchiving task:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unarchive task.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return {
     selectedTask,
     isDialogOpen,
@@ -191,5 +240,8 @@ export const useTaskBoard = (onRefetch: () => void) => {
     handleCreateTask,
     deleteTask,
     handleCloseDialogs,
+    archiveTask,
+    unarchiveTask,
   };
 };
+

@@ -35,6 +35,14 @@ export const columnsConfig = [
     color: 'bg-red-100 border-red-300',
     badgeColor: 'bg-red-500',
   },
+  {
+    id: 'archived',
+    title: 'Archived',
+    status: 'archived',
+    color: 'bg-purple-100 border-purple-300',
+    badgeColor: 'bg-purple-500',
+    isArchive: true,
+  }
 ];
 
 // Add interface for TypeScript type checking
@@ -44,4 +52,9 @@ export interface ColumnConfig {
   status: string;
   color: string;
   badgeColor: string;
+  isArchive?: boolean;
 }
+
+// Define a special droppable ID for the archive drop zone
+export const ARCHIVE_DROPPABLE_ID = 'archive-drop-zone';
+
