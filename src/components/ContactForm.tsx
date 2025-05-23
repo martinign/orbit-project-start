@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -309,7 +310,7 @@ const ContactForm = ({ contact, onSuccess, projectId }: ContactFormProps) => {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600 text-white">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {contact ? "Update Contact" : "Create Contact"}
           </Button>
