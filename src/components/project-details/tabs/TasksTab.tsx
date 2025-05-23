@@ -143,7 +143,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
               tasks={filteredTasks} 
               projectId={projectId} 
               onRefetch={refetchTasks}
-              showArchiveColumn={showArchivedOnly}
+              showArchiveColumn={false}
+              archiveOnlyMode={showArchivedOnly}
             />
           ) : (
             <TimelineView tasks={filteredTasks} isLoading={tasksLoading} />

@@ -30,13 +30,15 @@ interface TaskBoardProps {
   projectId: string;
   onRefetch: () => void;
   showArchiveColumn?: boolean;
+  archiveOnlyMode?: boolean;
 }
 
 const TaskBoard: React.FC<TaskBoardProps> = ({ 
   tasks, 
   projectId, 
   onRefetch, 
-  showArchiveColumn = false 
+  showArchiveColumn = false,
+  archiveOnlyMode = false
 }) => {
   const queryClient = useQueryClient();
   const { isColumnCollapsed, toggleColumnCollapsed } = useCollapsibleTaskColumns(projectId);
@@ -95,8 +97,8 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     markTaskUpdatesAsViewed(task.id);
   };
 
-  // Get visible columns based on showArchiveColumn prop
-  const visibleColumns = getVisibleColumns(showArchiveColumn);
+  // Get visible columns based on showArchiveColumn and archiveOnlyMode props
+  const visibleColumns = getVisibleColumns(showArchiveColumn, archiveOnlyMode);
 
   // Filter tasks to show only non-archived in regular columns
   // and only archived in archive column
@@ -112,17 +114,22 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     );
   };
 
-  // Calculate grid columns based on number of visible columns
-  const gridCols = showArchiveColumn ? 'lg:grid-cols-6' : 'lg:grid-cols-5';
+  // Calculate grid columns based on number of visible columns and archive-only mode
+  const getGridCols = () => {
+    if (archiveOnlyMode) {
+      return 'grid-cols-1 max-w-md mx-auto'; // Single column, centered
+    }
+    return showArchiveColumn ? 'lg:grid-cols-6' : 'lg:grid-cols-5';
+  };
 
   return (
     <div className="h-full">
       <TooltipProvider>
         <DragDropContext onDragEnd={handleDragEnd}>
-          {/* Compact Archive Drop Zone - Always Visible */}
-          <CompactArchiveDropZone />
+          {/* Compact Archive Drop Zone - Only show when not in archive-only mode */}
+          {!archiveOnlyMode && <CompactArchiveDropZone />}
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${gridCols} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${getGridCols()} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
             {visibleColumns.map((column) => (
               <TaskBoardColumn
                 key={column.id}

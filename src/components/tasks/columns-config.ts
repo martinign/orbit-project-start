@@ -46,10 +46,18 @@ export const columnsConfig = [
 ];
 
 // Get columns based on whether archive should be shown
-export const getVisibleColumns = (showArchive: boolean = false) => {
+export const getVisibleColumns = (showArchive: boolean = false, archiveOnlyMode: boolean = false) => {
+  if (archiveOnlyMode) {
+    // When in archive-only mode, show only the archive column
+    return columnsConfig.filter(col => col.isArchive);
+  }
+  
   if (showArchive) {
+    // Show all columns including archive
     return columnsConfig;
   }
+  
+  // Default: show all columns except archive
   return columnsConfig.filter(col => !col.isArchive);
 };
 
