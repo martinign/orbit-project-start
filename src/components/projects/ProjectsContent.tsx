@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import ProjectsTable from "./ProjectsTable";
 import ProjectsCardGrid from "./ProjectsCardGrid";
@@ -102,7 +101,6 @@ const ProjectsContent = ({
               variant="outline"
               size="sm"
               onClick={() => setShowAll(!showAll)}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               <List className="h-4 w-4 mr-2" />
               {showAll ? "Show Paged" : "Show All"}
