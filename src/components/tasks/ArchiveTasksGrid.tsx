@@ -45,22 +45,13 @@ export const ArchiveTasksGrid: React.FC<ArchiveTasksGridProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-          📦 Archived Tasks
-          <span className="text-sm font-normal text-gray-500">
-            ({tasks.length})
-          </span>
-        </h3>
-      </div>
-
       <Droppable droppableId="archived" direction="vertical">
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
             className={`
-              grid gap-4 auto-rows-max
+              grid gap-4
               grid-cols-1 
               md:grid-cols-2 
               lg:grid-cols-3 
@@ -81,7 +72,6 @@ export const ArchiveTasksGrid: React.FC<ArchiveTasksGridProps> = ({
           >
             {tasks.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-                <div className="text-6xl mb-4">📦</div>
                 <p className="text-gray-500 text-lg mb-2">No archived tasks</p>
                 <p className="text-gray-400 text-sm">
                   Tasks moved to archive will appear here
@@ -89,7 +79,7 @@ export const ArchiveTasksGrid: React.FC<ArchiveTasksGridProps> = ({
               </div>
             ) : (
               tasks.map((task, index) => (
-                <div key={task.id} className="h-fit">
+                <div key={task.id} className="h-fit min-h-[120px]">
                   <TaskCard
                     task={task}
                     index={index}
