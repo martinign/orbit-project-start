@@ -115,8 +115,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           
           <Button 
             onClick={handleArchiveToggle}
-            variant={showArchivedOnly ? "default" : "outline"}
-            className={showArchivedOnly ? "bg-purple-500 hover:bg-purple-600 text-white" : ""}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
             size="sm"
           >
             <Archive className="mr-1 h-4 w-4" />
