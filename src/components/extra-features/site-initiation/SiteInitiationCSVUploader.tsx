@@ -13,19 +13,29 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+
 interface SiteInitiationCSVUploaderProps {
   projectId?: string;
 }
+
 interface ValidationResult {
   isValid: boolean;
   missingFields: string[];
 }
+
 type ImportType = 'site-data' | 'cra-list';
+
+interface SiteDataWithFlags extends SiteData {
+  hasStarterPackInCSV?: boolean;
+  hasRegisteredInSrpInCSV?: boolean;
+  hasSuppliesAppliedInCSV?: boolean;
+}
+
 export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps> = ({
   projectId
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [parsedSiteData, setParsedSiteData] = useState<SiteData[]>([]);
+  const [parsedSiteData, setParsedSiteData] = useState<SiteDataWithFlags[]>([]);
   const [parsedCRAData, setParsedCRAData] = useState<CRAData[]>([]);
   const [processing, setProcessing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -33,14 +43,14 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
   const [importType, setImportType] = useState<ImportType>('site-data');
   const {
     user
-  } = useAuth(); // Get current user
+  } = useAuth();
 
   const {
     processCSVData
   } = useSiteInitiationData(projectId);
   const {
     processCRACSVData
-  } = useCraCsvImport(projectId, user?.id); // Pass user ID to the hook
+  } = useCraCsvImport(projectId, user?.id);
 
   // Validate required fields in CSV data
   const validateSiteRecord = (record: any): ValidationResult => {
@@ -167,7 +177,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         try {
           console.log('Raw parsed data:', results.data);
           if (importType === 'site-data') {
-            const mappedData = mapCSVToSiteData(results.data as any[]);
+            const mappedData = mapCSVToSiteData(results.data as any[], results.meta.fields || []);
 
             // Validate all records
             const invalidRecords = mappedData.filter(record => {
@@ -214,10 +224,21 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     });
   }, [projectId, importType]);
 
-  // Map CSV columns to site data fields
-  const mapCSVToSiteData = (csvData: any[]): SiteData[] => {
+  // Map CSV columns to site data fields with status field tracking
+  const mapCSVToSiteData = (csvData: any[], csvHeaders: string[]): SiteDataWithFlags[] => {
+    // Check which status fields are present in the CSV headers
+    const hasStarterPackColumn = csvHeaders.some(header => 
+      header.toLowerCase().includes('starter') && header.toLowerCase().includes('pack')
+    );
+    const hasRegisteredInSrpColumn = csvHeaders.some(header => 
+      header.toLowerCase().includes('registered') && header.toLowerCase().includes('srp')
+    );
+    const hasSuppliesAppliedColumn = csvHeaders.some(header => 
+      header.toLowerCase().includes('supplies') && header.toLowerCase().includes('applied')
+    );
+
     return csvData.map(row => {
-      const mappedData = {
+      const mappedData: SiteDataWithFlags = {
         pxl_site_reference_number: row['PXL Site Reference Number'] || row['pxl_site_reference_number'] || '',
         pi_name: row['PI Name'] || row['pi_name'] || '',
         site_personnel_name: row['Site Personnel Name'] || row['site_personnel_name'] || '',
@@ -231,16 +252,39 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         province_state: row['Province/State'] || row['province_state'] || '',
         zip_code: row['Zip Code'] || row['zip_code'] || '',
         country: row['Country'] || row['country'] || '',
-        project_id: projectId || ''
+        project_id: projectId || '',
+        // Add flags to track which status fields are present in CSV
+        hasStarterPackInCSV: hasStarterPackColumn,
+        hasRegisteredInSrpInCSV: hasRegisteredInSrpColumn,
+        hasSuppliesAppliedInCSV: hasSuppliesAppliedColumn
       };
 
-      // Only set starter_pack to true if role is LABP and starter pack column exists and is true
-      const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
-      const isStarterPackTrue = typeof starterPack === 'string' ? starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true' : Boolean(starterPack);
-      return {
-        ...mappedData,
-        starter_pack: mappedData.role === 'LABP' && isStarterPackTrue
-      };
+      // Only set status fields if they are present in CSV and have explicit values
+      if (hasStarterPackColumn) {
+        const starterPack = row['Starter Pack'] || row['starter_pack'] || '';
+        const isStarterPackTrue = typeof starterPack === 'string' ? 
+          starterPack.toLowerCase() === 'yes' || starterPack.toLowerCase() === 'true' : 
+          Boolean(starterPack);
+        mappedData.starter_pack = mappedData.role === 'LABP' && isStarterPackTrue;
+      }
+
+      if (hasRegisteredInSrpColumn) {
+        const registeredInSrp = row['Registered in SRP'] || row['registered_in_srp'] || '';
+        const isRegisteredTrue = typeof registeredInSrp === 'string' ? 
+          registeredInSrp.toLowerCase() === 'yes' || registeredInSrp.toLowerCase() === 'true' : 
+          Boolean(registeredInSrp);
+        mappedData.registered_in_srp = isRegisteredTrue;
+      }
+
+      if (hasSuppliesAppliedColumn) {
+        const suppliesApplied = row['Supplies Applied'] || row['supplies_applied'] || '';
+        const isSuppliesTrue = typeof suppliesApplied === 'string' ? 
+          suppliesApplied.toLowerCase() === 'yes' || suppliesApplied.toLowerCase() === 'true' : 
+          Boolean(suppliesApplied);
+        mappedData.supplies_applied = isSuppliesTrue;
+      }
+
+      return mappedData;
     });
   };
 
@@ -280,7 +324,9 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         let processedCount = 0;
         for (let i = 0; i < parsedSiteData.length; i += batchSize) {
           const batch = parsedSiteData.slice(i, i + batchSize);
-          await processCSVData(batch);
+          // Remove the flags before sending to the backend
+          const cleanBatch = batch.map(({ hasStarterPackInCSV, hasRegisteredInSrpInCSV, hasSuppliesAppliedInCSV, ...site }) => site);
+          await processCSVData(cleanBatch);
           processedCount += batch.length;
           setUploadProgress(Math.floor(processedCount / parsedSiteData.length * 100));
 
@@ -363,11 +409,16 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     if (importType === 'site-data' && parsedSiteData.length) {
       const labpSites = parsedSiteData.filter(site => site.role === 'LABP');
       const starterPacksInData = parsedSiteData.filter(site => site.starter_pack).length;
+      const hasStatusColumns = parsedSiteData.some(site => 
+        site.hasStarterPackInCSV || site.hasRegisteredInSrpInCSV || site.hasSuppliesAppliedInCSV
+      );
+      
       return {
         totalSites: parsedSiteData.length,
         labpSites: labpSites.length,
         eligibleWithStarterPack: labpSites.filter(site => site.starter_pack).length,
-        ineligibleWithStarterPack: starterPacksInData - labpSites.filter(site => site.starter_pack).length
+        ineligibleWithStarterPack: starterPacksInData - labpSites.filter(site => site.starter_pack).length,
+        hasStatusColumns
       };
     } else if (importType === 'cra-list' && parsedCRAData.length) {
       return {
@@ -380,7 +431,9 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
     }
     return null;
   };
+
   const stats = getImportStatistics();
+  
   return <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
@@ -402,7 +455,7 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
         
         {importType === 'site-data' && <div className="mt-1 flex items-center text-amber-600">
             <AlertCircle className="h-4 w-4 mr-1" />
-            <span className="text-xs">Starter packs are only applicable to LABP roles</span>
+            <span className="text-xs">Status columns are optional. Existing values will be preserved if not included in CSV.</span>
           </div>}
       </CardHeader>
       
@@ -458,6 +511,9 @@ export const SiteInitiationCSVUploader: React.FC<SiteInitiationCSVUploaderProps>
                           {stats.ineligibleWithStarterPack > 0 && <li className="text-amber-600 font-medium">
                               Note: {stats.ineligibleWithStarterPack} non-LABP sites had starter packs marked. 
                               These will be imported with starter pack set to false.
+                            </li>}
+                          {!stats.hasStatusColumns && <li className="text-green-600 font-medium">
+                              No status columns detected. Existing status values will be preserved.
                             </li>}
                         </> : <>
                           <li>Total CRAs: {stats.totalCRAs}</li>

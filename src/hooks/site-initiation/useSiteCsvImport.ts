@@ -7,7 +7,7 @@ import { SiteData, SiteOperationsResult } from './types';
 export const useSiteCsvImport = (projectId?: string, userId?: string) => {
   const [processing, setProcessing] = useState(false);
 
-  // Process CSV data with upsert logic that preserves existing status columns
+  // Process CSV data with improved upsert logic that preserves existing status columns
   const processCSVData = async (records: SiteData[]): Promise<SiteOperationsResult> => {
     if (!userId || !projectId || !records.length) return { success: 0, error: 0 };
 
@@ -46,7 +46,7 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
                 .eq('project_id', projectId)
                 .maybeSingle();
 
-              // If record exists, preserve the existing status values unless explicitly provided in CSV
+              // Prepare the record with preserved status values
               const recordWithPreservedStatus = {
                 ...record,
                 user_id: userId,
@@ -54,7 +54,8 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
               };
 
               if (existingRecord) {
-                // Only preserve existing status if the CSV doesn't explicitly set these values
+                // Preserve existing status values if the CSV record doesn't have explicit values
+                // Only update status fields if they were explicitly provided in the CSV
                 if (record.starter_pack === undefined || record.starter_pack === null) {
                   recordWithPreservedStatus.starter_pack = existingRecord.starter_pack;
                 }
@@ -67,6 +68,17 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
                 
                 // Store the existing record ID to ensure proper update
                 recordWithPreservedStatus.id = existingRecord.id;
+              } else {
+                // For new records, set default values for undefined status fields
+                if (record.starter_pack === undefined || record.starter_pack === null) {
+                  recordWithPreservedStatus.starter_pack = false;
+                }
+                if (record.registered_in_srp === undefined || record.registered_in_srp === null) {
+                  recordWithPreservedStatus.registered_in_srp = false;
+                }
+                if (record.supplies_applied === undefined || record.supplies_applied === null) {
+                  recordWithPreservedStatus.supplies_applied = false;
+                }
               }
 
               return recordWithPreservedStatus;
@@ -100,9 +112,13 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
         }
       }
 
+      const statusMessage = errorCount > 0 
+        ? `Successfully processed ${successCount} records. Failed to process ${errorCount} records.`
+        : `Successfully processed ${successCount} records.`;
+
       toast({
         title: "CSV Import Completed",
-        description: `Successfully processed ${successCount} records. ${errorCount > 0 ? `Failed to process ${errorCount} records.` : ''} Status changes are tracked in the audit history.`,
+        description: `${statusMessage} Existing status values have been preserved for fields not included in the CSV.`,
         variant: errorCount > 0 ? "default" : "default",
       });
 
