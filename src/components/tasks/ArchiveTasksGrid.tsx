@@ -79,7 +79,7 @@ export const ArchiveTasksGrid: React.FC<ArchiveTasksGridProps> = ({
               </div>
             ) : (
               tasks.map((task, index) => (
-                <div key={task.id} className="h-fit min-h-[120px]">
+                <div key={task.id} className="h-[200px]">
                   <TaskCard
                     task={task}
                     index={index}
