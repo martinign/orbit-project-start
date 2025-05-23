@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { StickyNote } from "@/hooks/useStickyNotes";
 import { StickyNoteItem } from "./StickyNoteItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
