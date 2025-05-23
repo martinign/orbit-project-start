@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingState } from '../display/LoadingState';
 import { SummaryCard } from './SummaryCard';
 import { TableHeader } from './TableHeader';
 import { SiteTable } from './SiteTable';
-import { TableFooter } from './TableFooter';
+import TableFooter from './TableFooter';
 import { StarterPackSiteReference } from './types';
 import { StarterPacksStats } from './types';
 import { SiteData } from '@/hooks/site-initiation/types';
@@ -110,7 +109,10 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <TableFooter 
                   showAll={showAll} 
                   setShowAll={setShowAll}
+                  filteredReferencesCount={filteredSiteReferences.length}
+                  selectedCount={selectedSiteRefs.length}
                   pagination={pagination}
+                  exporting={exporting}
                 />
               )}
             </>

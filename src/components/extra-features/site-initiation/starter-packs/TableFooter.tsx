@@ -3,14 +3,19 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { List } from 'lucide-react';
 import { PaginationControls } from '@/components/ui/pagination-controls';
-import { UsePaginationReturn } from '@/hooks/usePagination';
+
+interface PaginationState {
+  currentPage: number;
+  totalPages: number;
+  goToPage: (page: number) => void;
+}
 
 interface TableFooterProps {
   showAll: boolean;
   setShowAll: (value: boolean) => void;
   filteredReferencesCount: number;
   selectedCount: number;
-  pagination: UsePaginationReturn;
+  pagination: PaginationState;
   exporting?: boolean;
 }
 
