@@ -1,10 +1,8 @@
 
 import React from 'react';
-import { Eye, Check, X, History } from 'lucide-react';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { SiteHoverCard } from './hover-card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 import { StatusBadge } from './hover-card/components/StatusBadge';
 import { isEligibleForStarterPack } from '@/hooks/site-initiation/siteUtils';
 import {
@@ -89,11 +87,12 @@ export const SiteTable: React.FC<SiteTableProps> = ({
               />
             </TableHead>
             <TableHead>Reference</TableHead>
-            <TableHead>PI Name</TableHead>
-            <TableHead className="w-[120px] text-center">Starter Pack</TableHead>
-            <TableHead className="w-[120px] text-center">SRP Registration</TableHead>
-            <TableHead className="w-[120px] text-center">Supplies Applied</TableHead>
-            <TableHead className="w-[80px] text-right">Actions</TableHead>
+            <TableHead>Institution</TableHead>
+            <TableHead>Country</TableHead>
+            <TableHead>Personnel</TableHead>
+            <TableHead className="w-[100px] text-center">Starter Pack</TableHead>
+            <TableHead className="w-[100px] text-center">SRP Registration</TableHead>
+            <TableHead className="w-[100px] text-center">Supplies Applied</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -116,44 +115,40 @@ export const SiteTable: React.FC<SiteTableProps> = ({
                   </SiteHoverCard>
                 </TableCell>
                 <TableCell>
-                  {site?.pi_name || <span className="text-gray-400 italic">Not specified</span>}
+                  {site?.institution || <span className="text-gray-400 italic">Not specified</span>}
+                </TableCell>
+                <TableCell>
+                  {site?.country || <span className="text-gray-400 italic">Not specified</span>}
+                </TableCell>
+                <TableCell>
+                  {site?.site_personnel_name || <span className="text-gray-400 italic">Not specified</span>}
                 </TableCell>
                 <TableCell className="text-center">
                   {labpSite && isEligibleForStarterPack(labpSite) ? (
-                    <StatusBadge
-                      status={labpSite.starter_pack}
-                      onToggle={(newValue) => onStarterPackToggle(labpSite, newValue)}
-                      label={labpSite.starter_pack ? "Sent" : "Not sent"}
-                    />
+                    <div className="flex justify-center">
+                      <StatusBadge
+                        status={labpSite.starter_pack}
+                        onToggle={(newValue) => onStarterPackToggle(labpSite, newValue)}
+                      />
+                    </div>
                   ) : (
                     <span className="text-gray-400 text-xs italic">N/A</span>
                   )}
                 </TableCell>
                 <TableCell className="text-center">
-                  <StatusBadge
-                    status={site?.registered_in_srp}
-                    onToggle={(newValue) => onRegisteredInSrpToggle(site, newValue)}
-                    label={site?.registered_in_srp ? "Registered" : "Not registered"}
-                  />
+                  <div className="flex justify-center">
+                    <StatusBadge
+                      status={site?.registered_in_srp}
+                      onToggle={(newValue) => onRegisteredInSrpToggle(site, newValue)}
+                    />
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <StatusBadge
-                    status={site?.supplies_applied}
-                    onToggle={(newValue) => onSuppliesAppliedToggle(site, newValue)}
-                    label={site?.supplies_applied ? "Applied" : "Not applied"}
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end space-x-1">
-                    <Button 
-                      size="icon"
-                      variant="ghost" 
-                      className="h-7 w-7" 
-                      onClick={() => onViewHistory(siteRef, site?.site_personnel_name || '', site?.id)}
-                      title="View status history"
-                    >
-                      <History className="h-4 w-4" />
-                    </Button>
+                  <div className="flex justify-center">
+                    <StatusBadge
+                      status={site?.supplies_applied}
+                      onToggle={(newValue) => onSuppliesAppliedToggle(site, newValue)}
+                    />
                   </div>
                 </TableCell>
               </TableRow>

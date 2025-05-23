@@ -43,13 +43,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   }
 
   return (
-    <div className="flex items-center space-x-1">
-      <Switch 
-        checked={!!isActive} 
-        onCheckedChange={handleToggle}
-        className="data-[state=checked]:bg-blue-500"
-      />
-      <span className="text-xs">{label || (isActive ? 'Yes' : 'No')}</span>
-    </div>
+    <Switch 
+      checked={!!isActive} 
+      onCheckedChange={handleToggle}
+      className="data-[state=checked]:bg-blue-500"
+    />
   );
 };
