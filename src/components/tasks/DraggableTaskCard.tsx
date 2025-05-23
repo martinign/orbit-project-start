@@ -65,7 +65,7 @@ export const DraggableTaskCard = ({
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           className={cn(
-            "p-2 mb-2 bg-white rounded-md shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer border-l-4",
+            "p-2 mb-2 bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border-l-4",
             {
               "border-blue-500": priority === "high",
               "border-yellow-500": priority === "medium",
@@ -76,60 +76,74 @@ export const DraggableTaskCard = ({
           )}
           onClick={toggleCardExpand}
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <TaskCardHeader
-                title={title}
-                hasSubtasks={subtasksCount > 0}
-                isExpanded={isExpanded}
-                toggleExpand={toggleExpand}
-                isPrivate={is_private}
-              />
-              
-              {/* Archive indicator */}
-              {is_archived && (
-                <Badge variant="outline" className="flex items-center gap-1 mt-1 bg-purple-50 text-purple-700 border-purple-300">
-                  <Archive className="h-3 w-3" />
-                  Archived
-                </Badge>
-              )}
-
-              {/* Private indicator */}
-              {is_private && (
-                <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-300">
-                  Private
-                </Badge>
-              )}
-              
-              <TaskMetadata 
-                subtasksCount={subtasksCount}
-                updateCount={updateCount}
-                isPrivate={is_private}
-              />
+          {/* Compact view - just title */}
+          {!isCardExpanded && (
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm truncate">
+                  {title}
+                </h3>
+              </div>
             </div>
+          )}
 
-            <TaskActions
-              task={task}
-              updateCount={updateCount}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              onAddSubtask={onAddSubtask}
-              onShowUpdates={onShowUpdates}
-            />
-          </div>
-
+          {/* Expanded view - all details */}
           {isCardExpanded && (
-            <TaskHoverContent 
-              title={task.title}
-              description={task.description}
-              priority={task.priority}
-              dueDate={task.due_date}
-              createdAt={task.created_at}
-              userId={task.user_id}
-              workdayCodeId={task.workday_code_id}
-              isPrivate={task.is_private}
-            />
+            <>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <TaskCardHeader
+                    title={title}
+                    hasSubtasks={subtasksCount > 0}
+                    isExpanded={isExpanded}
+                    toggleExpand={toggleExpand}
+                    isPrivate={is_private}
+                  />
+                  
+                  {/* Archive indicator */}
+                  {is_archived && (
+                    <Badge variant="outline" className="flex items-center gap-1 mt-1 bg-purple-50 text-purple-700 border-purple-300">
+                      <Archive className="h-3 w-3" />
+                      Archived
+                    </Badge>
+                  )}
+
+                  {/* Private indicator */}
+                  {is_private && (
+                    <Badge variant="outline" className="mt-1 bg-blue-50 text-blue-700 border-blue-300">
+                      Private
+                    </Badge>
+                  )}
+                  
+                  <TaskMetadata 
+                    subtasksCount={subtasksCount}
+                    updateCount={updateCount}
+                    isPrivate={is_private}
+                  />
+                </div>
+
+                <TaskActions
+                  task={task}
+                  updateCount={updateCount}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onUpdate={onUpdate}
+                  onAddSubtask={onAddSubtask}
+                  onShowUpdates={onShowUpdates}
+                />
+              </div>
+
+              <TaskHoverContent 
+                title={task.title}
+                description={task.description}
+                priority={task.priority}
+                dueDate={task.due_date}
+                createdAt={task.created_at}
+                userId={task.user_id}
+                workdayCodeId={task.workday_code_id}
+                isPrivate={task.is_private}
+              />
+            </>
           )}
         </div>
       )}
