@@ -1,11 +1,9 @@
 
 import React, { useState } from 'react';
-import { DragDropContext } from '@hello-pangea/dnd';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import TaskBoardColumn from './tasks/TaskBoardColumn';
 import { TaskDialogs } from './tasks/TaskDialogs';
 import { useTaskBoard } from '@/hooks/useTaskBoard';
-import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 import { getVisibleColumns } from './tasks/columns-config';
 import { ArchiveTasksGrid } from './tasks/ArchiveTasksGrid';
 import { useQueryClient } from '@tanstack/react-query';
@@ -71,8 +69,6 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
     handleCloseDialogs,
   } = useTaskBoard(onRefetch);
 
-  const { handleDragEnd } = useTaskDragAndDrop(onRefetch);
-
   useEffect(() => {
     const channel = supabase.channel('taskboard-changes')
       .on('postgres_changes', {
@@ -130,46 +126,44 @@ const TaskBoard: React.FC<TaskBoardProps> = ({
   return (
     <div className="h-full">
       <TooltipProvider>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          {archiveOnlyMode ? (
-            // Archive-only mode: Show responsive grid
-            <div className={`${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
-              <ArchiveTasksGrid
-                tasks={getArchivedTasks()}
+        {archiveOnlyMode ? (
+          // Archive-only mode: Show responsive grid
+          <div className={`${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+            <ArchiveTasksGrid
+              tasks={getArchivedTasks()}
+              projectId={projectId}
+              handleEditTask={handleEditTask}
+              handleDeleteConfirm={handleDeleteConfirm}
+              handleTaskUpdates={handleTaskUpdates}
+              handleShowUpdates={handleViewTaskUpdates}
+              handleAddSubtask={handleAddSubtask}
+              taskUpdateCounts={updateCounts}
+              disabled={isDeleting || isRefetching}
+            />
+          </div>
+        ) : (
+          // Regular mode: Show columns
+          <div className={`grid grid-cols-1 md:grid-cols-2 ${getGridCols()} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
+            {visibleColumns.map((column) => (
+              <TaskBoardColumn
+                key={column.id}
+                column={column}
                 projectId={projectId}
+                tasks={getTasksForColumn(column.status, column.isArchive)}
                 handleEditTask={handleEditTask}
                 handleDeleteConfirm={handleDeleteConfirm}
                 handleTaskUpdates={handleTaskUpdates}
                 handleShowUpdates={handleViewTaskUpdates}
                 handleAddSubtask={handleAddSubtask}
+                handleCreateTask={handleCreateTask}
+                isColumnCollapsed={isColumnCollapsed}
+                toggleColumnCollapsed={toggleColumnCollapsed}
                 taskUpdateCounts={updateCounts}
                 disabled={isDeleting || isRefetching}
               />
-            </div>
-          ) : (
-            // Regular mode: Show columns
-            <div className={`grid grid-cols-1 md:grid-cols-2 ${getGridCols()} gap-4 ${(isDeleting || isRefetching) ? 'opacity-70 pointer-events-none' : ''}`}>
-              {visibleColumns.map((column) => (
-                <TaskBoardColumn
-                  key={column.id}
-                  column={column}
-                  projectId={projectId}
-                  tasks={getTasksForColumn(column.status, column.isArchive)}
-                  handleEditTask={handleEditTask}
-                  handleDeleteConfirm={handleDeleteConfirm}
-                  handleTaskUpdates={handleTaskUpdates}
-                  handleShowUpdates={handleViewTaskUpdates}
-                  handleAddSubtask={handleAddSubtask}
-                  handleCreateTask={handleCreateTask}
-                  isColumnCollapsed={isColumnCollapsed}
-                  toggleColumnCollapsed={toggleColumnCollapsed}
-                  taskUpdateCounts={updateCounts}
-                  disabled={isDeleting || isRefetching}
-                />
-              ))}
-            </div>
-          )}
-        </DragDropContext>
+            ))}
+          </div>
+        )}
       </TooltipProvider>
 
       <TaskDialogs
