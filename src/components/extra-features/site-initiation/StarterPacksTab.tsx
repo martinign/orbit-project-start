@@ -7,6 +7,7 @@ import { useSiteReferences } from './starter-packs/hooks/useSiteReferences';
 import { useStarterPackToggle } from './starter-packs/hooks/useStarterPackToggle';
 import { useStarterPackStats } from './starter-packs/hooks/useStarterPackStats';
 import { useLabpExport } from './starter-packs/hooks/useLabpExport';
+import { SiteStatusHistoryDialog } from './starter-packs/SiteStatusHistoryDialog';
 
 interface StarterPacksTabProps {
   projectId?: string;
@@ -26,6 +27,14 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
   
   // State for tracking selected site references
   const [selectedSiteRefs, setSelectedSiteRefs] = useState<string[]>([]);
+
+  // State for status history dialog
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedSite, setSelectedSite] = useState<{
+    id?: string;
+    siteRef: string;
+    siteName: string;
+  } | null>(null);
 
   const { 
     optimisticUpdates, 
@@ -88,36 +97,56 @@ export const StarterPacksTab: React.FC<StarterPacksTabProps> = ({ projectId }) =
     exportLabpSitesToCsv(selectedSiteRefs);
   };
 
+  // View history handler
+  const handleViewHistory = (siteRef: string, siteName: string, siteId?: string) => {
+    setSelectedSite({ siteRef, siteName, id: siteId });
+    setHistoryDialogOpen(true);
+  };
+
   if (error) {
     return <ErrorState error={error} />;
   }
 
   return (
-    <MainContent
-      loading={loading}
-      stats={stats}
-      displaySiteReferences={displaySiteReferences}
-      filteredSiteReferences={filteredSiteReferences}
-      starterPackFilter={starterPackFilter}
-      setStarterPackFilter={setStarterPackFilter}
-      registeredInSrpFilter={registeredInSrpFilter}
-      setRegisteredInSrpFilter={setRegisteredInSrpFilter}
-      suppliesAppliedFilter={suppliesAppliedFilter}
-      setSuppliesAppliedFilter={setSuppliesAppliedFilter}
-      searchQuery={searchQuery}
-      setSearchQuery={setSearchQuery}
-      activeFilterCount={activeFilterCount}
-      resetFilters={resetFilters}
-      handleExportCSV={handleExportCSV}
-      selectedSiteRefs={selectedSiteRefs}
-      setSelectedSiteRefs={setSelectedSiteRefs}
-      handleStarterPackToggle={handleStarterPackToggle}
-      handleRegisteredInSrpToggle={handleRegisteredInSrpToggle}
-      handleSuppliesAppliedToggle={handleSuppliesAppliedToggle}
-      showAll={showAll}
-      setShowAll={setShowAll}
-      pagination={pagination}
-      exporting={exporting}
-    />
+    <>
+      <MainContent
+        loading={loading}
+        stats={stats}
+        displaySiteReferences={displaySiteReferences}
+        filteredSiteReferences={filteredSiteReferences}
+        starterPackFilter={starterPackFilter}
+        setStarterPackFilter={setStarterPackFilter}
+        registeredInSrpFilter={registeredInSrpFilter}
+        setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+        suppliesAppliedFilter={suppliesAppliedFilter}
+        setSuppliesAppliedFilter={setSuppliesAppliedFilter}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeFilterCount={activeFilterCount}
+        resetFilters={resetFilters}
+        handleExportCSV={handleExportCSV}
+        selectedSiteRefs={selectedSiteRefs}
+        setSelectedSiteRefs={setSelectedSiteRefs}
+        handleStarterPackToggle={handleStarterPackToggle}
+        handleRegisteredInSrpToggle={handleRegisteredInSrpToggle}
+        handleSuppliesAppliedToggle={handleSuppliesAppliedToggle}
+        showAll={showAll}
+        setShowAll={setShowAll}
+        pagination={pagination}
+        exporting={exporting}
+        onViewHistory={handleViewHistory}
+      />
+      
+      {selectedSite && (
+        <SiteStatusHistoryDialog
+          open={historyDialogOpen}
+          onClose={() => setHistoryDialogOpen(false)}
+          projectId={projectId}
+          siteId={selectedSite.id}
+          siteRef={selectedSite.siteRef}
+          siteName={selectedSite.siteName}
+        />
+      )}
+    </>
   );
 };

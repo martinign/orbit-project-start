@@ -39,7 +39,7 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
               // Check if record already exists
               const { data: existingRecord } = await supabase
                 .from('project_csam_site')
-                .select('starter_pack, registered_in_srp, supplies_applied')
+                .select('id, starter_pack, registered_in_srp, supplies_applied')
                 .eq('pxl_site_reference_number', record.pxl_site_reference_number)
                 .eq('site_personnel_name', record.site_personnel_name)
                 .eq('role', record.role)
@@ -64,6 +64,9 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
                 if (record.supplies_applied === undefined || record.supplies_applied === null) {
                   recordWithPreservedStatus.supplies_applied = existingRecord.supplies_applied;
                 }
+                
+                // Store the existing record ID to ensure proper update
+                recordWithPreservedStatus.id = existingRecord.id;
               }
 
               return recordWithPreservedStatus;
@@ -99,7 +102,7 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
 
       toast({
         title: "CSV Import Completed",
-        description: `Successfully processed ${successCount} records. ${errorCount > 0 ? `Failed to process ${errorCount} records.` : ''}`,
+        description: `Successfully processed ${successCount} records. ${errorCount > 0 ? `Failed to process ${errorCount} records.` : ''} Status changes are tracked in the audit history.`,
         variant: errorCount > 0 ? "default" : "default",
       });
 

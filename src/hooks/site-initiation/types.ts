@@ -27,3 +27,17 @@ export interface SiteOperationsResult {
   success: number;
   error: number;
 }
+
+export interface SiteStatusHistoryRecord {
+  id: string;
+  site_id: string;
+  project_id: string;
+  user_id: string;
+  pxl_site_reference_number: string;
+  site_personnel_name: string;
+  role: string;
+  field_changed: string;
+  old_value: boolean | null;
+  new_value: boolean | null;
+  created_at: string;
+}

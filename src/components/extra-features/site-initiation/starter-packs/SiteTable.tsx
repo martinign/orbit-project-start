@@ -1,5 +1,12 @@
 
 import React from 'react';
+import { Eye, Check, X, History } from 'lucide-react';
+import { SiteData } from '@/hooks/site-initiation/types';
+import { SiteHoverCard } from './hover-card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { StatusBadge } from './hover-card/components/StatusBadge';
+import { isEligibleForStarterPack } from '@/hooks/site-initiation/siteUtils';
 import {
   Table,
   TableBody,
@@ -8,168 +15,149 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { SiteHoverCard } from './hover-card';
-import { StarterPackSiteReference } from './types';
-import { Checkbox } from "@/components/ui/checkbox";
-import { StatusBadge } from './hover-card/components/StatusBadge';
-
-interface SortableColumnHeaderProps {
-  field: string;
-  children: React.ReactNode;
-}
-
-const SortableColumnHeader: React.FC<SortableColumnHeaderProps> = ({ 
-  field, 
-  children 
-}) => {
-  return (
-    <div className="flex items-center">
-      {children}
-    </div>
-  );
-};
 
 interface SiteTableProps {
-  displaySiteReferences: StarterPackSiteReference[];
-  handleStarterPackToggle: (site: any, value: boolean) => void;
-  handleRegisteredInSrpToggle: (site: any, value: boolean) => void;
-  handleSuppliesAppliedToggle: (site: any, value: boolean) => void;
+  siteReferences: {
+    siteRef: string;
+    sites: SiteData[];
+    hasSiteData: boolean;
+  }[];
   selectedSiteRefs: string[];
   setSelectedSiteRefs: (refs: string[]) => void;
+  onStarterPackToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  onRegisteredInSrpToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  onSuppliesAppliedToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  onViewHistory: (siteRef: string, siteName: string, siteId?: string) => void;
 }
 
-export const SiteTable: React.FC<SiteTableProps> = ({ 
-  displaySiteReferences,
-  handleStarterPackToggle, 
-  handleRegisteredInSrpToggle,
-  handleSuppliesAppliedToggle,
+export const SiteTable: React.FC<SiteTableProps> = ({
+  siteReferences,
   selectedSiteRefs,
-  setSelectedSiteRefs
+  setSelectedSiteRefs,
+  onStarterPackToggle,
+  onRegisteredInSrpToggle,
+  onSuppliesAppliedToggle,
+  onViewHistory
 }) => {
-  // Handle the selection of all sites
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      // Select all visible sites
-      const allSiteRefs = displaySiteReferences.map(site => site.reference);
-      setSelectedSiteRefs(allSiteRefs);
-    } else {
-      // Deselect all
-      setSelectedSiteRefs([]);
-    }
-  };
-
-  // Handle selection of a single site
-  const handleSelectSite = (checked: boolean, siteRef: string) => {
-    if (checked) {
-      setSelectedSiteRefs([...selectedSiteRefs, siteRef]);
-    } else {
+  // Toggle selection of a site reference
+  const toggleSelection = (siteRef: string) => {
+    if (selectedSiteRefs.includes(siteRef)) {
       setSelectedSiteRefs(selectedSiteRefs.filter(ref => ref !== siteRef));
+    } else {
+      setSelectedSiteRefs([...selectedSiteRefs, siteRef]);
     }
   };
-
-  // Check if all displayed sites are selected
-  const isAllSelected = displaySiteReferences.length > 0 && 
-    displaySiteReferences.every(site => selectedSiteRefs.includes(site.reference));
-
+  
+  // Toggle selection of all site references
+  const toggleSelectAll = () => {
+    if (selectedSiteRefs.length === siteReferences.length) {
+      setSelectedSiteRefs([]);
+    } else {
+      setSelectedSiteRefs(siteReferences.map(site => site.siteRef));
+    }
+  };
+  
+  // Get LABP site from a site reference group
+  const getLabpSite = (sites: SiteData[]) => {
+    return sites.find(site => site.role === 'LABP');
+  };
+  
+  // Check if all sites are selected
+  const allSelected = selectedSiteRefs.length === siteReferences.length && siteReferences.length > 0;
+  // Check if some sites are selected
+  const someSelected = selectedSiteRefs.length > 0 && selectedSiteRefs.length < siteReferences.length;
+  
+  if (siteReferences.length === 0) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-gray-500">No sites match the current filters.</p>
+      </div>
+    );
+  }
+  
   return (
-    <div className="border rounded-md">
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]">
+            <TableHead className="w-[40px]">
               <Checkbox 
-                checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
-                aria-label="Select all sites"
+                checked={allSelected}
+                indeterminate={someSelected} 
+                onCheckedChange={() => toggleSelectAll()}
               />
             </TableHead>
-            <TableHead>
-              <SortableColumnHeader field="reference">Site Reference</SortableColumnHeader>
-            </TableHead>
-            <TableHead>
-              <SortableColumnHeader field="institution">Institution</SortableColumnHeader>
-            </TableHead>
-            <TableHead>
-              <SortableColumnHeader field="country">Country</SortableColumnHeader>
-            </TableHead>
-            <TableHead>
-              <SortableColumnHeader field="personnel">Personnel</SortableColumnHeader>
-            </TableHead>
-            <TableHead className="text-center">
-              <SortableColumnHeader field="hasStarterPack">Starter Pack</SortableColumnHeader>
-            </TableHead>
-            <TableHead className="text-center">
-              <SortableColumnHeader field="registeredInSrp">Registered in SRP</SortableColumnHeader>
-            </TableHead>
-            <TableHead className="text-center">
-              <SortableColumnHeader field="suppliesApplied">Supplies Applied</SortableColumnHeader>
-            </TableHead>
+            <TableHead>Reference</TableHead>
+            <TableHead>PI Name</TableHead>
+            <TableHead className="w-[120px] text-center">Starter Pack</TableHead>
+            <TableHead className="w-[120px] text-center">SRP Registration</TableHead>
+            <TableHead className="w-[120px] text-center">Supplies Applied</TableHead>
+            <TableHead className="w-[80px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {displaySiteReferences.map((site) => (
-            <TableRow key={site.reference}>
-              <TableCell className="w-[50px]">
-                <Checkbox 
-                  checked={selectedSiteRefs.includes(site.reference)}
-                  onCheckedChange={(checked) => handleSelectSite(!!checked, site.reference)}
-                  aria-label={`Select site ${site.reference}`}
-                />
-              </TableCell>
-              <TableCell>
-                <SiteHoverCard siteRef={site}>
-                  <span className="font-medium cursor-pointer">{site.reference}</span>
-                </SiteHoverCard>
-              </TableCell>
-              <TableCell>{site.institution}</TableCell>
-              <TableCell>{site.country}</TableCell>
-              <TableCell>{site.personnel}</TableCell>
-              <TableCell className="text-center">
-                <div className="flex justify-center">
-                  {site.missingLabp ? (
-                    <StatusBadge variant="secondary" className="text-xs opacity-70">
-                      No LABP role assigned
-                    </StatusBadge>
-                  ) : (
-                    <Switch 
-                      checked={site.hasStarterPack}
-                      onCheckedChange={(value) => {
-                        if (site.labpSite) {
-                          handleStarterPackToggle(site.labpSite, value);
-                        }
-                      }}
-                      disabled={!site.labpSite}
+          {siteReferences.map(({ siteRef, sites }) => {
+            const labpSite = getLabpSite(sites);
+            const firstSite = sites[0]; // Fallback if no LABP site
+            const site = labpSite || firstSite;
+            
+            return (
+              <TableRow key={siteRef}>
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedSiteRefs.includes(siteRef)}
+                    onCheckedChange={() => toggleSelection(siteRef)}
+                  />
+                </TableCell>
+                <TableCell>
+                  <SiteHoverCard siteReferences={{ siteRef, sites, hasSiteData: true }}>
+                    <span className="text-blue-600 underline cursor-pointer">{siteRef}</span>
+                  </SiteHoverCard>
+                </TableCell>
+                <TableCell>
+                  {site?.pi_name || <span className="text-gray-400 italic">Not specified</span>}
+                </TableCell>
+                <TableCell className="text-center">
+                  {labpSite && isEligibleForStarterPack(labpSite) ? (
+                    <StatusBadge
+                      value={labpSite.starter_pack}
+                      onToggle={(newValue) => onStarterPackToggle(labpSite, newValue)}
+                      label={labpSite.starter_pack ? "Sent" : "Not sent"}
                     />
+                  ) : (
+                    <span className="text-gray-400 text-xs italic">N/A</span>
                   )}
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex justify-center">
-                  <Switch 
-                    checked={site.registeredInSrp}
-                    onCheckedChange={(value) => {
-                      if (site.allSitesForReference.length > 0) {
-                        handleRegisteredInSrpToggle(site.allSitesForReference[0], value);
-                      }
-                    }}
+                </TableCell>
+                <TableCell className="text-center">
+                  <StatusBadge
+                    value={site?.registered_in_srp}
+                    onToggle={(newValue) => onRegisteredInSrpToggle(site, newValue)}
+                    label={site?.registered_in_srp ? "Registered" : "Not registered"}
                   />
-                </div>
-              </TableCell>
-              <TableCell className="text-center">
-                <div className="flex justify-center">
-                  <Switch 
-                    checked={site.suppliesApplied}
-                    onCheckedChange={(value) => {
-                      if (site.allSitesForReference.length > 0) {
-                        handleSuppliesAppliedToggle(site.allSitesForReference[0], value);
-                      }
-                    }}
+                </TableCell>
+                <TableCell className="text-center">
+                  <StatusBadge
+                    value={site?.supplies_applied}
+                    onToggle={(newValue) => onSuppliesAppliedToggle(site, newValue)}
+                    label={site?.supplies_applied ? "Applied" : "Not applied"}
                   />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>
+                  <div className="flex justify-end space-x-1">
+                    <Button 
+                      size="icon"
+                      variant="ghost" 
+                      className="h-7 w-7" 
+                      onClick={() => onViewHistory(siteRef, site?.site_personnel_name || '', site?.id)}
+                      title="View status history"
+                    >
+                      <History className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

@@ -388,6 +388,56 @@ export type Database = {
           },
         ]
       }
+      project_csam_site_status_history: {
+        Row: {
+          created_at: string
+          field_changed: string
+          id: string
+          new_value: boolean | null
+          old_value: boolean | null
+          project_id: string
+          pxl_site_reference_number: string
+          role: string
+          site_id: string
+          site_personnel_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          field_changed: string
+          id?: string
+          new_value?: boolean | null
+          old_value?: boolean | null
+          project_id: string
+          pxl_site_reference_number: string
+          role: string
+          site_id: string
+          site_personnel_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          field_changed?: string
+          id?: string
+          new_value?: boolean | null
+          old_value?: boolean | null
+          project_id?: string
+          pxl_site_reference_number?: string
+          role?: string
+          site_id?: string
+          site_personnel_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_csam_site_status_history_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "project_csam_site"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_doc_request_updates: {
         Row: {
           content: string

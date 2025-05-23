@@ -1,40 +1,55 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { LoadingState } from '../display/LoadingState';
+import { LoadingSiteState } from '../table/LoadingSiteState';
 import { SummaryCard } from './SummaryCard';
+import { StarterPackFiltersPopover } from './StarterPackFiltersPopover';
 import { TableHeader } from './TableHeader';
 import { SiteTable } from './SiteTable';
-import TableFooter from './TableFooter';
-import { StarterPackSiteReference } from './types';
-import { StarterPacksStats } from './types';
+import { TableFooter } from './TableFooter';
 import { SiteData } from '@/hooks/site-initiation/types';
 import { PaginationState } from '@/hooks/usePagination';
 
 interface MainContentProps {
   loading: boolean;
-  stats: StarterPacksStats;
-  displaySiteReferences: StarterPackSiteReference[];
-  filteredSiteReferences: StarterPackSiteReference[];
+  stats: {
+    totalSites: number;
+    labpSites: number;
+    starterPackSent: number;
+    starterPackNeeded: number;
+    registeredInSrp: number;
+    suppliesApplied: number;
+  };
+  displaySiteReferences: {
+    siteRef: string;
+    sites: SiteData[];
+    hasSiteData: boolean;
+  }[];
+  filteredSiteReferences: {
+    siteRef: string;
+    sites: SiteData[];
+    hasSiteData: boolean;
+  }[];
   starterPackFilter: string;
-  setStarterPackFilter: (value: string) => void;
+  setStarterPackFilter: (filter: string) => void;
   registeredInSrpFilter: string;
-  setRegisteredInSrpFilter: (value: string) => void;
+  setRegisteredInSrpFilter: (filter: string) => void;
   suppliesAppliedFilter: string;
-  setSuppliesAppliedFilter: (value: string) => void;
+  setSuppliesAppliedFilter: (filter: string) => void;
   searchQuery: string;
-  setSearchQuery: (value: string) => void;
+  setSearchQuery: (query: string) => void;
   activeFilterCount: number;
   resetFilters: () => void;
   handleExportCSV: () => void;
   selectedSiteRefs: string[];
   setSelectedSiteRefs: (refs: string[]) => void;
-  handleStarterPackToggle: (site: any, value: boolean) => void;
-  handleRegisteredInSrpToggle: (site: any, value: boolean) => void;
-  handleSuppliesAppliedToggle: (site: any, value: boolean) => void;
-  showAll: boolean; 
-  setShowAll: (value: boolean) => void;
+  handleStarterPackToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  handleRegisteredInSrpToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  handleSuppliesAppliedToggle: (site: SiteData | undefined, newValue: boolean) => Promise<void>;
+  showAll: boolean;
+  setShowAll: (show: boolean) => void;
   pagination: PaginationState;
   exporting: boolean;
+  onViewHistory: (siteRef: string, siteName: string, siteId?: string) => void;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
@@ -61,74 +76,59 @@ export const MainContent: React.FC<MainContentProps> = ({
   showAll,
   setShowAll,
   pagination,
-  exporting
+  exporting,
+  onViewHistory
 }) => {
+  if (loading) {
+    return <LoadingSiteState />;
+  }
+  
   return (
     <div className="space-y-6">
-      {/* Summary Card */}
       <SummaryCard stats={stats} />
-
-      {/* Sites Table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <TableHeader 
-            starterPackFilter={starterPackFilter}
-            setStarterPackFilter={setStarterPackFilter}
-            registeredInSrpFilter={registeredInSrpFilter}
-            setRegisteredInSrpFilter={setRegisteredInSrpFilter}
-            suppliesAppliedFilter={suppliesAppliedFilter}
-            setSuppliesAppliedFilter={setSuppliesAppliedFilter}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            activeFilterCount={activeFilterCount}
-            resetFilters={resetFilters}
-            handleExportCSV={handleExportCSV}
-            selectedCount={selectedSiteRefs.length}
-            totalCount={filteredSiteReferences.length}
-            exporting={exporting}
-          />
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <LoadingState />
-          ) : filteredSiteReferences.length === 0 ? (
-            <EmptySitesState />
-          ) : (
-            <>
-              <SiteTable 
-                displaySiteReferences={displaySiteReferences} 
-                handleStarterPackToggle={handleStarterPackToggle}
-                handleRegisteredInSrpToggle={handleRegisteredInSrpToggle}
-                handleSuppliesAppliedToggle={handleSuppliesAppliedToggle}
-                selectedSiteRefs={selectedSiteRefs}
-                setSelectedSiteRefs={setSelectedSiteRefs}
-              />
-              
-              {/* Pagination Controls with Show All button */}
-              {filteredSiteReferences.length > 0 && (
-                <TableFooter 
-                  showAll={showAll} 
-                  setShowAll={setShowAll}
-                  filteredReferencesCount={filteredSiteReferences.length}
-                  selectedCount={selectedSiteRefs.length}
-                  pagination={pagination}
-                  exporting={exporting}
-                />
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      
+      <div className="bg-white border rounded-md shadow-sm">
+        <TableHeader
+          filtersOpen={false} 
+          setFiltersOpen={() => {}}
+          activeFilterCount={activeFilterCount}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          hasActiveFilters={activeFilterCount > 0}
+          onExportCSV={handleExportCSV}
+          exporting={exporting}
+          selectedCount={selectedSiteRefs.length}
+          totalCount={filteredSiteReferences.length}
+          FiltersPopover={
+            <StarterPackFiltersPopover
+              starterPackFilter={starterPackFilter}
+              setStarterPackFilter={setStarterPackFilter}
+              registeredInSrpFilter={registeredInSrpFilter}
+              setRegisteredInSrpFilter={setRegisteredInSrpFilter}
+              suppliesAppliedFilter={suppliesAppliedFilter}
+              setSuppliesAppliedFilter={setSuppliesAppliedFilter}
+              onResetFilters={resetFilters}
+            />
+          }
+        />
+        
+        <SiteTable 
+          siteReferences={displaySiteReferences}
+          selectedSiteRefs={selectedSiteRefs}
+          setSelectedSiteRefs={setSelectedSiteRefs}
+          onStarterPackToggle={handleStarterPackToggle}
+          onRegisteredInSrpToggle={handleRegisteredInSrpToggle}
+          onSuppliesAppliedToggle={handleSuppliesAppliedToggle}
+          onViewHistory={onViewHistory}
+        />
+        
+        <TableFooter 
+          filteredCount={filteredSiteReferences.length}
+          pagination={pagination}
+          showAll={showAll}
+          setShowAll={setShowAll}
+        />
+      </div>
     </div>
   );
 };
-
-// Empty state component
-const EmptySitesState: React.FC = () => (
-  <div className="text-center py-10">
-    <h3 className="text-lg font-medium mb-2">No sites found</h3>
-    <p className="text-muted-foreground text-sm">
-      Try adjusting your filters or add more sites
-    </p>
-  </div>
-);
