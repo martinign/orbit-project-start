@@ -11,11 +11,19 @@ export const useSiteCsvImport = (projectId?: string, userId?: string) => {
   const processCSVData = async (records: SiteData[]): Promise<SiteOperationsResult> => {
     if (!userId || !projectId || !records.length) return { success: 0, error: 0 };
 
-    // Update records to ensure starter_pack is false for non-LABP roles
-    const processedRecords = records.map(record => ({
-      ...record,
-      starter_pack: record.role === 'LABP' ? Boolean(record.starter_pack) : false
-    }));
+    // Only process starter_pack if it was provided in the CSV
+    const processedRecords = records.map(record => {
+      const processedRecord = { ...record };
+      
+      // Only apply starter_pack logic if the field was actually provided in the CSV
+      if (record.starter_pack !== undefined && record.starter_pack !== null) {
+        // Apply LABP role restriction only when starter_pack field is explicitly provided
+        processedRecord.starter_pack = record.role === 'LABP' ? Boolean(record.starter_pack) : false;
+      }
+      // If starter_pack is undefined/null, leave it as is so the preservation logic works
+      
+      return processedRecord;
+    });
 
     let successCount = 0;
     let errorCount = 0;
