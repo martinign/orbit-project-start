@@ -9,9 +9,6 @@ import { TimelineView } from '@/components/tasks/TimelineView';
 import TaskDialog from '@/components/task-dialog/TaskDialog';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { DragDropContext } from '@hello-pangea/dnd';
-import { CompactArchiveDropZone } from '@/components/tasks/CompactArchiveDropZone';
-import { useTaskDragAndDrop } from '@/hooks/useTaskDragAndDrop';
 
 interface TasksTabProps {
   projectId: string;
@@ -31,7 +28,6 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   const [showPrivateOnly, setShowPrivateOnly] = useState(false);
   const [showArchivedOnly, setShowArchivedOnly] = useState(false);
   const queryClient = useQueryClient();
-  const { handleDragEnd } = useTaskDragAndDrop(refetchTasks);
 
   // Filter tasks based on the showPrivateOnly and showArchivedOnly state
   const filteredTasks = tasks.filter(task => {
@@ -106,9 +102,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           <CardTitle>Project Tasks</CardTitle>
           <CardDescription>Manage tasks for this project</CardDescription>
         </div>
-        <div className="flex flex-row items-center gap-2">
-          <CompactArchiveDropZone />
-          
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
           <Button 
             onClick={handleArchiveToggle}
             className="bg-blue-500 hover:bg-blue-600 text-white"
@@ -135,39 +129,37 @@ export const TasksTab: React.FC<TasksTabProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          {tasksLoading ? (
-            <div className="text-center py-6 border rounded-lg bg-gray-50">
-              <div className="animate-pulse flex flex-col items-center justify-center">
-                <div className="h-6 w-24 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 w-32 bg-gray-200 rounded"></div>
-              </div>
+        {tasksLoading ? (
+          <div className="text-center py-6 border rounded-lg bg-gray-50">
+            <div className="animate-pulse flex flex-col items-center justify-center">
+              <div className="h-6 w-24 bg-gray-200 rounded mb-2"></div>
+              <div className="h-4 w-32 bg-gray-200 rounded"></div>
             </div>
-          ) : filteredTasks && filteredTasks.length > 0 ? (
-            !isTimelineView ? (
-              <TaskBoard 
-                tasks={filteredTasks} 
-                projectId={projectId} 
-                onRefetch={refetchTasks}
-                showArchiveColumn={false}
-                archiveOnlyMode={showArchivedOnly}
-              />
-            ) : (
-              <TimelineView tasks={filteredTasks} isLoading={tasksLoading} />
-            )
+          </div>
+        ) : filteredTasks && filteredTasks.length > 0 ? (
+          !isTimelineView ? (
+            <TaskBoard 
+              tasks={filteredTasks} 
+              projectId={projectId} 
+              onRefetch={refetchTasks}
+              showArchiveColumn={false}
+              archiveOnlyMode={showArchivedOnly}
+            />
           ) : (
-            <div className="text-center p-8 border rounded-lg bg-gray-50">
-              <p className="text-muted-foreground mb-4">
-                {showArchivedOnly ? 
-                  'No archived tasks found for this project' : 
-                  (showPrivateOnly ? 'No private tasks found for this project' : 'No tasks found for this project')}
-              </p>
-              <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white">
-                <Plus className="mr-2 h-4 w-4" /> Create Task
-              </Button>
-            </div>
-          )}
-        </DragDropContext>
+            <TimelineView tasks={filteredTasks} isLoading={tasksLoading} />
+          )
+        ) : (
+          <div className="text-center p-8 border rounded-lg bg-gray-50">
+            <p className="text-muted-foreground mb-4">
+              {showArchivedOnly ? 
+                'No archived tasks found for this project' : 
+                (showPrivateOnly ? 'No private tasks found for this project' : 'No tasks found for this project')}
+            </p>
+            <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Plus className="mr-2 h-4 w-4" /> Create Task
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       <TaskDialog 
